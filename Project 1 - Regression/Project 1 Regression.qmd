@@ -16,10 +16,7 @@ The aim of the current study is to assess whether a new gel treatment for gum di
 
 The project description provided by the PI is available below:
 
-```{r, echo = FALSE, out.height="75%", out.width="75%", fig.align = "center"}
-knitr::include_graphics("C:\\Users\\sviea\\Documents\\Advanced Data Analysis\\Project 1 MLR with Covariates\\Project 1 Description.png")
-```
-
+![Project-1-Description]("C:/Users/sviea/Documents/Advanced Data Analysis/Advanced-Data-Analysis/Project 1 - Regression/Project 1 Description.png")
 
 ## Data Preparation
 
