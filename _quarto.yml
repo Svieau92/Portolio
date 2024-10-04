@@ -2,7 +2,9 @@ project:
   type: website
 
 website: 
-  title: "Sean Vieau - Data Analyses"
+  title: "Sean Vieau Portfolio"
   navbar: 
     left: 
+      - href: index.qmd
+        text: Home
       - Project_1_Regression.qmd

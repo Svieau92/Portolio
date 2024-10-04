@@ -1,0 +1,13 @@
+---
+title: "Sean Vieau"
+image: Professional_Picture.jpg
+toc: false
+about:
+  template: jolla
+  image-shape: round
+  image-width: 17em
+  
+---
+
+Add stuff about me here.
+---
