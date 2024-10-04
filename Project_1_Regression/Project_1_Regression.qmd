@@ -842,7 +842,7 @@ Collapsing the low, medium, and high concentration gel groups into 1 group does 
 
 [Gender]{.underline}
 
-*Gender* is related to attachment loss and pocket depth change, and as such will be included in the final model.
+Gender is related to attachment loss and pocket depth change, and as such will be included in the final model.
 
 [Supressor / Counfound Variables]{.underline}
 
@@ -957,21 +957,9 @@ tab_model(model_attach2,
 
 [Tables]{.underline}
 
-```{r, echo = FALSE}
-# out.height | "50%"
-# out.widht | "50%"
-# fig.align | "center"
+<img src="Regression1_model_attach.png" alt="Regression Model" width="50%" height="50%">
 
-knitr::include_graphics("C:\\Users\\sviea\\Documents\\Advanced Data Analysis\\Project 1 MLR with Covariates\\Regression2_model_attach.png")
-```
-
-```{r, echo = FALSE}
-# out.height | "50%"
-# out.widht | "50%"
-# fig.align | "center"
-
-knitr::include_graphics("C:\\Users\\sviea\\Documents\\Advanced Data Analysis\\Project 1 MLR with Covariates\\Regression2_model_attach.png")
-```
+<img src="Regression2_model_attach.png" alt="Regression Model" width="50%" height="50%">
 
 Note: p-values are unadjusted.
 
@@ -1012,13 +1000,7 @@ tab_model(model_pd2,
           pred.labels = c("(Intercept)", "Control", "Low", "Medium", "High"))
 ```
 
-```{r, echo = FALSE}
-# out.height | "50%"
-# out.widht | "50%"
-# fig.align | "center"
-
-knitr::include_graphics("C:\\Users\\sviea\\Documents\\Advanced Data Analysis\\Project 1 MLR with Covariates\\Regression3_model_pd.png")
-```
+<img src="Regression3_model_pd.png" alt="Regression Model" width="50%">
 
 Note: p-values are unadjusted
 
@@ -1326,32 +1308,15 @@ For example, there exists very simple ways of imputing data, such as plugging in
 
 Then there exists regression imputation, where for each variable you fit a regression model of it to the observed data, and then use that model to predict missing values, and use those predictions in place of the missing values. However, this injects bias into the estimate for the correlation between X and Y (since the values fall perfectly in line with the hypothesis that X and Y have a non zero correlation. (and are in a perfect line)).
 
-```{r, echo = FALSE}
-# fig.width | "65%
-# fig.heigth | "65%"
-# fig.align | "center"
-
-knitr::include_graphics("C:\\Users\\sviea\\Documents\\Advanced Data Analysis\\Project 1 MLR with Covariates\\regression imputation.png")
-```
+<img src="regression_imputation.png" width="65%" height="65%">
 
 Then there is stochastic regression imputation, which is like regression imputation but *adds noise back into the imputations based on the variance of their residuals*. This helps account for variance in the results due to missing data.
 
-```{r, echo = FALSE}
-# fig.height = "50%"
-# fig.width = "50%"
-# fig.align = "center"
-
-knitr::include_graphics("C:\\Users\\sviea\\Documents\\Advanced Data Analysis\\Project 1 MLR with Covariates\\stochastic regression imputation.png")
-```
+<img src="stochastic_regression_imputation.png" width="65%" height="65%">
 
 Multiple imputation works by fitting multiple stochastic imputation models (can be 100's or 1000's), analyzing each dataset separately to produce estimates of interest, and finally pooling together these statistics of interest. If done properly, the pooled statistics are *unbiased under MAR, and the SE's will be correct*!
 
-```{r, echo = FALSE}
-# fig.height | "50%"
-# fig.width | "50%"
-
-knitr::include_graphics("C:\\Users\\sviea\\Documents\\Advanced Data Analysis\\Project 1 MLR with Covariates\\multiple imputation.png")
-```
+<img src="multiple_imputation.png" width="50%" height="50%">
 
 Multiple Imputation is "simple, elegant and powerful. It is simple because it fills the holes in the data with plausible values. It is elegant because the uncertainty about the unknown data is coded in the data itself. And it is powerful because it can solve “other” problems that are actually missing data problems in disguise." - Stef van Buuren
 
@@ -1647,9 +1612,7 @@ This process follows three step:
 
 Jackknife residuals are similar to standardized residuals. Standardized residuals are standardized by the standard error of the regression, and are primarily used for identifying outliers. Jackknife residuals on the other hand allow you to assess the leverage of individuals data points, to see how much they actually influence the model ([Source](https://stats.stackexchange.com/questions/204708/is-studentized-residuals-v-s-standardized-residuals-in-lm-model))
 
-```{r, echo = FALSE}
-knitr::include_graphics("C:\\Users\\sviea\\Documents\\Advanced Data Analysis\\Project 1 MLR with Covariates\\rstudent-jackknife.png")
-```
+<img src="rstudent-jackknife.png" width="95%">
 
 Jackknife residuals follow exactly a t(n-p-2) distribution, where approximately 5% of residuals are expected to exceed 1.96 in absolute value. Jackknife residuals make suspicious values more obvious compared to other residuals.
 
@@ -1661,9 +1624,7 @@ However, a potential outlier value may not actually have that dramatic of an imp
 -   Extreme X values can have *high influence*
 -   A high-leverage point becomes an *influential* point if its Y value doesn't follow the pattern of the rest of the data (i.e. is too low or too high)
 
-```{r, echo = FALSE}
-knitr::include_graphics("C:\\Users\\sviea\\Documents\\Advanced Data Analysis\\Project 1 MLR with Covariates\\leverage_influence.png")
-```
+<img src="leverage_influence.png" width="80%">
 
 An observation is influential if removing it substantially changes the estimate of the coefficients for that model. We use five measurements to assess influence: Jackknife residuals, Leverage, Cook's Distance (Cook's D), DFFITS, and DFBETAS.
 
@@ -1677,9 +1638,7 @@ An observation is influential if removing it substantially changes the estimate 
 
 Note: p = the number of variables in the model
 
-```{r, echo = FALSE}
-knitr::include_graphics("C:\\Users\\sviea\\Documents\\Advanced Data Analysis\\Project 1 MLR with Covariates\\jackknife cheet sheet.png")
-```
+<img src="jackknife_cheet_sheet.png" width="90%">
 
 <a href="#Jackknife">Back to top of tabset</a>
 
@@ -1775,9 +1734,7 @@ This is a test of a hypothesis that we do not have an outlier. We reject that hy
 
 Leverage is calculated as
 
-```{r, echo = FALSE}
-knitr::include_graphics("C:\\Users\\sviea\\Documents\\Advanced Data Analysis\\Project 1 MLR with Covariates\\leverage.png")
-```
+<img src="leverage.png" width="90%>
 
 If X \_i is close to Xbar, then h_i is small (i.e. the i-th point has low leverage).
 
@@ -2191,6 +2148,8 @@ summary(model_pd_outlier)
 
 There is no difference in our models after removing outlier 168.
 
+:::
+
 # To do List
 
 [Important]{.underline}
@@ -2203,14 +2162,6 @@ Try adding captions to all graphs and tables (eg #\| fig-cap )
 
 mess around with a final clean version that makes use of echo = FALSE to hide unneeded code chunks
 
-fix source hyperlink :(
-
-```{r}
-# Generate a publication level output of the model
-
-# I could plot the CIs maybe to visualize the results??
-sjPlot::plot_model(model_attach1, type = "est", show.values = TRUE, show.p = TRUE)
-```
 
 question for a TA or prof:
 
