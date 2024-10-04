@@ -204,6 +204,7 @@ window.Quarto = {
   <li><a href="#Multiple_imputation" id="toc-Multiple_imputation" class="nav-link" data-scroll-target="#Multiple_imputation">Multiple Imputation</a></li>
   <li><a href="#Jackknife" id="toc-Jackknife" class="nav-link" data-scroll-target="#Jackknife">Identify Outliers using Jackknife Residuals</a></li>
   </ul></li>
+  <li><a href="#to-do-list" id="toc-to-do-list" class="nav-link" data-scroll-target="#to-do-list">To do List</a></li>
   </ul>
 </nav>
     </div>
@@ -2625,7 +2626,7 @@ F-statistic:  40.6 on 1 and 101 DF,  p-value: 5.621e-09</code></pre>
 <p><u>Treatment Condition</u></p>
 <p>Collapsing the low, medium, and high concentration gel groups into 1 group does not seem to improve the relationship between treatment and attachment loss or pocket depth change. Only models including all 5 treatment groups will therefore be considered from here on out to keep in alignment with the original study design.</p>
 <p><u>Gender</u></p>
-<p><em>Gender</em> is related to attachment loss and pocket depth change, and as such will be included in the final model.</p>
+<p>Gender is related to attachment loss and pocket depth change, and as such will be included in the final model.</p>
 <p><u>Supressor / Counfound Variables</u></p>
 <p>A model will be tested with all covariates to assess for possible suppressor / confound variables. But the other potential covariates of race, age, sites, and smoking status were not related to attachment loss or pocket depth change by themselves.</p>
 <p><u>Baseline vs 1 Year Measurements</u></p>
@@ -2775,24 +2776,8 @@ high        -0.25091345 0.09547760</code></pre>
 <p><u>Conclusion</u></p>
 <p>While the overall model was significant, the only groups that were statistically different from the no treatment control were the low and medium concentration gel groups (p &lt; 0.05). However, since this was a placebo-controlled RCT, and none of the treatment groups were significantly different from the placebo group, we can conclude that we <strong><em>fail to reject the null hypothesis</em></strong> that the average attachment loss over 1 year is the same between all groups.</p>
 <p><u>Tables</u></p>
-<div class="cell">
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="../../Advanced Data Analysis/Project 1 MLR with Covariates/Regression2_model_attach.png" class="img-fluid figure-img" width="426"></p>
-</figure>
-</div>
-</div>
-</div>
-<div class="cell">
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="../../Advanced Data Analysis/Project 1 MLR with Covariates/Regression2_model_attach.png" class="img-fluid figure-img" width="426"></p>
-</figure>
-</div>
-</div>
-</div>
+<p><img src="Regression1_model_attach.png" alt="Regression Model" width="50%" height="50%"></p>
+<p><img src="Regression2_model_attach.png" alt="Regression Model" width="50%" height="50%"></p>
 <p>Note: p-values are unadjusted.</p>
 <p><a href="#Model_1">Back to top of tabset</a></p>
 </div>
@@ -2830,15 +2815,7 @@ F-statistic: 2.074 on 4 and 98 DF,  p-value: 0.08994</code></pre>
 <p><u>Conclusion</u></p>
 <p>No groups were significantly different from each other in pocket depth change after 1 year (F<sub>(4,98)</sub>= 2.074, p = 0.0899), and we <strong><em>fail to reject the null hypothesis</em></strong> that the average pocket depth change over 1 year is the same between all groups.</p>
 <p><u>Tables</u></p>
-<div class="cell">
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="../../Advanced Data Analysis/Project 1 MLR with Covariates/Regression3_model_pd.png" class="img-fluid figure-img" width="433"></p>
-</figure>
-</div>
-</div>
-</div>
+<p><img src="Regression3_model_pd.png" alt="Regression Model" width="50%"></p>
 <p>Note: p-values are unadjusted</p>
 <p><a href="#Model_1">Back to top of tabset</a></p>
 </div>
@@ -3065,7 +3042,7 @@ attachbase  4.989769e-05 0.0002993861</code></pre>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="Project_1_Regression_files/figure-html/unnamed-chunk-54-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="Project_1_Regression_files/figure-html/unnamed-chunk-51-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -3079,7 +3056,7 @@ attachbase  4.989769e-05 0.0002993861</code></pre>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="Project_1_Regression_files/figure-html/unnamed-chunk-54-2.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="Project_1_Regression_files/figure-html/unnamed-chunk-51-2.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -3097,7 +3074,7 @@ attachbase  4.989769e-05 0.0002993861</code></pre>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="Project_1_Regression_files/figure-html/unnamed-chunk-55-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="Project_1_Regression_files/figure-html/unnamed-chunk-52-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -3109,7 +3086,7 @@ attachbase  4.989769e-05 0.0002993861</code></pre>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="Project_1_Regression_files/figure-html/unnamed-chunk-55-2.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="Project_1_Regression_files/figure-html/unnamed-chunk-52-2.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -3119,7 +3096,7 @@ attachbase  4.989769e-05 0.0002993861</code></pre>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="Project_1_Regression_files/figure-html/unnamed-chunk-55-3.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="Project_1_Regression_files/figure-html/unnamed-chunk-52-3.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -3131,7 +3108,7 @@ attachbase  4.989769e-05 0.0002993861</code></pre>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="Project_1_Regression_files/figure-html/unnamed-chunk-55-4.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="Project_1_Regression_files/figure-html/unnamed-chunk-52-4.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -3175,7 +3152,7 @@ W = 0.99059, p-value = 0.6933</code></pre>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="Project_1_Regression_files/figure-html/unnamed-chunk-57-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="Project_1_Regression_files/figure-html/unnamed-chunk-54-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -3188,7 +3165,7 @@ W = 0.99059, p-value = 0.6933</code></pre>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="Project_1_Regression_files/figure-html/unnamed-chunk-57-2.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="Project_1_Regression_files/figure-html/unnamed-chunk-54-2.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -3242,7 +3219,7 @@ Bartlett's K-squared = 2.5462, df = 4, p-value = 0.6364</code></pre>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="Project_1_Regression_files/figure-html/unnamed-chunk-61-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="Project_1_Regression_files/figure-html/unnamed-chunk-58-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -3307,35 +3284,11 @@ attr(,"class")
 <p>Multiple Imputation is a commonly used method to handle missing data when data is not MCAR, but is MAR. It is a process by which you use observed data to “predict” missing data, then use those “imputed” values in further analyses. Multiple imputation builds upon and pools together “single” imputation approaches.</p>
 <p>For example, there exists very simple ways of imputing data, such as plugging in the average or median values in place of missing values. This is not sophisticated and kind of sketchy.</p>
 <p>Then there exists regression imputation, where for each variable you fit a regression model of it to the observed data, and then use that model to predict missing values, and use those predictions in place of the missing values. However, this injects bias into the estimate for the correlation between X and Y (since the values fall perfectly in line with the hypothesis that X and Y have a non zero correlation. (and are in a perfect line)).</p>
-<div class="cell">
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="../../Advanced Data Analysis/Project 1 MLR with Covariates/regression imputation.png" class="img-fluid figure-img" width="366"></p>
-</figure>
-</div>
-</div>
-</div>
+<p><img src="regression_imputation.png" width="65%" height="65%"></p>
 <p>Then there is stochastic regression imputation, which is like regression imputation but <em>adds noise back into the imputations based on the variance of their residuals</em>. This helps account for variance in the results due to missing data.</p>
-<div class="cell">
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="../../Advanced Data Analysis/Project 1 MLR with Covariates/stochastic regression imputation.png" class="img-fluid figure-img" width="421"></p>
-</figure>
-</div>
-</div>
-</div>
+<p><img src="stochastic_regression_imputation.png" width="65%" height="65%"></p>
 <p>Multiple imputation works by fitting multiple stochastic imputation models (can be 100’s or 1000’s), analyzing each dataset separately to produce estimates of interest, and finally pooling together these statistics of interest. If done properly, the pooled statistics are <em>unbiased under MAR, and the SE’s will be correct</em>!</p>
-<div class="cell">
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="../../Advanced Data Analysis/Project 1 MLR with Covariates/multiple imputation.png" class="img-fluid figure-img" width="417"></p>
-</figure>
-</div>
-</div>
-</div>
+<p><img src="multiple_imputation.png" width="50%" height="50%"></p>
 <p>Multiple Imputation is “simple, elegant and powerful. It is simple because it fills the holes in the data with plausible values. It is elegant because the uncertainty about the unknown data is coded in the data itself. And it is powerful because it can solve “other” problems that are actually missing data problems in disguise.” - Stef van Buuren</p>
 <p><a href="#Multiple_imputation">Back to top of tabset</a></p>
 </div>
@@ -3362,7 +3315,7 @@ attr(,"class")
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="Project_1_Regression_files/figure-html/unnamed-chunk-65-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="Project_1_Regression_files/figure-html/unnamed-chunk-59-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -3397,7 +3350,7 @@ attr(,"class")
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="Project_1_Regression_files/figure-html/unnamed-chunk-67-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="Project_1_Regression_files/figure-html/unnamed-chunk-61-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -3423,7 +3376,7 @@ attr(,"class")
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="Project_1_Regression_files/figure-html/unnamed-chunk-68-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="Project_1_Regression_files/figure-html/unnamed-chunk-62-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -3636,7 +3589,7 @@ high         0.05690063 0.08727557  0.6519652 0.5159498143</code></pre>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="Project_1_Regression_files/figure-html/unnamed-chunk-78-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="Project_1_Regression_files/figure-html/unnamed-chunk-72-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -3713,7 +3666,7 @@ high        -0.07771793 0.08727557 -0.8904889 0.37538435</code></pre>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="Project_1_Regression_files/figure-html/unnamed-chunk-81-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="Project_1_Regression_files/figure-html/unnamed-chunk-75-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -3741,15 +3694,7 @@ high        -0.07771793 0.08727557 -0.8904889 0.37538435</code></pre>
 <li><p>Calculate the jackknife residual as the difference between the actual value and that fitted value</p></li>
 </ul>
 <p>Jackknife residuals are similar to standardized residuals. Standardized residuals are standardized by the standard error of the regression, and are primarily used for identifying outliers. Jackknife residuals on the other hand allow you to assess the leverage of individuals data points, to see how much they actually influence the model (<a href="https://stats.stackexchange.com/questions/204708/is-studentized-residuals-v-s-standardized-residuals-in-lm-model">Source</a>)</p>
-<div class="cell">
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="../../Advanced Data Analysis/Project 1 MLR with Covariates/rstudent-jackknife.png" class="img-fluid figure-img" width="623"></p>
-</figure>
-</div>
-</div>
-</div>
+<p><img src="rstudent-jackknife.png" width="95%"></p>
 <p>Jackknife residuals follow exactly a t(n-p-2) distribution, where approximately 5% of residuals are expected to exceed 1.96 in absolute value. Jackknife residuals make suspicious values more obvious compared to other residuals.</p>
 <p>Definitions vary, but we generally consider a residual to be an outlier if the jackknife residual is +- 3.</p>
 <p>However, a potential outlier value may not actually have that dramatic of an impact on the model (which is what we are concerned that outliers will do). That is why we use jackknife residuals to investigate leverage and influence.</p>
@@ -3758,15 +3703,7 @@ high        -0.07771793 0.08727557 -0.8904889 0.37538435</code></pre>
 <li>Extreme X values can have <em>high influence</em></li>
 <li>A high-leverage point becomes an <em>influential</em> point if its Y value doesn’t follow the pattern of the rest of the data (i.e.&nbsp;is too low or too high)</li>
 </ul>
-<div class="cell">
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="../../Advanced Data Analysis/Project 1 MLR with Covariates/leverage_influence.png" class="img-fluid figure-img" width="531"></p>
-</figure>
-</div>
-</div>
-</div>
+<p><img src="leverage_influence.png" width="80%"></p>
 <p>An observation is influential if removing it substantially changes the estimate of the coefficients for that model. We use five measurements to assess influence: Jackknife residuals, Leverage, Cook’s Distance (Cook’s D), DFFITS, and DFBETAS.</p>
 <ul>
 <li><p>Leverage: Measures how far a measurement deviates from the mean. You want to examine values greater than 2(p+1)/n</p></li>
@@ -3775,15 +3712,7 @@ high        -0.07771793 0.08727557 -0.8904889 0.37538435</code></pre>
 <li><p>DDFBETAS: Measure the influence of an observation on *individual* coefficient estimates. You want to examine estimates outside the range of +- 2/sqrt(n). A large DFBETA for variable k indicates that the i-th observation has a sizeable impact on the k-th regression coefficient.</p></li>
 </ul>
 <p>Note: p = the number of variables in the model</p>
-<div class="cell">
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="../../Advanced Data Analysis/Project 1 MLR with Covariates/jackknife cheet sheet.png" class="img-fluid figure-img" width="577"></p>
-</figure>
-</div>
-</div>
-</div>
+<p><img src="jackknife_cheet_sheet.png" width="90%"></p>
 <p><a href="#Jackknife">Back to top of tabset</a></p>
 </div>
 <div id="tabset-13-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-13-2-tab">
@@ -3935,7 +3864,7 @@ high        -0.07771793 0.08727557 -0.8904889 0.37538435</code></pre>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="Project_1_Regression_files/figure-html/unnamed-chunk-87-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="Project_1_Regression_files/figure-html/unnamed-chunk-78-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -4147,15 +4076,7 @@ Largest |rstudent|:
 <div id="tabset-10-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-10-3-tab">
 <p><strong>Leverage</strong> is a measure of geometric distance of an observation’s predictor point from the center point of the predictor space. In other words, leverage is a measurement of how far that observation deviates from the mean of that variable. High leverage observations have the potential to be very influential, but they are not <em>necessarily</em> influential. It’s possible for a high leverage point to not be influential, but very difficult for a low leverage point to be influential.</p>
 <p>Leverage is calculated as</p>
-<div class="cell">
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="../../Advanced Data Analysis/Project 1 MLR with Covariates/leverage.png" class="img-fluid figure-img" width="191"></p>
-</figure>
-</div>
-</div>
-</div>
+<p>&lt;img src=“leverage.png” width=“90%&gt;</p>
 <p>If X _i is close to Xbar, then h_i is small (i.e.&nbsp;the i-th point has low leverage).</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb191"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb191-1"><a href="#cb191-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Caculate cutoff for leverage</span></span>
@@ -4175,7 +4096,7 @@ Largest |rstudent|:
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="Project_1_Regression_files/figure-html/unnamed-chunk-91-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="Project_1_Regression_files/figure-html/unnamed-chunk-81-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -4204,7 +4125,7 @@ Largest |rstudent|:
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="Project_1_Regression_files/figure-html/unnamed-chunk-92-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="Project_1_Regression_files/figure-html/unnamed-chunk-82-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -4233,7 +4154,7 @@ Largest |rstudent|:
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="Project_1_Regression_files/figure-html/unnamed-chunk-93-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="Project_1_Regression_files/figure-html/unnamed-chunk-83-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -4263,7 +4184,7 @@ Largest |rstudent|:
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="Project_1_Regression_files/figure-html/unnamed-chunk-94-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="Project_1_Regression_files/figure-html/unnamed-chunk-84-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -4278,7 +4199,7 @@ Largest |rstudent|:
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="Project_1_Regression_files/figure-html/unnamed-chunk-94-2.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="Project_1_Regression_files/figure-html/unnamed-chunk-84-2.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -4293,7 +4214,7 @@ Largest |rstudent|:
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="Project_1_Regression_files/figure-html/unnamed-chunk-94-3.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="Project_1_Regression_files/figure-html/unnamed-chunk-84-3.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -4308,7 +4229,7 @@ Largest |rstudent|:
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="Project_1_Regression_files/figure-html/unnamed-chunk-94-4.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="Project_1_Regression_files/figure-html/unnamed-chunk-84-4.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -4326,7 +4247,7 @@ Largest |rstudent|:
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="Project_1_Regression_files/figure-html/unnamed-chunk-95-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="Project_1_Regression_files/figure-html/unnamed-chunk-85-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -4346,7 +4267,7 @@ Largest |rstudent|:
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="Project_1_Regression_files/figure-html/unnamed-chunk-96-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="Project_1_Regression_files/figure-html/unnamed-chunk-86-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -4592,7 +4513,7 @@ Largest |rstudent|:
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="Project_1_Regression_files/figure-html/unnamed-chunk-99-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="Project_1_Regression_files/figure-html/unnamed-chunk-89-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -4810,7 +4731,7 @@ Largest |rstudent|:
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="Project_1_Regression_files/figure-html/unnamed-chunk-102-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="Project_1_Regression_files/figure-html/unnamed-chunk-92-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -4838,7 +4759,7 @@ Largest |rstudent|:
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="Project_1_Regression_files/figure-html/unnamed-chunk-103-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="Project_1_Regression_files/figure-html/unnamed-chunk-93-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -4866,7 +4787,7 @@ Largest |rstudent|:
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="Project_1_Regression_files/figure-html/unnamed-chunk-104-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="Project_1_Regression_files/figure-html/unnamed-chunk-94-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -4896,7 +4817,7 @@ Largest |rstudent|:
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="Project_1_Regression_files/figure-html/unnamed-chunk-105-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="Project_1_Regression_files/figure-html/unnamed-chunk-95-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -4911,7 +4832,7 @@ Largest |rstudent|:
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="Project_1_Regression_files/figure-html/unnamed-chunk-105-2.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="Project_1_Regression_files/figure-html/unnamed-chunk-95-2.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -4926,7 +4847,7 @@ Largest |rstudent|:
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="Project_1_Regression_files/figure-html/unnamed-chunk-105-3.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="Project_1_Regression_files/figure-html/unnamed-chunk-95-3.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -4941,7 +4862,7 @@ Largest |rstudent|:
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="Project_1_Regression_files/figure-html/unnamed-chunk-105-4.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="Project_1_Regression_files/figure-html/unnamed-chunk-95-4.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -4959,7 +4880,7 @@ Largest |rstudent|:
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="Project_1_Regression_files/figure-html/unnamed-chunk-106-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="Project_1_Regression_files/figure-html/unnamed-chunk-96-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -4979,7 +4900,7 @@ Largest |rstudent|:
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="Project_1_Regression_files/figure-html/unnamed-chunk-107-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="Project_1_Regression_files/figure-html/unnamed-chunk-97-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -5137,6 +5058,11 @@ F-statistic: 1.954 on 4 and 97 DF,  p-value: 0.1077</code></pre>
 </div>
 </div>
 <p>There is no difference in our models after removing outlier 168.</p>
+</div>
+</div>
+</div>
+</section>
+</section>
 <section id="to-do-list" class="level1">
 <h1>To do List</h1>
 <p><u>Important</u></p>
@@ -5144,20 +5070,6 @@ F-statistic: 1.954 on 4 and 97 DF,  p-value: 0.1077</code></pre>
 <p><u>Aesthetic</u></p>
 <p>Try adding captions to all graphs and tables (eg #| fig-cap )</p>
 <p>mess around with a final clean version that makes use of echo = FALSE to hide unneeded code chunks</p>
-<p>fix source hyperlink :(</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb240"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb240-1"><a href="#cb240-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Generate a publication level output of the model</span></span>
-<span id="cb240-2"><a href="#cb240-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb240-3"><a href="#cb240-3" aria-hidden="true" tabindex="-1"></a><span class="co"># I could plot the CIs maybe to visualize the results??</span></span>
-<span id="cb240-4"><a href="#cb240-4" aria-hidden="true" tabindex="-1"></a>sjPlot<span class="sc">::</span><span class="fu">plot_model</span>(model_attach1, <span class="at">type =</span> <span class="st">"est"</span>, <span class="at">show.values =</span> <span class="cn">TRUE</span>, <span class="at">show.p =</span> <span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Project_1_Regression_files/figure-html/unnamed-chunk-110-1.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-</div>
 <p>question for a TA or prof:</p>
 <ul>
 <li><p>consuslting Prof: Did he make the slides for jackknife residuals? Why the cutoff in Cooks D of 1.0, interwebs says other equation.</p></li>
@@ -5185,11 +5097,6 @@ F-statistic: 1.954 on 4 and 97 DF,  p-value: 0.1077</code></pre>
 <p>look into Tableau for interactive graphs (she says its easy).</p>
 
 
-</section>
-</div>
-</div>
-</div>
-</section>
 </section>
 
 </main> <!-- /main -->
@@ -5285,7 +5192,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
   }
     var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
     var mailtoRegex = new RegExp(/^mailto:/);
-      var filterRegex = new RegExp('/' + window.location.host + '/');
+      var filterRegex = new RegExp("https:\/\/Svieau92\.github\.io\/Advanced-Data-Analysis\/");
     var isInternal = (href) => {
         return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
     }
