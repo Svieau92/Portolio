@@ -89,7 +89,7 @@ Pocket depth and attachment loss are both measurements of how far the gums have 
 
 Here we will perform several assessments to ensure fidelity of the data
 
-::: panel-tabset
+:::: panel-tabset
 ## Erroneous Data Entry
 
 First we will perform a simple check to assess for correct entry of data
@@ -253,7 +253,7 @@ This could cause problems! We will either have to combine all the treatment cond
 See <a href="#Multiple_imputation">Multiple Imputation section</a> for analysis with multiple imputation.
 
 <a href="#Data_Management">Back to top of tabset</a>
-:::
+::::
 
 ## Descriptive Statistics {#Descriptives}
 
@@ -529,7 +529,7 @@ Both attachment loss and pocket depth change appear to be normally distributed a
 
 Here I will plot the data and perform a number of simple linear regressions to examine relationships between variables in order to determine which covariates to include in the model.
 
-::: panel-tabset
+:::::: panel-tabset
 ## Primary Explanatory Variable
 
 ::: panel-tabset
@@ -857,7 +857,7 @@ The baseline measurements of attachment loss and pocket depth were significant p
 Attachment loss and pocket depth change are highly related to each other, but this should not impact the analysis. PI's will need to be consulted to interpret the clinical significance of findings, and to help fully understand the implications of any possible differences that may arise between attachment loss and pocket depth change in the analysis.
 
 <a href="#Exploratory">Back to top of tabset</a>
-:::
+::::::
 
 # Data Analysis
 
@@ -957,9 +957,9 @@ tab_model(model_attach2,
 
 [Tables]{.underline}
 
-<img src="Regression1_model_attach.png" alt="Regression Model" width="50%" height="50%">
+<img src="Regression1_model_attach.png" alt="Regression Model" width="50%" height="50%"/>
 
-<img src="Regression2_model_attach.png" alt="Regression Model" width="50%" height="50%">
+<img src="Regression2_model_attach.png" alt="Regression Model" width="50%" height="50%"/>
 
 Note: p-values are unadjusted.
 
@@ -1000,7 +1000,7 @@ tab_model(model_pd2,
           pred.labels = c("(Intercept)", "Control", "Low", "Medium", "High"))
 ```
 
-<img src="Regression3_model_pd.png" alt="Regression Model" width="50%">
+<img src="Regression3_model_pd.png" alt="Regression Model" width="50%"/>
 
 Note: p-values are unadjusted
 
@@ -1308,15 +1308,15 @@ For example, there exists very simple ways of imputing data, such as plugging in
 
 Then there exists regression imputation, where for each variable you fit a regression model of it to the observed data, and then use that model to predict missing values, and use those predictions in place of the missing values. However, this injects bias into the estimate for the correlation between X and Y (since the values fall perfectly in line with the hypothesis that X and Y have a non zero correlation. (and are in a perfect line)).
 
-<img src="regression_imputation.png" width="65%" height="65%">
+<img src="regression_imputation.png" width="65%" height="65%"/>
 
 Then there is stochastic regression imputation, which is like regression imputation but *adds noise back into the imputations based on the variance of their residuals*. This helps account for variance in the results due to missing data.
 
-<img src="stochastic_regression_imputation.png" width="65%" height="65%">
+<img src="stochastic_regression_imputation.png" width="65%" height="65%"/>
 
 Multiple imputation works by fitting multiple stochastic imputation models (can be 100's or 1000's), analyzing each dataset separately to produce estimates of interest, and finally pooling together these statistics of interest. If done properly, the pooled statistics are *unbiased under MAR, and the SE's will be correct*!
 
-<img src="multiple_imputation.png" width="50%" height="50%">
+<img src="multiple_imputation.png" width="65%" height="65%"/>
 
 Multiple Imputation is "simple, elegant and powerful. It is simple because it fills the holes in the data with plausible values. It is elegant because the uncertainty about the unknown data is coded in the data itself. And it is powerful because it can solve “other” problems that are actually missing data problems in disguise." - Stef van Buuren
 
@@ -1592,8 +1592,7 @@ Looks pretty good.
 
 In this section we will explore how our analysis would have changed if we identified outliers using the jackknife residuals.
 
-::: panel-tabset
-
+:::::: panel-tabset
 ## Background
 
 \*Note: This information is from BIOS 6602 Week 6 Lecture 10
@@ -1612,7 +1611,7 @@ This process follows three step:
 
 Jackknife residuals are similar to standardized residuals. Standardized residuals are standardized by the standard error of the regression, and are primarily used for identifying outliers. Jackknife residuals on the other hand allow you to assess the leverage of individuals data points, to see how much they actually influence the model ([Source](https://stats.stackexchange.com/questions/204708/is-studentized-residuals-v-s-standardized-residuals-in-lm-model))
 
-<img src="rstudent-jackknife.png" width="95%">
+<img src="rstudent-jackknife.png" width="95%"/>
 
 Jackknife residuals follow exactly a t(n-p-2) distribution, where approximately 5% of residuals are expected to exceed 1.96 in absolute value. Jackknife residuals make suspicious values more obvious compared to other residuals.
 
@@ -1624,7 +1623,7 @@ However, a potential outlier value may not actually have that dramatic of an imp
 -   Extreme X values can have *high influence*
 -   A high-leverage point becomes an *influential* point if its Y value doesn't follow the pattern of the rest of the data (i.e. is too low or too high)
 
-<img src="leverage_influence.png" width="80%">
+<img src="leverage_influence.png" width="80%"/>
 
 An observation is influential if removing it substantially changes the estimate of the coefficients for that model. We use five measurements to assess influence: Jackknife residuals, Leverage, Cook's Distance (Cook's D), DFFITS, and DFBETAS.
 
@@ -1638,7 +1637,7 @@ An observation is influential if removing it substantially changes the estimate 
 
 Note: p = the number of variables in the model
 
-<img src="jackknife_cheet_sheet.png" width="90%">
+<img src="jackknife_cheet_sheet.png" width="90%"/>
 
 <a href="#Jackknife">Back to top of tabset</a>
 
@@ -1648,7 +1647,7 @@ Note: p = the number of variables in the model
 
 Now that we have covered the background for jackknife residuals, we can apply that knowledge to assess for outliers in our dataset for this project!
 
-::: panel-tabset
+::::: panel-tabset
 ## Attachment Loss
 
 ::: panel-tabset
@@ -1734,7 +1733,7 @@ This is a test of a hypothesis that we do not have an outlier. We reject that hy
 
 Leverage is calculated as
 
-<img src="leverage.png" width="90%>
+\<img src="leverage.png" width="90%\>
 
 If X \_i is close to Xbar, then h_i is small (i.e. the i-th point has low leverage).
 
@@ -2124,7 +2123,7 @@ kable(diagnostics_pd[diagnostics_attach$id %in% c(106,239),], caption = "Correla
   kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
 ```
 :::
-:::
+:::::
 
 ## Rerunning the Model with Outliers Removed
 
@@ -2147,8 +2146,7 @@ summary(model_pd_outlier)
 ```
 
 There is no difference in our models after removing outlier 168.
-
-:::
+::::::
 
 # To do List
 
@@ -2161,7 +2159,6 @@ check for outliers using jackknife residuals
 Try adding captions to all graphs and tables (eg #\| fig-cap )
 
 mess around with a final clean version that makes use of echo = FALSE to hide unneeded code chunks
-
 
 question for a TA or prof:
 
@@ -2199,18 +2196,12 @@ Look into R custom table (could also use kable)(but can crash)
 
 plotly for interactive graphs
 
-r-graph-galler.com/interactive-charts.html
-plotly gampinder, highchart interactive line plot in R (plotly is more popular) (highchart requires minimal coding, seems simpler. but is limited)
+r-graph-galler.com/interactive-charts.html plotly gampinder, highchart interactive line plot in R (plotly is more popular) (highchart requires minimal coding, seems simpler. but is limited)
 
 can use R to directly send an email to someone
 
-
-Options:
-Directly upload photos to online cloud and link to those
-Everytime you share the doc, share as folders and include link to those folders. Use setwd()./(test) command and set the working directory at the start(the . means the current folder)
-Use github (?) (be careful of automatic updates function, )
+Options: Directly upload photos to online cloud and link to those Everytime you share the doc, share as folders and include link to those folders. Use setwd()./(test) command and set the working directory at the start(the . means the current folder) Use github (?) (be careful of automatic updates function, )
 
 alexkaizer.com/bios_6618 - can ask him how to turn my qmd into a website.
-
 
 look into Tableau for interactive graphs (she says its easy).
