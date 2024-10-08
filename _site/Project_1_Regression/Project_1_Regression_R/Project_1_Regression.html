@@ -2805,8 +2805,8 @@ high        -0.25091345 0.09547760</code></pre>
 <p><u>Conclusion</u></p>
 <p>While the overall model was significant, the only groups that were statistically different from the no treatment control were the low and medium concentration gel groups (p &lt; 0.05). However, since this was a placebo-controlled RCT, and none of the treatment groups were significantly different from the placebo group, we can conclude that we <strong><em>fail to reject the null hypothesis</em></strong> that the average attachment loss over 1 year is the same between all groups.</p>
 <p><u>Tables</u></p>
-<p><img src="Regression1_model_attach.png" alt="Regression Model" width="50%" height="50%"></p>
-<p><img src="Regression2_model_attach.png" alt="Regression Model" width="50%" height="50%"></p>
+<p><img src="Media/Regression1_model_attach.png" alt="Regression Model" width="50%" height="50%"></p>
+<p><img src="Media/Regression2_model_attach.png" alt="Regression Model" width="50%" height="50%"></p>
 <p>Note: p-values are unadjusted.</p>
 <p><a href="#Model_1">Back to top of tabset</a></p>
 </div>
@@ -2844,7 +2844,7 @@ F-statistic: 2.074 on 4 and 98 DF,  p-value: 0.08994</code></pre>
 <p><u>Conclusion</u></p>
 <p>No groups were significantly different from each other in pocket depth change after 1 year (F<sub>(4,98)</sub>= 2.074, p = 0.0899), and we <strong><em>fail to reject the null hypothesis</em></strong> that the average pocket depth change over 1 year is the same between all groups.</p>
 <p><u>Tables</u></p>
-<p><img src="Regression3_model_pd.png" alt="Regression Model" width="50%"></p>
+<p><img src="Media/Regression3_model_pd.png" alt="Regression Model" width="50%"></p>
 <p>Note: p-values are unadjusted</p>
 <p><a href="#Model_1">Back to top of tabset</a></p>
 </div>
@@ -3313,11 +3313,11 @@ attr(,"class")
 <p>Multiple Imputation is a commonly used method to handle missing data when data is not MCAR, but is MAR. It is a process by which you use observed data to “predict” missing data, then use those “imputed” values in further analyses. Multiple imputation builds upon and pools together “single” imputation approaches.</p>
 <p>For example, there exists very simple ways of imputing data, such as plugging in the average or median values in place of missing values. This is not sophisticated and kind of sketchy.</p>
 <p>Then there exists regression imputation, where for each variable you fit a regression model of it to the observed data, and then use that model to predict missing values, and use those predictions in place of the missing values. However, this injects bias into the estimate for the correlation between X and Y (since the values fall perfectly in line with the hypothesis that X and Y have a non zero correlation. (and are in a perfect line)).</p>
-<p><img src="regression_imputation.png" width="65%" height="65%"></p>
+<p><img src="Media/regression_imputation.png" width="65%" height="65%"></p>
 <p>Then there is stochastic regression imputation, which is like regression imputation but <em>adds noise back into the imputations based on the variance of their residuals</em>. This helps account for variance in the results due to missing data.</p>
-<p><img src="stochastic_regression_imputation.png" width="65%" height="65%"></p>
+<p><img src="Media/stochastic_regression_imputation.png" width="65%" height="65%"></p>
 <p>Multiple imputation works by fitting multiple stochastic imputation models (can be 100’s or 1000’s), analyzing each dataset separately to produce estimates of interest, and finally pooling together these statistics of interest. If done properly, the pooled statistics are <em>unbiased under MAR, and the SE’s will be correct</em>!</p>
-<p><img src="multiple_imputation.png" width="65%" height="65%"></p>
+<p><img src="Media/multiple_imputation.png" width="65%" height="65%"></p>
 <p>Multiple Imputation is “simple, elegant and powerful. It is simple because it fills the holes in the data with plausible values. It is elegant because the uncertainty about the unknown data is coded in the data itself. And it is powerful because it can solve “other” problems that are actually missing data problems in disguise.” - Stef van Buuren</p>
 <p><a href="#Multiple_imputation">Back to top of tabset</a></p>
 </div>
@@ -3723,7 +3723,7 @@ high        -0.07771793 0.08727557 -0.8904889 0.37538435</code></pre>
 <li><p>Calculate the jackknife residual as the difference between the actual value and that fitted value</p></li>
 </ul>
 <p>Jackknife residuals are similar to standardized residuals. Standardized residuals are standardized by the standard error of the regression, and are primarily used for identifying outliers. Jackknife residuals on the other hand allow you to assess the leverage of individuals data points, to see how much they actually influence the model (<a href="https://stats.stackexchange.com/questions/204708/is-studentized-residuals-v-s-standardized-residuals-in-lm-model">Source</a>)</p>
-<p><img src="rstudent-jackknife.png" width="95%"></p>
+<p><img src="Media/rstudent-jackknife.png" width="95%"></p>
 <p>Jackknife residuals follow exactly a t(n-p-2) distribution, where approximately 5% of residuals are expected to exceed 1.96 in absolute value. Jackknife residuals make suspicious values more obvious compared to other residuals.</p>
 <p>Definitions vary, but we generally consider a residual to be an outlier if the jackknife residual is +- 3.</p>
 <p>However, a potential outlier value may not actually have that dramatic of an impact on the model (which is what we are concerned that outliers will do). That is why we use jackknife residuals to investigate leverage and influence.</p>
@@ -3732,7 +3732,7 @@ high        -0.07771793 0.08727557 -0.8904889 0.37538435</code></pre>
 <li>Extreme X values can have <em>high influence</em></li>
 <li>A high-leverage point becomes an <em>influential</em> point if its Y value doesn’t follow the pattern of the rest of the data (i.e.&nbsp;is too low or too high)</li>
 </ul>
-<p><img src="leverage_influence.png" width="80%"></p>
+<p><img src="Media/leverage_influence.png" width="80%"></p>
 <p>An observation is influential if removing it substantially changes the estimate of the coefficients for that model. We use five measurements to assess influence: Jackknife residuals, Leverage, Cook’s Distance (Cook’s D), DFFITS, and DFBETAS.</p>
 <ul>
 <li><p>Leverage: Measures how far a measurement deviates from the mean. You want to examine values greater than 2(p+1)/n</p></li>
@@ -3741,7 +3741,7 @@ high        -0.07771793 0.08727557 -0.8904889 0.37538435</code></pre>
 <li><p>DDFBETAS: Measure the influence of an observation on *individual* coefficient estimates. You want to examine estimates outside the range of +- 2/sqrt(n). A large DFBETA for variable k indicates that the i-th observation has a sizeable impact on the k-th regression coefficient.</p></li>
 </ul>
 <p>Note: p = the number of variables in the model</p>
-<p><img src="jackknife_cheet_sheet.png" width="90%"></p>
+<p><img src="Media/jackknife_cheet_sheet.png" width="90%"></p>
 <p><a href="#Jackknife">Back to top of tabset</a></p>
 </div>
 <div id="tabset-13-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-13-2-tab">
@@ -4105,7 +4105,7 @@ Largest |rstudent|:
 <div id="tabset-10-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-10-3-tab">
 <p><strong>Leverage</strong> is a measure of geometric distance of an observation’s predictor point from the center point of the predictor space. In other words, leverage is a measurement of how far that observation deviates from the mean of that variable. High leverage observations have the potential to be very influential, but they are not <em>necessarily</em> influential. It’s possible for a high leverage point to not be influential, but very difficult for a low leverage point to be influential.</p>
 <p>Leverage is calculated as</p>
-<p>&lt;img src=“leverage.png” width=“90%&gt;</p>
+<p>&lt;img src=“Media/leverage.png” width=“90%&gt;</p>
 <p>If X _i is close to Xbar, then h_i is small (i.e.&nbsp;the i-th point has low leverage).</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb191"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb191-1"><a href="#cb191-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Caculate cutoff for leverage</span></span>

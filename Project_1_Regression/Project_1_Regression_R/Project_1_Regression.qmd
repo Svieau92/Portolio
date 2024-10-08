@@ -957,9 +957,9 @@ tab_model(model_attach2,
 
 [Tables]{.underline}
 
-<img src="Regression1_model_attach.png" alt="Regression Model" width="50%" height="50%"/>
+<img src="Media/Regression1_model_attach.png" alt="Regression Model" width="50%" height="50%"/>
 
-<img src="Regression2_model_attach.png" alt="Regression Model" width="50%" height="50%"/>
+<img src="Media/Regression2_model_attach.png" alt="Regression Model" width="50%" height="50%"/>
 
 Note: p-values are unadjusted.
 
@@ -1000,7 +1000,7 @@ tab_model(model_pd2,
           pred.labels = c("(Intercept)", "Control", "Low", "Medium", "High"))
 ```
 
-<img src="Regression3_model_pd.png" alt="Regression Model" width="50%"/>
+<img src="Media/Regression3_model_pd.png" alt="Regression Model" width="50%"/>
 
 Note: p-values are unadjusted
 
@@ -1308,15 +1308,15 @@ For example, there exists very simple ways of imputing data, such as plugging in
 
 Then there exists regression imputation, where for each variable you fit a regression model of it to the observed data, and then use that model to predict missing values, and use those predictions in place of the missing values. However, this injects bias into the estimate for the correlation between X and Y (since the values fall perfectly in line with the hypothesis that X and Y have a non zero correlation. (and are in a perfect line)).
 
-<img src="regression_imputation.png" width="65%" height="65%"/>
+<img src="Media/regression_imputation.png" width="65%" height="65%"/>
 
 Then there is stochastic regression imputation, which is like regression imputation but *adds noise back into the imputations based on the variance of their residuals*. This helps account for variance in the results due to missing data.
 
-<img src="stochastic_regression_imputation.png" width="65%" height="65%"/>
+<img src="Media/stochastic_regression_imputation.png" width="65%" height="65%"/>
 
 Multiple imputation works by fitting multiple stochastic imputation models (can be 100's or 1000's), analyzing each dataset separately to produce estimates of interest, and finally pooling together these statistics of interest. If done properly, the pooled statistics are *unbiased under MAR, and the SE's will be correct*!
 
-<img src="multiple_imputation.png" width="65%" height="65%"/>
+<img src="Media/multiple_imputation.png" width="65%" height="65%"/>
 
 Multiple Imputation is "simple, elegant and powerful. It is simple because it fills the holes in the data with plausible values. It is elegant because the uncertainty about the unknown data is coded in the data itself. And it is powerful because it can solve “other” problems that are actually missing data problems in disguise." - Stef van Buuren
 
@@ -1611,7 +1611,7 @@ This process follows three step:
 
 Jackknife residuals are similar to standardized residuals. Standardized residuals are standardized by the standard error of the regression, and are primarily used for identifying outliers. Jackknife residuals on the other hand allow you to assess the leverage of individuals data points, to see how much they actually influence the model ([Source](https://stats.stackexchange.com/questions/204708/is-studentized-residuals-v-s-standardized-residuals-in-lm-model))
 
-<img src="rstudent-jackknife.png" width="95%"/>
+<img src="Media/rstudent-jackknife.png" width="95%"/>
 
 Jackknife residuals follow exactly a t(n-p-2) distribution, where approximately 5% of residuals are expected to exceed 1.96 in absolute value. Jackknife residuals make suspicious values more obvious compared to other residuals.
 
@@ -1623,7 +1623,7 @@ However, a potential outlier value may not actually have that dramatic of an imp
 -   Extreme X values can have *high influence*
 -   A high-leverage point becomes an *influential* point if its Y value doesn't follow the pattern of the rest of the data (i.e. is too low or too high)
 
-<img src="leverage_influence.png" width="80%"/>
+<img src="Media/leverage_influence.png" width="80%"/>
 
 An observation is influential if removing it substantially changes the estimate of the coefficients for that model. We use five measurements to assess influence: Jackknife residuals, Leverage, Cook's Distance (Cook's D), DFFITS, and DFBETAS.
 
@@ -1637,7 +1637,7 @@ An observation is influential if removing it substantially changes the estimate 
 
 Note: p = the number of variables in the model
 
-<img src="jackknife_cheet_sheet.png" width="90%"/>
+<img src="Media/jackknife_cheet_sheet.png" width="90%"/>
 
 <a href="#Jackknife">Back to top of tabset</a>
 
@@ -1733,7 +1733,7 @@ This is a test of a hypothesis that we do not have an outlier. We reject that hy
 
 Leverage is calculated as
 
-\<img src="leverage.png" width="90%\>
+\<img src="Media/leverage.png" width="90%\>
 
 If X \_i is close to Xbar, then h_i is small (i.e. the i-th point has low leverage).
 

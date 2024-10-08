@@ -1,0 +1,4 @@
+- source: project
+  quarto-pub:
+    - id: b1b45954-dd17-43ea-9929-132267ba49e1
+      url: 'https://svieau.quarto.pub/portfolio'
