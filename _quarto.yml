@@ -3,7 +3,8 @@ project:
 
 website: 
   title: "Sean Vieau Portfolio"
-  navbar: 
+  navbar:
+    background: primary
     left: 
       - href: index.qmd
         text: Home
@@ -19,3 +20,8 @@ website:
       - text: Data Wrangling
       - text: Clinical Research Informatics
       - text: CV
+      
+theme: cyborg
+
+execute: 
+  echo: true

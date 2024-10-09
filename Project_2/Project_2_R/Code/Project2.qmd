@@ -1,7 +1,10 @@
 ---
 title: "Advanced Data Analysis - Project 2"
-format: html
+author: "Sean Vieau"
+date: "October 9, 2024"
 editor: visual
+output: html_document
+toc: true
 ---
 
 ```{r setup, include=FALSE}
@@ -21,7 +24,6 @@ The project description provided by the PI is available below:
   <img src="/Project_2/Project_2_R/Media/Project2_description1.png" width="85%"/>
 </div>
 
-
 # Method
 
 **Study Design**
@@ -30,4 +32,152 @@ This is a secondary data analysis of the Multicenter AIDS Cohort Study, an ongoi
 
 Potential covariates of interest include: marijuana usage since last visit and frequency of usage, income, BMI, high blood pressure, diabetes, liver disease stage 3 / 4, kidney disease, frailty related phenotype, total cholesterol, triglycerides, fasting LDL, dyslipidemia, depression score, smoking status, alcohol use since last visit, heroin or opiate use since last visit, intravenous drug use since last visit, race, education at baseline, age, if they took ART at the visit or if they have ever taken it before, and years since initiating ART.
 
-## Read in the Data Set
+## Data Preparation
+
+First we load the necessary packages
+
+```{r, message = FALSE}
+library(dplyr)
+library(ggplot2)
+library(tidyverse)
+library(knitr)
+library(naniar)
+library(kableExtra)
+library(table1)
+library(purrr)
+library(tidyr) # Used for reshaping
+```
+
+Then we import the data set.
+
+```{r, message = FALSE}
+data <- read_csv("C:/Users/sviea/Documents/Portfolio/Project_2/Project_2_R/RawData/hiv_dataset.csv")
+```
+
+And take a look.
+
+```{r}
+glimpse(data)
+```
+
+Everything appears properly formatted, however all our categorical variables are coded as doubles.
+
+Let's take a look at the header for good measure.
+
+```{r}
+kable(head(data), format = "html") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+```
+
+We can see the data set is in long form. Let's convert that to wideform.
+
+```{r}
+
+# Filter data to only include 2 years
+data_2 <- data %>%
+  filter(years <= 2)
+
+data_wide <- pivot_wider(data_2, id_cols = newid, names_from = years, values_from = -c(newid, years))
+
+kable(head(data_wide), format = "html") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+
+```
+
+Missingness
+
+```{r}
+gg_miss_var(data)
+```
+
+This shows that we are missing the most values for LDL, TRIG, income, TCHOL, and ADH.
+
+A closer examination reveals...
+
+```{r}
+vis_miss(data)
+```
+
+47% of `LDL`, 43% of `TRIG`, 23% of `income`, and 22% of `TCHOL`, and 15% of `ADH` values are missing.
+
+`LDL`, `TRIG`, and income have egregious amounts of missing data. `ADH` may be acceptable, but it will be worth investigating missing trends with it and potentially performing MI or switching to a linear mixed model if it is a strong predictor of our dependent variables and should be included in the model. Fortunately, all other variables have <5% missing values and are acceptable, and can be kept as is.
+
+```{r}
+# Create a function to summarize each column
+summarize_column <- function(column) {
+  data.frame(
+    Min = min(column, na.rm = TRUE),
+    Max = max(column, na.rm = TRUE)
+  )
+}
+
+# Apply the function to each column and bind the results into a single data frame
+summary_df <- map_dfr(data_wide, summarize_column, .id = "Column") %>%
+  mutate(across(everything(), ~ format(., scientific = FALSE))) # Eliminates scientific notation
+
+# Pretty print the table
+kable(summary_df, format = "html") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+
+# Apply the function to each column and bind the results into a single data frame
+summary_df <- map_dfr(data, summarize_column, .id = "Column") %>%
+  mutate(across(everything(), ~ format(., scientific = FALSE))) # Eliminates scientific notation
+                                      
+# Pretty print the table
+kable(summary_df, format = "html") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+```
+
+`income` is on a scale from 1-9, with 9 being do not wish to answer.
+
+`BMI` at years 1 and 2 show the mins as -1 and maxes as 999+. The data dictionary says that -1 is an 'improbable value', and 999 is "insufficient data". Odd that the max for BMI_1 shows as 999.61449 instead of 999.
+
+```{r}
+hist(data_wide$BMI_0)
+hist(data_wide$BMI_1)
+hist(data_wide$BMI_2)
+```
+
+Takeaway here is we only use the baseline measure of `BMI` if we include this variable in our model.
+
+Let's look at the frequencies we have for income
+
+```{r}
+hist(data_wide$income_0)
+```
+
+
+Will have to turn all variables into classes and so they have names.
+
+
+```{r}
+hist(data_wide$CESD_0)
+barplot(table(data_wide$CESD_0))
+```
+
+vload 0 is huuuuuge. There are some crazy outliers or misentered data there
+
+```{r}
+hist(data_wide$VLOAD_0)
+barplot(table(data_wide$VLOAD_0))
+boxplot(data_wide$VLOAD_0)
+hist(data_wide$VLOAD_1)
+hist(data_wide$VLOAD_2)
+
+```
+
+
+Conclusion: our previous missing data visuals were not accurate! We need to go back through and filter out the values that were coded as missing, but did not show up as NA (e.g. the -1, 9, or 999 values)!
+
+For example, CESD missing was coded as -1, not blank. Go through each variable and write that down. BMI, education no response is 9, 9 for a bunch is coded as insufficient data
+
+```{r}
+# Do that here.
+```
+
+
+to do
+
+do cleaning, then plotting, then correlations.
+
+create change scores.

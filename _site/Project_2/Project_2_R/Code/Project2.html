@@ -6,8 +6,10 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
+<meta name="author" content="Sean Vieau">
+<meta name="dcterms.date" content="2024-10-09">
 
-<title>Project 2 - Advanced Data Analysis – Sean Vieau Portfolio</title>
+<title>Advanced Data Analysis - Project 2 – Sean Vieau Portfolio</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -19,6 +21,40 @@ ul.task-list li input[type="checkbox"] {
   width: 0.8em;
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 </style>
 
@@ -35,10 +71,10 @@ ul.task-list li input[type="checkbox"] {
 <script src="../../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-dark.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<link href="../../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="dark">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -66,11 +102,15 @@ ul.task-list li input[type="checkbox"] {
     "search-label": "Search"
   }
 }</script>
+<script src="../../../site_libs/kePrint-0.0.1/kePrint.js"></script>
+
+<link href="../../../site_libs/lightable-0.0.1/lightable.css" rel="stylesheet">
+
 
 
 </head>
 
-<body class="nav-fixed fullcontent">
+<body class="nav-fixed">
 
 <div id="quarto-search-results"></div>
   <header id="quarto-header" class="headroom fixed-top">
@@ -137,20 +177,44 @@ ul.task-list li input[type="checkbox"] {
 <div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
 <!-- margin-sidebar -->
-    
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#introduction" id="toc-introduction" class="nav-link active" data-scroll-target="#introduction">Introduction</a></li>
+  <li><a href="#method" id="toc-method" class="nav-link" data-scroll-target="#method">Method</a>
+  <ul class="collapse">
+  <li><a href="#data-preparation" id="toc-data-preparation" class="nav-link" data-scroll-target="#data-preparation">Data Preparation</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Project 2 - Advanced Data Analysis</h1>
+<h1 class="title">Advanced Data Analysis - Project 2</h1>
 </div>
 
 
 
 <div class="quarto-title-meta">
 
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Sean Vieau </p>
+          </div>
+  </div>
     
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">October 9, 2024</p>
+    </div>
+  </div>
   
     
   </div>
@@ -174,8 +238,1843 @@ ul.task-list li input[type="checkbox"] {
 <p><strong>Study Design</strong></p>
 <p>This is a secondary data analysis of the Multicenter AIDS Cohort Study, an ongoing prospective cohort study investigating the natural and treated disease progression of HIV-1 in bisexual men in 4 major cities in the U.S. Measurements for all variables were taken once per year over an 8-year time period; however, the current analysis is only concerned with treatment outcomes after 2 years of HAART. Data was received as a longform .csv file containing 33 columns along with a data dictionary. The main outcomes of interest are viral load, CD4+ T cell count, and aggregate physical and quality of life scores. Adherence to treatment regiment will be investigated as a potential confounder.</p>
 <p>Potential covariates of interest include: marijuana usage since last visit and frequency of usage, income, BMI, high blood pressure, diabetes, liver disease stage 3 / 4, kidney disease, frailty related phenotype, total cholesterol, triglycerides, fasting LDL, dyslipidemia, depression score, smoking status, alcohol use since last visit, heroin or opiate use since last visit, intravenous drug use since last visit, race, education at baseline, age, if they took ART at the visit or if they have ever taken it before, and years since initiating ART.</p>
-<section id="read-in-the-data-set" class="level2">
-<h2 class="anchored" data-anchor-id="read-in-the-data-set">Read in the Data Set</h2>
+<section id="data-preparation" class="level2">
+<h2 class="anchored" data-anchor-id="data-preparation">Data Preparation</h2>
+<p>First we load the necessary packages</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(knitr)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(naniar)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(kableExtra)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(table1)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(purrr)</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyr) <span class="co"># Used for reshaping</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Then we import the data set.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>data <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"C:/Users/sviea/Documents/Portfolio/Project_2/Project_2_R/RawData/hiv_dataset.csv"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>And take a look.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(data)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Rows: 3,632
+Columns: 33
+$ newid      &lt;dbl&gt; 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4,…
+$ AGG_MENT   &lt;dbl&gt; 44.90710, 58.20754, 59.65136, 56.80657, 46.34190, 48.71791,…
+$ AGG_PHYS   &lt;dbl&gt; 52.52557, 41.29347, 48.54453, 46.73991, 27.92331, 38.03807,…
+$ HASHV      &lt;dbl&gt; 1, 1, 1, 1, 1, 2, 1, 2, 1, 2, 1, 1, 2, 1, 2, 1, 1, 2, 2, 1,…
+$ HASHF      &lt;dbl&gt; NA, 4, 0, 0, 0, 0, 0, 0, 0, 0, 4, 4, 4, 0, 0, 0, 0, 0, 4, 2…
+$ income     &lt;dbl&gt; 4, 4, 4, 5, 2, 1, 2, 1, 9, 2, 6, 6, 6, NA, 7, 7, 7, NA, 1, …
+$ BMI        &lt;dbl&gt; 24.71756, 26.06801, 27.16421, 25.71786, 26.66936, 25.96576,…
+$ HBP        &lt;dbl&gt; 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 9, 9, 1, 1, 1, 1, 1, 1, 1, 1,…
+$ DIAB       &lt;dbl&gt; 1, 1, 1, 1, 9, 9, 9, 1, 1, 1, 9, 9, 1, 9, 9, 9, 9, 9, 1, 3,…
+$ LIV34      &lt;dbl&gt; 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1,…
+$ KID        &lt;dbl&gt; 1, 1, 1, 1, 9, 9, 9, 2, 2, 2, 1, 1, 1, 2, 1, 1, 1, 2, 9, 9,…
+$ FRP        &lt;dbl&gt; 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2,…
+$ FP         &lt;dbl&gt; 1, 1, 1, 1, 9, 9, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2,…
+$ TCHOL      &lt;dbl&gt; 133, 131, 180, 171, 125, NA, 134, 105, 141, 153, 170, 170, …
+$ TRIG       &lt;dbl&gt; 176, 107, 233, 139, NA, NA, NA, 104, 162, 127, NA, NA, 82, …
+$ LDL        &lt;dbl&gt; 62, 66, 86, 96, NA, NA, NA, 44, 73, 84, NA, NA, 127, NA, NA…
+$ DYSLIP     &lt;dbl&gt; 2, 1, 2, 1, 2, 9, 4, 1, 2, 1, 2, 2, 2, 9, 2, 2, 2, 2, 2, 4,…
+$ CESD       &lt;dbl&gt; 14, 2, 1, 18, 20, 18, 18, 21, 23, 17, 18, 22, 23, 14, 1, 1,…
+$ SMOKE      &lt;dbl&gt; 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3,…
+$ DKGRP      &lt;dbl&gt; 0, 3, 0, 1, 0, 3, 2, 1, 0, 1, 0, 0, 0, 1, 2, 1, 1, 2, 1, 2,…
+$ HEROPIATE  &lt;dbl&gt; 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2,…
+$ IDU        &lt;dbl&gt; 2, 1, 1, 1, 2, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 1, 1, 1, 1, 1,…
+$ LEU3N      &lt;dbl&gt; 104.1659, 262.0061, 345.4010, 292.3271, 257.8278, 459.4562,…
+$ VLOAD      &lt;dbl&gt; 1.020130e+05, 2.700000e+01, 6.000000e+01, 9.000000e+00, 8.1…
+$ ADH        &lt;dbl&gt; NA, 2, 1, 1, NA, 1, 1, 1, 1, 1, NA, 1, 1, 2, 1, 1, 2, 1, NA…
+$ RACE       &lt;dbl&gt; 1, 1, 1, 1, 3, 3, 3, 3, 3, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,…
+$ EDUCBAS    &lt;dbl&gt; 4, 4, 4, 4, 2, 2, 2, 2, 2, 2, 7, 7, 7, 7, 7, 7, 7, 7, 5, 5,…
+$ hivpos     &lt;dbl&gt; 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,…
+$ age        &lt;dbl&gt; 52, 53, 54, 55, 54, 55, 56, 60, 61, 62, 47, 48, 49, 51, 52,…
+$ ART        &lt;dbl&gt; 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1,…
+$ everART    &lt;dbl&gt; 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1,…
+$ years      &lt;dbl&gt; 0, 1, 2, 3, 0, 1, 2, 6, 7, 8, 0, 1, 2, 4, 5, 6, 7, 8, 0, 1,…
+$ hard_drugs &lt;dbl&gt; 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1,…</code></pre>
+</div>
+</div>
+<p>Everything appears properly formatted, however all our categorical variables are coded as doubles.</p>
+<p>Let’s take a look at the header for good measure.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">kable</span>(<span class="fu">head</span>(data), <span class="at">format =</span> <span class="st">"html"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable_styling</span>(<span class="at">bootstrap_options =</span> <span class="fu">c</span>(<span class="st">"striped"</span>, <span class="st">"hover"</span>, <span class="st">"condensed"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<table class="table table-striped table-hover table-condensed caption-top table-sm small" data-quarto-postprocess="true">
+<thead>
+<tr class="header">
+<th style="text-align: right;" data-quarto-table-cell-role="th">newid</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">AGG_MENT</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">AGG_PHYS</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">HASHV</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">HASHF</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">income</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">BMI</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">HBP</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">DIAB</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">LIV34</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">KID</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">FRP</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">FP</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">TCHOL</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">TRIG</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">LDL</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">DYSLIP</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">CESD</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">SMOKE</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">DKGRP</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">HEROPIATE</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">IDU</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">LEU3N</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">VLOAD</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">ADH</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">RACE</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">EDUCBAS</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">hivpos</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">age</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">ART</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">everART</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">years</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">hard_drugs</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">44.90710</td>
+<td style="text-align: right;">52.52557</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">24.71756</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">133</td>
+<td style="text-align: right;">176</td>
+<td style="text-align: right;">62</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">14</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">104.1659</td>
+<td style="text-align: right;">102013</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">52</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">58.20754</td>
+<td style="text-align: right;">41.29346</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">26.06801</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">131</td>
+<td style="text-align: right;">107</td>
+<td style="text-align: right;">66</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">262.0061</td>
+<td style="text-align: right;">27</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">53</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">59.65136</td>
+<td style="text-align: right;">48.54453</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">27.16421</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">180</td>
+<td style="text-align: right;">233</td>
+<td style="text-align: right;">86</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">345.4010</td>
+<td style="text-align: right;">60</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">54</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">56.80657</td>
+<td style="text-align: right;">46.73991</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">25.71786</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">171</td>
+<td style="text-align: right;">139</td>
+<td style="text-align: right;">96</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">18</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">292.3271</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">55</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">46.34190</td>
+<td style="text-align: right;">27.92331</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">26.66936</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">125</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">20</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">257.8278</td>
+<td style="text-align: right;">8121</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">54</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">48.71791</td>
+<td style="text-align: right;">38.03807</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">25.96576</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">18</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">459.4562</td>
+<td style="text-align: right;">21</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">55</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+</tr>
+</tbody>
+</table>
+
+
+</div>
+</div>
+<p>We can see the data set is in long form. Let’s convert that to wideform.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Filter data to only include 2 years</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>data_2 <span class="ot">&lt;-</span> data <span class="sc">%&gt;%</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(years <span class="sc">&lt;=</span> <span class="dv">2</span>)</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>data_wide <span class="ot">&lt;-</span> <span class="fu">pivot_wider</span>(data_2, <span class="at">id_cols =</span> newid, <span class="at">names_from =</span> years, <span class="at">values_from =</span> <span class="sc">-</span><span class="fu">c</span>(newid, years))</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="fu">kable</span>(<span class="fu">head</span>(data_wide), <span class="at">format =</span> <span class="st">"html"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable_styling</span>(<span class="at">bootstrap_options =</span> <span class="fu">c</span>(<span class="st">"striped"</span>, <span class="st">"hover"</span>, <span class="st">"condensed"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<table class="table table-striped table-hover table-condensed caption-top table-sm small" data-quarto-postprocess="true">
+<thead>
+<tr class="header">
+<th style="text-align: right;" data-quarto-table-cell-role="th">newid</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">AGG_MENT_0</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">AGG_MENT_1</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">AGG_MENT_2</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">AGG_PHYS_0</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">AGG_PHYS_1</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">AGG_PHYS_2</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">HASHV_0</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">HASHV_1</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">HASHV_2</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">HASHF_0</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">HASHF_1</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">HASHF_2</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">income_0</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">income_1</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">income_2</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">BMI_0</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">BMI_1</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">BMI_2</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">HBP_0</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">HBP_1</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">HBP_2</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">DIAB_0</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">DIAB_1</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">DIAB_2</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">LIV34_0</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">LIV34_1</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">LIV34_2</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">KID_0</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">KID_1</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">KID_2</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">FRP_0</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">FRP_1</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">FRP_2</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">FP_0</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">FP_1</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">FP_2</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">TCHOL_0</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">TCHOL_1</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">TCHOL_2</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">TRIG_0</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">TRIG_1</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">TRIG_2</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">LDL_0</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">LDL_1</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">LDL_2</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">DYSLIP_0</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">DYSLIP_1</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">DYSLIP_2</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">CESD_0</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">CESD_1</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">CESD_2</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">SMOKE_0</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">SMOKE_1</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">SMOKE_2</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">DKGRP_0</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">DKGRP_1</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">DKGRP_2</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">HEROPIATE_0</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">HEROPIATE_1</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">HEROPIATE_2</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">IDU_0</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">IDU_1</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">IDU_2</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">LEU3N_0</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">LEU3N_1</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">LEU3N_2</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">VLOAD_0</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">VLOAD_1</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">VLOAD_2</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">ADH_0</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">ADH_1</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">ADH_2</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">RACE_0</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">RACE_1</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">RACE_2</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">EDUCBAS_0</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">EDUCBAS_1</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">EDUCBAS_2</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">hivpos_0</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">hivpos_1</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">hivpos_2</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">age_0</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">age_1</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">age_2</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">ART_0</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">ART_1</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">ART_2</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">everART_0</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">everART_1</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">everART_2</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">hard_drugs_0</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">hard_drugs_1</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">hard_drugs_2</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">44.90710</td>
+<td style="text-align: right;">58.20754</td>
+<td style="text-align: right;">59.65136</td>
+<td style="text-align: right;">52.52557</td>
+<td style="text-align: right;">41.29346</td>
+<td style="text-align: right;">48.54453</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">24.71756</td>
+<td style="text-align: right;">26.06801</td>
+<td style="text-align: right;">27.16421</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">133</td>
+<td style="text-align: right;">131</td>
+<td style="text-align: right;">180</td>
+<td style="text-align: right;">176</td>
+<td style="text-align: right;">107</td>
+<td style="text-align: right;">233</td>
+<td style="text-align: right;">62</td>
+<td style="text-align: right;">66</td>
+<td style="text-align: right;">86</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">14</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">104.1659</td>
+<td style="text-align: right;">262.0061</td>
+<td style="text-align: right;">345.4010</td>
+<td style="text-align: right;">102013.000</td>
+<td style="text-align: right;">27.00000</td>
+<td style="text-align: right;">60.00000</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">52</td>
+<td style="text-align: right;">53</td>
+<td style="text-align: right;">54</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">46.34190</td>
+<td style="text-align: right;">48.71791</td>
+<td style="text-align: right;">45.41483</td>
+<td style="text-align: right;">27.92331</td>
+<td style="text-align: right;">38.03807</td>
+<td style="text-align: right;">37.32204</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">26.66936</td>
+<td style="text-align: right;">25.96576</td>
+<td style="text-align: right;">26.96037</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">125</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">134</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">20</td>
+<td style="text-align: right;">18</td>
+<td style="text-align: right;">18</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">257.8278</td>
+<td style="text-align: right;">459.4562</td>
+<td style="text-align: right;">263.0693</td>
+<td style="text-align: right;">8121.000</td>
+<td style="text-align: right;">21.00000</td>
+<td style="text-align: right;">48.00000</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">54</td>
+<td style="text-align: right;">55</td>
+<td style="text-align: right;">56</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">40.22337</td>
+<td style="text-align: right;">44.42011</td>
+<td style="text-align: right;">41.70079</td>
+<td style="text-align: right;">60.06970</td>
+<td style="text-align: right;">62.71705</td>
+<td style="text-align: right;">58.51450</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">28.59085</td>
+<td style="text-align: right;">28.35320</td>
+<td style="text-align: right;">28.18510</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">170</td>
+<td style="text-align: right;">170</td>
+<td style="text-align: right;">180</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">82</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">127</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">18</td>
+<td style="text-align: right;">22</td>
+<td style="text-align: right;">23</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">563.1223</td>
+<td style="text-align: right;">488.9100</td>
+<td style="text-align: right;">405.1816</td>
+<td style="text-align: right;">4001.556</td>
+<td style="text-align: right;">2020.00000</td>
+<td style="text-align: right;">27.50917</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">47</td>
+<td style="text-align: right;">48</td>
+<td style="text-align: right;">49</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">42.90638</td>
+<td style="text-align: right;">31.15971</td>
+<td style="text-align: right;">52.68223</td>
+<td style="text-align: right;">50.78850</td>
+<td style="text-align: right;">44.62883</td>
+<td style="text-align: right;">51.50533</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">20.36451</td>
+<td style="text-align: right;">18.21865</td>
+<td style="text-align: right;">20.28485</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">214</td>
+<td style="text-align: right;">197</td>
+<td style="text-align: right;">251</td>
+<td style="text-align: right;">97</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">260</td>
+<td style="text-align: right;">147</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">152</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">14</td>
+<td style="text-align: right;">25</td>
+<td style="text-align: right;">13</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">110.4218</td>
+<td style="text-align: right;">159.6297</td>
+<td style="text-align: right;">179.6409</td>
+<td style="text-align: right;">740.000</td>
+<td style="text-align: right;">26.64732</td>
+<td style="text-align: right;">27.00000</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">44</td>
+<td style="text-align: right;">45</td>
+<td style="text-align: right;">46</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">56.42904</td>
+<td style="text-align: right;">56.21993</td>
+<td style="text-align: right;">66.50629</td>
+<td style="text-align: right;">43.75671</td>
+<td style="text-align: right;">30.47055</td>
+<td style="text-align: right;">18.82350</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">22.26986</td>
+<td style="text-align: right;">24.97865</td>
+<td style="text-align: right;">20.80193</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">196</td>
+<td style="text-align: right;">204</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">162</td>
+<td style="text-align: right;">192</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">135</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">-9</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">252.6634</td>
+<td style="text-align: right;">92.6634</td>
+<td style="text-align: right;">59.6219</td>
+<td style="text-align: right;">62727.039</td>
+<td style="text-align: right;">30389.00000</td>
+<td style="text-align: right;">419.50000</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">53</td>
+<td style="text-align: right;">54</td>
+<td style="text-align: right;">55</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">59.74437</td>
+<td style="text-align: right;">53.84956</td>
+<td style="text-align: right;">50.26010</td>
+<td style="text-align: right;">56.86261</td>
+<td style="text-align: right;">57.91396</td>
+<td style="text-align: right;">55.95668</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">23.22166</td>
+<td style="text-align: right;">23.75318</td>
+<td style="text-align: right;">22.41001</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">216</td>
+<td style="text-align: right;">216</td>
+<td style="text-align: right;">151</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">125</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">81</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">634.1246</td>
+<td style="text-align: right;">745.6517</td>
+<td style="text-align: right;">893.4328</td>
+<td style="text-align: right;">15745.000</td>
+<td style="text-align: right;">7870.00000</td>
+<td style="text-align: right;">53.50000</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">36</td>
+<td style="text-align: right;">37</td>
+<td style="text-align: right;">38</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+</tr>
+</tbody>
+</table>
+
+
+</div>
+</div>
+<p>Missingness</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">gg_miss_var</span>(data)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Project2_files/figure-html/unnamed-chunk-6-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>This shows that we are missing the most values for LDL, TRIG, income, TCHOL, and ADH.</p>
+<p>A closer examination reveals…</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">vis_miss</span>(data)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Project2_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>47% of <code>LDL</code>, 43% of <code>TRIG</code>, 23% of <code>income</code>, and 22% of <code>TCHOL</code>, and 15% of <code>ADH</code> values are missing.</p>
+<p><code>LDL</code>, <code>TRIG</code>, and income have egregious amounts of missing data. <code>ADH</code> may be acceptable, but it will be worth investigating missing trends with it and potentially performing MI or switching to a linear mixed model if it is a strong predictor of our dependent variables and should be included in the model. Fortunately, all other variables have &lt;5% missing values and are acceptable, and can be kept as is.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a function to summarize each column</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>summarize_column <span class="ot">&lt;-</span> <span class="cf">function</span>(column) {</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">data.frame</span>(</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">Min =</span> <span class="fu">min</span>(column, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">Max =</span> <span class="fu">max</span>(column, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Apply the function to each column and bind the results into a single data frame</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>summary_df <span class="ot">&lt;-</span> <span class="fu">map_dfr</span>(data_wide, summarize_column, <span class="at">.id =</span> <span class="st">"Column"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">everything</span>(), <span class="sc">~</span> <span class="fu">format</span>(., <span class="at">scientific =</span> <span class="cn">FALSE</span>))) <span class="co"># Eliminates scientific notation</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Pretty print the table</span></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a><span class="fu">kable</span>(summary_df, <span class="at">format =</span> <span class="st">"html"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable_styling</span>(<span class="at">bootstrap_options =</span> <span class="fu">c</span>(<span class="st">"striped"</span>, <span class="st">"hover"</span>, <span class="st">"condensed"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<table class="table table-striped table-hover table-condensed caption-top table-sm small" data-quarto-postprocess="true">
+<thead>
+<tr class="header">
+<th style="text-align: left;" data-quarto-table-cell-role="th">Column</th>
+<th style="text-align: left;" data-quarto-table-cell-role="th">Min</th>
+<th style="text-align: left;" data-quarto-table-cell-role="th">Max</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">newid</td>
+<td style="text-align: left;">1.000000</td>
+<td style="text-align: left;">550.00000</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">AGG_MENT_0</td>
+<td style="text-align: left;">7.229315</td>
+<td style="text-align: left;">69.77406</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">AGG_MENT_1</td>
+<td style="text-align: left;">12.387162</td>
+<td style="text-align: left;">73.31224</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">AGG_MENT_2</td>
+<td style="text-align: left;">10.510143</td>
+<td style="text-align: left;">66.73736</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">AGG_PHYS_0</td>
+<td style="text-align: left;">19.160645</td>
+<td style="text-align: left;">69.70657</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">AGG_PHYS_1</td>
+<td style="text-align: left;">9.116614</td>
+<td style="text-align: left;">70.43724</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">AGG_PHYS_2</td>
+<td style="text-align: left;">14.816510</td>
+<td style="text-align: left;">68.87474</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">HASHV_0</td>
+<td style="text-align: left;">1.000000</td>
+<td style="text-align: left;">2.00000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">HASHV_1</td>
+<td style="text-align: left;">1.000000</td>
+<td style="text-align: left;">2.00000</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">HASHV_2</td>
+<td style="text-align: left;">1.000000</td>
+<td style="text-align: left;">2.00000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">HASHF_0</td>
+<td style="text-align: left;">0.000000</td>
+<td style="text-align: left;">4.00000</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">HASHF_1</td>
+<td style="text-align: left;">0.000000</td>
+<td style="text-align: left;">4.00000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">HASHF_2</td>
+<td style="text-align: left;">0.000000</td>
+<td style="text-align: left;">4.00000</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">income_0</td>
+<td style="text-align: left;">1.000000</td>
+<td style="text-align: left;">9.00000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">income_1</td>
+<td style="text-align: left;">1.000000</td>
+<td style="text-align: left;">9.00000</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">income_2</td>
+<td style="text-align: left;">1.000000</td>
+<td style="text-align: left;">9.00000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">BMI_0</td>
+<td style="text-align: left;">16.495330</td>
+<td style="text-align: left;">45.27516</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">BMI_1</td>
+<td style="text-align: left;">-1.000000</td>
+<td style="text-align: left;">999.61449</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">BMI_2</td>
+<td style="text-align: left;">-1.000000</td>
+<td style="text-align: left;">1000.11465</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">HBP_0</td>
+<td style="text-align: left;">1.000000</td>
+<td style="text-align: left;">9.00000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">HBP_1</td>
+<td style="text-align: left;">1.000000</td>
+<td style="text-align: left;">9.00000</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">HBP_2</td>
+<td style="text-align: left;">1.000000</td>
+<td style="text-align: left;">9.00000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">DIAB_0</td>
+<td style="text-align: left;">1.000000</td>
+<td style="text-align: left;">9.00000</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">DIAB_1</td>
+<td style="text-align: left;">1.000000</td>
+<td style="text-align: left;">9.00000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">DIAB_2</td>
+<td style="text-align: left;">1.000000</td>
+<td style="text-align: left;">9.00000</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LIV34_0</td>
+<td style="text-align: left;">1.000000</td>
+<td style="text-align: left;">9.00000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">LIV34_1</td>
+<td style="text-align: left;">1.000000</td>
+<td style="text-align: left;">9.00000</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LIV34_2</td>
+<td style="text-align: left;">1.000000</td>
+<td style="text-align: left;">9.00000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">KID_0</td>
+<td style="text-align: left;">1.000000</td>
+<td style="text-align: left;">9.00000</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">KID_1</td>
+<td style="text-align: left;">1.000000</td>
+<td style="text-align: left;">9.00000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">KID_2</td>
+<td style="text-align: left;">1.000000</td>
+<td style="text-align: left;">9.00000</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">FRP_0</td>
+<td style="text-align: left;">1.000000</td>
+<td style="text-align: left;">9.00000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">FRP_1</td>
+<td style="text-align: left;">1.000000</td>
+<td style="text-align: left;">2.00000</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">FRP_2</td>
+<td style="text-align: left;">1.000000</td>
+<td style="text-align: left;">9.00000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">FP_0</td>
+<td style="text-align: left;">1.000000</td>
+<td style="text-align: left;">9.00000</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">FP_1</td>
+<td style="text-align: left;">1.000000</td>
+<td style="text-align: left;">9.00000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">FP_2</td>
+<td style="text-align: left;">1.000000</td>
+<td style="text-align: left;">9.00000</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">TCHOL_0</td>
+<td style="text-align: left;">58.000000</td>
+<td style="text-align: left;">288.00000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">TCHOL_1</td>
+<td style="text-align: left;">72.000000</td>
+<td style="text-align: left;">348.00000</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">TCHOL_2</td>
+<td style="text-align: left;">57.000000</td>
+<td style="text-align: left;">613.00000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">TRIG_0</td>
+<td style="text-align: left;">33.000000</td>
+<td style="text-align: left;">1260.00000</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">TRIG_1</td>
+<td style="text-align: left;">38.000000</td>
+<td style="text-align: left;">2237.00000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">TRIG_2</td>
+<td style="text-align: left;">28.000000</td>
+<td style="text-align: left;">1793.00000</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LDL_0</td>
+<td style="text-align: left;">5.000000</td>
+<td style="text-align: left;">704.00000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">LDL_1</td>
+<td style="text-align: left;">31.000000</td>
+<td style="text-align: left;">217.00000</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LDL_2</td>
+<td style="text-align: left;">42.000000</td>
+<td style="text-align: left;">247.00000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">DYSLIP_0</td>
+<td style="text-align: left;">1.000000</td>
+<td style="text-align: left;">9.00000</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">DYSLIP_1</td>
+<td style="text-align: left;">1.000000</td>
+<td style="text-align: left;">9.00000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">DYSLIP_2</td>
+<td style="text-align: left;">1.000000</td>
+<td style="text-align: left;">9.00000</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">CESD_0</td>
+<td style="text-align: left;">-1.000000</td>
+<td style="text-align: left;">51.00000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">CESD_1</td>
+<td style="text-align: left;">-1.000000</td>
+<td style="text-align: left;">53.00000</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">CESD_2</td>
+<td style="text-align: left;">-1.000000</td>
+<td style="text-align: left;">50.00000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">SMOKE_0</td>
+<td style="text-align: left;">1.000000</td>
+<td style="text-align: left;">3.00000</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">SMOKE_1</td>
+<td style="text-align: left;">1.000000</td>
+<td style="text-align: left;">3.00000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">SMOKE_2</td>
+<td style="text-align: left;">1.000000</td>
+<td style="text-align: left;">3.00000</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">DKGRP_0</td>
+<td style="text-align: left;">0.000000</td>
+<td style="text-align: left;">3.00000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">DKGRP_1</td>
+<td style="text-align: left;">0.000000</td>
+<td style="text-align: left;">3.00000</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">DKGRP_2</td>
+<td style="text-align: left;">0.000000</td>
+<td style="text-align: left;">3.00000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">HEROPIATE_0</td>
+<td style="text-align: left;">-9.000000</td>
+<td style="text-align: left;">2.00000</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">HEROPIATE_1</td>
+<td style="text-align: left;">-9.000000</td>
+<td style="text-align: left;">2.00000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">HEROPIATE_2</td>
+<td style="text-align: left;">1.000000</td>
+<td style="text-align: left;">2.00000</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">IDU_0</td>
+<td style="text-align: left;">1.000000</td>
+<td style="text-align: left;">2.00000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">IDU_1</td>
+<td style="text-align: left;">1.000000</td>
+<td style="text-align: left;">2.00000</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">IDU_2</td>
+<td style="text-align: left;">1.000000</td>
+<td style="text-align: left;">2.00000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">LEU3N_0</td>
+<td style="text-align: left;">10.859882</td>
+<td style="text-align: left;">1217.45309</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LEU3N_1</td>
+<td style="text-align: left;">48.755542</td>
+<td style="text-align: left;">1323.47320</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">LEU3N_2</td>
+<td style="text-align: left;">39.542123</td>
+<td style="text-align: left;">1727.92558</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">VLOAD_0</td>
+<td style="text-align: left;">1.726179</td>
+<td style="text-align: left;">190695039.60000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">VLOAD_1</td>
+<td style="text-align: left;">0.246597</td>
+<td style="text-align: left;">687753.36270</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">VLOAD_2</td>
+<td style="text-align: left;">0.246597</td>
+<td style="text-align: left;">710841.00000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">ADH_0</td>
+<td style="text-align: left;">1.000000</td>
+<td style="text-align: left;">1.00000</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ADH_1</td>
+<td style="text-align: left;">1.000000</td>
+<td style="text-align: left;">4.00000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">ADH_2</td>
+<td style="text-align: left;">1.000000</td>
+<td style="text-align: left;">4.00000</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">RACE_0</td>
+<td style="text-align: left;">1.000000</td>
+<td style="text-align: left;">8.00000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">RACE_1</td>
+<td style="text-align: left;">1.000000</td>
+<td style="text-align: left;">8.00000</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">RACE_2</td>
+<td style="text-align: left;">1.000000</td>
+<td style="text-align: left;">8.00000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">EDUCBAS_0</td>
+<td style="text-align: left;">1.000000</td>
+<td style="text-align: left;">7.00000</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">EDUCBAS_1</td>
+<td style="text-align: left;">1.000000</td>
+<td style="text-align: left;">7.00000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">EDUCBAS_2</td>
+<td style="text-align: left;">1.000000</td>
+<td style="text-align: left;">7.00000</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">hivpos_0</td>
+<td style="text-align: left;">1.000000</td>
+<td style="text-align: left;">1.00000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">hivpos_1</td>
+<td style="text-align: left;">1.000000</td>
+<td style="text-align: left;">1.00000</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">hivpos_2</td>
+<td style="text-align: left;">1.000000</td>
+<td style="text-align: left;">1.00000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">age_0</td>
+<td style="text-align: left;">20.000000</td>
+<td style="text-align: left;">73.00000</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">age_1</td>
+<td style="text-align: left;">21.000000</td>
+<td style="text-align: left;">74.00000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">age_2</td>
+<td style="text-align: left;">22.000000</td>
+<td style="text-align: left;">75.00000</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ART_0</td>
+<td style="text-align: left;">0.000000</td>
+<td style="text-align: left;">0.00000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">ART_1</td>
+<td style="text-align: left;">1.000000</td>
+<td style="text-align: left;">1.00000</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ART_2</td>
+<td style="text-align: left;">1.000000</td>
+<td style="text-align: left;">1.00000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">everART_0</td>
+<td style="text-align: left;">0.000000</td>
+<td style="text-align: left;">0.00000</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">everART_1</td>
+<td style="text-align: left;">1.000000</td>
+<td style="text-align: left;">1.00000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">everART_2</td>
+<td style="text-align: left;">1.000000</td>
+<td style="text-align: left;">1.00000</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">hard_drugs_0</td>
+<td style="text-align: left;">0.000000</td>
+<td style="text-align: left;">1.00000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">hard_drugs_1</td>
+<td style="text-align: left;">0.000000</td>
+<td style="text-align: left;">1.00000</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">hard_drugs_2</td>
+<td style="text-align: left;">0.000000</td>
+<td style="text-align: left;">1.00000</td>
+</tr>
+</tbody>
+</table>
+
+
+</div>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Apply the function to each column and bind the results into a single data frame</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>summary_df <span class="ot">&lt;-</span> <span class="fu">map_dfr</span>(data, summarize_column, <span class="at">.id =</span> <span class="st">"Column"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">everything</span>(), <span class="sc">~</span> <span class="fu">format</span>(., <span class="at">scientific =</span> <span class="cn">FALSE</span>))) <span class="co"># Eliminates scientific notation</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>                                      </span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Pretty print the table</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="fu">kable</span>(summary_df, <span class="at">format =</span> <span class="st">"html"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable_styling</span>(<span class="at">bootstrap_options =</span> <span class="fu">c</span>(<span class="st">"striped"</span>, <span class="st">"hover"</span>, <span class="st">"condensed"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<table class="table table-striped table-hover table-condensed caption-top table-sm small" data-quarto-postprocess="true">
+<thead>
+<tr class="header">
+<th style="text-align: left;" data-quarto-table-cell-role="th">Column</th>
+<th style="text-align: left;" data-quarto-table-cell-role="th">Min</th>
+<th style="text-align: left;" data-quarto-table-cell-role="th">Max</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">newid</td>
+<td style="text-align: left;">1.000000</td>
+<td style="text-align: left;">550.00000</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">AGG_MENT</td>
+<td style="text-align: left;">-1.734553</td>
+<td style="text-align: left;">73.31224</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">AGG_PHYS</td>
+<td style="text-align: left;">9.116614</td>
+<td style="text-align: left;">73.57077</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">HASHV</td>
+<td style="text-align: left;">1.000000</td>
+<td style="text-align: left;">2.00000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">HASHF</td>
+<td style="text-align: left;">0.000000</td>
+<td style="text-align: left;">4.00000</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">income</td>
+<td style="text-align: left;">1.000000</td>
+<td style="text-align: left;">9.00000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">BMI</td>
+<td style="text-align: left;">-1.000000</td>
+<td style="text-align: left;">1000.11465</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">HBP</td>
+<td style="text-align: left;">1.000000</td>
+<td style="text-align: left;">9.00000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">DIAB</td>
+<td style="text-align: left;">1.000000</td>
+<td style="text-align: left;">9.00000</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LIV34</td>
+<td style="text-align: left;">1.000000</td>
+<td style="text-align: left;">9.00000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">KID</td>
+<td style="text-align: left;">1.000000</td>
+<td style="text-align: left;">9.00000</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">FRP</td>
+<td style="text-align: left;">1.000000</td>
+<td style="text-align: left;">9.00000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">FP</td>
+<td style="text-align: left;">1.000000</td>
+<td style="text-align: left;">9.00000</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">TCHOL</td>
+<td style="text-align: left;">57.000000</td>
+<td style="text-align: left;">613.00000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">TRIG</td>
+<td style="text-align: left;">28.000000</td>
+<td style="text-align: left;">2237.00000</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LDL</td>
+<td style="text-align: left;">5.000000</td>
+<td style="text-align: left;">704.00000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">DYSLIP</td>
+<td style="text-align: left;">1.000000</td>
+<td style="text-align: left;">9.00000</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">CESD</td>
+<td style="text-align: left;">-1.000000</td>
+<td style="text-align: left;">60.00000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">SMOKE</td>
+<td style="text-align: left;">1.000000</td>
+<td style="text-align: left;">3.00000</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">DKGRP</td>
+<td style="text-align: left;">0.000000</td>
+<td style="text-align: left;">3.00000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">HEROPIATE</td>
+<td style="text-align: left;">-9.000000</td>
+<td style="text-align: left;">2.00000</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">IDU</td>
+<td style="text-align: left;">1.000000</td>
+<td style="text-align: left;">2.00000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">LEU3N</td>
+<td style="text-align: left;">7.015129</td>
+<td style="text-align: left;">1902.76202</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">VLOAD</td>
+<td style="text-align: left;">0.246597</td>
+<td style="text-align: left;">190695039.60000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">ADH</td>
+<td style="text-align: left;">1.000000</td>
+<td style="text-align: left;">4.00000</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">RACE</td>
+<td style="text-align: left;">1.000000</td>
+<td style="text-align: left;">8.00000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">EDUCBAS</td>
+<td style="text-align: left;">1.000000</td>
+<td style="text-align: left;">7.00000</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">hivpos</td>
+<td style="text-align: left;">1.000000</td>
+<td style="text-align: left;">1.00000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">age</td>
+<td style="text-align: left;">20.000000</td>
+<td style="text-align: left;">81.00000</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ART</td>
+<td style="text-align: left;">0.000000</td>
+<td style="text-align: left;">1.00000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">everART</td>
+<td style="text-align: left;">0.000000</td>
+<td style="text-align: left;">1.00000</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">years</td>
+<td style="text-align: left;">0.000000</td>
+<td style="text-align: left;">8.00000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">hard_drugs</td>
+<td style="text-align: left;">0.000000</td>
+<td style="text-align: left;">1.00000</td>
+</tr>
+</tbody>
+</table>
+
+
+</div>
+</div>
+<p><code>income</code> is on a scale from 1-9, with 9 being do not wish to answer.</p>
+<p><code>BMI</code> at years 1 and 2 show the mins as -1 and maxes as 999+. The data dictionary says that -1 is an ‘improbable value’, and 999 is “insufficient data”. Odd that the max for BMI_1 shows as 999.61449 instead of 999.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(data_wide<span class="sc">$</span>BMI_0)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Project2_files/figure-html/unnamed-chunk-9-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(data_wide<span class="sc">$</span>BMI_1)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Project2_files/figure-html/unnamed-chunk-9-2.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(data_wide<span class="sc">$</span>BMI_2)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Project2_files/figure-html/unnamed-chunk-9-3.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Takeaway here is we only use the baseline measure of <code>BMI</code> if we include this variable in our model.</p>
+<p>Let’s look at the frequencies we have for income</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(data_wide<span class="sc">$</span>income_0)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Project2_files/figure-html/unnamed-chunk-10-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Will have to turn all variables into classes and so they have names.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(data_wide<span class="sc">$</span>CESD_0)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Project2_files/figure-html/unnamed-chunk-11-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">barplot</span>(<span class="fu">table</span>(data_wide<span class="sc">$</span>CESD_0))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Project2_files/figure-html/unnamed-chunk-11-2.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>vload 0 is huuuuuge. There are some crazy outliers or misentered data there</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(data_wide<span class="sc">$</span>VLOAD_0)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Project2_files/figure-html/unnamed-chunk-12-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">barplot</span>(<span class="fu">table</span>(data_wide<span class="sc">$</span>VLOAD_0))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Project2_files/figure-html/unnamed-chunk-12-2.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">boxplot</span>(data_wide<span class="sc">$</span>VLOAD_0)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Project2_files/figure-html/unnamed-chunk-12-3.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(data_wide<span class="sc">$</span>VLOAD_1)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Project2_files/figure-html/unnamed-chunk-12-4.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(data_wide<span class="sc">$</span>VLOAD_2)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Project2_files/figure-html/unnamed-chunk-12-5.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Conclusion: our previous missing data visuals were not accurate! We need to go back through and filter out the values that were coded as missing, but did not show up as NA (e.g.&nbsp;the -1, 9, or 999 values)!</p>
+<p>For example, CESD missing was coded as -1, not blank. Go through each variable and write that down. BMI, education no response is 9, 9 for a bunch is coded as insufficient data</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Do that here.</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>to do</p>
+<p>do cleaning, then plotting, then correlations.</p>
+<p>create change scores.</p>
 
 
 </section>

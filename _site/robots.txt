@@ -1,1 +1,1 @@
-Sitemap: https://svieau.quarto.pub/portfolio/sitemap.xml
+Sitemap: https://Svieau92.github.io/Advanced-Data-Analysis/sitemap.xml
