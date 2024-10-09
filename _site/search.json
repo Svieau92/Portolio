@@ -82,5 +82,19 @@
     "title": "This is markdown",
     "section": "",
     "text": "# This is code\nprint(\"Hello world\")"
+  },
+  {
+    "objectID": "Project_2/Project_2_R/Code/Project2.html",
+    "href": "Project_2/Project_2_R/Code/Project2.html",
+    "title": "Project 2 - Advanced Data Analysis",
+    "section": "",
+    "text": "The aim of the current study is to assess how treatment response differs for HIV+ patients 2 years after initiating Highly Active Antiretroviral Therapy (HAART) based on hard drug usage (such as heroin or cocaine). This study is of particular scientific interest because it is unclear whether the use of hard drugs inhibits the immune system in humans; treatment strategies may differ based on these results. The researchers are interested in comparing subjects who never used hard drugs to current hard drug users (those that use hard drugs at year 2) or previous hard drug users (those who used drugs at year 0 or 1). Outcomes of interest are: viral load (HIV copies in a mL of blood), CD4+ T cell count (a measure of immunologic health), and aggregate physical and quality of life scores from the SF-36.\nThe clinical hypothesis is that, if hard drugs inhibit the immune system in humans, subjects who currently or previously used hard drugs will have higher viral load and lower CD4+ T cell counts than those who never used hard drugs. Additionally, the researchers are interested in knowing if potential differences between the drug use groups can be explained by differences in adherence to the treatment regimen. The researchers are agnostic on how quality of life changes after treatment, since side effects of the treatment are significant.\nThe project description provided by the PI is available below:"
+  },
+  {
+    "objectID": "Project_2/Project_2_R/Code/Project2.html#read-in-the-data-set",
+    "href": "Project_2/Project_2_R/Code/Project2.html#read-in-the-data-set",
+    "title": "Project 2 - Advanced Data Analysis",
+    "section": "Read in the Data Set",
+    "text": "Read in the Data Set"
   }
 ]

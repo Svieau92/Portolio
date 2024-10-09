@@ -14,6 +14,7 @@ website:
           - text: Regression (SAS)
             href: _site/Project_1_Regression/Project_1_Regression_SAS/Project_1_Regression_SAS.html
           - text: Regression with Moderator (R)
+            href: Project_2/Project_2_R/Code/Project2.qmd
           - text: Regression with Moderator (SAS)
       - text: Data Wrangling
       - text: Clinical Research Informatics
