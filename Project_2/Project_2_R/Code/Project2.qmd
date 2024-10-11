@@ -44,21 +44,26 @@ library(naniar) # Used to visualize missing data
 library(kableExtra) # Used for pretty printing (kable_styling)
 library(table1) # Used to make Table 1
 library(tidyr) # Used for reshaping
+library(bestNormalize) # Used in selecting best transformation for a variable
 ```
 
 Then we import the data set.
 
 ```{r, message = FALSE}
+# Read in data
 data <- read_csv("C:/Users/sviea/Documents/Portfolio/Project_2/Project_2_R/RawData/hiv_dataset.csv")
 ```
 
 And take a look.
 
 ```{r}
+# Examine data
 glimpse(data)
 ```
 
 Everything appears properly imported, however all our categorical variables are coded as doubles.
+
+## Labeling Categorical Variables
 
 Let's factor and label our categorical variables so they are appropriately represented (and not doubles, which will yield incorrect results in models)
 
@@ -83,7 +88,7 @@ data$HBP <- factor(data$HBP,
 
 data$DIAB <- factor(data$DIAB,
                     levels = c(1, 2, 3, 4, 9),
-                   labels = c("No", "Yes", "No, based on data trajectory", "Yes, based on data trajectory", "Insufficient data"))
+                    labels = c("No", "Yes", "No, based on data trajectory", "Yes, based on data trajectory", "Insufficient data"))
                       
 data$LIV34 <- factor(data$LIV34,
                      levels = c(1, 2, 9),
@@ -99,11 +104,11 @@ data$FRP <- factor(data$FRP,
 
 data$FP <- factor(data$FP,
                   levels = c(1,2,9),
-                   labels = c("No", "Yes", "Insufficient Data"))
+                  labels = c("No", "Yes", "Insufficient Data"))
 
 data$DYSLIP <- factor(data$DYSLIP,
                       levels = c(1, 2, 3, 4, 9),
-                   labels = c("No", "Yes", "No, based on data trajectory", "Yes, based on data trajectory", "Insufficient data"))
+                      labels = c("No", "Yes", "No, based on data trajectory", "Yes, based on data trajectory", "Insufficient data"))
 
 data$SMOKE <- factor(data$SMOKE,
                      levels = c(1, 2, 3),
@@ -141,67 +146,69 @@ data$hard_drugs <- factor(data$hard_drugs,
 Let's take another look to check that those variables are no longer doubles.
 
 ```{r}
+# Examine data
 glimpse(data)
 ```
 
 Looks good.
 
+## Filtering Data Set
+
 Now let's take a look at the header to get a good feeling for our data.
 
 ```{r}
-kable(head(data), format = "html") %>%
+# Pretty print data header
+kable(head(data), format = "html", full_width = TRUE) %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
 ```
 
-We can see the data set is in long form. Let's convert that to wideform.
+Hmm, we have 8 years worth of data points, but the experimenters are only interested in the first 2 years.
+
+Out of curiosity, let's look at how many participants they had each year.
 
 ```{r}
-data_wide <- pivot_wider(data, id_cols = newid, names_from = years, values_from = -c(newid, years, RACE, EDUCBAS, hivpos, everART))
+# Visualize patient drop off over 8 years of study
+barplot(table(data$years))
+
+# Check number of patients in each year
+kable(table(data$years), format = "html", full_width = FALSE) %>%
+  kable_styling(bootstrap_options = c("condensed", "hover", "striped"))
+```
+
+This is interesting, we don't seem to have as drastic a drop off as I expected. The researchers managed to retain all participants for the first 2 years, and 50% by the end of the 8-year study.
+
+Let's filter to only include values from the first 2 years.
+
+```{r}
+# Filter long form data set to be include only first 2 years
+data_2 <- data[data$years <= 2,]
+```
+
+```{r}
+# Double check if any patients dropped out within the first 2 years
+any(is.na(data_2$years))
+```
+
+Luckily, all participants have at least 2 years of visits!
+
+## Transpose to Wideform
+
+We can also see that the provided data set is in longform. Let's convert that to wideform.
+
+```{r}
+# Create new wideform data set for first 2 years of study              
+data_wide_2 <- pivot_wider(data_2, id_cols = newid, names_from = years, values_from = -c(newid, years))
 ```
 
 And take a look at the header to check that was done correctly.
 
 ```{r}
-kable(head(data_wide), format = "html") %>%
+# Pretty print header of wideform data
+kable(head(data_wide_2), format = "html", full_width = TRUE) %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
 ```
 
-Good. now we have a long and wide form of the data set for all 8 years of the study.
-
-However, the experimenters are only interested in the first 2 years.
-
-Out of curiosity, let's look at how many participants they had each year.
-
-```{r}
-barplot(table(data$years))
-
-table(data$years)
-```
-
-This is interesting, we don't seem to have as drastic a drop off as I expected. The researchers managed to retain all participants for the first 2 years, and 50% by the end of the 8-year study.
-
-Let's filter both data sets to only include values from the first 2 years.
-
-```{r}
-# Filter long form data set to be include only first 2 years
-data_2 <- data[data$years <= 2,]
-
-# Pretty print
-kable(head(data_2), format = "html") %>%
-  kable_styling(bootstrap_options = c("condensed", "striped", "hover"))
-
-# Create new wideform data set for first 2 years of study              
-data_wide_2 <- pivot_wider(data_2, id_cols = newid, names_from = years, values_from = -c(newid, years))
-
-kable(head(data_wide_2), format = "html") %>%
-  kable_styling(bootstrap_options = c("condensed", "striped", "hover"))
-```
-
-```{r}
-any(is.na(data_2$years))
-```
-
-Luckily, all participants have at least 2 years of visits!
+Good. now we have a long and wide form of the data set for the first two years of the study.
 
 Finally, let's just clean that wide data set up a bit to drop repeat measures of variables that are constant over time (race, education at baseline, HIV serostatus, everART)
 
@@ -209,7 +216,6 @@ Finally, let's just clean that wide data set up a bit to drop repeat measures of
 # Clean up the wide data set a bit by deleting multiple observations across time for constant variables such as race
 data_wide_2 <- data_wide_2 %>% select(-RACE_1, -RACE_2, -EDUCBAS_1, -EDUCBAS_2, -hivpos_1, - hivpos_2, -everART_1, -everART_2)
 ```
-
 
 Now that our data sets are adequately prepared, we can move on to performing our data checks to ensure fidelity of the data set.
 
@@ -226,22 +232,57 @@ First we begin by examining missingness in our data set
 gg_miss_var(data_2)
 ```
 
-This shows that we are missing the most values for LDL, TRIG, income, TCHOL, and ADH.
+This shows that we are missing the most values for `LDL`, `TRIG`, `ADH`, `TCHOL`, and `income`.
 
 A closer examination reveals...
 
 ```{r}
+# Visualize missing values for longform data
 vis_miss(data_2)
-vis_miss(data)
-vis_miss(data_wide)
 ```
 
-47% of `LDL`, 43% of `TRIG`, 23% of `income`, and 22% of `TCHOL`, and 15% of `ADH` values are missing.
+53% of `LDL`, 53% of `TRIG`, 33% of `ADH`, 32% of `TCHOL`, and 24% of `income` values are missing.
 
-`LDL`, `TRIG`, and income have egregious amounts of missing data. `ADH` may be acceptable, but it will be worth investigating missing trends with it and potentially performing MI or switching to a linear mixed model if it is a strong predictor of our dependent variables and should be included in the model. Fortunately, all other variables have \<5% missing values and are acceptable, and can be kept as is.
+`LDL` and`TRIG` have egregious amounts of missing data (\> 50%). `TCHOL` and `income` are in a range where we may be able to save them with MI or a linear mixed model that allows for missing data. We will have to see.
+
+`ADH` is missing 33% of values. That could be problematic as that's a key variable the researchers are interested in.
+
+But there's an odd, systematic pattern there... what if we look at the wide form of the data?
 
 ```{r}
-# # Code from ChatGPT
+# Visualize missing values for wideform data
+vis_miss(data_wide_2)
+```
+
+Ah, 1/3 of the values for `ADH` are missing because there are 3 time points and you can't have baseline adherence to a protocol you just started (i.e. `ADH_0`).
+
+There's a small blip there that looks like someone DOES have a value for `ADH_0`, I wonder what that's about...
+
+```{r}
+# For some reason participant 426 has an adherence of 1 at baseline
+adh_at_baseline <- data_wide_2 %>%
+  filter(ADH_0 == "100%") %>% 
+  select(newid, ADH_0)
+
+# Pretty print
+kable(adh_at_baseline, format = "html", full_width = FALSE)
+```
+
+Apparently if you're participant 426, you can have 100% adherence to a protocol you've just started (clearly a typo).
+
+Conclusion is we can still use `ADH` as a variable! We just have to use adherence at years 1 or 2.
+
+## Data Cleaning
+
+We just examined missingness as a preliminary check. However there is more work to be done.
+
+The dataset we received has variables that were coded inconsistently. For instance, some variables are coded so that missing values are represented by a blank, and some variables (like `CESD`) are coded so that missing values are represented by -1. In other cases, such as with `BMI`, improbable values are coded as 999.
+
+We can see this if we examine the mins and maxes for each numerical variable.
+
+```{r}
+# Code from ChatGPT
+# This function summarizes the mins and maxes of numeric variables
 summarize_column <- function(column) {
   if (is.numeric(column)) {
     return(data.frame(
@@ -252,134 +293,334 @@ summarize_column <- function(column) {
   }
 }
 
-
 # Apply the function to each column and bind the results into a single data frame
-summary_df <- map_dfr(data_wide, summarize_column, .id = "Column") %>%
+summary_df <- map_dfr(data_2, summarize_column, .id = "Column") %>%
   mutate(across(everything(), ~ format(., scientific = FALSE))) # Eliminates scientific notation
 
-# Pretty print the table
-kable(summary_df, format = "html") %>%
-  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
-
-# Apply the function to each column and bind the results into a single data frame
-summary_df <- map_dfr(data, summarize_column, .id = "Column") %>%
-  mutate(across(everything(), ~ format(., scientific = FALSE))) # Eliminates scientific notation
-                                      
-# Pretty print the table
+# Pretty print the mins and maxes of longform data_2
 kable(summary_df, format = "html") %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
 ```
 
-`income` is on a scale from 1-9, with 9 being do not wish to answer.
+In effect, our data is not correctly showing all missing values. Let's clean all that up, variable by variable.
 
-`BMI` at years 1 and 2 show the mins as -1 and maxes as 999+. The data dictionary says that -1 is an 'improbable value', and 999 is "insufficient data". Odd that the max for BMI_1 shows as 999.61449 instead of 999.
+### Cleaning Dependent Variables {#Clean_DVs}
 
-```{r}
-hist(data_wide$BMI_0)
-hist(data_wide$BMI_1)
-hist(data_wide$BMI_2)
-```
+First we will begin by examining and cleaning our 4 primary outcomes of interest.
 
-Takeaway here is we only use the baseline measure of `BMI` if we include this variable in our model.
+The first two are laboratory measures.
 
-Let's look at the frequencies we have for income
+-   [Viral load (VLOAD):]{.underline} The number of HIV copies in a mL of blood
+-   [CD4+ T cell count (LEU3N):]{.underline} A measure of immunologic health.
 
-```{r}
-barplot(table(data_wide$income_0))
-```
+In untreated HIV infection, viral load increases over time and CD4+ T cell counts decline as the immune system is attacked by the virus. Once treatment is initiated, we expect viral load to decrease rapidly and CD4 counts to recover.
 
-Will have to turn all variables into classes and so they have names.
+Our last two measures are quality of life measures from the [SF-36](https://www.rand.org/health-care/surveys_tools/mos/36-item-short-form.html).
 
-```{r}
-hist(data_wide$CESD_0)
-barplot(table(data_wide$CESD_0))
-```
+-   [Aggregate physical quality of life score (AGG_PHYS)]{.underline}
 
-vload 0 is huuuuuge. There are some crazy outliers or misentered data there
+-   [Aggregate mental quality of life score (AGG_MENT)]{.underline}
 
-```{r}
-hist(data_wide$VLOAD_0)
-barplot(table(data_wide$VLOAD_0))
-boxplot(data_wide$VLOAD_0)
-hist(data_wide$VLOAD_1)
-hist(data_wide$VLOAD_2)
-```
-
-Conclusion: our previous missing data visuals were not accurate! We need to go back through and filter out the values that were coded as missing, but did not show up as NA (e.g. the -1, 9, or 999 values)!
-
-For example, CESD missing was coded as -1, not blank. Go through each variable and write that down. BMI, education no response is 9, 9 for a bunch is coded as insufficient data
-
-```{r}
-# Do that here.
-```
-
-to do
-
-do cleaning, then plotting, then correlations.
-
-create change scores.
-
-```{r}
-# Gets average viral load per patient for example, can do min and max etc.
-summary_table <- data %>%
-  group_by(newid) %>%
-  summarize(mean__vload = mean(VLOAD))
-summary_table
-
-colnames(data)
-```
-
-Now we know that we have to go through and clean each variable, such that missing or inappropriate values are coded as missing in our data set. In effect, our data set is not correctly showing missing data.
-
-::: callout-note
-Note: I may be spinning my wheels here and do not need to change values for "insufficient data" or "improbably values". I think if I convert these variables to categorical that will all be handled in the model. Come back to this later.
-:::
-
-
-```{r}
-# Making dummy codes
-data_wide$current_drug <- ifelse(data_wide$hard_drugs_2 == 1, 1, 0) 
-data_wide$previous_drug <- ifelse((data_wide$hard_drugs_1 == 1 | data_wide$hard_drugs_0 == 1) & data_wide$hard_drugs_2 == 0, 1, 0)
-data_wide$never_drug <- ifelse(data_wide$hard_drugs_1 == 0 & data_wide$hard_drugs_0 == 0, 1, 0)
-```
+These scores range from 0 to 100, with higher scores indicating better quality of life. The researchers are not sure what happens to quality of life after initiating treatment. While in theory subjects’ improving health should result in increased quality of life, the side effects of these treatments are significant. If subjects experience declines in quality of life after initiating treatment, we would be concerned that they would stop treatment.
 
 ::: panel-tabset
+## Viral Load
 
-## AGG_MENT
+Standardized viral load
+
+-   0 = 0 copies/ml
+
+-   999,999,999 = 999,999,999 copies/ml
+
+-   Blank = Missing
+
+Our min max function earlier showed the max VLOAD was 190695039.60. I wonder if this is real or a data error?
 
 ```{r}
-hist(data$AGG_MENT)
+# create histogram of viral load
+hist(data_2$VLOAD)
 
-qqnorm(data$AGG_MENT)
-qqline(data$AGG_MENT)
+# Create qqplots of viral load
+qqnorm(data_2$VLOAD)
+qqline(data_2$VLOAD)
+```
 
-sorted_data <- data[order(data$AGG_MENT),]
+Yeah, looks like there are about 3 data points throwing off our qqplot from being normal.
+
+Let's investigate.
+
+```{r}
+# Sort data set by descending viral load
+sorted_data <- data_2[order(-data_2$VLOAD),] %>%
+  select(newid, VLOAD, years)
+
+# Pretty print resulting table
 kable(head(sorted_data), format = "html") %>%
+  kable_styling(bootstrap_options = c("condensed", "striped", "hover"))
+```
+
+So the highest VLOAD value is 75x the 5th highest, and the 4th highest is 2x 5th highest. All these values are from different patients at the baseline.
+
+Based on the data dictionary provided, these values fall below the specified range of 999,999,999 copies/ml. That the PI's specified this range could mean these are real data points. Maybe immediately after when someone is first exposed to HIV the viral load is incredibly high, and these 4 or so patients fell in that time period?
+
+I will first check if removing them makes our data normally distributed.
+
+We will then add them back into the data set and keep them in mind. Checking with the jackknife residuals after we run our model will tell us if they are high leverage points.
+
+```{r}
+# Create boxplot to assess for outliers
+outlier_vload <- boxplot(data_2$VLOAD, main = "Boxplot for VLOAD")$out
+text(x = rep(1.2, length(outlier_vload)),
+     y = outlier_vload, labels = outlier_vload, col = 'red', cex = 0.8)
+```
+
+Indeed the boxplot shows these values really mess with our data.
+
+These top 4 patients based on VLOAD are 224, 78, 437, and 196. Patient 196 has double the VLOAD of the next highest person, which means this could be an outlier or real data, but let's remove them just to see.
+
+```{r}
+# Remove 4 highest viral load visits
+data_vload_removed <- data
+data_vload_removed$VLOAD[data_vload_removed$newid %in% c(224, 78, 437, 196)] <- NA
+
+# Create plots to assess for normality
+hist(data_vload_removed$VLOAD)
+qqnorm(data_vload_removed$VLOAD)
+```
+
+Oh, that makes more sense. Those might not have been outliers, we just need to log transform viral load. Right, viral load is often used as a real world example of a biological measurement that is logarithmic...
+
+Let's do that log transform, and just pretend we remembered that from the start.
+
+```{r}
+# Log transform viral load in the long form data set
+data_2$VLOAD_log <- log(data_2$VLOAD)
+
+# Create a histogram of log transformed viral load
+hist(data_2$VLOAD_log)
+
+# Create qqplot of log transformed viral load
+qqnorm(data_2$VLOAD_log)
+qqline(data_2$VLOAD_log)
+
+# Create boxplot of log transformed viral load to assess for potential outliers
+outlier_vload <- boxplot(data_2$VLOAD_log, main = "Boxplot for VLOAD")
+```
+
+That looks much better!
+
+I'd say that's roughly normally distributed, maybe a bit right tailed but likely still acceptable.
+
+Looks like this took care of those values that were showing up as outliers before.
+
+`VLOAD` has now been cleaned!
+
+<a href="#Clean_DVs">Back to top of tabset</a>
+
+## CD4+ T Cell Count
+
+A measure of immunologic health.
+
+Number of CD4 positive cells (helpers)
+
+-   0 - 9999 cells
+-   Blank = Missing
+
+```{r}
+# Create histogram of CD4 T Cells
+hist(data_2$LEU3N)
+
+# Create qqplot of CD4 T Cells
+qqnorm(data_2$LEU3N)
+qqline(data_2$LEU3N)
+
+# Sort data set by descending CD4 T Cell
+sorted_data <- data_2[order(-data_2$LEU3N),] %>%
+  select(newid, LEU3N, years)
+
+# Pretty print resulting table
+kable(head(sorted_data), format = "html") %>%
+  kable_styling(bootstrap_options = c("condensed", "striped", "hover"))
+```
+
+These values all look believable and like there was no errors during data collection or entering. It is unclear whether this variable is right tailed because of outliers, or if it needs to be transformed.
+
+Let's look at potential outliers.
+
+```{r}
+# Create boxplot of CD4 T cell count to assess for outliers
+outlier_leu3n <- boxplot(data_2$LEU3N, main = "Boxplot for Leu3n")$out
+text(x = rep(1.2, length(outlier_leu3n)),
+     y = outlier_leu3n, labels = outlier_leu3n, col = 'red', cex = 0.8)
+```
+
+Yeah, the boxplot is showing a lot of outliers.
+
+Let's try a log transform.
+
+```{r}
+# Log transform CD4 T Cell count
+data_2$LEU3N_log <- log(data_2$LEU3N)
+
+# Create histogram of log transformed CD4 T cell count
+hist(data_2$LEU3N_log)
+
+# Create qqplot of log transformed CD4 T cell count
+qqnorm(data_2$LEU3N_log)
+qqline(data_2$LEU3N_log)
+
+```
+
+That... didn't work. Maybe let's try standardization.
+
+```{R}
+# Perform a standardization transformation of CD4 T Cell Count
+data_2$LEU3N_standard <- scale(data_2$LEU3N)
+
+# Create histogram of standardized CD4 T Cell count
+hist(data_2$LEU3N_standard)
+
+# Create qqplot of standardized CD4 T Cell count.
+qqnorm(data_2$LEU3N_standard)
+qqline(data_2$LEU3N_standard)
+```
+
+Hmm, that didn't do the trick.
+
+At this point I asked my professor in passing and he recommended the bestNormalize package (which he happened to write) to help in selecting the best transformation for a variable.
+
+Let's take a shot at it.
+
+```{r}
+# Use bestNormalize R package to select the best transformation for CD4 T Cell count
+BNObject <- bestNormalize(data_2$LEU3N)
+BNObject
+```
+
+The bestNormalize function selects the best transformation according to the Pearson P statistic (divided by its degrees of freedom), as calculated by the nortest package. There are a variety of normality tests out there, but the benefit of the Pearson P / df is that it is a relatively interpretable goodness of fit test, and the ratio P / df can be compared between transformations as an absolute measure of the departure from normality (if the data follows close to a normal distribution, this ratio will be close to 1).
+
+Here we can see that orderNorm (1.14), Yeo-Johnson (1.26), and Box-Cox (1.26) all perform relatively similar to each other. Let's see what those plots look like if I do those transformations.
+
+```{r}
+# Peform ordernNorm transformation of CD4 T Cell count
+data_2$LEU3N_orderNorm <- orderNorm(data_2$LEU3N)$x.t
+
+# Peform Box-Cox transformation of CD4 T Cell count
+data_2$LEU3N_boxcox <- boxcox(data_2$LEU3N)$x.t
+
+# Peform Yeo-Johnson transformation of CD4 T Cell count
+data_2$LEU3N_yeojohnson <- yeojohnson(data_2$LEU3N)$x.t
+
+# Plot all histograms using MASS
+par(mfrow = c(3,1))
+MASS::truehist(data_2$LEU3N_orderNorm, main = "OrderNorm transformation", nbins = 24)
+MASS::truehist(data_2$LEU3N_boxcox, main = "Box Cox transformation", nbins = 24)
+MASS::truehist(data_2$LEU3N_yeojohnson, main = "Yeo-Johnson transformation", nbins = 24)
+```
+
+```{r}
+# This function visualizes the estimated normality statistics obtained for each fold and repeat of cross-validation via boxplots. It allows you to compare transformation methods
+boxplot(log10(BNObject$oos_preds), yaxt = 'n')
+axis(2, at=log10(c(.1,.5, 1, 2, 5, 10)), labels=c(.1,.5, 1, 2, 5, 10))
+```
+
+I will select Box-Cox as those two names are more familiar to me so I trust it more per the availability heuristic (and because orderNorm looks TOO good to be true).
+
+It looks like we are good on `LEU3N` and can move forward!
+
+More information on Box-Cox Transformation [here](https://www.statisticshowto.com/probability-and-statistics/normal-distributions/box-cox-transformation/)
+
+<a href="#Clean_DVs">Back to top of tabset</a>
+
+## Aggregate Mental QOL Score
+
+The values for `AGG_MENT` in our data set range from 7.229315 to 73.31224, which is believable and leads us to conclude there were no data entry errors here.
+
+Let's examine normality.
+
+```{r}
+# Create a histogram for aggregate mental QOL score
+hist(data_2$AGG_MENT)
+
+# Create qqplot for aggregate mental QOL score
+qqnorm(data_2$AGG_MENT)
+qqline(data_2$AGG_MENT)
+
+# Sort by descending to examine highest values
+sorted_data_2 <- data_2[order(data_2$AGG_MENT),] %>%
+  select(newid, AGG_MENT, years)
+
+# Pretty print resulting table
+kable(head(sorted_data_2), format = "html") %>%
   kable_styling(bootstrap_options = c("hover", "striped", "condensed"))
 ```
 
-We can see that we have one data entry as a negative (ID 150, AGG_MENT = -1.73, year 5), which is not possible on this scale (scores range from 0 - 100. This is possibly a typo and is meant to be 1.73, but we will have to follow up with the PI's to be certain.
-
-This will not effect our analysis because we are only looking at the first 2 years of data points.
-
-The rest of the values for AGG_MENT look fine.
-
-It also seems that AGG_MENT is not normally distributed, it is left-tailed.
-
-## AGG_PHYS
+It appears that `AGG_MENT` is also not normally distributed, it is left-tailed. Let's address that.
 
 ```{r}
-hist(data$AGG_PHYS)
-
-qqnorm(data$AGG_PHYS)
-qqline(data$AGG_PHYS)
+# Use bestNormalize function to test which transformation performs the best
+BNobject <- bestNormalize(data_2$AGG_MENT)
+BNobject
 ```
+
+The orderNorm transformation beats out the other transformations by a mile. Let's perform that.
+
+```{r}
+# Perform orderNorm transformation of aggregate mental QOL score
+data_2$AGG_MENT_orderNorm <- orderNorm(data_2$AGG_MENT)$x.t
+MASS::truehist(data_2$AGG_MENT_orderNorm, main = "OrderNorm transformation", nbins = 24)
+```
+
+That appears to be what we have to do but I have some misgivings with orderNorm transforming everything...
+
+Come back to this
+
+<a href="#Clean_DVs">Back to top of tabset</a>
+
+## Aggregate Physical QOL Score
 
 AGG_PHYS has a min of 9.12 and a max of 73.57. These are within the specified range of 0 - 100, and it appears there were no data error entries.
 
-AGG_PHYS is not normally distributed, it is left-tailed.
+```{r}
+# Creat histogram of aggregate physical QOL score
+hist(data_2$AGG_PHYS)
 
-## HASH_V
+# Create qqplots of aggregate physical QOL score
+qqnorm(data_2$AGG_PHYS)
+qqline(data_2$AGG_PHYS)
+```
+
+`AGG_PHYS` is not normally distributed, it is left-tailed.
+
+Let's test which type of transformation might suit it.
+
+```{r}
+# Use bestNormalize function to test which transformation performs the best
+BNobject <- bestNormalize(data_2$AGG_PHYS)
+BNobject
+```
+
+Again orderNorm performs the best.
+
+```{r}
+# Perform orderNorm transformation of aggregate mental QOL score
+data_2$AGG_PHYS_orderNorm <- orderNorm(data_2$AGG_PHYS)$x.t
+MASS::truehist(data_2$AGG_PHYS_orderNorm, main = "OrderNorm transformation", nbins = 24)
+```
+
+OrderNorm transforming all our DVs might make interpration difficult...
+
+Come back to this.
+
+<a href="#Clean_DVs">Back to top of tabset</a>
+:::
+
+### Cleaning Covariates {#Clean_IVs}
+
+Now let's perform data quality checks on our covariates.
+
+::: panel-tabset
+## Hash Use
 
 Hash/marijuana use since last visit
 
@@ -388,15 +629,17 @@ Hash/marijuana use since last visit
 -   blank = missing
 
 ```{r}
-barplot(table(data$HASHV))
-
+# Create a barplot for hash use
+barplot(table(data_2$HASHV))
 ```
 
 Missing data is correctly handled for this variable.
 
 We have more visits where participants used hash since the last visit than visits where participants did not use hash.
 
-## HASH_F
+<a href="#Clean_IVs">Back to top of tabset</a>
+
+## Hash Frequency
 
 Frequency hash/marijuana was used since last visit.
 
@@ -408,12 +651,15 @@ Frequency hash/marijuana was used since last visit.
 -   Blank = Missing
 
 ```{r}
-barplot(table(data$HASHF))
+# Create barplot for hash frequency
+barplot(table(data_2$HASHF))
 ```
 
 This variable is coded correctly. Most participants answered they have never used Hash.
 
-## INCOME
+<a href="#Clean_IVs">Back to top of tabset</a>
+
+## Income
 
 Income
 
@@ -426,76 +672,107 @@ Income
 -   7 = \$60,000 or more
 -   9 = Do not wish to answer
 
-```{r}
-barplot(table(data$income))
-table(data$income)
-```
-
 The min and max for income are 1 - 9, which matches that data dictionary.
 
-If we keep the participants who did not wish to answer as 9, analyses will treat them like they had the highest income. Therefore we have to convert those values of 9 to be NA.
+```{r}
+# Create barplot for income
+barplot(table(data_2$income))
+
+# Get values for each income level
+kable(table(data_2$income), format = "html") %>%
+  kable_styling(bootstrap_options = c("condensed", "hover", "striped"))
+```
+
+We have to convert those values do not wish to answer to be NA.
 
 ```{r}
 # Converting scores of 9 (do not wish to answer) to be NA
-data$income[data$income == 9] <- NA
-barplot(table(data$income))
+data$income[data_2$income == 9] <- NA
+barplot(table(data_2$income))
 ```
 
-Looks good, we just converted 103 participants from do not wish to answer, to count as missing.
+Looks good, we just converted 38 participants from do not wish to answer, to count as missing.
 
-I think maybe we didn't have to do this since income is a categorical variable, and not continous.
-
-Come back to this.
+<a href="#Clean_IVs">Back to top of tabset</a>
 
 ## BMI
 
-We have a min of -1 and a max of 1000. They coded improbable values as -1, and insufficient data as 999 (why it shows up with decimals and is not exactly 999, who knows). This can be seen in the histogram.
+Body Mass Index
+
+We have a min of -1 and a max of 1000.
+
+-   -1: Improbable values
+
+-   999: Insufficient data (why it shows up with decimals and is not exactly 999, who knows).
 
 ```{r}
-hist(data$BMI)
+# Create histogram of BMI
+hist(data_2$BMI)
 ```
 
 Let's convert those values of -1 and \>= 998 into missing values.
 
 ```{r}
-data$BMI[data$BMI < 0 | data$BMI >= 998] <- NA
+# Convert missing and improbably values to NA
+data_2$BMI[data_2$BMI < 0 | data_2$BMI >= 998] <- NA
 ```
 
-Let's look at the histogram again.
+And check out the histogram again and the qqplot.
 
 ```{r}
-hist(data$BMI)
+# Create histogram of BMI
+hist(data_2$BMI, breaks = 20)
 
-qqnorm(data$BMI)
-qqline(data$BMI)
+# Create qqplot of BMI
+qqnorm(data_2$BMI)
+qqline(data_2$BMI)
 
-summarize_column(data$BMI)
+summarize_column(data_2$BMI)
 ```
 
-Looks better. Now we have a BMI range of 15.10 - 52.83.
+Looks better. Now we have a BMI range of 15.94 - 52.83.
 
-The histogram and qqplots show BMI is slightly right tailed, with more morbidly obese patients than underweight. This might be close for us ignore however.
+The histogram and qqplots show BMI is slightly right skewed, with more morbidly obese patients than underweight. Is this close enough to normal to ignore, if we take out outliers?
 
-The patient with a BMI of 52.83 may also be an outlier from looking at the qqplot.
+The patient with a BMI of 52.83 may be an outlier based on the qqplot.
 
 ```{r}
-test <- data[data$newid == 206,]
+# Investigating highest BMI value to see if its an outlier
+highest_bmi <- data[data$newid == 206,]
 
-# This is kinda cool, shows this participant got reaaaaaally heavier over the first year, then dropped more in the proceeding year. Either that or that second year entry point was an error and was meant to be 42.83
-plot(test$years, test$BMI)
+# Plot BMI for each year for this patient
+plot(highest_bmi$years, highest_bmi$BMI)
 
+```
+
+Interestingly, participant 206 got heavier over the first year, then dropped weight in the proceeding years. Either that or that second year entry point was an error and was meant to be 42.83
+
+```{r}
 # Testing to see if these plots look normal after taking the participant with BMI of 52.83 out
-data$BMI[data$newid == 206 & data$years == 1] <- NA
-hist(data$BMI)
-qqnorm(data$BMI)
-qqline(data$BMI)
-
-# What if we completely got rid of participant 206?
+data_2$BMI[data_2$newid == 206 & data_2$years == 1] <- NA
+hist(data_2$BMI, breaks = 20)
+qqnorm(data_2$BMI)
+qqline(data_2$BMI)
+ 
+# Add back in that value we removed
+data_2$BMI[data_2$newid == 206 & data_2$years == 1] <- 52.832
 ```
 
-Still right tailed, but this looks better at least!
+After removing that highest BMI value, the histogram is still right tailed.
 
-## HBP
+What do the boxplots look like?
+
+```{r}
+outlier_bmi <- boxplot(data_2$BMI, main = "Boxplot for BMI")$out
+text(x = rep(1.2, length(outlier_bmi)),
+     y = outlier_bmi, labels = outlier_bmi, col = 'red', cex = 0.8)
+```
+
+That's a lot of potential outliers for BMI. If we really want to use this variable we may have to remove these values to keep BMI normally distributed.
+
+<a href="#Clean_IVs">Back to top of tabset</a>
+
+## High Blood Pressure
 
 High Blood Pressure (SBP \>= 140 or DBP \>= 90 or (diagnosed with hypertension and use of medication)
 
@@ -508,27 +785,43 @@ High Blood Pressure (SBP \>= 140 or DBP \>= 90 or (diagnosed with hypertension a
 
 We will have to exclude values of 9 or -1.
 
-The range for this variable is -1 to 9, so no improbable values. Let's see what the plots look like.
-
 ```{r}
-barplot(table(data$HBP))
+# Create barplot of high blood pressure
+barplot(table(data_2$HBP))
 ```
 
-Let's purge those values of 9.
+```{r}
+# Get values for high blood pressure category
+kable(table(data_2$HBP), format = "html") %>%
+  kable_styling(bootstrap_options = c("condensed", "hover", "striped"))
+```
+
+There are 137 participants with insufficient data. Let's purge them from the data set.
 
 ```{r}
-data$HBP[data$HBP == 9] <- NA
-barplot(table(data$HBP))
-table(data$HBP)
+# Convert values of insufficient data to NA for high blood pressure
+data_2$HBP[data_2$HBP == "Insufficient data, may include reported treatment without diagnosis"] <- NA
+
+# Drop empty levels
+data_2$HBP <- droplevels(data_2$HBP) 
+
+# Create barplot of high blood pressure 
+barplot(table(data_2$HBP))
+
+# Pretty print table
+kable(table(data_2$HBP), format = "html") %>%
+  kable_styling(bootstrap_options = c("condensed", "hover", "striped"))
 ```
 
 Looks better.
 
-Only 49 participants who have no based on trajectory, and 16 that have yes based on trajectory.
+Only 34 visits where participants had no based on trajectory, and 4 that had yes based on trajectory.
 
-We will have to decide to either exclude these or merge them into the 1 or 2 values, respectively. We can do that after we run our correlation matrix to see if there's any relationship here worth pursuing.
+We will have to decide to either exclude these or merge them into the no or yes groups, respectively. We can do that after we run our correlation matrix to see if there's any relationship here worth pursuing.
 
-## DIABETES
+<a href="#Clean_IVs">Back to top of tabset</a>
+
+## Diabetes
 
 Diabetes (GLUC 2 \>= 126 or (diagnosed with diabetes and use of medication))
 
@@ -539,23 +832,40 @@ Diabetes (GLUC 2 \>= 126 or (diagnosed with diabetes and use of medication))
 -   9 = Insufficient data
 
 ```{r}
-barplot(table(data$DIAB))
-table(data$DIAB)
+# Create barplot of diabetes
+barplot(table(data_2$DIAB))
+
+# Pretty print table
+kable(table(data_2$DIAB), format = "html") %>%
+  kable_styling(bootstrap_options = c("condensed", "hover", "striped"))
 ```
 
-There are 1529 patients who have insuffiient data to make a diabetes diagnosis! Should these be labeled as having diabetes, or just excluded? We would have to follow up with the PI, but for now I am going to go with how it is coded and assume that they were labeled as having insufficient data for any kind of diagnosis.
+There are 881 visits with patient who had insuffiicent data to make a diabetes diagnosis!
 
-Let's change those 9's to NA's so this is appropriately represented.
+Let's change those values to NA.
 
 ```{r}
-data$DIAB[data$DIAB == 9] <- NA
-barplot(table(data$DIAB))
-table(data$DIAB)
+# Convert values of insufficient data to NA for diabetes
+data_2$DIAB[data_2$DIAB == "Insufficient data"] <- NA
+
+# Drop empty levels
+data_2$DIAB <- droplevels(data_2$DIAB)
+
+# Create a barplot for diabetes
+barplot(table(data_2$DIAB))
+
+# Pretty print table
+kable(table(data_2$DIAB), format = "html") %>%
+  kable_styling(bootstrap_options = c("condensed", "hover", "striped"))
 ```
 
-Great. Notably, there is only on patient with a value of yes, based on trajectory. Same question as before, should we wrap these up into the 1 and 2 categories, respectively? Coming back to this later.
+Great, `HBP` is now cleaned.
 
-## LIV34
+Notably, there were no visits with a yes, based on trajectory.
+
+<a href="#Clean_IVs">Back to top of tabset</a>
+
+## Liver Disease
 
 Liver disease stage 3/4 (SGPT or SGOP \> 150), preliminary algorithm
 
@@ -564,150 +874,242 @@ Liver disease stage 3/4 (SGPT or SGOP \> 150), preliminary algorithm
 -   9 = Insufficient data
 
 ```{r}
-barplot(table(data$LIV34))
-table(data$LIV34)
+# Create barplot of liver disease stage
+barplot(table(data_2$LIV34))
+
+# Pretty print table
+kable(table(data_2$LIV34), format = "html") %>%
+  kable_styling(bootstrap_options = c("condensed", "hover", "striped"))
 ```
 
-There are 920 patients with insufficient data for a liver disease diagnosis.
+There are 507 patients with insufficient data for a liver disease diagnosis.
 
-Let's convert those values of 9 to NA to reflec this.
+Let's convert those values to NA to reflect this.
 
 ```{r}
-data$LIV34[data$LIV34 == 9] <- NA
-barplot(table(data$LIV34))
+# Convert values of insufficient data to NA for liver disease stage
+data_2$LIV34[data_2$LIV34 == "Insufficient Data"] <- NA
+
+# Drop empty levels
+data_2$LIV34 <- droplevels(data_2$LIV34)
+
+# Create barplot of cleaned liver stage disease
+barplot(table(data_2$LIV34))
+
+# Pretty print table
+kable(table(data_2$LIV34), format = "html") %>%
+  kable_styling(bootstrap_options = c("condensed", "hover", "striped"))
 ```
 
-Looks good now.
+Looks good, `LIV34` is now cleaned!
 
-## KID
+<a href="#Clean_IVs">Back to top of tabset</a>
 
-Kidney disease (EGFR \< 60 or UPRCR \>= 200) 
- - 1 = No 
- - 2 = Yes 
- - 3 = No, based on data trajectory 
- - 4 = Yes, based on data trajectory 
- - 9 = Insufficient data
+## Kidney Disease
+
+Kidney disease (EGFR \< 60 or UPRCR \>= 200)
+
+-   1 = No
+
+-   2 = Yes
+
+-   3 = No, based on data trajectory
+
+-   4 = Yes, based on data trajectory
+
+-   \- 9 = Insufficient data
 
 ```{r}
-barplot(table(data$KID))
-table(data$KID)
+# Create barplots of kidney disease
+barplot(table(data_2$KID))
+
+# Pretty print table
+kable(table(data_2$KID), format = "html") %>%
+  kable_styling(bootstrap_options = c("condensed", "hover", "striped"))
 ```
 
-2102 patients with insufficient data.
+There are 1068 visits where there was insufficient data for a diagnosis.
 
 Let's convert those to NA values.
 
 ```{r}
-data$KID[data$KID == 9] <- NA
-barplot(table(data$KID))
+# Convert values of insufficient data to NA for kidney disease
+data_2$KID[data_2$KID == "Insufficient data"] <- NA
+
+# Drop empty levels
+data_2$KID <- droplevels(data_2$KID)
+
+# Create barplot of kidney disease
+barplot(table(data_2$KID))
 ```
 
-Looks good.
+Looks good, `KID` is now cleaned!
 
-## FRP
+<a href="#Clean_IVs">Back to top of tabset</a>
 
-Frailty Related Phenotype (3 out of 4 conditions = YES; WTLOS, PHDWA, HLTWB, HLTVA 
+## Frailty Related Phenotype
 
-- 1 = No 
-- 2 = Yes 
-- 9 = Insufficient data
+Frailty Related Phenotype (3 out of 4 conditions = YES; WTLOS, PHDWA, HLTWB, HLTVA
+
+-   1 = No
+-   2 = Yes
+-   9 = Insufficient data
 
 ```{r}
-barplot(table(data$FRP))
-table(data$FRP)
+# Create barplot of frailty related phenotype
+barplot(table(data_2$FRP))
+
+# Pretty print table
+kable(table(data_2$FRP), format = "html") %>%
+  kable_styling(bootstrap_options = c("condensed", "hover", "striped"))
 ```
 
-Only 5 patients with insufficient data.
+Only 3 patients with insufficient data.
 
 Let's convert them to NA.
 
 ```{r}
-data$FRP[data$FRP == 9] <- NA
-barplot(table(data$FRP))
+# Convert values of insufficient data to NA for frailty related phenotype
+data_2$FRP[data_2$FRP == "Insufficient Data"] <- NA
+
+# Drop empty levels
+data_2$FRP <- droplevels(data_2$FRP)
+
+# Create barplot of frailty related phenotype
+barplot(table(data_2$FRP))
 ```
 
-Looks good.
+Looks good, `FRP` is now cleaned.
 
-## FP
+<a href="#Clean_IVs">Back to top of tabset</a>
 
-Frailty Phenotype (3 out of 5 conditions = YES: WTLOS, PHWDA, HLTVA, SLOW, WEAK) 
+## Frailty Phenotype
 
-- 1 = No 
-- 2 = Yes 
-- 9 = Insufficient Data
+Frailty Phenotype (3 out of 5 conditions = YES: WTLOS, PHWDA, HLTVA, SLOW, WEAK)
+
+-   1 = No
+-   2 = Yes
+-   9 = Insufficient Data
 
 ```{r}
-barplot(table(data$FP))
-table(data$FP)
+# Create barplot of frailty phenotype
+barplot(table(data_2$FP))
+
+# Pretty print table
+kable(table(data_2$FP), format = "html") %>%
+  kable_styling(bootstrap_options = c("condensed", "hover", "striped"))
 ```
 
-728 patients with insufficient data. Let's convert to NA.
+357 visits with insufficient data. Let's convert to NA.
 
 ```{r}
-data$FP[data$FP == 9] <- NA
-barplot(table(data$FP))
+# Convert values of insufficient data to NA for frailty phenotype
+data_2$FP[data_2$FP == "Insufficient Data"] <- NA
+
+# Drop empty levels
+data_2$FP <- droplevels(data_2$FP)
+
+# Create barplot of frailty phenotype
+barplot(table(data_2$FP))
 ```
 
-Looks good.
+Looks good, `FP` is now cleaned!
 
-## TCHOL
+<a href="#Clean_IVs">Back to top of tabset</a>
+
+## Total Cholesterol
 
 Total cholesterol mg/dL
 
 ```{r}
-hist(data$TCHOL)
+# Create histogram for total cholesterol
+hist(data_2$TCHOL)
 
-qqnorm(data$TCHOL)
-qqline(data$TCHOL)
+# Create qqplot for total cholesterol
+qqnorm(data_2$TCHOL)
+qqline(data_2$TCHOL)
 ```
 
 The histogram and qq plot show what may be outliers for total cholesterol at the higher range. How many values are potential outliers?
 
 ```{r}
-outlier_tchol <- boxplot(data$TCHOL, main = "Boxplot for Total Cholesterol")$out
+# Create boxplot to assess for outliers for total cholesterol
+outlier_tchol <- boxplot(data_2$TCHOL, main = "Boxplot for Total Cholesterol")$out
 text(x = rep(1.2, length(outlier_tchol)),
      y = outlier_tchol, labels = outlier_tchol, col = 'red', cex = 0.8)
 
-sorted_data <- data[order(-data$TCHOL),]
-head(sorted_data)
+# Sort by descending total cholesterol
+sorted_data <- data_2[order(-data_2$TCHOL),] %>%
+  select(newid, TCHOL, years)
+
+# Pretty print table
+kable(head(sorted_data), format = "html") %>%
+  kable_styling(bootstrap_options = c("condensed", "hover", "striped"))
 ```
 
-Quite a few! We'll have to look at this later.
+The highest cholesterol value is \~2x higher than the next highest value. Let's see what happens if we remove it.
 
-Nothing that looks erroneous however.
+```{r}
+# Delete highest total cholesterol value
+data_2$TCHOL[data_2$TCHOL == 613] <- NA 
 
-## TRIG
+# Create histogram of total cholesterol
+hist(data_2$TCHOL)
+
+# Create qqplot of total cholesterol
+qqnorm(data_2$TCHOL)
+qqline(data_2$TCHOL)
+```
+
+Looks better but still slightly right skewed. This variable had \~30% missing values, so we may end up not using it.
+
+<a href="#Clean_IVs">Back to top of tabset</a>
+
+## Triglycerides
 
 Triglycerides, mg/dL
 
 ```{r}
-hist(data$TRIG)
+# Create histogram of triglycerides
+hist(data_2$TRIG)
 
-qqnorm(data$TRIG)
-qqline(data$TRIG)
+# Create qqplot of triglycerides
+qqnorm(data_2$TRIG)
+qqline(data_2$TRIG)
 ```
 
 VERY skewed! Based on the qqplots, it looks like we would have to perform a log transform on `TRIG` if we wanted to use it. However we have nearly 50% missing values for this variable, so we should drop it as a covariate.
 
-## LDL
+<a href="#Clean_IVs">Back to top of tabset</a>
 
-Low Density Lipoprotein (fasting)
+## LoW Density Lipoprotein
+
+Low Density Lipoprotein (fasting) mg/dL
 
 ```{r}
-hist(data$LDL)
+# Create a histogram for LDL
+hist(data_2$LDL)
 ```
 
-Looks like we may have an erroneous value there.
+Looks like we may have an erroneous value at the highest range there.
 
 ```{r}
-sorted_data <- data[order(-data$LDL),]
+# Sort by descending total cholesterol
+sorted_data <- data_2[order(-data_2$LDL),] %>%
+  select(newid, LDL, years)
+
+# Pretty print table
+kable(head(sorted_data), format = "html") %>%
+  kable_styling(bootstrap_options = c("condensed", "hover", "striped"))
 ```
 
 Patients 19 and 413 have the same value of 704 at baseline. Clearly an error with the measurement process.
 
 `LDL` has close to 50% missing values and we will not be using it in our model, so I will move on. But good to know we can't just blindly trust all the values to be correct!
 
-## DYSLIP
+<a href="#Clean_IVs">Back to top of tabset</a>
+
+## Dyslipidemia
 
 Dyslipidemia at visit. fasting TC \>=200 mg/dl or \>=130 mg/dl or HDL \< 40 mg/dl or triglycerides \>=150 mg/dl or use of lipid lowering medications (HICHOLRX) with self report or clinical diagnosis in the past.
 
@@ -718,56 +1120,63 @@ Dyslipidemia at visit. fasting TC \>=200 mg/dl or \>=130 mg/dl or HDL \< 40 mg/d
 -   9 = Insufficient data
 
 ```{r}
-barplot(table(data$DYSLIP))
-table(data$DYSLIP)
+# Create barplot of dyslipidemia
+barplot(table(data_2$DYSLIP))
+
+# Pretty print table
+kable(table(data_2$DYSLIP), format = "html") %>%
+  kable_styling(bootstrap_options = c("condensed", "hover", "striped"))
 ```
 
-There are 1223 patients with insufficient data for a dyslipemia diagnosis.
+There are 718 visits with insufficient data for a dyslipidemia diagnosis.
 
-Let's convert those 9's to NAs to reflect this.
+Let's convert those to NAs to reflect this.
 
 ```{r}
-data$DYSLIP[data$DYSLIP == 9] <- NA
-barplot(table(data$DYSLIP))
+# Convert values of insufficient data to NA for dyslipidemia
+data_2$DYSLIP[data_2$DYSLIP == "Insufficient data"] <- NA
+
+# Drop empty levels
+data_2$DYSLIP <- droplevels(data_2$DYSLIP)
+
+# Create barplot of dyslipidemia
+barplot(table(data_2$DYSLIP))
 ```
 
-Looks good.
+Looks good, `DYSLIP` is now cleaned!
 
-## CESD
+<a href="#Clean_IVs">Back to top of tabset</a>
 
-Center for Epidemiological Studies Depression Scale ( \>= 16 is depressed) Does not contribute to DEPSR.
+## Depression
 
--   0 - 60.
+Center for Epidemiological Studies Depression Scale ( \>= 16 is depressed).
+
+-   0 - 60
+
 -   -1 = missing
 
 ```{r}
-hist(data$CESD)
+# Create histogram for depression score
+hist(data_2$CESD)
 ```
 
-That's nearly 400 patients with missing CESD scores. Let's correctly reflect those as NA's
+Let's correctly reflect those -1's as NA's
 
 ```{r}
-data$CESD[data$CESD == -1] <- NA
-hist(data$CESD)
+# Remove depression scores that were coded as missing
+data_2$CESD[data_2$CESD == -1] <- NA
+
+# Create histogram of depression score
+hist(data_2$CESD)
 ```
 
-Looks good.
+Looks good. `CESD` is now cleaned!
 
-```{r}
-vis_miss(data)
-```
+It IS right skewed though. Will have to handle that if we want to use it.
 
-Looking at the missing % for CESD, it only shows 2%. That doesn't match up with the histogram of the unaltered data set, which showed closer to 400 patients with values of -1.
+<a href="#Clean_IVs">Back to top of tabset</a>
 
-Re-reading the data set and running the code below shows there is only 58 patients with values of -1, which is indeed \~2% of 3632. So the code run correctly just that first histogram has a weird and incorrect y axis.
-
-```{r}
-# data <- read_csv("C:/Users/sviea/Documents/Portfolio/Project_2/Project_2_R/RawData/hiv_dataset.csv")
-# count_cesd_missing <- data$CESD[data$CESD == -1]
-# length(count_cesd_missing)
-```
-
-## SMOKE
+## Smoking Status
 
 Smoking status
 
@@ -777,364 +1186,454 @@ Smoking status
 -   Blank = missing
 
 ```{r}
-barplot(table(data$SMOKE))
+# Create barplot of smoking status
+barplot(table(data_2$SMOKE))
 ```
 
 Looks good, nothing to do here.
 
-## DKGRP
+<a href="#Clean_IVs">Back to top of tabset</a>
 
-Alcohol use since last visit 
+## Drinking Group
 
- - 0 = None 
- - 1 = 1 to 3 drinks/week 
- - 2 = 4 to 13 drinks/week
- - 3 = More than 13 drinks/week 
- - Blank = Missing
+Alcohol use since last visit
+
+-   0 = None
+-   1 = 1 to 3 drinks/week
+-   2 = 4 to 13 drinks/week
+-   3 = More than 13 drinks/week
+-   Blank = Missing
 
 ```{r}
-barplot(table(data$DKGRP))
+# Create barplot of drinking group
+barplot(table(data_2$DKGRP))
 ```
 
 Looks good, nothing to do here.
 
-## HEROPIATE
+<a href="#Clean_IVs">Back to top of tabset</a>
 
-Took heroin or other opiates since last visit? 
+## Heroin or Opiate Use
 
- - 1 = No 
- - 2 = Yes 
- - -9 = Not specified in form 
- - Blank = Missing
+Took heroin or other opiates since last visit?
+
+-   1 = No
+-   2 = Yes
+-   -9 = Not specified in form
+-   Blank = Missing
 
 ```{r}
-barplot(table(data$HEROPIATE))
-table(data$HEROPIATE)
+# Create barplot of heroin or opiate use
+barplot(table(data_2$HEROPIATE))
+
+# Pretty print table
+kable(table(data_2$HEROPIATE), format = "html") %>%
+  kable_styling(bootstrap_options = c("condensed", "hover", "striped"))
 ```
 
-Only 20 participants that did not specify on their form.
+Only 20 visits where participants did not specify drinking frequency on their form.
 
 Let's correct those to be NA.
 
 ```{r}
-data$HEROPIATE[data$HEROPIATE == -9] <- NA
-barplot(table(data$HEROPIATE))
+# Convert values of insufficient data to NA for heroin or opiate use
+data_2$HEROPIATE[data_2$HEROPIATE == "Not Specified"] <- NA
+
+# Drop empty levels
+data_2$HEROPIATE <- droplevels(data_2$HEROPIATE)
+
+# Create barplot of heroin or opiate use
+barplot(table(data_2$HEROPIATE))
 ```
 
-Looks good.
+Looks good. `HEROPIATE` is now cleaned!
 
-## IDU
+<a href="#Clean_IVs">Back to top of tabset</a>
 
-Took/used drugs with a needle since last visit? 
- - 1 = No 
- - 2 = Yes 
- - Blank = Missing
+## Intravenous Drug Use
+
+Took/used drugs with a needle since last visit?
+
+-   1 = No
+-   2 = Yes
+-   Blank = Missing
 
 ```{r}
-barplot(table(data$IDU))
+# Create barplot of intravenous drug use
+barplot(table(data_2$IDU))
 ```
 
-Looks good.
+Looks good. Nothing to do here
 
-## LEU3N
+<a href="#Clean_IVs">Back to top of tabset</a>
 
-/# of CD4 positive cells (helpers) - 0 - 9999 cells - Blank = Missing
+## Adherence
+
+Adherence to meds taken since last visit
+
+-   1 = 100%
+-   2 = 95-99%
+-   3 = 75-94%
+-   4 \<75%
+-   Blank = Missing
 
 ```{r}
-hist(data$LEU3N)
+# Create bar plot of adherence
+barplot(table(data_2$ADH))
 
-qqnorm(data$LEU3N)
-qqline(data$LEU3N)
-
-sorted_data <- data[order(-data$LEU3N),]
+# Pretty print table
+kable(table(data_2$ADH), format = "html") %>%
+  kable_styling(bootstrap_options = c("condensed", "hover", "striped"))
 ```
 
-These values all look believable and like there was no errors during data collection or entering. The values do look left tailed because of potential outliers.
+VERY interesting. I was thinking that 100% vs 95-99% adherence was an arbitrary difference to choose to divide groups on, and was actually planning to merge the two. However, this shows why the experimenters likely made that decision: both groups have close to the same amount of observations (\~500)\> That's really good to know.
 
-Let's look at potential outliers.
+We could still play with the idea of simplifying this into two groups: \>= 95% and \< 95%. We will revisit that in the model selection.
+
+<a href="#Clean_IVs">Back to top of tabset</a>
+
+## Race
+
+Race
+
+-   1 = White, non-Hispanic
+-   2 = White, Hispanic
+-   3 = Black, non-Hispanic
+-   4 = Black, Hispanic
+-   5 = American Indian or Alaskan Native
+-   6 = Asian or Pacific Islander
+-   7 = Other 8 = Other Hispanic (created for 2001-03 new recruits)
+-   Blank = Missing
 
 ```{r}
-outlier_leu3n <- boxplot(data$LEU3N, main = "Boxplot for Leu3n")$out
-text(x = rep(1.2, length(outlier_leu3n)),
-     y = outlier_leu3n, labels = outlier_leu3n, col = 'red', cex = 0.8)
+# Create barplot of race
+barplot(table(data_2$RACE))
 
-data$LEU3N_log <- log(data$LEU3N)
-
-hist(data$LEU3N_log)
-
-qqnorm(data$LEU3N_log)
-qqline(data$LEU3N_log)
-
-# Standarization
-
-data$LEU3N_standard <- scale(data$LEU3N)
-
-hist(data$LEU3N_standard)
-qqnorm(data$LEU3N_standard)
-qqline(data$LEU3N_standard)
-
-outlier_leu3n_standard <- boxplot(data$LEU3N, main = "Boxplot for Leu3n")$out
-text(x = rep(1.2, length(outlier_leu3n_standard)),
-     y = outlier_leu3n_standard, labels = outlier_leu3n, col = 'red', cex = 0.8)
-
-
+# Pretty print table
+kable(table(data_2$RACE), format = "html") %>%
+  kable_styling(bootstrap_options = c("condensed", "hover", "striped"))
 ```
 
-Yeah, definitely looks like we have a lot of outliers.
-
-However, since the values all look believable, I am tempted to keep them in the analysis as this is real biological data.
-
-There are also robust regression models that are robust to outliers in the DV that we can consider, such as Ridge, Quantile, or Lasso regression.
-
-There should be a way to quantify how many values are beyond the box range, and also see if they are from the same patients, which they likely are. This could help justify keeping them in.
-
-Come back to this later.
-
-## VLOAD
-
-Standardized viral load - 0 = 0 copies/ml - 999,999,999 = 999,999,999 copies/ml - Blank = Missing
-
-Our min max function earlier showed the max VLOAD was 190695039.60. I wonder if this is real or a data error?
-
-```{r}
-hist(data$VLOAD)
-
-qqnorm(data$VLOAD)
-qqline(data$VLOAD)
-```
-
-Yeah, looks like there are about 3 data points throwing off or qqplot from being normal.
-
-Let's investigate.
-
-```{r}
-sorted_data <- data[order(-data$VLOAD),]
-
-sorted_data %>% 
-  select(newid, VLOAD, years) %>%
-  head()
-```
-
-So the highest VLOAD value is 75x the 5th highest, 
-
-They are all from different patients at the baseline, which leads me to think these aren't real data points.
-
-It will be important to double check with the PI what the expected values should be for `VLOAD`. Based on the data dictionary provided, these values fall below the specified range of 999,999,999 copies/ml. That the PI's specified that range could mean these are real data points. Maybe immediately after when someone is first exposed to HIV the viral load is incredibly high, and these 4 or so patients fell in that time period?
-
-I will first check if removing them makes our data normally distributed.
-
-We will then add them back into the data set and keep them in mind. Checking with the jackknife residuals after we run our model will tell us if they are high leverage points. 
-
-```{r}
-outlier_vload <- boxplot(data$VLOAD, main = "Boxplot for VLOAD")$out
-text(x = rep(1.2, length(outlier_vload)),
-     y = outlier_vload, labels = outlier_vload, col = 'red', cex = 0.8)
-```
-
-Indeed the boxplot shows these values really mess with our data. They will likely be dropped as outliers in the final analysis.
-
-These top 4 patients based on VLOAD are 224, 78, 437, and 196. Patient 196 has double the VLOAD of the next highest person, which means this could be an outlier or real data.
-
-```{r}
-data_vload_removed <- data
-data_vload_removed$VLOAD[data_vload_removed$newid %in% c(224, 78, 437, 196)] <- NA
-hist(data_vload_removed$VLOAD)
-qqnorm(data_vload_removed$VLOAD)
-```
-
-That makes more sense. Those might not have been outliers, we just need to log transform viral load. That also makes sense, as viral load is often used as a real world example of when relationships are logarithmic. 
-
-Let's do that log transform.
-
-```{r}
-data$VLOAD_log <- log(data$VLOAD)
-
-hist(data$VLOAD_log)
-
-qqnorm(data$VLOAD_log)
-qqline(data$VLOAD_log)
-
-outlier_vload_log <- boxplot(data$VLOAD_log, main = "Boxplot for VLOAD_log")$out
-text(x = rep(1.2, length(outlier_vload_log)),
-     y = outlier_vload_log, labels = outlier_vload_log, col = 'red', cex = 0.8)
-```
-
-That looks much better!
-
-I'd say that's roughly normally distributed, maybe a bit right tailed but likely still acceptable.
-
-Looks like we still have those 3 outliers, which will pop out when we look at leverage and influence with the jackknife residuals.
-
-## ADH
-
-Adherence to meds taken since last visit 
-- 1 = 100% 
-- 2 = 95-99% 
-- 3 = 75-94% 
-- 4 <75% 
-- Blank = Missing
-
-```{r}
-barplot(table(data$ADH))
-table(data$ADH)
-```
-
-VERY interesting. I was thinking that 100% vs 95-99% adherence was an arbitrary difference to choose to divide groups on, and was actually planning to merge the two. However, this shows why the experimenters likely made that decision: both groups have close to the same amount of observations (~1370)> That's really good to know. 
-
-We could still play with the idea of simplifying this into two groups: >= 95% and < 95%. We will revisit that in the model selection.
-
-
-## RACE
-
-Race 
-
-- 1 = White, non-Hispanic 
-- 2 = White, Hispanic 
-- 3  = Black, non-Hispanic 
-- 4 = Black, Hispanic 
-- 5 = American Indian or Alaskan Native 
-- 6 = Asian or Pacific Islander 
-- 7 = Other 8 = Other Hispanic (created for 2001-03 new recruits) 
-- Blank = Missing 
-
-```{r}
-barplot(table(data$RACE))
-table(data$RACE)
-```
-
-This all looks coded properly. As is a common thing I am seeing, we have a predominant proportion of participants who are white, non-Hispanic. The data set might be large enough that we can use this.
+This all looks coded properly. As is a common thing I am seeing, we have a predominant proportion of participants who are white, non-Hispanic. The data set might be large enough that we can use race as a covariate.
 
 It might be worth dummy coding as white vs non white and see if there are any differences. That's not the main focus of this project though so I will leave that to if I have extra time at the end.
 
-## EDUCBAS
+<a href="#Clean_IVs">Back to top of tabset</a>
 
-Baseline or earliest reported education (highest grade or level) 
+## Education at Baseline
 
-- 1 = 8th grade or less 
-- 2 = 9,10, or 11th grade 
-- 3 = 12th grade 
-- 4 = At least one year college but no degree 
-- 5 = Four years college / got degree 
-- 6 = Some graduate work 
-- 7 = Post-graduate degree 
-- Blank = Missing
+Baseline or earliest reported education (highest grade or level)
+
+-   1 = 8th grade or less
+-   2 = 9,10, or 11th grade
+-   3 = 12th grade
+-   4 = At least one year college but no degree
+-   5 = Four years college / got degree
+-   6 = Some graduate work
+-   7 = Post-graduate degree
+-   Blank = Missing
 
 ```{r}
-barplot(table(data$EDUCBAS))
-table(data$EDUCBAS)
+# Create barplot of education at baseline
+barplot(table(data_2$EDUCBAS))
+
+# Pretty print table
+kable(table(data_2$EDUCBAS), format = "html") %>%
+  kable_styling(bootstrap_options = c("condensed", "hover", "striped"))
 ```
 
-This all checks out. And it looks like there are enough participants in each group to run analyses with this variable. Will be interesting to see what relationships arise, as I expect there to be a strong association between education and HIV exposure.
+This all checks out. And it looks like there are enough participants in each group (except for 8th grade or less) to run analyses with this variable. It will be interesting to see what relationships arise, as I expect there to be a strong association between education and HIV exposure.
 
-## hivpos
+<a href="#Clean_IVs">Back to top of tabset</a>
 
-HIV Serostatus 
+## HIV Serostatus
 
-- 0 = Negative 
-- 1 = Positive
+HIV Serostatus
+
+-   0 = Negative
+-   1 = Positive
 
 ```{r}
 # Checking that all patients are HIV pos
-any(is.na(data$hivpos))
+any(is.na(data_2$hivpos))
 ```
 
 All patients in this data set are HIV+
 
-## age
+<a href="#Clean_IVs">Back to top of tabset</a>
 
-Age at visit 
+## Age
+
+Age at visit
 
 ```{r}
-hist(data$age)
+# Create histogram for age
+hist(data_2$age)
 
-qqnorm(data$age)
-qqline(data$age)
+# Create qqplot for age
+qqnorm(data_2$age)
+qqline(data_2$age)
 ```
 
-Nice and normally distributed how we like it.
+Nice and normally distributed, how we like it.
 
-## ART
+<a href="#Clean_IVs">Back to top of tabset</a>
 
-Take ART at visit 
- - 0 = NO 
- - 1 = YES
+## Antiretroviral Therapy
+
+Take ART at visit
+
+-   0 = NO
+-   1 = YES
 
 ```{r}
-barplot(table(data$ART))
-table(data$ART)
+# Create barplot of antiretroviral therapy
+barplot(table(data_2$ART))
+
+# Pretty print table
+kable(table(data_2$ART), format = "html") %>%
+  kable_styling(bootstrap_options = c("condensed", "hover", "striped"))
 ```
 
 I'm not too sure how useful this variable will be. It just means there were some visits where patients were not given ART, I suppose. But most visits had participants receiving ART.
+
+<a href="#Clean_IVs">Back to top of tabset</a>
 
 ## everART
 
 Ever took ART.
 
- - 0 = NO 
- - 1 = YES
+-   0 = NO
+-   1 = YES
 
 ```{r}
-barplot(table(data$everART))
-table(data$everART)
+# Create barplot of everART
+barplot(table(data_2$everART))
+
+# Pretty print table
+kable(table(data_2$everART), format = "html") %>%
+  kable_styling(bootstrap_options = c("condensed", "hover", "striped"))
 ```
 
 This has the exact same split as `ART`. Which makes me think they are exactly the same values for each participant
 
 ```{r}
 # Check if everART and ART are identical
-all(data$everART == data$ART)
+all(data_2$everART == data_2$ART)
 ```
 
 Yup, this is either an accidental duplicate of `ART`, or there is no distinction of significance between the two. What exactly does "Ever took ART" (the explanation provided by the data dictionary) mean? Was this taken at baseline?
 
 Either way looks like we're not using this variable.
 
-## hard_drugs
+<a href="#Clean_IVs">Back to top of tabset</a>
 
-Hard drug use (either injection drugs or illicit heroin/opiate use) since last visit 
+## Hard Drug Use
 
- - 0 = No 
- - 1 = Yes 
- - Blank = Missing
+Hard drug use (either injection drugs or illicit heroin/opiate use) since last visit
+
+-   0 = No
+-   1 = Yes
+-   Blank = Missing
 
 ```{r}
-barplot(table(data$hard_drugs))
-table(data$hard_drugs)
+# Create barplot of hard drug use category
+barplot(table(data_2$hard_drugs))
+
+# Pretty print table
+kable(table(data_2$hard_drugs), format = "html") %>%
+  kable_styling(bootstrap_options = c("condensed", "hover", "striped"))
 ```
 
-There were 406 visits where participants had used hard_drugs since the last visit.
+There were 198 visits where participants had used hard_drugs since the last visit.
+
+This variable looks good. We will just have to do some dummy coding to create the categories the researchers were interested in.
+
+<a href="#Clean_IVs">Back to top of tabset</a>
 
 ## Summary
 
-Add details from of how many participants we excluded based on erroneous data entry. Add to CONSORT diagram.
+For the CONSORT diagram, we just removed:
+
+38 visits where patients did not report income.
+
+X BMI values that were missing and y values that were improbable.
+
+137 visits with insufficient data for a HBP diagnosis
+
+881 visits with insufficient data for a DIAB diagnosis.
+
+507 visits with insufficient data for a LIV34 diagnosis
+
+1068 visits with insuffcient data for a kidney disease diagnosis
+
+3 visits with insuffiient data for FRP diagnosis
+
+357 visits with insufficient data for FP diagnosis
+
+718 visits with insufficent data for dyslipidemia diagnosis
+
+X visits with missing values for CESD
+
+20 visits where heroin or opiate use was not specified
+
+COME BACK TO THIS BECAUSE i THINK I NEED TO COME BACK AND DELETE OUTLIERS.
+
+<a href="#Clean_IVs">Back to top of tabset</a>
+:::
+
+## Missingness Redux
+
+We first examined missingness before performing data cleaning just to get a sense of the data set.
+
+Let's compare what our missingness looked like pre- and post-data cleaning.
+
+```{r}
+# Visualize missingness for pre-cleaned data
+gg_miss_var(data)
+
+# Visualize missingness for post-cleaned data
+gg_miss_var(data_2)
+```
+
+The order for missingness has changed, now with `KID` at the top, followed by `DIAB`, `LDL`, `TRIG`, and `DYSLIP`.
+
+`TCHOL`, `LIV34`, and `income` are further behind, with levels of missingness that may be salvageable (\~30%).
+
+```{r}
+# Visualize missingness for pre-cleaned dataset
+vis_miss(data)
+
+# Visualize missingness for post-cleaned dataset
+vis_miss(data_2)
+```
+And for good measure let's now examine missingness in the wide form data set.
+
+```{r}
+# Create new wideform data set for first 2 years of study              
+data_wide_2 <- pivot_wider(data_2, id_cols = newid, names_from = years, values_from = -c(newid, years))
+
+# Visualize missing values in the wideform data set
+vis_miss(data_wide_2)
+```
+
+There are no real trends that become apparent when looking at this plot.
+
+To summarize, it appears that diagnoses that were determined by algorithm often had insufficient data to make a diagnosis, so perhaps this is an issue with those algorithms. Additionally, lab measurements of `LDL` and `TRIG` seem to have been too onerous for participants to have gotten. Maybe they opted out of those tests, or maybe the tests were only ordered under certain circumstances.
+
+These would be valuable questions to bring forth to the PI. But for now it appear as if we won't be able to use these variables.
+
+
+
 
 [Variables with a small amount of missingness that we can ignore and let them drop from the analysis when we run the model (i.e. \< 5%)]{.underline}
 
+AGG_MENT, AGG_PHYS, HASH_V, HASHF, FRP, SMOKE, DKGRP, HEROPIATE, IDU, LEU3N, VLOAD, ADH, EDUCBASE, AGE, ART, years, hard-drugs
+
 [Variables with enough missingness we have to address (i.e. 5-20%)]{.underline}
 
-[Variables we have excluded due to excessive % missing (i.e. \~40%)]{underline}
+baseline cases (\~8%) BMI, HBP
 
-LDL, TRIG,
-:::
+[Variables with \>20% that are edge cases, may have to drop, maybe can salvage.]{.underline}
 
-Missingness
+TCHOL
 
-Adherence
+income
+
+LIV34
+
+[Variables with so much missing data we have to drop those variables \>40%]{.underline}
+
+-   `LDL`
+
+-   `TRIG`
+
+-   DIAB
+
+-   KID
+
+-   DYSLIP
+
+# Variable Creation
+
+Here we will create our change scores for our dependent variables `LEU3N`, `VLOAD`, `AGG_MENT`, and `AGG_PHYS` to assess treatment response to ART
 
 ```{r}
-# For some reason participant 69 has an adherence of 1 at baseline
-data_sort <- data_wide[order(data_wide$ADH_0),]
+# Create change scores for outcome variables
+data_wide_2$VLOAD_CHANGE <- data_wide_2$VLOAD_2 - data_wide_2$VLOAD_0
+data_wide_2$LEU3N_CHANGE <- data_wide_2$LEU3N_2 - data_wide_2$LEU3N_0
+data_wide_2$AGG_MENT_CHANGE <- data_wide_2$AGG_MENT_2 - data_wide_2$AGG_MENT_0
+data_wide_2$AGG_MENT_PHYS <- data_wide_2$AGG_PHYS_2 - data_wide_2$AGG_PHYS_0
+```
+
+We need to make dummy codes for our hard drug use groups.
+
+```{r}
+# Making dummy codes for hard drug use group
+data_wide_2$current_drug <- ifelse(data_wide_2$hard_drugs_2 == "Yes", 1, 0) 
+data_wide_2$previous_drug <- ifelse((data_wide_2$hard_drugs_1 == "Yes" | data_wide_2$hard_drugs_0 == "Yes") & data_wide_2$hard_drugs_2 == "No", 1, 0)
+data_wide_2$never_drug <- ifelse(data_wide_2$hard_drugs_1 == "No" & data_wide_2$hard_drugs_0 == "No", 1, 0)
 ```
 
 
+# Correlation Matrix
+
 ```{r}
-# Create change scores
-data_wide$VLOAD_CHANGE <- data_wide$VLOAD_2 - data_wide$VLOAD_0
+
+# # Have to filter down to only numeric variables here
+# 
+# 
+# # Make a correlation matrix with all variables of the trimmed data set
+# correlation_matrix <- cor(data_wide_2, use = "complete.obs")
+# 
+# # Plot the matrix
+# corrplot(correlation_matrix, method = "circle")
+# 
+# # Trim the matrix
+# correlation_matrix[upper.tri(correlation_matrix)] <- NA
+
+```
+
+
+
+
+
+
+
+
+
+
+```{r}
+# Gets average viral load per patient for example, can do min and max etc.
+summary_table <- data %>%
+  group_by(newid) %>%
+  summarize(mean_vload = mean(VLOAD))
+summary_table
+
+colnames(data)
 ```
 
 
 # To do
 
- - Go back and add title and axes labels to all your plots dude
- - add #greentext to every chunk
- - organize tabs by outcome variable / covariates
+-   Go back and add title and axes labels to all your plots dude
+-   add #greentext to every chunk
+-   organize tabs by outcome variable / covariates
+-   investigate these to analyze non normal data: quantile regression, best normalized r package, gamma link GLM
+
+"The transformations contained in this package and implemented in bestNormalize are reversible (i.e., 1-1), which allows for straight-forward interpretation and consistency. In other words, any analysis performed on the normalized data can be interpreted using the original unit (see application)." Cool.
+
+
+```{r}
+library(mice)
+
+imputed_data <- mice(mtcars, m = 5, method = 'pmm', maxit = 50, seed = 500)
+
+# Check the imputed data
+summary(imputed_data)
+
+complete_data <- complete(imputed_data, 1) # 1 refers to the first imputed dataset
+complete_data
+
+```
+

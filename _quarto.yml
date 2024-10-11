@@ -21,7 +21,7 @@ website:
       - text: Clinical Research Informatics
       - text: CV
       
-theme: cyborg
+theme: minty
 
 execute: 
   echo: true
