@@ -46,6 +46,8 @@ library(kableExtra) # Used for pretty printing (kable_styling)
 library(table1) # Used to make Table 1
 library(tidyr) # Used for reshaping
 library(bestNormalize) # Used in selecting best transformation for a variable
+library(corrplot) # Used to make the correlation matrix
+library(corrtable) # used to make the table for the correlation matrix
 ```
 
 Then we import the data set.
@@ -142,6 +144,41 @@ data$EDUCBAS <- factor(data$EDUCBAS,
 data$hard_drugs <- factor(data$hard_drugs,
                           levels = c(0, 1),
                           labels = c("No", "Yes"))
+
+# Create labels for variables to make the names of each variable more professional in outputs
+label(data$newid) <- "ID"
+label(data$AGG_MENT) <- "Aggregate Mental QOL Score"
+label(data$AGG_PHYS) <- "Aggregate Physical QOL Score"
+label(data$HASHF) <- "Hash/Marijuana Use Since Last Visit"
+label(data$HASHV) <- "Frequency of Hash/Marijuana Use"
+label(data$income) <- "Income"
+label(data$HBP) <- "High Blood Pressure"
+label(data$DIAB) <- "Diabetes"
+label(data$LIV34) <- "Liver Disease Stage 3/4"
+label(data$KID) <-"Kidney Disease"
+label(data$FRP) <- "Frailty Related Phenotype"
+label(data$FP) <- "Fraily Phenotype"
+label(data$BMI) <- "BMI"
+label(data$TCHOL) <- "Total Cholesterol"
+label(data$TRIG) <- "Triglycerides"
+label(data$LDL) <- "LDL"
+label(data$DYSLIP) < "Dyslipidemia"
+label(data$SMOKE) < "Smoking Status"
+label(data$CESD) <- "CESD Depression Score"
+label(data$SMOKE) < "Smoking Status"
+label(data$DKGRP) <- "Drinking Group"
+label(data$HEROPIATE) <- "Heroin or Opiate Use Since Last Visit"
+label(data$IDU) <- "Intravenous Drug Usage Since Last Visit"
+label(data$LEU3N) <- "CD4+ T Cell Count"
+label(data$VLOAD) <- "Viral Load"
+label(data$ADH) <- "Adherence to Treatment Regimen"
+label(data$RACE) <- "Race"
+label(data$EDUCBAS) <- "Education at Baseline"
+label(data$hivpos) <- "HIV Serostatus"
+label(data$age) <- "Age"
+label(data$ART) <- "Antiretroviral Therapy"
+label(data$years) <- "Year of Visit"
+label(data$hard_drugs) <- "Hard Drug Usage"
 ```
 
 Let's take another look to check that those variables are no longer doubles.
@@ -725,7 +762,12 @@ We have to convert those values of 'Do not wish to answer' to be NA.
 
 ```{r}
 # Converting scores of 9 (do not wish to answer) to be NA
-data$income[data_2$income == 9] <- NA
+data_2$income[data_2$income == "Do not wish to answer"] <- NA
+
+# Drop empty levels
+data_2$income <- droplevels(data_2$income) 
+
+# Create a barplot of income with cleaned values
 barplot(table(data_2$income))
 ```
 
@@ -1852,7 +1894,7 @@ qqnorm(data_wide_2$AGG_PHYS_CHANGE)
 qqline(data_wide_2$AGG_PHYS_CHANGE)
 ```
 
-Aggregate physical QOL change score appears more normally distributed now. 
+Aggregate physical QOL change score appears more normally distributed now.
 
 [Top of Tabset](#Change_Scores)
 
@@ -1861,7 +1903,6 @@ Aggregate physical QOL change score appears more normally distributed now.
 After computing the change scores, our outcome variables are now normally distributed and we can move forward with using them in models!
 
 [Top of Tabset](#Change_Scores)
-
 :::
 
 ## Hard Drug Use Groups {#Hard_Drugs}
@@ -1870,12 +1911,11 @@ We need to make dummy codes for our hard drug use groups.
 
 The criteria outlined by the researchers are as follows:
 
- - [Never User:]{.underline} No drug use reported at 0, 1, or 2 years
- - [Previous User:]{.underline} Drug use reported at 0 or 1 years, but not 2 years
- - [Current User:]{.underline} Drug use reported at 2 years
- 
-::: panel-tabset
+-   [Never User:]{.underline} No drug use reported at 0, 1, or 2 years
+-   [Previous User:]{.underline} Drug use reported at 0 or 1 years, but not 2 years
+-   [Current User:]{.underline} Drug use reported at 2 years
 
+::: panel-tabset
 ## Drug Use Classification
 
 First we will create dummy codes for whether a patient was a never, previous, or current hard drug user.
@@ -1925,12 +1965,11 @@ Great, that looks like we coded it properly and there are no overlaps between dr
 
 Now we will use those dummy codes to make a variable for which group each patient was in
 
- - 0: Never User
- - 1: Previous User
- - 2: Current User
- 
-```{r}
+-   0: Never User
+-   1: Previous User
+-   2: Current User
 
+```{r}
 # Create a single variable for drug use group
 data_wide_2$hard_drugs_grp <- ifelse(data_wide_2$never_drug == 1, 0, 
                                  ifelse(data_wide_2$previous_drug == 1, 1,
@@ -1946,7 +1985,6 @@ data_wide_2$hard_drugs_grp <- factor(data_wide_2$hard_drugs_grp,
 And perform an internal consistency check to make sure there are no overlapping group assignments.
 
 ```{r}
-
 # Double check our criteria worked as intended
 filtered_data <- data_wide_2 %>%
   select(newid, hard_drugs_0, hard_drugs_1, hard_drugs_2, hard_drugs_grp)
@@ -1959,28 +1997,75 @@ kable(head(filtered_data), format = "html") %>%
 Looks good, we can now move forward with analyses using the `hard_drgs_grp` variable!
 
 [Top of Tabset](#Hard_Drugs)
-
 :::
 
+# Descriptive Statistics {#Descriptives}
 
+Here we will acquire the descriptive statistics of our data set and create Table 1. Code modified from [cran.r-project.org](https://cran.r-project.org/web/packages/table1/vignettes/table1-examples.html)
 
-# Correlation Matrix
+Please note: These descriptive statistics are based on the cleaned data set, and will be different from the original data (e.g. `income` values of "Do not wish to answer" have been recoded as missing values).
 
 ```{r}
-
-# # Have to filter down to only numeric variables here
-# 
-# 
-# # Make a correlation matrix with all variables of the trimmed data set
-# correlation_matrix <- cor(data_wide_2, use = "complete.obs")
-# 
-# # Plot the matrix
-# corrplot(correlation_matrix, method = "circle")
-# 
-# # Trim the matrix
-# correlation_matrix[upper.tri(correlation_matrix)] <- NA
-
+# Create Table 1 for longform data set, no stratification
+table1 <- table1(~AGG_MENT + AGG_PHYS + HASHV + HASHF + income + BMI+ HBP + DIAB + LIV34 + KID + FRP + FP + TCHOL + TRIG + LDL + DYSLIP + CESD + SMOKE + DKGRP + HEROPIATE + IDU + LEU3N + VLOAD + ADH + RACE + EDUCBAS + hivpos + age + ART + everART + years + hard_drugs, data = data_2, caption = "Descriptive Statistics", overall = c(left="Total"))
+table1
 ```
+
+Now what if I create table 1 for the wideform data set?
+
+```{r}
+# Create labels for variables to make the names of each variable more professional in outputs
+label(data_wide_2$AGG_MENT_0) <- "Aggregate Mental QOL Score"
+label(data_wide_2$AGG_PHYS_0) <- "Aggregate Physical QOL Score"
+label(data_wide_2$HASHF_0) <- "Hash/Marijuana Use"
+label(data_wide_2$HASHV_0) <- "Frequency of Hash/Marijuana Use"
+label(data_wide_2$income_0) <- "Income"
+label(data_wide_2$HBP_0) <- "High Blood Pressure"
+label(data_wide_2$DIAB_0) <- "Diabetes"
+label(data_wide_2$LIV34_0) <- "Liver Disease Stage 3/4"
+label(data_wide_2$KID_0) <-"Kidney Disease"
+label(data_wide_2$FRP_0) <- "Frailty Related Phenotype"
+label(data_wide_2$FP_0) <- "Fraily Phenotype"
+label(data_wide_2$BMI_0) <- "BMI"
+label(data_wide_2$TCHOL_0) <- "Total Cholesterol"
+label(data_wide_2$TRIG_0) <- "Triglycerides"
+label(data_wide_2$LDL_0) <- "LDL"
+label(data_wide_2$DYSLIP_0) < "Dyslipidemia"
+label(data_wide_2$SMOKE_0) < "Smoking Status"
+label(data_wide_2$CESD_0) <- "CESD Depression Score"
+label(data_wide_2$SMOKE_0) < "Smoking Status"
+label(data_wide_2$DKGRP_0) <- "Drinking Group"
+label(data_wide_2$HEROPIATE_0) <- "Heroin or Opiate Use"
+label(data_wide_2$IDU_0) <- "Intravenous Drug Usage"
+label(data_wide_2$LEU3N_0) <- "CD4+ T Cell Count"
+label(data_wide_2$VLOAD_log_0) <- "Log Viral Load"
+label(data_wide_2$ADH_1) <- "Adherence to Treatment Regimen at Year 1"
+label(data_wide_2$ADH_2) <- "Adherence to Treatment Regimen at Year 2"
+label(data_wide_2$RACE_0) <- "Race"
+label(data_wide_2$EDUCBAS_0) <- "Education at Baseline"
+label(data_wide_2$hivpos_0) <- "HIV Serostatus"
+label(data_wide_2$age_0) <- "Age"
+label(data_wide_2$ART_0) <- "Antiretroviral Therapy"
+label(data_wide_2$hard_drugs_0) <- "Hard Drug Usage"
+label(data_wide_2$AGG_MENT_CHANGE) <- "Aggregate Mental QOL Change Score"
+label(data_wide_2$AGG_PHYS_CHANGE) <- "Aggregate Physical QOL Change Score"
+label(data_wide_2$VLOAD_log_CHANGE) <- "Log Viral Load Change Score"
+label(data_wide_2$LEU3N_CHANGE) <- "CD4+ T Cell Count Change Score"
+
+# Create Table 1 for the wideform data set,stratified by hard drug use group
+table1 <- table1(~AGG_MENT_0 + AGG_PHYS_0 +  HASHV_0 + HASHF_0 + income_0 + BMI_0 + HBP_0 + DIAB_0 + LIV34_0 + KID_0 + FRP_0 + FP_0 + TCHOL_0 + TRIG_0 + LDL_0 + DYSLIP_0 + CESD_0 + SMOKE_0 + DKGRP_0 + HEROPIATE_0 + IDU_0 + LEU3N_0 +  VLOAD_log_0 + ADH_1 + ADH_2 + RACE_0 + EDUCBAS_0 + age_0 + AGG_MENT_CHANGE + AGG_PHYS_CHANGE + VLOAD_log_CHANGE + LEU3N_CHANGE| hard_drugs_grp, data = data_wide_2, caption = "Descriptive Statistics at Baseline", overall = c(left="Total"))
+table1
+```
+
+For good measure, let's create Table 1 while stratifying by Adherence group at 2 years.
+
+```{r}
+# Create Table 1 for the wideform data set,stratified by adherence group
+table1 <- table1(~AGG_MENT_0 + AGG_PHYS_0 +  HASHV_0 + HASHF_0 + income_0 + BMI_0 + HBP_0 + DIAB_0 + LIV34_0 + KID_0 + FRP_0 + FP_0 + TCHOL_0 + TRIG_0 + LDL_0 + DYSLIP_0 + CESD_0 + SMOKE_0 + DKGRP_0 + HEROPIATE_0 + IDU_0 + LEU3N_0 +  VLOAD_log_0 + hard_drugs_grp + RACE_0 + EDUCBAS_0 + age_0 + AGG_MENT_CHANGE + AGG_PHYS_CHANGE + VLOAD_log_CHANGE + LEU3N_CHANGE| ADH_2, data = data_wide_2, caption = "Descriptive Statistics at Baseline", overall = c(left="Total"))
+table1
+```
+
+
 
 ```{r}
 # Gets average viral load per patient for example, can do min and max etc.
@@ -2003,14 +2088,251 @@ fig
 # Create boxplots for vload_log by hard_drugs
 fig <- plot_ly(data_wide_2, x = ~hard_drugs_grp, y = ~VLOAD_log_CHANGE, color = ~hard_drugs_grp, type = "box")
 fig
+```
 
+# Bivariate Relationships
+
+We will first perform an exploratory data analysis to assess the relationships between variables, to examine multicollinearity, and to select potential covariates.
+
+## Correlation Matrix
+
+First we will begin by making a correlation matrix to assess whether any of our IVs are related to each other (multicollinearity). This will also inform which variables to incorporate into the final model.
+
+```{r}
+# Let's clean our output by making a trimmed dataset excluding extaneous variables
+data_for_matrix <- select(data_2, -newid, -ART, -everART, -LEU3N_log, -LEU3N_yeojohnson, -LEU3N_boxcox, -LEU3N_orderNorm, - LEU3N_standard, -AGG_MENT_orderNorm, -AGG_MENT_orderNorm, -BMI_outlier, -CESD_sqrt, -hivpos, -AGG_PHYS_orderNorm, - LIV34)
+
+# We factored our variables at the start. To make a correlation matrix we must reconvert those back to numeric
+data_for_matrix <- data.frame(lapply(data_for_matrix, function(x) if (is.factor(x)) as.numeric(x) else x))
+
+# Make a correlation matrix with all variables of the trimmed data set
+correlation_matrix <- cor(data_for_matrix, use = "complete.obs")
+
+# Plot the matrix
+corrplot(correlation_matrix, method = "circle")
+```
+
+There are a host of strong correlations in our data set.
+
+`CESD` has a strong negative associated with `AGG_MENT`, which makes perfect sense. Those who are are more depressed will have lower mental health scores. `CESD` will have to be included in any analysis with `AGG_MENT` as an outcome variable.
+
+`FRP` and `FP` are strongly negatively associated with `AGG_PHYS`. This also makes perfect sense: Those who are frail will have lower overall physical health scores. `FRP` and/or `FP` will need to be included in the model predicting `AGG_PHYS`. Additionally, the correlation between `FRP` and `FP` will have to be assessed to see if we have multicollinearity. If so, one of them can be chosen over the other since it sounds like they are evaluating almost the same thing (i.e., "Frailty Related Phenotype" vs "Frailty Phenotype")
+
+`income` is strongly associated with `EDUCBASE`, `RACE`, `SMOKE`, and weakly correlated with `TCHOL` and `LDL`, and `VLOAD_log`. These relationships will all have to be examined more closely to control for multicollinearity.
+
+`ADH` is correlated with `VLOAD_log`, but I think having a categorical variable in a correlation matrix is actually not appropriate. `VLOAD_log` appears to be lightly correlated with `income` and `EDUCBASE`.
+
+`Hard_drugs` is highly correlated with `HEROPIATE` and `IDU`, which makes perfect sense, as they are all basically the same thing. Since `Hard_drugs` is our main independent variable of interest, we drop `HEROPIATE` and `IDU` as potential covariates since they are all so highly correlated.
+
+We appear to have notable multicollinearity between `DYSLIP` and `TCHOL`, `LDL`, and `TRIG`. This makes sense because all these variables are highly related (abnormal levels of fats in the blood). This is interesting because these variables are where a lot of our missingness occured. We will have to be careful when including any of these variables in our model.
+
+We also have some possible multicollinearity to be aware of between `KID`, `HBP`, and `DIAB`.
+
+With all that in mind, let's look at our relationships between the main IV and outcomes of interest!!
+
+## Exploratory Data Analysis {#EDA}
+
+Here I will plot the data and perform a number of simple linear regressions to examine relationships between variables in order to determine which covariates to include in the model.
+
+::::: panel-tabset
+
+## Primary Explanatory Variable
+
+Let's begin by seeing if there appears to be a difference in our outcome variables based on hard drug use
+
+::: panel-tabset
+
+## Log Viral Load
+
+Start with log viral load.
+
+```{r}
+# Create boxplots of log viral load change by hard drug use group
+p <- ggplot(data_wide_2, aes(x = hard_drugs_grp, y = VLOAD_log_CHANGE, fill = hard_drugs_grp)) +
+  geom_boxplot(alpha = 0.5) +
+  scale_fill_brewer(palette="Pastel2") +
+  labs(title = "Boxplot of Log Viral Load Change by Hard Drug Use Group",
+       x = "Hard Drug Use Group",
+       y = "Log Viral Load Change") +
+  guides(fill = guide_legend(title = "Hard Drug Use Group"))
+
+ggplotly(p)
+```
+There may be a difference between log viral load change and hard drug use group, especially between never users and previous users.
+
+[Top of tabset](#EDA)
+
+## CD4+ T Cell Count
+
+```{r}
+# Create boxplots of CD4+ T Cell Count by hard drug use group
+p <- ggplot(data_wide_2, aes(x = hard_drugs_grp, y = LEU3N_CHANGE, fill = hard_drugs_grp)) +
+  geom_boxplot(alpha = 0.5) +
+  scale_fill_brewer(palette="Pastel2") +
+  labs(title = "Boxplot of CD4+ T Cell Count by Hard Drug Use Group",
+       x = "Hard Drug Use Group",
+       y = "CD4+ T Cell Count Change") +
+  guides(fill = guide_legend(title = "Hard Drug Use Group"))
+
+ggplotly(p)
+```
+
+There does not appear to be much of a difference in CD4+ T cell count over 2 years based on hard drug use.
+
+[Top of Tabset](#EDA)
+
+## Aggregate Mental QOL Change
+
+```{r}
+# Create boxplots of aggregate mental QOL by hard drug use group
+p <- ggplot(data_wide_2, aes(x = hard_drugs_grp, y = AGG_MENT_CHANGE, fill = hard_drugs_grp)) +
+  geom_boxplot(alpha = 0.5) +
+  scale_fill_brewer(palette="Pastel2") +
+  labs(title = "Boxplot of Aggregate Mental QOL by Hard Drug Use Group",
+       x = "Hard Drug Use Group",
+       y = "Aggregate Mental QOL Change") +
+  guides(fill = guide_legend(title = "Hard Drug Use Group"))
+
+ggplotly(p)
+```
+
+Lots of variation in our boxplots there, but doesn't really look like a significant difference between groups.
+
+[Top of Tabset](#EDA)
+
+## Aggregate Physical QOL Change
+
+```{r}
+# Create boxplots of aggregate physical QOL by hard drug use group
+p <- ggplot(data_wide_2, aes(x = hard_drugs_grp, y = AGG_PHYS_CHANGE, fill = hard_drugs_grp)) +
+  geom_boxplot(alpha = 0.5) +
+  scale_fill_brewer(palette="Pastel2") +
+  labs(title = "Boxplot of Aggregate Physical QOL by Hard Drug Use Group",
+       x = "Hard Drug Use Group",
+       y = "Aggregate Physical QOL Change") +
+  guides(fill = guide_legend(title = "Hard Drug Use Group"))
+
+ggplotly(p)
+```
+
+Also doesn't look like a difference here.
+
+:::
+
+## Adherence
+
+::: panel-tabset
+
+The researchers are interested in assessing adherence as a potential confounder for the relationship between hard drug use and the outcome variables. Let's assess
+
+## Log Viral Load Change
+
+```{r}
+# Create boxplots of log viral load change by adherence group
+p <- ggplot(data_wide_2, aes(x = ADH_2, y = VLOAD_log_CHANGE, fill = ADH_2)) +
+  geom_boxplot(alpha = 0.5) +
+  scale_fill_brewer(palette="Pastel2") +
+  labs(title = "Boxplot of Log Viral Load Change by Adherence",
+       x = "Adherence",
+       y = "Log Viral Load Change") +
+  guides(fill = guide_legend(title = "Adherence"))
+
+ggplotly(p)
+```
+
+It does appear that log viral load change differs based on adherence. It seems that the low adherence groups have a less of a decrease in log viral load compared to the high adherence groups.
+
+If this relationship is significant we will definitely have to include adherence as a covariate.
+
+[Top of Tabset](#EDA)
+
+## CD4+ T Cell Count Change
+
+```{r}
+# Create boxplots of CD4+ T Cell Count by adherence group
+p <- ggplot(data_wide_2, aes(x = ADH_2, y = LEU3N_CHANGE, fill = ADH_2)) +
+  geom_boxplot(alpha = 0.5) +
+  scale_fill_brewer(palette="Pastel2") +
+  labs(title = "Boxplot of CD4+ T Cell Count by Adherence",
+       x = "Adherence",
+       y = "CD4+ T Cell Count Change") +
+  guides(fill = guide_legend(title = "Adherence"))
+
+ggplotly(p)
+```
+
+There does not appear to be much of a difference in CD4+ T Cell Count based on adherence.
+
+[Top of Tabset](#EDA)
+
+## Aggregate Mental QOL Change
+
+```{r}
+# Create boxplots of aggregate mental QOL change by adherence group
+p <- ggplot(data_wide_2, aes(x = ADH_2, y = AGG_MENT_CHANGE, fill = ADH_2)) +
+  geom_boxplot(alpha = 0.5) +
+  scale_fill_brewer(palette="Pastel2") +
+  labs(title = "Boxplot of CD4+ T Cell Count by Adherence",
+       x = "Adherence",
+       y = "Aggregate Mental QOL Change") +
+  guides(fill = guide_legend(title = "Adherence"))
+
+ggplotly(p)
+```
+
+There does not appear to be much of a difference in aggregate mental QOL change based on adherence.
+
+[Top of Tabset](#EDA)
+
+## Aggregate Physical QOL Change
+
+```{r}
+# Create boxplots of aggregate physical QOL change by adherence group
+p <- ggplot(data_wide_2, aes(x = ADH_2, y = AGG_PHYS_CHANGE, fill = ADH_2)) +
+  geom_boxplot(alpha = 0.5) +
+  scale_fill_brewer(palette="Pastel2") +
+  labs(title = "Boxplot of CD4+ T Cell Count by Adherence",
+       x = "Adherence",
+       y = "Aggregate Physical QOL Change") +
+  guides(fill = guide_legend(title = "Adherence"))
+
+ggplotly(p)
+```
+
+[Top of Tabset](#EDA)
+
+
+:::
+
+:::
+
+::::::
+
+This doesn't tell us anything but I want to come back to this idea.
+
+```{r}
+ggplot(data_wide_2, aes(x = newid, y = VLOAD_log_CHANGE, color = hard_drugs_grp)) +
+  geom_point()
+
+```
+
+
+
+# CONSORT Flow Chart
+
+Here is where I will go back and add details for how many participants we removed at each stage.
+
+This function is useful for tabulating missing data for each variable.
+
+```{r}
+# Print number of missing data for each column 
+kable(colSums(is.na(data_2)), format = "html", col.names = "Missing") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
 ```
 
 # To do
 
 -   Go back and add title and axes labels to all your plots dude
--   add #greentext to every chunk
--   organize tabs by outcome variable / covariates
 -   investigate these to analyze non normal data: quantile regression, best normalized r package, gamma link GLM
 
 "The transformations contained in this package and implemented in bestNormalize are reversible (i.e., 1-1), which allows for straight-forward interpretation and consistency. In other words, any analysis performed on the normalized data can be interpreted using the original unit (see application)." Cool.
@@ -2030,6 +2352,4 @@ complete_data
 
 maybe do MI for TCHOl, or try clearing out outliers +- 3 SD from mean and re-plot hist and qqplots
 
-
-turn my kable pretty print into a function that I can just call as
-pretty(df)
+turn my kable pretty print into a function that I can just call as pretty(df)
