@@ -2038,14 +2038,14 @@ $ hard_drugs &lt;fct&gt; Yes, No, No, No, Yes, No, No, No, No, No, Yes, Yes, Yes
 <div class="cell-output cell-output-stdout">
 <pre><code>Best Normalizing transformation with 1606 Observations
  Estimated Normality Statistics (Pearson P / df, lower =&gt; more normal):
- - arcsinh(x): 2.8682
- - Box-Cox: 1.2201
- - Center+scale: 1.7066
- - Double Reversed Log_b(x+a): 3.0808
- - Log_b(x+a): 2.8707
- - orderNorm (ORQ): 1.1239
- - sqrt(x + a): 1.2352
- - Yeo-Johnson: 1.2198
+ - arcsinh(x): 2.8951
+ - Box-Cox: 1.2859
+ - Center+scale: 1.7864
+ - Double Reversed Log_b(x+a): 3.1979
+ - Log_b(x+a): 2.8951
+ - orderNorm (ORQ): 1.2186
+ - sqrt(x + a): 1.3767
+ - Yeo-Johnson: 1.2847
 Estimation method: Out-of-sample via CV with 10 folds and 5 repeats
  
 Based off these, bestNormalize chose:
@@ -2184,15 +2184,15 @@ orderNorm Transformation with 1606 nonmissing obs and ties
 <div class="cell-output cell-output-stdout">
 <pre><code>Best Normalizing transformation with 1640 Observations
  Estimated Normality Statistics (Pearson P / df, lower =&gt; more normal):
- - arcsinh(x): 9.374
- - Box-Cox: 3.2474
- - Center+scale: 5.2284
- - Double Reversed Log_b(x+a): 2.3679
- - Exp(x): 169.0512
- - Log_b(x+a): 9.3776
- - orderNorm (ORQ): 1.0564
- - sqrt(x + a): 6.9001
- - Yeo-Johnson: 3.1015
+ - arcsinh(x): 9.7489
+ - Box-Cox: 3.3579
+ - Center+scale: 5.3592
+ - Double Reversed Log_b(x+a): 2.3865
+ - Exp(x): 171.9139
+ - Log_b(x+a): 9.754
+ - orderNorm (ORQ): 1.0963
+ - sqrt(x + a): 6.9998
+ - Yeo-Johnson: 3.2108
 Estimation method: Out-of-sample via CV with 10 folds and 5 repeats
  
 Based off these, bestNormalize chose:
@@ -2255,15 +2255,15 @@ orderNorm Transformation with 1640 nonmissing obs and ties
 <div class="cell-output cell-output-stdout">
 <pre><code>Best Normalizing transformation with 1640 Observations
  Estimated Normality Statistics (Pearson P / df, lower =&gt; more normal):
- - arcsinh(x): 6.8197
- - Box-Cox: 2.4408
- - Center+scale: 3.8004
- - Double Reversed Log_b(x+a): 1.8483
- - Exp(x): 172.7064
- - Log_b(x+a): 6.817
- - orderNorm (ORQ): 1.1008
- - sqrt(x + a): 4.9546
- - Yeo-Johnson: 2.0788
+ - arcsinh(x): 6.7206
+ - Box-Cox: 2.4537
+ - Center+scale: 3.8295
+ - Double Reversed Log_b(x+a): 1.8702
+ - Exp(x): 173.1257
+ - Log_b(x+a): 6.7251
+ - orderNorm (ORQ): 1.0831
+ - sqrt(x + a): 4.9873
+ - Yeo-Johnson: 2.1217
 Estimation method: Out-of-sample via CV with 10 folds and 5 repeats
  
 Based off these, bestNormalize chose:
@@ -3986,8 +3986,6 @@ orderNorm Transformation with 1640 nonmissing obs and ties
 </div>
 <p>The order for missingness has changed, now with <code>KID</code> at the top, followed by <code>DIAB</code>, <code>LDL</code>, <code>TRIG</code>, and <code>DYSLIP</code>.</p>
 <p><code>TCHOL</code>, <code>LIV34</code>, and <code>income</code> are further behind, with levels of missingness that may be salvageable (~30%).</p>
-<p>To summarize, it appears that diagnoses that were determined by algorithm often had insufficient data to make a diagnosis, so perhaps this is an issue with those algorithms. Additionally, lab measurements of <code>LDL</code> and <code>TRIG</code> seem to have been too onerous for participants to have gotten. Maybe they opted out of those tests, or maybe the tests were only ordered under certain circumstances.</p>
-<p>These would be valuable questions to bring forth to the PI. But for now it appear as if we won’t be able to use these variables.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb138"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb138-1"><a href="#cb138-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Visualize missingness for pre-cleaned dataset</span></span>
 <span id="cb138-2"><a href="#cb138-2" aria-hidden="true" tabindex="-1"></a><span class="fu">vis_miss</span>(data)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -4024,6 +4022,8 @@ orderNorm Transformation with 1640 nonmissing obs and ties
 </div>
 </div>
 <p>There are no real trends that become apparent when looking at this plot.</p>
+<p>To summarize, it appears that diagnoses that were determined by algorithm often had insufficient data to make a diagnosis, so perhaps this is an issue with those algorithms. Additionally, lab measurements of <code>LDL</code> and <code>TRIG</code> seem to have been too onerous for participants to have gotten. Maybe they opted out of those tests, or maybe the tests were only ordered under certain circumstances.</p>
+<p>These would be valuable questions to bring forth to the PI. But for now it appear as if we won’t be able to use these variables.</p>
 <p><u>Variables with a small amount of missingness that we can ignore and let them drop from the analysis when we run the model (i.e.&nbsp;&lt; 5%)</u></p>
 <p>AGG_MENT, AGG_PHYS, HASH_V, HASHF, FRP, SMOKE, DKGRP, HEROPIATE, IDU, LEU3N, VLOAD, ADH, EDUCBASE, AGE, ART, years, hard-drugs</p>
 <p><u>Variables with enough missingness we have to address (i.e.&nbsp;5-20%)</u></p>
@@ -4541,7 +4541,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
   }
     var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
     var mailtoRegex = new RegExp(/^mailto:/);
-      var filterRegex = new RegExp('/' + window.location.host + '/');
+      var filterRegex = new RegExp("https:\/\/svieau\.quarto\.pub\/portfolio");
     var isInternal = (href) => {
         return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
     }
