@@ -40,6 +40,7 @@ First we load the necessary packages
 library(dplyr)
 library(ggplot2)
 library(tidyverse)
+library(plotly) # Used for interactive plots
 library(naniar) # Used to visualize missing data
 library(kableExtra) # Used for pretty printing (kable_styling)
 library(table1) # Used to make Table 1
@@ -177,19 +178,24 @@ kable(table(data$years), format = "html", full_width = FALSE) %>%
 
 This is interesting, we don't seem to have as drastic a drop off as I expected. The researchers managed to retain all participants for the first 2 years, and 50% by the end of the 8-year study.
 
-Let's filter to only include values from the first 2 years.
+Let's filter to only include values from the first 2 years, as this is the timeframe the researchers are interested in.
 
 ```{r}
 # Filter long form data set to be include only first 2 years
 data_2 <- data[data$years <= 2,]
+
+# Check how many visits we have in the filtered data set.
+dim(data_2)
 ```
+
+We went from 3632 visits in the 8 year data set to 1650 in the 2 year filtered data set.
 
 ```{r}
 # Double check if any patients dropped out within the first 2 years
 any(is.na(data_2$years))
 ```
 
-Luckily, all participants have at least 2 years of visits!
+Luckily, no patients dropped out within the first 2 years of the study!
 
 ## Transpose to Wideform
 
@@ -411,7 +417,7 @@ That looks much better!
 
 I'd say that's roughly normally distributed, maybe a bit right tailed but likely still acceptable.
 
-Looks like this took care of those values that were showing up as outliers before.
+Looks like this took care of those values that were showing up as outliers before, and we have no outliers for this variable.
 
 `VLOAD` has now been cleaned!
 
@@ -428,7 +434,7 @@ Number of CD4 positive cells (helpers)
 
 ```{r}
 # Create histogram of CD4 T Cells
-hist(data_2$LEU3N)
+hist(data_2$LEU3N, breaks = 24)
 
 # Create qqplot of CD4 T Cells
 qqnorm(data_2$LEU3N)
@@ -528,6 +534,34 @@ I will select Box-Cox as those two names are more familiar to me so I trust it m
 
 It looks like we are good on `LEU3N` and can move forward!
 
+```{r}
+# Get mean and SD for LEU3N
+mean_value <- mean(data_2$LEU3N, na.rm = TRUE)
+sd_value <- sd(data_2$LEU3N, na.rm = TRUE)
+
+# Copy data set so we are not changing our main data set.
+filtered_data <- data_2
+
+# Shows we have 10 values >= 3SDs from the mean.
+filtered_data %>%
+  select(LEU3N) %>%
+  filter(LEU3N >= mean_value + 3*sd_value)
+
+# Filter our values greater than 3SD from the mean.
+filtered_data$LEU3N[filtered_data$LEU3N >= (mean_value + (3 * sd_value)) | filtered_data$LEU3N <= (mean_value - (3 * sd_value))] <- NA
+
+# View the hist again now that we have filtered outleirs
+hist(filtered_data$LEU3N, breaks = 24)
+
+# Create boxplot of CD4 T cell count to assess for outliers
+outlier_leu3n <- boxplot(filtered_data$LEU3N, main = "Boxplot for Leu3n")$out
+text(x = rep(1.2, length(outlier_leu3n)),
+     y = outlier_leu3n, labels = outlier_leu3n, col = 'red', cex = 0.8)
+```
+
+
+[Options:]{.underline} We can try running the analysis with our transformed `LEU3N` values, or run it without transformation and see how many of those high values are real outliers with high leverage and influence.
+
 More information on Box-Cox Transformation [here](https://www.statisticshowto.com/probability-and-statistics/normal-distributions/box-cox-transformation/)
 
 <a href="#Clean_DVs">Back to top of tabset</a>
@@ -553,9 +587,14 @@ sorted_data_2 <- data_2[order(data_2$AGG_MENT),] %>%
 # Pretty print resulting table
 kable(head(sorted_data_2), format = "html") %>%
   kable_styling(bootstrap_options = c("hover", "striped", "condensed"))
+
+# Create boxplot of aggregate mental QOL to assess for outliers
+outlier_AGG_MENT <- boxplot(data_2$AGG_MENT, main = "Boxplot for Aggregate Mental QOL")$out
+text(x = rep(1.2, length(outlier_AGG_MENT)),
+     y = outlier_AGG_MENT, labels = outlier_AGG_MENT, col = 'red', cex = 0.8)
 ```
 
-It appears that `AGG_MENT` is also not normally distributed, it is left-tailed. Let's address that.
+It appears that `AGG_MENT` only has 2 potential outliers, and is also not normally distributed, it is left-tailed. Let's address that.
 
 ```{r}
 # Use bestNormalize function to test which transformation performs the best
@@ -683,7 +722,7 @@ kable(table(data_2$income), format = "html") %>%
   kable_styling(bootstrap_options = c("condensed", "hover", "striped"))
 ```
 
-We have to convert those values do not wish to answer to be NA.
+We have to convert those values of 'Do not wish to answer' to be NA.
 
 ```{r}
 # Converting scores of 9 (do not wish to answer) to be NA
@@ -769,6 +808,92 @@ text(x = rep(1.2, length(outlier_bmi)),
 ```
 
 That's a lot of potential outliers for BMI. If we really want to use this variable we may have to remove these values to keep BMI normally distributed.
+
+```{r}
+# Run simple correlation matrix to see if BMI correlated with any outcomes of interest
+
+# Correlation between VMI and VLOAD log
+cor_test_result <- cor.test(data_2$BMI, data_2$VLOAD_log)
+cor_test_result
+
+# Correlation between BMI and CD4+ T Cell count boxcox
+cor_test_result <- cor.test(data_2$BMI, data_2$LEU3N_boxcox)
+cor_test_result
+
+
+# Correlation between BMI and mental QOL 
+cor_test_result <- cor.test(data_2$BMI, data_2$AGG_MENT)
+cor_test_result
+
+# Correlation between BMI and physical QOL.
+cor_test_result <- cor.test(data_2$BMI, data_2$AGG_PHYS)
+cor_test_result
+```
+BMI is correlated with all our outcome variables, so we should make sure it's cleaned.
+
+It looks like we have a lot of outliers for BMI we can clean out from our data set to make sure it has a normal distribution.
+
+```{r}
+# Compute mean and sd values for BMI
+mean_value <- mean(data_2$BMI, na.rm = TRUE)
+sd_value <- sd(data_2$BMI, na.rm = TRUE)
+
+# Use plotly to label outliers
+fig <- plot_ly(data = data_2, type = 'box') 
+fig <- fig %>% add_boxplot(y = ~BMI, name = "Suspected Outlier", 
+                           boxpoints = 'suspectedoutliers',
+                           marker = list(color = 'rgb(8,81,156)',
+                                         outliercolor = 'rgba(219, 64, 82, 0.6)',
+                                         line = list(outliercolor = 'rgba(219, 64, 82, 1.0)',
+                                                     outlierwidth = 2)),
+                           line = list(color = 'rgb(8,81,156)'),
+                           text = ~paste("ID:", newid),
+                           hoverinfo = "text")
+fig
+
+# Identify outliers
+data_2$BMI_outlier <- (abs(data_2$BMI - mean_value) > 3* sd_value)
+
+# See how many outliers we have
+filtered_data <- data_2 %>%
+  select(newid, BMI, BMI_outlier) %>%
+  filter(BMI_outlier == "TRUE")
+dim(filtered_data)
+
+# Pretty Print
+kable(head(filtered_data), format = "html") %>%
+  kable_styling(bootstrap_options = c("condensed", "hover", "striped"))
+
+```
+
+We have 22 patients that had a BMI +- 3 SD from the mean. Let's clear them from the data set.
+
+```{r}
+# Filter our values greater than 3SD from the mean.
+data_2$BMI[(abs(data_2$BMI - mean_value) > 3* sd_value)] <- NA
+
+# Create histogram of BMI now that we have removed outleirs
+hist(data_2$BMI)
+
+# Create qqplot of BMI now that we have removed outliers
+qqnorm(data_2$BMI)
+qqline(data_2$BMI)
+
+# Plot outliers one more time
+fig <- plot_ly(data = data_2, type = 'box') 
+fig <- fig %>% add_boxplot(y = ~BMI, name = "Suspected Outlier", 
+                           boxpoints = 'suspectedoutliers',
+                           marker = list(color = 'rgb(8,81,156)',
+                                         outliercolor = 'rgba(219, 64, 82, 0.6)',
+                                         line = list(outliercolor = 'rgba(219, 64, 82, 1.0)',
+                                                     outlierwidth = 2)),
+                           line = list(color = 'rgb(8,81,156)'),
+                           text = ~paste("ID:", newid),
+                           hoverinfo = "text")
+fig
+
+```
+Those all look a lot better! We can now conclude that `BMI` is normally distributed and can be used as a covariate in our models.
 
 <a href="#Clean_IVs">Back to top of tabset</a>
 
@@ -1082,7 +1207,7 @@ VERY skewed! Based on the qqplots, it looks like we would have to perform a log 
 
 <a href="#Clean_IVs">Back to top of tabset</a>
 
-## LoW Density Lipoprotein
+## Low Density Lipoprotein
 
 Low Density Lipoprotein (fasting) mg/dL
 
@@ -1168,13 +1293,32 @@ data_2$CESD[data_2$CESD == -1] <- NA
 
 # Create histogram of depression score
 hist(data_2$CESD)
+
+# Create qqplot for depression score
+qqnorm(data_2$CESD)
+qqline(data_2$CESD)
+
 ```
 
 Looks good. `CESD` is now cleaned!
 
 It IS right skewed though. Will have to handle that if we want to use it.
 
+A square root transformation may be worth it?
+
+
 <a href="#Clean_IVs">Back to top of tabset</a>
+```{r}
+# Try a sqrt transformation
+data_2$CESD_sqrt <- sqrt(data_2$CESD)
+
+# Create histogram of sqrt depression score
+hist(data_2$CESD_sqrt)
+
+# Create qqplot of sqrt depressions score
+qqnorm(data_2$CESD_sqrt)
+qqline(data_2$CESD_sqrt)
+```
 
 ## Smoking Status
 
@@ -1558,21 +1702,46 @@ LIV34
 
 Here we will create our change scores for our dependent variables `LEU3N`, `VLOAD`, `AGG_MENT`, and `AGG_PHYS` to assess treatment response to ART
 
+## Change Scores
+
 ```{r}
 # Create change scores for outcome variables
-data_wide_2$VLOAD_CHANGE <- data_wide_2$VLOAD_2 - data_wide_2$VLOAD_0
+data_wide_2$VLOAD_log_CHANGE <- data_wide_2$VLOAD_log_2 - data_wide_2$VLOAD_log_0
 data_wide_2$LEU3N_CHANGE <- data_wide_2$LEU3N_2 - data_wide_2$LEU3N_0
 data_wide_2$AGG_MENT_CHANGE <- data_wide_2$AGG_MENT_2 - data_wide_2$AGG_MENT_0
 data_wide_2$AGG_MENT_PHYS <- data_wide_2$AGG_PHYS_2 - data_wide_2$AGG_PHYS_0
 ```
 
+## Hard Drug Use Groups
+
 We need to make dummy codes for our hard drug use groups.
 
 ```{r}
-# Making dummy codes for hard drug use group
+# Making dummy codes for hard drug use groups
+
+# Create dummy code for current drug users (those who used at year 2)
 data_wide_2$current_drug <- ifelse(data_wide_2$hard_drugs_2 == "Yes", 1, 0) 
+
+# Create dummy code for previous drug users (those who used at years 0 or 1, but not 2)
 data_wide_2$previous_drug <- ifelse((data_wide_2$hard_drugs_1 == "Yes" | data_wide_2$hard_drugs_0 == "Yes") & data_wide_2$hard_drugs_2 == "No", 1, 0)
-data_wide_2$never_drug <- ifelse(data_wide_2$hard_drugs_1 == "No" & data_wide_2$hard_drugs_0 == "No", 1, 0)
+
+# Create dummy code for never drug users (did not use at years 0, 1, or 2)
+data_wide_2$never_drug <- ifelse(data_wide_2$hard_drugs_1 == "No" & data_wide_2$hard_drugs_0 == "No" & data_wide_2$hard_drugs_2 == "No", 1, 0)
+
+# Create a single variable that contains drug use group
+data_wide_2$hard_drugs_grp <- ifelse(data_wide_2$never_drug == 1, 0, 
+                                 ifelse(data_wide_2$previous_drug == 1, 1,
+                                        ifelse(data_wide_2$current_drug == 1, 2, NA)))
+
+# Let's factor this new variable and label it too
+data_wide_2$hard_drugs_grp <- factor(data_wide_2$hard_drugs_grp,
+                                     levels = c(0,1,2),
+                                     labels = c("Never User", "Previous User", "Current User"))
+
+# Double check our criteria worked as intended
+data_wide_2 %>%
+  select(newid, hard_drugs_0, hard_drugs_1, hard_drugs_2, hard_drugs_grp)
+
 ```
 
 
@@ -1613,6 +1782,21 @@ summary_table
 colnames(data)
 ```
 
+```{r}
+# Create boxplots for vload_log by hard_drugs
+# _______come back to this and add multiple plots for each outcome variable in a single plot____________
+fig <- plot_ly(ggplot2::diamonds, y = ~data_2$VLOAD_log, color = ~data_2$hard_drugs, type = "box")
+fig
+```
+
+
+```{r}
+# Create boxplots for vload_log by hard_drugs
+fig <- plot_ly(data_wide_2, x = ~hard_drugs_grp, y = ~VLOAD_log_CHANGE, color = ~hard_drugs_grp, type = "box")
+fig
+
+```
+
 
 # To do
 
@@ -1637,3 +1821,4 @@ complete_data
 
 ```
 
+maybe do MI for TCHOl, or try clearing out outliers +- 3 SD from mean and replot hist and qqplots
