@@ -559,7 +559,6 @@ text(x = rep(1.2, length(outlier_leu3n)),
      y = outlier_leu3n, labels = outlier_leu3n, col = 'red', cex = 0.8)
 ```
 
-
 [Options:]{.underline} We can try running the analysis with our transformed `LEU3N` values, or run it without transformation and see how many of those high values are real outliers with high leverage and influence.
 
 More information on Box-Cox Transformation [here](https://www.statisticshowto.com/probability-and-statistics/normal-distributions/box-cox-transformation/)
@@ -829,6 +828,7 @@ cor_test_result
 cor_test_result <- cor.test(data_2$BMI, data_2$AGG_PHYS)
 cor_test_result
 ```
+
 BMI is correlated with all our outcome variables, so we should make sure it's cleaned.
 
 It looks like we have a lot of outliers for BMI we can clean out from our data set to make sure it has a normal distribution.
@@ -893,6 +893,7 @@ fig <- fig %>% add_boxplot(y = ~BMI, name = "Suspected Outlier",
 fig
 
 ```
+
 Those all look a lot better! We can now conclude that `BMI` is normally distributed and can be used as a covariate in our models.
 
 <a href="#Clean_IVs">Back to top of tabset</a>
@@ -1306,8 +1307,8 @@ It IS right skewed though. Will have to handle that if we want to use it.
 
 A square root transformation may be worth it?
 
-
 <a href="#Clean_IVs">Back to top of tabset</a>
+
 ```{r}
 # Try a sqrt transformation
 data_2$CESD_sqrt <- sqrt(data_2$CESD)
@@ -1651,6 +1652,7 @@ vis_miss(data)
 # Visualize missingness for post-cleaned dataset
 vis_miss(data_2)
 ```
+
 And for good measure let's now examine missingness in the wide form data set.
 
 ```{r}
@@ -1661,64 +1663,224 @@ data_wide_2 <- pivot_wider(data_2, id_cols = newid, names_from = years, values_f
 vis_miss(data_wide_2)
 ```
 
-There are no real trends that become apparent when looking at this plot.
+There are no real trends that become apparent when looking at this plot for the wideform data set.
 
-To summarize, it appears that diagnoses that were determined by algorithm often had insufficient data to make a diagnosis, so perhaps this is an issue with those algorithms. Additionally, lab measurements of `LDL` and `TRIG` seem to have been too onerous for participants to have gotten. Maybe they opted out of those tests, or maybe the tests were only ordered under certain circumstances.
+To summarize, it appears that diagnoses that were determined by algorithm (such as `KID`, `DIAB`, `DYSLIP`, and `LIV34`, often had insufficient data to make a diagnosis, so perhaps this is an issue with those algorithms. Additionally, lab measurements of `LDL` and `TRIG` seem to have been too onerous for participants to have gotten. Maybe they opted out of those tests, or maybe the tests were only ordered under certain circumstances.
 
 These would be valuable questions to bring forth to the PI. But for now it appear as if we won't be able to use these variables.
 
+We may want to impute `income`, `LIV34`, and `TCHOL`, as these have missingness of 24%, 31%, and 32%, respectively.
 
+#### Variables with minimal missing data (\<5%) that can be disregarded without affecting analysis integrity
 
+-   `AGG_MENT`
+-   `AGG_PHYS`
+-   `HASH_V`
+-   `HASHF`
+-   `FRP`
+-   `SMOKE`
+-   `DKGRP`
+-   `HEROPIATE`
+-   `IDU`
+-   `LEU3N`
+-   `VLOAD`
+-   `ADH`
+-   `EDUCBASE`
+-   `AGE`
+-   `ART`
+-   `years`
+-   `hard-drugs`
 
-[Variables with a small amount of missingness that we can ignore and let them drop from the analysis when we run the model (i.e. \< 5%)]{.underline}
+#### Variables with moderate missing data (5-20%) that necessitate intervention
 
-AGG_MENT, AGG_PHYS, HASH_V, HASHF, FRP, SMOKE, DKGRP, HEROPIATE, IDU, LEU3N, VLOAD, ADH, EDUCBASE, AGE, ART, years, hard-drugs
+-   `BMI`
+-   `HBP`
 
-[Variables with enough missingness we have to address (i.e. 5-20%)]{.underline}
+#### Variables with \>20% missing data that are edge cases and may require exclusion or imputation
 
-baseline cases (\~8%) BMI, HBP
+-   `TCHOL`
+-   `income`
+-   `LIV34`
 
-[Variables with \>20% that are edge cases, may have to drop, maybe can salvage.]{.underline}
-
-TCHOL
-
-income
-
-LIV34
-
-[Variables with so much missing data we have to drop those variables \>40%]{.underline}
+#### Variables with an excess of missing data (\>40%) that necessitate exclusion from the analysis
 
 -   `LDL`
-
 -   `TRIG`
-
--   DIAB
-
--   KID
-
--   DYSLIP
+-   `DIAB`
+-   `KID`
+-   `DYSLIP`
 
 # Variable Creation
 
-Here we will create our change scores for our dependent variables `LEU3N`, `VLOAD`, `AGG_MENT`, and `AGG_PHYS` to assess treatment response to ART
+Here we will create the variables necessary for the analysis.
 
-## Change Scores
+Since we cleaned the longform data set, let's go ahead and re-transpose it to update the wide form data set.
+
+```{r}
+# Create new wideform data set for first 2 years of study              
+data_wide_2 <- pivot_wider(data_2, id_cols = newid, names_from = years, values_from = -c(newid, years))
+```
+
+## Change Scores {#Change_Scores}
+
+Here we will create our change scores for our dependent variables `LEU3N`, `VLOAD`, `AGG_MENT`, and `AGG_PHYS` to assess treatment response to ART. For `VLOAD` we will create change scores off the log transformed values.
 
 ```{r}
 # Create change scores for outcome variables
 data_wide_2$VLOAD_log_CHANGE <- data_wide_2$VLOAD_log_2 - data_wide_2$VLOAD_log_0
 data_wide_2$LEU3N_CHANGE <- data_wide_2$LEU3N_2 - data_wide_2$LEU3N_0
 data_wide_2$AGG_MENT_CHANGE <- data_wide_2$AGG_MENT_2 - data_wide_2$AGG_MENT_0
-data_wide_2$AGG_MENT_PHYS <- data_wide_2$AGG_PHYS_2 - data_wide_2$AGG_PHYS_0
+data_wide_2$AGG_PHYS_CHANGE <- data_wide_2$AGG_PHYS_2 - data_wide_2$AGG_PHYS_0
 ```
 
-## Hard Drug Use Groups
+Now let's perform internal consistency checks to make sure those calculation were performed correctly, as well as reexamine the distributions of the change score for each variable.
+
+::: panel-tabset
+## Log Viral Load Change
+
+```{r}
+# Select only variables related to change scores to double check we performed calculation correctly.
+filtered_data <- data_wide_2 %>%
+  select(VLOAD_log_0, VLOAD_log_2, VLOAD_log_CHANGE)
+
+# Pretty print
+kable(head(filtered_data), format = "html") %>%
+  kable_styling(bootstrap_options = c("condensed", "striped", "hover"))
+```
+
+The computation for change score was performed correctly.
+
+```{r}
+# Set up the plotting area: 1 row, 2 columns
+par(mfrow = c(1, 2))
+
+# Create hist for vload log change score
+hist(data_wide_2$VLOAD_log_CHANGE)
+
+# Create qqplot for vload log change score
+qqnorm(data_wide_2$VLOAD_log_CHANGE)
+qqline(data_wide_2$VLOAD_log_CHANGE)
+```
+
+Looks like we have 1 outlier there that we should catch with the jackknife residuals after we fit the model, but `VLOAD_log_CHANGE` looks normally distributed!
+
+[Top of Tabset](#Change_Scores)
+
+## CD4+ T Cell Count Change
+
+```{r}
+# Select only variables related to change scores to double check we performed calculation correctly.
+filtered_data <- data_wide_2 %>%
+  select(LEU3N_0, LEU3N_2, LEU3N_CHANGE)
+
+# Pretty print
+kable(head(filtered_data), format = "html") %>%
+  kable_styling(bootstrap_options = c("condensed", "striped", "hover"))
+```
+
+The computation for change score was performed correctly.
+
+```{r}
+# Set up the plotting area: 1 row, 2 columns
+par(mfrow = c(1, 2))
+
+# Create hist for CD4+ T Cell change score
+hist(data_wide_2$LEU3N_CHANGE)
+
+# Create qqplot for CD4+ T Cell change score
+qqnorm(data_wide_2$LEU3N_CHANGE)
+qqline(data_wide_2$LEU3N_CHANGE)
+```
+
+CD4+ T Cell count change score looks normally distributed, with 1 or 2 outliers that we can examine the leverage and influence of.
+
+[Top of Tabset](#Change_Scores)
+
+## Aggregate Mental QOL Change
+
+```{r}
+# Select only variables related to change scores to double check we performed calculation correctly.
+filtered_data <- data_wide_2 %>%
+  select(AGG_MENT_0, AGG_MENT_2, AGG_MENT_CHANGE)
+
+# Pretty print
+kable(head(filtered_data), format = "html") %>%
+  kable_styling(bootstrap_options = c("condensed", "striped", "hover"))
+```
+
+The computation for change score was performed correctly.
+
+```{r}
+# Set up the plotting area: 1 row, 2 columns
+par(mfrow = c(1, 2))
+
+# Create hist for aggregate mental QOL change score
+hist(data_wide_2$AGG_MENT_CHANGE, breaks = 24)
+
+# Create qqplot for aggregate mental QOL change score
+qqnorm(data_wide_2$AGG_MENT_CHANGE)
+qqline(data_wide_2$AGG_MENT_CHANGE)
+```
+
+That looks more normally distributed now, and our sample size is very large so we can also count on the central limit theorem to help us with the assumption of normality.
+
+[Top of Tabset](#Change_Scores)
+
+## Aggregate Physical QOL Change
+
+```{r}
+# Select only variables related to change scores to double check we performed calculation correctly.
+filtered_data <- data_wide_2 %>%
+  select(AGG_PHYS_0, AGG_PHYS_2, AGG_PHYS_CHANGE)
+
+# Pretty print
+kable(head(filtered_data), format = "html") %>%
+  kable_styling(bootstrap_options = c("condensed", "striped", "hover"))
+```
+
+The computation for change score was performed correctly.
+
+```{r}
+# Set up the plotting area: 1 row, 2 columns
+par(mfrow = c(1, 2))
+    
+# Create hist for aggregate physical  QOL change score
+hist(data_wide_2$AGG_PHYS_CHANGE, breaks = 24)
+
+# Create qqplot for aggregate physical QOL change score
+qqnorm(data_wide_2$AGG_PHYS_CHANGE)
+qqline(data_wide_2$AGG_PHYS_CHANGE)
+```
+
+Aggregate physical QOL change score appears more normally distributed now. 
+
+[Top of Tabset](#Change_Scores)
+
+## Summary
+
+After computing the change scores, our outcome variables are now normally distributed and we can move forward with using them in models!
+
+[Top of Tabset](#Change_Scores)
+
+:::
+
+## Hard Drug Use Groups {#Hard_Drugs}
 
 We need to make dummy codes for our hard drug use groups.
 
-```{r}
-# Making dummy codes for hard drug use groups
+The criteria outlined by the researchers are as follows:
 
+ - [Never User:]{.underline} No drug use reported at 0, 1, or 2 years
+ - [Previous User:]{.underline} Drug use reported at 0 or 1 years, but not 2 years
+ - [Current User:]{.underline} Drug use reported at 2 years
+ 
+::: panel-tabset
+
+## Drug Use Classification
+
+First we will create dummy codes for whether a patient was a never, previous, or current hard drug user.
+
+```{r}
 # Create dummy code for current drug users (those who used at year 2)
 data_wide_2$current_drug <- ifelse(data_wide_2$hard_drugs_2 == "Yes", 1, 0) 
 
@@ -1728,21 +1890,78 @@ data_wide_2$previous_drug <- ifelse((data_wide_2$hard_drugs_1 == "Yes" | data_wi
 # Create dummy code for never drug users (did not use at years 0, 1, or 2)
 data_wide_2$never_drug <- ifelse(data_wide_2$hard_drugs_1 == "No" & data_wide_2$hard_drugs_0 == "No" & data_wide_2$hard_drugs_2 == "No", 1, 0)
 
-# Create a single variable that contains drug use group
+```
+
+And perform some internal consistency checks to ensure we coded that correctly.
+
+```{r}
+
+# Double check our criteria worked as intended
+filtered_data <- data_wide_2 %>%
+  select(newid, hard_drugs_0, hard_drugs_1, hard_drugs_2, never_drug, previous_drug, current_drug)
+
+# Pretty print
+kable(head(filtered_data), format = "html") %>%
+  kable_styling(bootstrap_options = c("condensed", "striped", "hover"))
+
+# Double check no overlapping group assignments (such as a current AND previous drug user)
+no_overlap <- apply(data_wide_2[, c("never_drug", "previous_drug", "current_drug")], 1, sum) <= 1
+all_no_overlap <- all(no_overlap)
+
+# Print result
+if (all_no_overlap) {
+  print("No overlapping group assignments")
+} else {
+  print("There are overlapping group assignments in some rows")
+}
+
+```
+
+Great, that looks like we coded it properly and there are no overlaps between drug use conditions (e.g. there are no current drug users who are also previous drug users).
+
+[Top of Tabset](#Hard_Drugs)
+
+## Drug Use Group
+
+Now we will use those dummy codes to make a variable for which group each patient was in
+
+ - 0: Never User
+ - 1: Previous User
+ - 2: Current User
+ 
+```{r}
+
+# Create a single variable for drug use group
 data_wide_2$hard_drugs_grp <- ifelse(data_wide_2$never_drug == 1, 0, 
                                  ifelse(data_wide_2$previous_drug == 1, 1,
                                         ifelse(data_wide_2$current_drug == 1, 2, NA)))
 
-# Let's factor this new variable and label it too
+# Factor this new variable and label it too
 data_wide_2$hard_drugs_grp <- factor(data_wide_2$hard_drugs_grp,
                                      levels = c(0,1,2),
                                      labels = c("Never User", "Previous User", "Current User"))
 
+```
+
+And perform an internal consistency check to make sure there are no overlapping group assignments.
+
+```{r}
+
 # Double check our criteria worked as intended
-data_wide_2 %>%
+filtered_data <- data_wide_2 %>%
   select(newid, hard_drugs_0, hard_drugs_1, hard_drugs_2, hard_drugs_grp)
 
+# Pretty print
+kable(head(filtered_data), format = "html") %>%
+  kable_styling(bootstrap_options = c("condensed", "striped", "hover"))
 ```
+
+Looks good, we can now move forward with analyses using the `hard_drgs_grp` variable!
+
+[Top of Tabset](#Hard_Drugs)
+
+:::
+
 
 
 # Correlation Matrix
@@ -1763,15 +1982,6 @@ data_wide_2 %>%
 
 ```
 
-
-
-
-
-
-
-
-
-
 ```{r}
 # Gets average viral load per patient for example, can do min and max etc.
 summary_table <- data %>%
@@ -1789,14 +1999,12 @@ fig <- plot_ly(ggplot2::diamonds, y = ~data_2$VLOAD_log, color = ~data_2$hard_dr
 fig
 ```
 
-
 ```{r}
 # Create boxplots for vload_log by hard_drugs
 fig <- plot_ly(data_wide_2, x = ~hard_drugs_grp, y = ~VLOAD_log_CHANGE, color = ~hard_drugs_grp, type = "box")
 fig
 
 ```
-
 
 # To do
 
@@ -1806,7 +2014,6 @@ fig
 -   investigate these to analyze non normal data: quantile regression, best normalized r package, gamma link GLM
 
 "The transformations contained in this package and implemented in bestNormalize are reversible (i.e., 1-1), which allows for straight-forward interpretation and consistency. In other words, any analysis performed on the normalized data can be interpreted using the original unit (see application)." Cool.
-
 
 ```{r}
 library(mice)
@@ -1821,4 +2028,8 @@ complete_data
 
 ```
 
-maybe do MI for TCHOl, or try clearing out outliers +- 3 SD from mean and replot hist and qqplots
+maybe do MI for TCHOl, or try clearing out outliers +- 3 SD from mean and re-plot hist and qqplots
+
+
+turn my kable pretty print into a function that I can just call as
+pretty(df)
