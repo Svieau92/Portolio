@@ -139,7 +139,7 @@ ul.task-list li input[type="checkbox"] {
     
 <!-- main -->
 <div class="quarto-about-jolla">
-  <img src="Media\Professional_Picture.png" class="about-image
+  <img src="Project_1_Regression/Project_1_Regression_R/Media/Professional_Picture.jpg" class="about-image
   round " style="height: 24em; width: 24em;">
  <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
@@ -240,7 +240,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
   }
     var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
     var mailtoRegex = new RegExp(/^mailto:/);
-      var filterRegex = new RegExp("https:\/\/svieau\.quarto\.pub\/portfolio");
+      var filterRegex = new RegExp('/' + window.location.host + '/');
     var isInternal = (href) => {
         return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
     }
