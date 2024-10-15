@@ -10,6 +10,15 @@ toc: true
 ```{r setup, include=FALSE}
 # Sets the default for all chunks as echo = TRUE (ensures they show unless specified not to)
 knitr::opts_chunk$set(echo = TRUE)
+
+# Create a function to pretty print our dataframes
+pretty_print <- function(x) {
+  kable(x, format = "html") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+}
+
+# Set options to avoid scientific notation
+options(scipen = 999)
 ```
 
 # Introduction
@@ -70,7 +79,7 @@ Everything appears properly imported, however all our categorical variables are 
 
 Let's factor and label our categorical variables so they are appropriately represented (and not doubles, which will yield incorrect results in models)
 
-```{r}
+```{r, results='hide'}
 # Converting all appropriate variables from doubles to categorical variables
 
 data$HASHV <- factor(data$HASHV,
@@ -139,7 +148,7 @@ data$RACE <- factor(data$RACE,
 
 data$EDUCBAS <- factor(data$EDUCBAS,
                        levels = c(1, 2, 3, 4, 5, 6, 7),
-                       labels = c("8th grade or less ", "9,10, or 11th grade", "12th grade", "At least one year college but no degree", "Four years college / got degree ", "Some graduate work", "Post-graduate degree"))
+                       labels = c("8th grade or less ", "9,10, or 11th grade", "12th grade", "At least one year college but no degree", "Four years college or got degree", "Some graduate work", "Post-graduate degree"))
 
 data$hard_drugs <- factor(data$hard_drugs,
                           levels = c(0, 1),
@@ -196,8 +205,7 @@ Now let's take a look at the header to get a good feeling for our data.
 
 ```{r}
 # Pretty print data header
-kable(head(data), format = "html", full_width = TRUE) %>%
-  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+pretty_print(head(data))
 ```
 
 Hmm, we have 8 years worth of data points, but the experimenters are only interested in the first 2 years.
@@ -209,8 +217,7 @@ Out of curiosity, let's look at how many participants they had each year.
 barplot(table(data$years))
 
 # Check number of patients in each year
-kable(table(data$years), format = "html", full_width = FALSE) %>%
-  kable_styling(bootstrap_options = c("condensed", "hover", "striped"))
+pretty_print(table(data$years))
 ```
 
 This is interesting, we don't seem to have as drastic a drop off as I expected. The researchers managed to retain all participants for the first 2 years, and 50% by the end of the 8-year study.
@@ -247,8 +254,7 @@ And take a look at the header to check that was done correctly.
 
 ```{r}
 # Pretty print header of wideform data
-kable(head(data_wide_2), format = "html", full_width = TRUE) %>%
-  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+pretty_print(head(data_wide_2))
 ```
 
 Good. now we have a long and wide form of the data set for the first two years of the study.
@@ -262,11 +268,7 @@ data_wide_2 <- data_wide_2 %>% select(-RACE_1, -RACE_2, -EDUCBAS_1, -EDUCBAS_2, 
 
 Now that our data sets are adequately prepared, we can move on to performing our data checks to ensure fidelity of the data set.
 
-# Data Quality Checks
-
-Here we will perform several assessments on each variable to ensure fidelity of the data
-
-## Missingness
+# Missingness
 
 First we begin by examining missingness in our data set
 
@@ -308,14 +310,15 @@ adh_at_baseline <- data_wide_2 %>%
   select(newid, ADH_0)
 
 # Pretty print
-kable(adh_at_baseline, format = "html", full_width = FALSE)
+pretty_print(adh_at_baseline)
+
 ```
 
 Apparently if you're participant 426, you can have 100% adherence to a protocol you've just started (clearly a typo).
 
 Conclusion is we can still use `ADH` as a variable! We just have to use adherence at years 1 or 2.
 
-## Data Cleaning
+# Data Cleaning
 
 We just examined missingness as a preliminary check. However there is more work to be done.
 
@@ -341,8 +344,7 @@ summary_df <- map_dfr(data_2, summarize_column, .id = "Column") %>%
   mutate(across(everything(), ~ format(., scientific = FALSE))) # Eliminates scientific notation
 
 # Pretty print the mins and maxes of longform data_2
-kable(summary_df, format = "html") %>%
-  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+pretty_print(summary_df)
 ```
 
 In effect, our data is not correctly showing all missing values. Let's clean all that up, variable by variable.
@@ -366,7 +368,7 @@ Our last two measures are quality of life measures from the [SF-36](https://www.
 
 These scores range from 0 to 100, with higher scores indicating better quality of life. The researchers are not sure what happens to quality of life after initiating treatment. While in theory subjects’ improving health should result in increased quality of life, the side effects of these treatments are significant. If subjects experience declines in quality of life after initiating treatment, we would be concerned that they would stop treatment.
 
-::: panel-tabset
+:::::: panel-tabset
 ## Viral Load
 
 Standardized viral load
@@ -380,6 +382,9 @@ Standardized viral load
 Our min max function earlier showed the max VLOAD was 190695039.60. I wonder if this is real or a data error?
 
 ```{r}
+# Set up the plotting area: 1 row, 2 columns
+par(mfrow = c(1, 2))
+
 # create histogram of viral load
 hist(data_2$VLOAD)
 
@@ -398,8 +403,7 @@ sorted_data <- data_2[order(-data_2$VLOAD),] %>%
   select(newid, VLOAD, years)
 
 # Pretty print resulting table
-kable(head(sorted_data), format = "html") %>%
-  kable_styling(bootstrap_options = c("condensed", "striped", "hover"))
+pretty_print(head(sorted_data))
 ```
 
 So the highest VLOAD value is 75x the 5th highest, and the 4th highest is 2x 5th highest. All these values are from different patients at the baseline.
@@ -422,6 +426,9 @@ Indeed the boxplot shows these values really mess with our data.
 These top 4 patients based on VLOAD are 224, 78, 437, and 196. Patient 196 has double the VLOAD of the next highest person, which means this could be an outlier or real data, but let's remove them just to see.
 
 ```{r}
+# Set up the plotting area: 1 row, 2 columns
+par(mfrow = c(1, 2))
+
 # Remove 4 highest viral load visits
 data_vload_removed <- data
 data_vload_removed$VLOAD[data_vload_removed$newid %in% c(224, 78, 437, 196)] <- NA
@@ -438,6 +445,9 @@ Let's do that log transform, and just pretend we remembered that from the start.
 ```{r}
 # Log transform viral load in the long form data set
 data_2$VLOAD_log <- log(data_2$VLOAD)
+
+# Set up the plotting area: 1 row, 2 columns
+par(mfrow = c(1, 2))
 
 # Create a histogram of log transformed viral load
 hist(data_2$VLOAD_log)
@@ -458,7 +468,7 @@ Looks like this took care of those values that were showing up as outliers befor
 
 `VLOAD` has now been cleaned!
 
-<a href="#Clean_DVs">Back to top of tabset</a>
+[Top of Tabset](#Clean_DVs)
 
 ## CD4+ T Cell Count
 
@@ -470,6 +480,9 @@ Number of CD4 positive cells (helpers)
 -   Blank = Missing
 
 ```{r}
+# Set up the plotting area: 1 row, 2 columns
+par(mfrow = c(1, 2))
+
 # Create histogram of CD4 T Cells
 hist(data_2$LEU3N, breaks = 24)
 
@@ -482,8 +495,7 @@ sorted_data <- data_2[order(-data_2$LEU3N),] %>%
   select(newid, LEU3N, years)
 
 # Pretty print resulting table
-kable(head(sorted_data), format = "html") %>%
-  kable_styling(bootstrap_options = c("condensed", "striped", "hover"))
+pretty_print(head(sorted_data))
 ```
 
 These values all look believable and like there was no errors during data collection or entering. It is unclear whether this variable is right tailed because of outliers, or if it needs to be transformed.
@@ -505,13 +517,15 @@ Let's try a log transform.
 # Log transform CD4 T Cell count
 data_2$LEU3N_log <- log(data_2$LEU3N)
 
+# Set up the plotting area: 1 row, 2 columns
+par(mfrow = c(1, 2))
+
 # Create histogram of log transformed CD4 T cell count
 hist(data_2$LEU3N_log)
 
 # Create qqplot of log transformed CD4 T cell count
 qqnorm(data_2$LEU3N_log)
 qqline(data_2$LEU3N_log)
-
 ```
 
 That... didn't work. Maybe let's try standardization.
@@ -519,6 +533,9 @@ That... didn't work. Maybe let's try standardization.
 ```{R}
 # Perform a standardization transformation of CD4 T Cell Count
 data_2$LEU3N_standard <- scale(data_2$LEU3N)
+
+# Set up the plotting area: 1 row, 2 columns
+par(mfrow = c(1, 2))
 
 # Create histogram of standardized CD4 T Cell count
 hist(data_2$LEU3N_standard)
@@ -569,38 +586,13 @@ axis(2, at=log10(c(.1,.5, 1, 2, 5, 10)), labels=c(.1,.5, 1, 2, 5, 10))
 
 I will select Box-Cox as those two names are more familiar to me so I trust it more per the availability heuristic (and because orderNorm looks TOO good to be true).
 
-It looks like we are good on `LEU3N` and can move forward!
-
-```{r}
-# Get mean and SD for LEU3N
-mean_value <- mean(data_2$LEU3N, na.rm = TRUE)
-sd_value <- sd(data_2$LEU3N, na.rm = TRUE)
-
-# Copy data set so we are not changing our main data set.
-filtered_data <- data_2
-
-# Shows we have 10 values >= 3SDs from the mean.
-filtered_data %>%
-  select(LEU3N) %>%
-  filter(LEU3N >= mean_value + 3*sd_value)
-
-# Filter our values greater than 3SD from the mean.
-filtered_data$LEU3N[filtered_data$LEU3N >= (mean_value + (3 * sd_value)) | filtered_data$LEU3N <= (mean_value - (3 * sd_value))] <- NA
-
-# View the hist again now that we have filtered outleirs
-hist(filtered_data$LEU3N, breaks = 24)
-
-# Create boxplot of CD4 T cell count to assess for outliers
-outlier_leu3n <- boxplot(filtered_data$LEU3N, main = "Boxplot for Leu3n")$out
-text(x = rep(1.2, length(outlier_leu3n)),
-     y = outlier_leu3n, labels = outlier_leu3n, col = 'red', cex = 0.8)
-```
-
-[Options:]{.underline} We can try running the analysis with our transformed `LEU3N` values, or run it without transformation and see how many of those high values are real outliers with high leverage and influence.
-
 More information on Box-Cox Transformation [here](https://www.statisticshowto.com/probability-and-statistics/normal-distributions/box-cox-transformation/)
 
-<a href="#Clean_DVs">Back to top of tabset</a>
+::: callout-note
+## Note: [Later in the document](#Variable_Creation) we see that the distribution of the change score for each outcome variable is normally distributed, and thus absolves us of the need to perform any transformations besides log transforming `VLOAD`.
+:::
+
+[Top of Tabset](#Clean_DVs)
 
 ## Aggregate Mental QOL Score
 
@@ -609,6 +601,9 @@ The values for `AGG_MENT` in our data set range from 7.229315 to 73.31224, which
 Let's examine normality.
 
 ```{r}
+# Set up the plotting area: 1 row, 2 columns
+par(mfrow = c(1, 2))
+
 # Create a histogram for aggregate mental QOL score
 hist(data_2$AGG_MENT)
 
@@ -621,8 +616,7 @@ sorted_data_2 <- data_2[order(data_2$AGG_MENT),] %>%
   select(newid, AGG_MENT, years)
 
 # Pretty print resulting table
-kable(head(sorted_data_2), format = "html") %>%
-  kable_styling(bootstrap_options = c("hover", "striped", "condensed"))
+pretty_print(head(sorted_data_2))
 
 # Create boxplot of aggregate mental QOL to assess for outliers
 outlier_AGG_MENT <- boxplot(data_2$AGG_MENT, main = "Boxplot for Aggregate Mental QOL")$out
@@ -648,15 +642,20 @@ MASS::truehist(data_2$AGG_MENT_orderNorm, main = "OrderNorm transformation", nbi
 
 That appears to be what we have to do but I have some misgivings with orderNorm transforming everything...
 
-Come back to this
+::: callout-note
+## Note: [Later in the document](#Variable_Creation) we see that the distribution of the change score for each outcome variable is normally distributed, and thus absolves us of the need to perform any transformations besides log transforming `VLOAD`.
+:::
 
-<a href="#Clean_DVs">Back to top of tabset</a>
+[Top of Tabset](#Clean_DVs)
 
 ## Aggregate Physical QOL Score
 
 AGG_PHYS has a min of 9.12 and a max of 73.57. These are within the specified range of 0 - 100, and it appears there were no data error entries.
 
 ```{r}
+# Set up the plotting area: 1 row, 2 columns
+par(mfrow = c(1, 2))
+
 # Creat histogram of aggregate physical QOL score
 hist(data_2$AGG_PHYS)
 
@@ -685,10 +684,12 @@ MASS::truehist(data_2$AGG_PHYS_orderNorm, main = "OrderNorm transformation", nbi
 
 OrderNorm transforming all our DVs might make interpration difficult...
 
-Come back to this.
-
-<a href="#Clean_DVs">Back to top of tabset</a>
+::: callout-note
+## Note: [Later in the document](#Variable_Creation) we see that the distribution of the change score for each outcome variable is normally distributed, and thus absolves us of the need to perform any transformations besides log transforming `VLOAD`.
 :::
+
+[Top of Tabset](#Clean_DVs)
+::::::
 
 ### Cleaning Covariates {#Clean_IVs}
 
@@ -754,8 +755,7 @@ The min and max for income are 1 - 9, which matches that data dictionary.
 barplot(table(data_2$income))
 
 # Get values for each income level
-kable(table(data_2$income), format = "html") %>%
-  kable_styling(bootstrap_options = c("condensed", "hover", "striped"))
+pretty_print(table(data_2$income))
 ```
 
 We have to convert those values of 'Do not wish to answer' to be NA.
@@ -800,6 +800,9 @@ data_2$BMI[data_2$BMI < 0 | data_2$BMI >= 998] <- NA
 And check out the histogram again and the qqplot.
 
 ```{r}
+# Set up the plotting area: 1 row, 2 columns
+par(mfrow = c(1, 2))
+
 # Create histogram of BMI
 hist(data_2$BMI, breaks = 20)
 
@@ -822,12 +825,14 @@ highest_bmi <- data[data$newid == 206,]
 
 # Plot BMI for each year for this patient
 plot(highest_bmi$years, highest_bmi$BMI)
-
 ```
 
 Interestingly, participant 206 got heavier over the first year, then dropped weight in the proceeding years. Either that or that second year entry point was an error and was meant to be 42.83
 
 ```{r}
+# Set up the plotting area: 1 row, 2 columns
+par(mfrow = c(1, 2))
+
 # Testing to see if these plots look normal after taking the participant with BMI of 52.83 out
 data_2$BMI[data_2$newid == 206 & data_2$years == 1] <- NA
 hist(data_2$BMI, breaks = 20)
@@ -903,8 +908,7 @@ filtered_data <- data_2 %>%
 dim(filtered_data)
 
 # Pretty Print
-kable(head(filtered_data), format = "html") %>%
-  kable_styling(bootstrap_options = c("condensed", "hover", "striped"))
+pretty_print(head(filtered_data))
 
 ```
 
@@ -913,6 +917,9 @@ We have 22 patients that had a BMI +- 3 SD from the mean. Let's clear them from 
 ```{r}
 # Filter our values greater than 3SD from the mean.
 data_2$BMI[(abs(data_2$BMI - mean_value) > 3* sd_value)] <- NA
+
+# Set up the plotting area: 1 row, 2 columns
+par(mfrow = c(1, 2))
 
 # Create histogram of BMI now that we have removed outleirs
 hist(data_2$BMI)
@@ -960,8 +967,7 @@ barplot(table(data_2$HBP))
 
 ```{r}
 # Get values for high blood pressure category
-kable(table(data_2$HBP), format = "html") %>%
-  kable_styling(bootstrap_options = c("condensed", "hover", "striped"))
+pretty_print(table(data_2$HBP))
 ```
 
 There are 137 participants with insufficient data. Let's purge them from the data set.
@@ -977,15 +983,14 @@ data_2$HBP <- droplevels(data_2$HBP)
 barplot(table(data_2$HBP))
 
 # Pretty print table
-kable(table(data_2$HBP), format = "html") %>%
-  kable_styling(bootstrap_options = c("condensed", "hover", "striped"))
+pretty_print(table(data_2$HBP))
 ```
 
 Looks better.
 
 Only 34 visits where participants had no based on trajectory, and 4 that had yes based on trajectory.
 
-We will have to decide to either exclude these or merge them into the no or yes groups, respectively. We can do that after we run our correlation matrix to see if there's any relationship here worth pursuing.
+We will have to decide to either exclude these or merge them into the no or yes groups, respectively. We can do that after we run our correlations to see if there's any relationship here worth pursuing.
 
 <a href="#Clean_IVs">Back to top of tabset</a>
 
@@ -1004,8 +1009,7 @@ Diabetes (GLUC 2 \>= 126 or (diagnosed with diabetes and use of medication))
 barplot(table(data_2$DIAB))
 
 # Pretty print table
-kable(table(data_2$DIAB), format = "html") %>%
-  kable_styling(bootstrap_options = c("condensed", "hover", "striped"))
+pretty_print(table(data_2$DIAB))
 ```
 
 There are 881 visits with patient who had insuffiicent data to make a diabetes diagnosis!
@@ -1023,8 +1027,8 @@ data_2$DIAB <- droplevels(data_2$DIAB)
 barplot(table(data_2$DIAB))
 
 # Pretty print table
-kable(table(data_2$DIAB), format = "html") %>%
-  kable_styling(bootstrap_options = c("condensed", "hover", "striped"))
+pretty_print(table(data_2$DIAB))
+
 ```
 
 Great, `HBP` is now cleaned.
@@ -1046,8 +1050,7 @@ Liver disease stage 3/4 (SGPT or SGOP \> 150), preliminary algorithm
 barplot(table(data_2$LIV34))
 
 # Pretty print table
-kable(table(data_2$LIV34), format = "html") %>%
-  kable_styling(bootstrap_options = c("condensed", "hover", "striped"))
+pretty_print(table(data_2$LIV34))
 ```
 
 There are 507 patients with insufficient data for a liver disease diagnosis.
@@ -1065,8 +1068,7 @@ data_2$LIV34 <- droplevels(data_2$LIV34)
 barplot(table(data_2$LIV34))
 
 # Pretty print table
-kable(table(data_2$LIV34), format = "html") %>%
-  kable_styling(bootstrap_options = c("condensed", "hover", "striped"))
+pretty_print(table(data_2$LIV34))
 ```
 
 Looks good, `LIV34` is now cleaned!
@@ -1092,8 +1094,7 @@ Kidney disease (EGFR \< 60 or UPRCR \>= 200)
 barplot(table(data_2$KID))
 
 # Pretty print table
-kable(table(data_2$KID), format = "html") %>%
-  kable_styling(bootstrap_options = c("condensed", "hover", "striped"))
+pretty_print(table(data_2$KID))
 ```
 
 There are 1068 visits where there was insufficient data for a diagnosis.
@@ -1128,8 +1129,7 @@ Frailty Related Phenotype (3 out of 4 conditions = YES; WTLOS, PHDWA, HLTWB, HLT
 barplot(table(data_2$FRP))
 
 # Pretty print table
-kable(table(data_2$FRP), format = "html") %>%
-  kable_styling(bootstrap_options = c("condensed", "hover", "striped"))
+pretty_print(table(data_2$FRP))
 ```
 
 Only 3 patients with insufficient data.
@@ -1164,8 +1164,7 @@ Frailty Phenotype (3 out of 5 conditions = YES: WTLOS, PHWDA, HLTVA, SLOW, WEAK)
 barplot(table(data_2$FP))
 
 # Pretty print table
-kable(table(data_2$FP), format = "html") %>%
-  kable_styling(bootstrap_options = c("condensed", "hover", "striped"))
+pretty_print(table(data_2$FP))
 ```
 
 357 visits with insufficient data. Let's convert to NA.
@@ -1190,6 +1189,9 @@ Looks good, `FP` is now cleaned!
 Total cholesterol mg/dL
 
 ```{r}
+# Set up the plotting area: 1 row, 2 columns
+par(mfrow = c(1, 2))
+
 # Create histogram for total cholesterol
 hist(data_2$TCHOL)
 
@@ -1211,8 +1213,7 @@ sorted_data <- data_2[order(-data_2$TCHOL),] %>%
   select(newid, TCHOL, years)
 
 # Pretty print table
-kable(head(sorted_data), format = "html") %>%
-  kable_styling(bootstrap_options = c("condensed", "hover", "striped"))
+pretty_print(head(sorted_data))
 ```
 
 The highest cholesterol value is \~2x higher than the next highest value. Let's see what happens if we remove it.
@@ -1220,6 +1221,9 @@ The highest cholesterol value is \~2x higher than the next highest value. Let's 
 ```{r}
 # Delete highest total cholesterol value
 data_2$TCHOL[data_2$TCHOL == 613] <- NA 
+
+# Set up the plotting area: 1 row, 2 columns
+par(mfrow = c(1, 2))
 
 # Create histogram of total cholesterol
 hist(data_2$TCHOL)
@@ -1238,6 +1242,9 @@ Looks better but still slightly right skewed. This variable had \~30% missing va
 Triglycerides, mg/dL
 
 ```{r}
+# Set up the plotting area: 1 row, 2 columns
+par(mfrow = c(1, 2))
+
 # Create histogram of triglycerides
 hist(data_2$TRIG)
 
@@ -1267,8 +1274,7 @@ sorted_data <- data_2[order(-data_2$LDL),] %>%
   select(newid, LDL, years)
 
 # Pretty print table
-kable(head(sorted_data), format = "html") %>%
-  kable_styling(bootstrap_options = c("condensed", "hover", "striped"))
+pretty_print(head(sorted_data))
 ```
 
 Patients 19 and 413 have the same value of 704 at baseline. Clearly an error with the measurement process.
@@ -1292,8 +1298,7 @@ Dyslipidemia at visit. fasting TC \>=200 mg/dl or \>=130 mg/dl or HDL \< 40 mg/d
 barplot(table(data_2$DYSLIP))
 
 # Pretty print table
-kable(table(data_2$DYSLIP), format = "html") %>%
-  kable_styling(bootstrap_options = c("condensed", "hover", "striped"))
+pretty_print(table(data_2$DYSLIP))
 ```
 
 There are 718 visits with insufficient data for a dyslipidemia diagnosis.
@@ -1334,26 +1339,27 @@ Let's correctly reflect those -1's as NA's
 # Remove depression scores that were coded as missing
 data_2$CESD[data_2$CESD == -1] <- NA
 
+# Set up the plotting area: 1 row, 2 columns
+par(mfrow = c(1, 2))
+
 # Create histogram of depression score
 hist(data_2$CESD)
 
 # Create qqplot for depression score
 qqnorm(data_2$CESD)
 qqline(data_2$CESD)
-
 ```
 
 Looks good. `CESD` is now cleaned!
 
-It IS right skewed though. Will have to handle that if we want to use it.
-
-A square root transformation may be worth it?
-
-<a href="#Clean_IVs">Back to top of tabset</a>
+For fun, let's see if a square root transformation helps at all.
 
 ```{r}
 # Try a sqrt transformation
 data_2$CESD_sqrt <- sqrt(data_2$CESD)
+
+# Set up the plotting area: 1 row, 2 columns
+par(mfrow = c(1, 2))
 
 # Create histogram of sqrt depression score
 hist(data_2$CESD_sqrt)
@@ -1362,6 +1368,10 @@ hist(data_2$CESD_sqrt)
 qqnorm(data_2$CESD_sqrt)
 qqline(data_2$CESD_sqrt)
 ```
+
+That does look a bit better, but the central limit theorem justifies inclusion of `CESD` without performing transformation.
+
+<a href="#Clean_IVs">Back to top of tabset</a>
 
 ## Smoking Status
 
@@ -1414,8 +1424,7 @@ Took heroin or other opiates since last visit?
 barplot(table(data_2$HEROPIATE))
 
 # Pretty print table
-kable(table(data_2$HEROPIATE), format = "html") %>%
-  kable_styling(bootstrap_options = c("condensed", "hover", "striped"))
+pretty_print(table(data_2$HEROPIATE))
 ```
 
 Only 20 visits where participants did not specify drinking frequency on their form.
@@ -1469,8 +1478,7 @@ Adherence to meds taken since last visit
 barplot(table(data_2$ADH))
 
 # Pretty print table
-kable(table(data_2$ADH), format = "html") %>%
-  kable_styling(bootstrap_options = c("condensed", "hover", "striped"))
+pretty_print(table(data_2$ADH))
 ```
 
 VERY interesting. I was thinking that 100% vs 95-99% adherence was an arbitrary difference to choose to divide groups on, and was actually planning to merge the two. However, this shows why the experimenters likely made that decision: both groups have close to the same amount of observations (\~500)\> That's really good to know.
@@ -1497,8 +1505,7 @@ Race
 barplot(table(data_2$RACE))
 
 # Pretty print table
-kable(table(data_2$RACE), format = "html") %>%
-  kable_styling(bootstrap_options = c("condensed", "hover", "striped"))
+pretty_print(table(data_2$RACE))
 ```
 
 This all looks coded properly. As is a common thing I am seeing, we have a predominant proportion of participants who are white, non-Hispanic. The data set might be large enough that we can use race as a covariate.
@@ -1525,8 +1532,7 @@ Baseline or earliest reported education (highest grade or level)
 barplot(table(data_2$EDUCBAS))
 
 # Pretty print table
-kable(table(data_2$EDUCBAS), format = "html") %>%
-  kable_styling(bootstrap_options = c("condensed", "hover", "striped"))
+pretty_print(table(data_2$EDUCBAS))
 ```
 
 This all checks out. And it looks like there are enough participants in each group (except for 8th grade or less) to run analyses with this variable. It will be interesting to see what relationships arise, as I expect there to be a strong association between education and HIV exposure.
@@ -1554,6 +1560,9 @@ All patients in this data set are HIV+
 Age at visit
 
 ```{r}
+# Set up the plotting area: 1 row, 2 columns
+par(mfrow = c(1, 2))
+
 # Create histogram for age
 hist(data_2$age)
 
@@ -1578,8 +1587,7 @@ Take ART at visit
 barplot(table(data_2$ART))
 
 # Pretty print table
-kable(table(data_2$ART), format = "html") %>%
-  kable_styling(bootstrap_options = c("condensed", "hover", "striped"))
+pretty_print(table(data_2$ART))
 ```
 
 I'm not too sure how useful this variable will be. It just means there were some visits where patients were not given ART, I suppose. But most visits had participants receiving ART.
@@ -1598,8 +1606,7 @@ Ever took ART.
 barplot(table(data_2$everART))
 
 # Pretty print table
-kable(table(data_2$everART), format = "html") %>%
-  kable_styling(bootstrap_options = c("condensed", "hover", "striped"))
+pretty_print(table(data_2$everART))
 ```
 
 This has the exact same split as `ART`. Which makes me think they are exactly the same values for each participant
@@ -1628,8 +1635,7 @@ Hard drug use (either injection drugs or illicit heroin/opiate use) since last v
 barplot(table(data_2$hard_drugs))
 
 # Pretty print table
-kable(table(data_2$hard_drugs), format = "html") %>%
-  kable_styling(bootstrap_options = c("condensed", "hover", "striped"))
+pretty_print(table(data_2$hard_drugs))
 ```
 
 There were 198 visits where participants had used hard_drugs since the last visit.
@@ -1707,7 +1713,7 @@ vis_miss(data_wide_2)
 
 There are no real trends that become apparent when looking at this plot for the wideform data set.
 
-To summarize, it appears that diagnoses that were determined by algorithm (such as `KID`, `DIAB`, `DYSLIP`, and `LIV34`, often had insufficient data to make a diagnosis, so perhaps this is an issue with those algorithms. Additionally, lab measurements of `LDL` and `TRIG` seem to have been too onerous for participants to have gotten. Maybe they opted out of those tests, or maybe the tests were only ordered under certain circumstances.
+To summarize, it appears that diagnoses that were determined by algorithm (such as `KID`, `DIAB`, `DYSLIP`, and `LIV34`, often had insufficient data to make a diagnosis, so perhaps this is an issue with those algorithms. Additionally, lab measurements of `LDL` and `TRIG` seem to have been too onerous for participants to have had collected. Maybe they opted out of those tests, or maybe the tests were only ordered under certain circumstances.
 
 These would be valuable questions to bring forth to the PI. But for now it appear as if we won't be able to use these variables.
 
@@ -1752,7 +1758,7 @@ We may want to impute `income`, `LIV34`, and `TCHOL`, as these have missingness 
 -   `KID`
 -   `DYSLIP`
 
-# Variable Creation
+# Variable Creation {#Variable_Creation}
 
 Here we will create the variables necessary for the analysis.
 
@@ -1763,11 +1769,32 @@ Since we cleaned the longform data set, let's go ahead and re-transpose it to up
 data_wide_2 <- pivot_wider(data_2, id_cols = newid, names_from = years, values_from = -c(newid, years))
 ```
 
-## Change Scores {#Change_Scores}
+:::::: panel-tabset
+## Outcome Variable Change Scores
 
 Here we will create our change scores for our dependent variables `LEU3N`, `VLOAD`, `AGG_MENT`, and `AGG_PHYS` to assess treatment response to ART. For `VLOAD` we will create change scores off the log transformed values.
 
+Change scores are calculated as:
+
+$$
+y_{2year} - y_{baseline} = y_{change}
+$$
+
+::: callout-note
+## Note
+
+Change scores are coded such that:
+
+-   For viral load, higher numbers are less desirable. Negative numbers signify a decrease in viral load over time, which is favorable.
+
+-   For CD4+ T Cell count, higher numbers are more desirable. Negative numbers signify a decrease in leukocytes over time, which is not favorable.
+
+-   For aggregate mental and physical QOL score, higher numbers signify an increase in mental/physical health from baseline. Negative values signify a decrease.
+:::
+
 ```{r}
+70 - 1
+
 # Create change scores for outcome variables
 data_wide_2$VLOAD_log_CHANGE <- data_wide_2$VLOAD_log_2 - data_wide_2$VLOAD_log_0
 data_wide_2$LEU3N_CHANGE <- data_wide_2$LEU3N_2 - data_wide_2$LEU3N_0
@@ -1775,7 +1802,7 @@ data_wide_2$AGG_MENT_CHANGE <- data_wide_2$AGG_MENT_2 - data_wide_2$AGG_MENT_0
 data_wide_2$AGG_PHYS_CHANGE <- data_wide_2$AGG_PHYS_2 - data_wide_2$AGG_PHYS_0
 ```
 
-Now let's perform internal consistency checks to make sure those calculation were performed correctly, as well as reexamine the distributions of the change score for each variable.
+Now let's perform internal consistency checks to make sure those calculations were performed correctly, as well as reexamine the distributions of the change score for each variable.
 
 ::: panel-tabset
 ## Log Viral Load Change
@@ -1786,13 +1813,15 @@ filtered_data <- data_wide_2 %>%
   select(VLOAD_log_0, VLOAD_log_2, VLOAD_log_CHANGE)
 
 # Pretty print
-kable(head(filtered_data), format = "html") %>%
-  kable_styling(bootstrap_options = c("condensed", "striped", "hover"))
+pretty_print(head(filtered_data))
 ```
 
 The computation for change score was performed correctly.
 
 ```{r}
+# Set up the plotting area: 1 row, 2 columns
+par(mfrow = c(1, 2))
+
 # Set up the plotting area: 1 row, 2 columns
 par(mfrow = c(1, 2))
 
@@ -1806,7 +1835,7 @@ qqline(data_wide_2$VLOAD_log_CHANGE)
 
 Looks like we have 1 outlier there that we should catch with the jackknife residuals after we fit the model, but `VLOAD_log_CHANGE` looks normally distributed!
 
-[Top of Tabset](#Change_Scores)
+[Top of Tabset](#Variable_Creation)
 
 ## CD4+ T Cell Count Change
 
@@ -1816,8 +1845,7 @@ filtered_data <- data_wide_2 %>%
   select(LEU3N_0, LEU3N_2, LEU3N_CHANGE)
 
 # Pretty print
-kable(head(filtered_data), format = "html") %>%
-  kable_styling(bootstrap_options = c("condensed", "striped", "hover"))
+pretty_print(head(filtered_data))
 ```
 
 The computation for change score was performed correctly.
@@ -1836,7 +1864,7 @@ qqline(data_wide_2$LEU3N_CHANGE)
 
 CD4+ T Cell count change score looks normally distributed, with 1 or 2 outliers that we can examine the leverage and influence of.
 
-[Top of Tabset](#Change_Scores)
+[Top of Tabset](#Variable_Creation)
 
 ## Aggregate Mental QOL Change
 
@@ -1846,8 +1874,7 @@ filtered_data <- data_wide_2 %>%
   select(AGG_MENT_0, AGG_MENT_2, AGG_MENT_CHANGE)
 
 # Pretty print
-kable(head(filtered_data), format = "html") %>%
-  kable_styling(bootstrap_options = c("condensed", "striped", "hover"))
+pretty_print(head(filtered_data))
 ```
 
 The computation for change score was performed correctly.
@@ -1866,7 +1893,7 @@ qqline(data_wide_2$AGG_MENT_CHANGE)
 
 That looks more normally distributed now, and our sample size is very large so we can also count on the central limit theorem to help us with the assumption of normality.
 
-[Top of Tabset](#Change_Scores)
+[Top of Tabset](#Variable_Creation)
 
 ## Aggregate Physical QOL Change
 
@@ -1876,8 +1903,7 @@ filtered_data <- data_wide_2 %>%
   select(AGG_PHYS_0, AGG_PHYS_2, AGG_PHYS_CHANGE)
 
 # Pretty print
-kable(head(filtered_data), format = "html") %>%
-  kable_styling(bootstrap_options = c("condensed", "striped", "hover"))
+pretty_print(head(filtered_data))
 ```
 
 The computation for change score was performed correctly.
@@ -1896,16 +1922,16 @@ qqline(data_wide_2$AGG_PHYS_CHANGE)
 
 Aggregate physical QOL change score appears more normally distributed now.
 
-[Top of Tabset](#Change_Scores)
+[Top of Tabset](#Variable_Creation)
 
 ## Summary
 
 After computing the change scores, our outcome variables are now normally distributed and we can move forward with using them in models!
 
-[Top of Tabset](#Change_Scores)
+[Top of Tabset](#Variable_Creation)
 :::
 
-## Hard Drug Use Groups {#Hard_Drugs}
+## Hard Drug Use Groups
 
 We need to make dummy codes for our hard drug use groups.
 
@@ -1935,14 +1961,12 @@ data_wide_2$never_drug <- ifelse(data_wide_2$hard_drugs_1 == "No" & data_wide_2$
 And perform some internal consistency checks to ensure we coded that correctly.
 
 ```{r}
-
 # Double check our criteria worked as intended
 filtered_data <- data_wide_2 %>%
   select(newid, hard_drugs_0, hard_drugs_1, hard_drugs_2, never_drug, previous_drug, current_drug)
 
 # Pretty print
-kable(head(filtered_data), format = "html") %>%
-  kable_styling(bootstrap_options = c("condensed", "striped", "hover"))
+pretty_print(head(filtered_data))
 
 # Double check no overlapping group assignments (such as a current AND previous drug user)
 no_overlap <- apply(data_wide_2[, c("never_drug", "previous_drug", "current_drug")], 1, sum) <= 1
@@ -1959,7 +1983,7 @@ if (all_no_overlap) {
 
 Great, that looks like we coded it properly and there are no overlaps between drug use conditions (e.g. there are no current drug users who are also previous drug users).
 
-[Top of Tabset](#Hard_Drugs)
+[Top of Tabset](#Variable_Creation)
 
 ## Drug Use Group
 
@@ -1969,7 +1993,7 @@ Now we will use those dummy codes to make a variable for which group each patien
 -   1: Previous User
 -   2: Current User
 
-```{r}
+```{r, results = "hide"}
 # Create a single variable for drug use group
 data_wide_2$hard_drugs_grp <- ifelse(data_wide_2$never_drug == 1, 0, 
                                  ifelse(data_wide_2$previous_drug == 1, 1,
@@ -1979,6 +2003,9 @@ data_wide_2$hard_drugs_grp <- ifelse(data_wide_2$never_drug == 1, 0,
 data_wide_2$hard_drugs_grp <- factor(data_wide_2$hard_drugs_grp,
                                      levels = c(0,1,2),
                                      labels = c("Never User", "Previous User", "Current User"))
+
+# Label the new variable for better output
+label(data_wide_2$hard_drugs_grp) <- "Hard Drug Use Group"
 
 ```
 
@@ -1990,14 +2017,168 @@ filtered_data <- data_wide_2 %>%
   select(newid, hard_drugs_0, hard_drugs_1, hard_drugs_2, hard_drugs_grp)
 
 # Pretty print
-kable(head(filtered_data), format = "html") %>%
-  kable_styling(bootstrap_options = c("condensed", "striped", "hover"))
+pretty_print(head(filtered_data))
+```
+
+Let's do a final check for how many patients we have in each group.
+
+```{r}
+# Pretty print categories
+pretty_print(table(data_wide_2$hard_drugs_grp))
 ```
 
 Looks good, we can now move forward with analyses using the `hard_drgs_grp` variable!
 
-[Top of Tabset](#Hard_Drugs)
+[Top of Tabset](#Variable_Creation)
 :::
+
+## Adherence Groups
+
+The experimenters coded adherence with 4 levels:
+
+-   1: 100%
+-   2: 95-99%
+-   3: 75-94%
+-   4: \<75%
+-   Blank = Missing
+
+However, it may be also be useful to think of adherence in terms of high vs. low adherence.
+
+Let's go ahead and create a new category for patients that had:
+
+-   High: 95% - 100%
+-   Low: \< 95%
+
+We will be using adherence at year 2 for these categories.
+
+```{r}
+# Create new groups based on high vs low adherence (based on adherence at 2 years)
+data_wide_2$ADH_HIGH <- ifelse(data_wide_2$ADH_2 == "100%" | data_wide_2$ADH_2 == "95-99%", 1, 0)
+data_wide_2$ADH_LOW <- ifelse(data_wide_2$ADH_2 == "75-94%" | data_wide_2$ADH_2 == "<75%%", 1, 0)
+
+# Create a variable for high vs low adherence
+data_wide_2$ADH_HIGHVSLOW <- ifelse(data_wide_2$ADH_LOW == 1, 0,
+                                    ifelse(data_wide_2$ADH_HIGH == 1, 1, NA))
+
+# Factor this new variable and label it too
+data_wide_2$ADH_HIGHVSLOW <- factor(data_wide_2$ADH_HIGHVSLOW,
+                                     levels = c(0,1),
+                                     labels = c("Low Adherence", "High Adherence"))
+
+
+# Label the new variable for better output
+label(data_wide_2$ADH_HIGHVSLOW) <- "Adherence Level"
+
+# Drop empty levels
+data_wide_2$ADH_HIGHVSLOW <- droplevels(data_wide_2$ADH_HIGHVSLOW) 
+
+```
+
+Let's perform a consistency check to make sure that coding worked as intended.
+
+```{r}
+# Double check our criteria worked as intended
+filtered_data <- data_wide_2 %>%
+  select(newid, ADH_2, ADH_HIGHVSLOW)
+
+# Pretty print
+pretty_print(head(filtered_data, 20))
+```
+
+Looks great, now we have a new variable `ADH_HIGHVSLOW` to compare how high and low adherence to the medication regiment since the last visit impacts outcomes.
+
+[Top of Tabset](#Variable_Creation)
+
+## Race Groups
+
+First let's examine how many patients of each race we have.
+
+```{r}
+# Get number of patients of each race
+pretty_print(table(data_wide_2$RACE_0))
+```
+
+We have a very low number of patients in the minority race categories.
+
+It may be informative to see how outcomes differ based on white vs non-white, as our sample is predominantly white and there is otherwise not enough patients in each category to use race as a meaningful variable.
+
+Let's create a variable that captures this.
+
+```{r}
+# Create dummy variable for race, white vs non-white
+data_wide_2$RACE_WHITEYN <- ifelse(is.na(data_wide_2$RACE_0), NA, 
+                                   ifelse(data_wide_2$RACE_0 == "White, non-Hispanic", 1, 0))
+
+
+# Factor this new variable and label it too
+data_wide_2$RACE_WHITEYN <- factor(data_wide_2$RACE_WHITEYN,
+                                     levels = c(0,1),
+                                     labels = c("Non-White", "White"))
+
+# Label the new variable for better output
+label(data_wide_2$RACE_WHITEYN) <- "Race"
+
+# Double check our criteria worked as intended
+filtered_data <- data_wide_2 %>%
+  select(newid, RACE_0, RACE_WHITEYN)
+
+# Pretty print
+pretty_print(head(filtered_data, 10))
+```
+
+Our dummy coding was performed correctly.
+
+Let's see what our counts looks like now.
+
+```{r}
+# Check counts for each category in the new whiteYN variable.
+table(data_wide_2$RACE_WHITEYN)
+```
+
+We have 186 non-white participants and 340 white participants.
+
+[Top of Tabset](#Variable_Creation)
+
+## Education Groups
+
+```{r}
+# Get number patients in each education tier
+pretty_print(table(data_wide_2$EDUCBAS_0))
+```
+
+Education at baseline is currently coded as a categorical variable with 7 levels. It may be more helpful to classify education as a bivariate variable of college vs no college.
+
+```{r}
+# Create new dummy variable for college vs no college
+data_wide_2$EDUC_COLLEGE <- ifelse(is.na(data_wide_2$EDUCBAS_0), NA, 
+                                   ifelse(data_wide_2$EDUCBAS_0 %in% c("At least one year college but no degree", 
+                                                                       "Four years college or got degree", 
+                                                                       "Some graduate work", 
+                                                                       "Post-graduate degree"), 1, 0))
+
+# Factor new variable
+data_wide_2$EDUC_COLLEGE <- factor(data_wide_2$EDUC_COLLEGE,
+                                     levels = c(0,1),
+                                     labels = c("No College", "College"))
+
+# Label the new variable for better output
+label(data_wide_2$EDUC_COLLEGE) <- "College Status"
+
+# Double check our criteria worked as intended
+filtered_data <- data_wide_2 %>%
+  select(newid, EDUCBAS_0, EDUC_COLLEGE)
+
+# Pretty print
+pretty_print(head(filtered_data, 10))
+
+# Get number of patients in each category
+table(data_wide_2$EDUC_COLLEGE)
+```
+
+Looks good, we have 125 patients with no college, and 425 with at least some college.
+
+[Top of Tabset](#Variable_Creation)
+::::::
 
 # Descriptive Statistics {#Descriptives}
 
@@ -2013,7 +2194,7 @@ table1
 
 Now what if I create table 1 for the wideform data set?
 
-```{r}
+```{r, results = "hide"}
 # Create labels for variables to make the names of each variable more professional in outputs
 label(data_wide_2$AGG_MENT_0) <- "Aggregate Mental QOL Score"
 label(data_wide_2$AGG_PHYS_0) <- "Aggregate Physical QOL Score"
@@ -2053,7 +2234,7 @@ label(data_wide_2$VLOAD_log_CHANGE) <- "Log Viral Load Change Score"
 label(data_wide_2$LEU3N_CHANGE) <- "CD4+ T Cell Count Change Score"
 
 # Create Table 1 for the wideform data set,stratified by hard drug use group
-table1 <- table1(~AGG_MENT_0 + AGG_PHYS_0 +  HASHV_0 + HASHF_0 + income_0 + BMI_0 + HBP_0 + DIAB_0 + LIV34_0 + KID_0 + FRP_0 + FP_0 + TCHOL_0 + TRIG_0 + LDL_0 + DYSLIP_0 + CESD_0 + SMOKE_0 + DKGRP_0 + HEROPIATE_0 + IDU_0 + LEU3N_0 +  VLOAD_log_0 + ADH_1 + ADH_2 + RACE_0 + EDUCBAS_0 + age_0 + AGG_MENT_CHANGE + AGG_PHYS_CHANGE + VLOAD_log_CHANGE + LEU3N_CHANGE| hard_drugs_grp, data = data_wide_2, caption = "Descriptive Statistics at Baseline", overall = c(left="Total"))
+table1 <- table1(~AGG_MENT_0 + AGG_PHYS_0 +  HASHV_0 + HASHF_0 + income_0 + BMI_0 + HBP_0 + DIAB_0 + LIV34_0 + KID_0 + FRP_0 + FP_0 + TCHOL_0 + TRIG_0 + LDL_0 + DYSLIP_0 + CESD_0 + SMOKE_0 + DKGRP_0 + HEROPIATE_0 + IDU_0 + LEU3N_0 +  VLOAD_log_0 + ADH_1 + ADH_2 + ADH_HIGHVSLOW +  RACE_WHITEYN + EDUC_COLLEGE + age_0 + AGG_MENT_CHANGE + AGG_PHYS_CHANGE + VLOAD_log_CHANGE + LEU3N_CHANGE| hard_drugs_grp, data = data_wide_2, caption = "Descriptive Statistics at Baseline", overall = c(left="Total"))
 table1
 ```
 
@@ -2061,11 +2242,9 @@ For good measure, let's create Table 1 while stratifying by Adherence group at 2
 
 ```{r}
 # Create Table 1 for the wideform data set,stratified by adherence group
-table1 <- table1(~AGG_MENT_0 + AGG_PHYS_0 +  HASHV_0 + HASHF_0 + income_0 + BMI_0 + HBP_0 + DIAB_0 + LIV34_0 + KID_0 + FRP_0 + FP_0 + TCHOL_0 + TRIG_0 + LDL_0 + DYSLIP_0 + CESD_0 + SMOKE_0 + DKGRP_0 + HEROPIATE_0 + IDU_0 + LEU3N_0 +  VLOAD_log_0 + hard_drugs_grp + RACE_0 + EDUCBAS_0 + age_0 + AGG_MENT_CHANGE + AGG_PHYS_CHANGE + VLOAD_log_CHANGE + LEU3N_CHANGE| ADH_2, data = data_wide_2, caption = "Descriptive Statistics at Baseline", overall = c(left="Total"))
+table1 <- table1(~AGG_MENT_0 + AGG_PHYS_0 +  HASHV_0 + HASHF_0 + income_0 + BMI_0 + HBP_0 + DIAB_0 + LIV34_0 + KID_0 + FRP_0 + FP_0 + TCHOL_0 + TRIG_0 + LDL_0 + DYSLIP_0 + CESD_0 + SMOKE_0 + DKGRP_0 + HEROPIATE_0 + IDU_0 + LEU3N_0 +  VLOAD_log_0 + ADH_1 + ADH_2 + ADH_HIGHVSLOW +  RACE_WHITEYN + EDUC_COLLEGE + age_0 + AGG_MENT_CHANGE + AGG_PHYS_CHANGE + VLOAD_log_CHANGE + LEU3N_CHANGE + hard_drugs_grp | ADH_2, data = data_wide_2, caption = "Descriptive Statistics at Baseline", overall = c(left="Total"))
 table1
 ```
-
-
 
 ```{r}
 # Gets average viral load per patient for example, can do min and max etc.
@@ -2073,8 +2252,6 @@ summary_table <- data %>%
   group_by(newid) %>%
   summarize(mean_vload = mean(VLOAD))
 summary_table
-
-colnames(data)
 ```
 
 ```{r}
@@ -2090,11 +2267,7 @@ fig <- plot_ly(data_wide_2, x = ~hard_drugs_grp, y = ~VLOAD_log_CHANGE, color = 
 fig
 ```
 
-# Bivariate Relationships
-
-We will first perform an exploratory data analysis to assess the relationships between variables, to examine multicollinearity, and to select potential covariates.
-
-## Correlation Matrix
+# Correlation Matrix
 
 First we will begin by making a correlation matrix to assess whether any of our IVs are related to each other (multicollinearity). This will also inform which variables to incorporate into the final model.
 
@@ -2114,42 +2287,155 @@ corrplot(correlation_matrix, method = "circle")
 
 There are a host of strong correlations in our data set.
 
-`CESD` has a strong negative associated with `AGG_MENT`, which makes perfect sense. Those who are are more depressed will have lower mental health scores. `CESD` will have to be included in any analysis with `AGG_MENT` as an outcome variable.
+### Precision Variables
 
-`FRP` and `FP` are strongly negatively associated with `AGG_PHYS`. This also makes perfect sense: Those who are frail will have lower overall physical health scores. `FRP` and/or `FP` will need to be included in the model predicting `AGG_PHYS`. Additionally, the correlation between `FRP` and `FP` will have to be assessed to see if we have multicollinearity. If so, one of them can be chosen over the other since it sounds like they are evaluating almost the same thing (i.e., "Frailty Related Phenotype" vs "Frailty Phenotype")
+`CESD` has a strong negative associated with `AGG_MENT`, which makes perfect sense. Those who are are more depressed will have lower mental health scores. `CESD` will have to be included as a precision variable for any analysis with `AGG_MENT` as the outcome variable.
 
-`income` is strongly associated with `EDUCBASE`, `RACE`, `SMOKE`, and weakly correlated with `TCHOL` and `LDL`, and `VLOAD_log`. These relationships will all have to be examined more closely to control for multicollinearity.
+`FRP` and `FP` are strongly negatively associated with `AGG_PHYS`. This also makes perfect sense: Those who are frail will have lower overall physical health scores. They are both highly correlated though and essentially measure the same thing. One will have to be dropped.
 
-`ADH` is correlated with `VLOAD_log`, but I think having a categorical variable in a correlation matrix is actually not appropriate. `VLOAD_log` appears to be lightly correlated with `income` and `EDUCBASE`.
+### Mutlicollinearity Issues
 
-`Hard_drugs` is highly correlated with `HEROPIATE` and `IDU`, which makes perfect sense, as they are all basically the same thing. Since `Hard_drugs` is our main independent variable of interest, we drop `HEROPIATE` and `IDU` as potential covariates since they are all so highly correlated.
+`EDUCBASE` is strongly associated with `income`, `RACE`, `SMOKE`, and weakly correlated with `TCHOL`, `LDL`, and `VLOAD_log`.
 
-We appear to have notable multicollinearity between `DYSLIP` and `TCHOL`, `LDL`, and `TRIG`. This makes sense because all these variables are highly related (abnormal levels of fats in the blood). This is interesting because these variables are where a lot of our missingness occured. We will have to be careful when including any of these variables in our model.
+`Hard_drugs` is highly correlated with `HEROPIATE` and `IDU`, which makes perfect sense, as they are all basically the same thing.
+
+We appear to have notable multicollinearity between `DYSLIP` and `TCHOL`, `LDL`, and `TRIG`. This makes sense because all these variables are highly related (dyslipidemia is abnormal levels of fats in the blood). This is interesting because these variables are where a lot of our missingness occured.
 
 We also have some possible multicollinearity to be aware of between `KID`, `HBP`, and `DIAB`.
 
-With all that in mind, let's look at our relationships between the main IV and outcomes of interest!!
+Let's clean this up a bit and remove unneccessary variables.
 
-## Exploratory Data Analysis {#EDA}
+## Removing Superfluous Variables
+
+We previously determined that `LDL`, `TRIG`, `DIAB`, `KID`, and `DYSLIP` had excessive missing values (\>40%).
+
+Now that we have seen that they are not strongly related to the outcome variables, we can be assured that we can safely remove them with no need for imputation.
+
+```{r}
+# Drop variables with excessive missing values from the wideform data set
+data_2 <- data_2 %>%
+  select(-LDL, -TRIG, -DIAB, -KID, -DYSLIP)
+```
+
+`FRP` and `FP` are both precision variables for `AGG_PHYS`, but highly correlated to each other.
+
+`FP` has more missing values (22%) than `FRP`(\~0%), and will thus be dropped.
+
+```{r}
+# Drop FP
+data_2 <- data_2 %>%
+  select(-FP)
+```
+
+`EDUCBASE` is highly correlated with `income`, `TCHOL`, `SMOKE`, and `RACE`.
+
+`income` has 27% missing values and thus will be dropped from further analysis.
+
+`TCHOL` has 32% missing values and will thus be dropped.
+
+`SMOKE` and `RACE` will be dropped to avoid issues of multicollinearity, and `EDUCBASE` used as the covariate of choice.
+
+```{r}
+# Drop income, total cholesterol, smoke, and race
+data_2 <- data_2 %>%
+  select(-income, -TCHOL, -SMOKE, -RACE)
+```
+
+`Hard_drugs` is highly correlated with `HEROPIATE` and `IDU`.
+
+`Hard_drugs` is our main independent variable of interest and thus we drop `HEROPIATE` and `IDU`.
+
+```{r}
+# Drop income, total cholesterol, smoke, and race
+data_2 <- data_2 %>%
+  select(-HEROPIATE, -IDU)
+```
+
+`HBP` is lightly correlated with `age` and `BMI`. Let's drop it to avoid multicollinearity.
+
+```{r}
+# Drop high blood pressure.
+data_2 <- data_2 %>%
+  select(-HBP)
+```
+
+## Correlation Matrix Redux
+
+Let's take another look at that correlation matrix now that we have cleaned up our data set to remove variables with excessive missing values and issues of multicollinearity.
+
+```{r}
+# Let's clean our output by making a trimmed dataset excluding extraneous variables
+data_for_matrix <- select(data_2, -newid, -ART, -everART, -LEU3N_log, -LEU3N_yeojohnson, -LEU3N_boxcox, -LEU3N_orderNorm, - LEU3N_standard, -AGG_MENT_orderNorm, -AGG_MENT_orderNorm, -BMI_outlier, -CESD_sqrt, -hivpos, -AGG_PHYS_orderNorm, - LIV34)
+
+# We factored our variables at the start. To make a correlation matrix we must reconvert those back to numeric
+data_for_matrix <- data.frame(lapply(data_for_matrix, function(x) if (is.factor(x)) as.numeric(x) else x))
+
+# Make a correlation matrix with all variables of the trimmed data set
+correlation_matrix <- cor(data_for_matrix, use = "complete.obs")
+
+# Plot the matrix
+corrplot(correlation_matrix, method = "circle")
+```
+
+Looking MUCH better! Here we can see some potentially strong relationships emerge.
+
+-   `CESD` as mentioned will be included as a precision variable for `AGG_MENT`
+
+-   `FRP` as mentioned will be included as a precision variable for `AGG_PHYS`
+
+-   `EDUCBASE` looks like it will be a predictor for all outcome variables except `AGG_MENT`
+
+-   `BMI` appears to have a weak correlation with all outcome variables and will likely be included in the final models.
+
+-   `age` also looks weakly correlated to all outcome variables except `VLOAD_log`
+
+Let's run some individual regression and assess these relationships more closely.
+
+p-values of \< 0.1 will be considered for the final models.
+
+I just want to try making a correlation matrix of the wideform data set and see what it looks like
+
+```{r}
+# Let's clean our output by making a trimmed dataset excluding extraneous variables
+data_for_matrix <- select(data_wide_2, AGG_MENT_CHANGE, AGG_PHYS_CHANGE, LEU3N_CHANGE, VLOAD_log_CHANGE, BMI_2, FRP_2, CESD_2, DKGRP_2, ADH_2, ADH_HIGHVSLOW, EDUCBAS_2, EDUC_COLLEGE, age_2, hard_drugs_grp)
+
+# We factored our variables at the start. To make a correlation matrix we must reconvert those back to numeric
+data_for_matrix <- data.frame(lapply(data_for_matrix, function(x) if (is.factor(x)) as.numeric(x) else x))
+
+# Make a correlation matrix with all variables of the trimmed data set
+correlation_matrix <- cor(data_for_matrix, use = "complete.obs")
+
+# Plot the matrix
+corrplot(correlation_matrix, method = "circle")
+```
+
+# Exploratory Data Analysis {#EDA}
 
 Here I will plot the data and perform a number of simple linear regressions to examine relationships between variables in order to determine which covariates to include in the model.
 
+Remember that:
+
+-   For viral load, higher numbers are less desirable. Negative numbers signify a decrease in viral load over time, which is favorable.
+
+-   For CD4+ T Cell count, higher numbers are more desirable. Negative numbers signify a decrease in leukocytes over time, and which is not favorable.
+
+-   For aggregate mental and physical QOL score, higher numbers signify an increase in mental/physical health from baseline. Negative values signify a decrease.
+
 ::::: panel-tabset
+## Log Viral Load 
 
-## Primary Explanatory Variable
-
-Let's begin by seeing if there appears to be a difference in our outcome variables based on hard drug use
+Let's focus first on a model predicting Log Viral Load change.
 
 ::: panel-tabset
+## PEV - Hard Drug Use
 
-## Log Viral Load
-
-Start with log viral load.
+Let's begin by seeing if there appears to be a difference in log viral load change based on hard drug use, the primary explanatory variable.
 
 ```{r}
 # Create boxplots of log viral load change by hard drug use group
 p <- ggplot(data_wide_2, aes(x = hard_drugs_grp, y = VLOAD_log_CHANGE, fill = hard_drugs_grp)) +
   geom_boxplot(alpha = 0.5) +
+  theme_minimal() +
   scale_fill_brewer(palette="Pastel2") +
   labs(title = "Boxplot of Log Viral Load Change by Hard Drug Use Group",
        x = "Hard Drug Use Group",
@@ -2158,9 +2444,418 @@ p <- ggplot(data_wide_2, aes(x = hard_drugs_grp, y = VLOAD_log_CHANGE, fill = ha
 
 ggplotly(p)
 ```
-There may be a difference between log viral load change and hard drug use group, especially between never users and previous users.
+
+There may be a difference between log viral load change and hard drug use group, especially between never users and previous users. Visually, never users may have had more of a decrease in log viral load over time compared to previous users and potentially current users.
+
+Let's run the regression to see if this relationship is statistically significant.
+
+```{r}
+# Perform regression predicting log vload change by hard drug use group
+model <- lm(VLOAD_log_CHANGE ~ hard_drugs_grp, data = data_wide_2)
+
+# Examine Summary
+summary(model)
+```
+
+```{r}
+# Apply Bonferroni correction
+p_values <- summary(model)$coefficients[,4] # This line selects the fourth column of the resulting coefficients table from summary(model_attach), which is the p-values
+
+# Perform Bonferroni correction 
+p_adjusted <- p.adjust(p_values, method = "bonferroni")
+
+# Compare adjusted p-values to unadjusted p-values
+p_comparison <- cbind(p_values, p_adjusted)
+pretty_print(p_comparison)
+```
+
+```{r}
+# Relevel to change to the reference group to previous user
+data_wide_2$hard_drugs_grp <- relevel(data_wide_2$hard_drugs_grp, ref = "Previous User")
+
+# Perform regression predicting log vload change by hard drug use group
+model <- lm(VLOAD_log_CHANGE ~ hard_drugs_grp, data = data_wide_2)
+
+# Examine Summary
+summary(model)
+
+# Apply Bonferroni correction
+p_values <- summary(model)$coefficients[,4] # This line selects the fourth column of the resulting coefficients table from summary(model_attach), which is the p-values
+
+# Perform Bonferroni correction 
+p_adjusted <- p.adjust(p_values, method = "bonferroni")
+
+# Compare adjusted p-values to unadjusted p-values
+p_comparison <- cbind(p_values, p_adjusted)
+pretty_print(p_comparison)
+```
+
+The overall model is significant (F~(2,529)~= 3.991, p = 0.01903). The group comparisons were not significant after applying Bonferroni correction. However, they may be significant after including precision variables or confounders, and thus we continue with the analysis and include `hard_drugs_group` as the PEV.
+
+
+[Top of Tabset](#EDA)
+
+## Adherence
+
+The researchers are interested in if treatment response between the drug use groups can be explained by differences in adherence to the HAART treatment regimen.
+
+The first step toward investigating this is to examine if there is a relationship between adherence and treatment response, such as log viral load change.
+
+```{r}
+# Get rid of that value of 1 for adherence at baseline for patient 426
+data_2$ADH[data_2$years == 0] <- NA
+
+# Get means for each year
+summary_data <- data_2 %>%
+  group_by(ADH, years) %>%
+  summarize(Average_VLOAD_log = mean(VLOAD_log, na.rm = TRUE))
+
+# Create plot
+ggplot(summary_data, aes(x = years, y = Average_VLOAD_log, color = ADH)) +
+  geom_line(size = 1) +   # Line plot
+  geom_point(size = 2) +  # Add points for clarity
+  labs(title = "Average Log Viral Load Change by Adherence Group Over 2 Years",
+       x = "Year",
+       y = "Average Log Viral Load Change",
+       color = "Adherence Group") +
+  theme_minimal() +       # Clean theme
+  scale_color_brewer(palette = "Pastel2")  # Nice color palette for groups
+```
+
+Indeed we can see that, across the first 2 years of the study, as adherence decreased, average log viral load increased.
+
+That is, groups with higher adherence had a smaller increase in log viral load over 2 years compared to those with lower adherence. This is evidence that the ART treatment is efficacious in reducing viral load!
+
+Let's examine that relationship with boxplots.
+
+```{r}
+# Create boxplots of log viral load change by adherence group
+p <- ggplot(data_wide_2, aes(x = ADH_2, y = VLOAD_log_CHANGE, fill = ADH_2)) +
+  geom_boxplot(alpha = 0.5) +
+  theme_minimal() +
+  scale_fill_brewer(palette="Pastel2") +
+  labs(title = "Boxplot of Log Viral Load Change by Adherence at Year 2",
+       x = "Adherence at year 2",
+       y = "Log Viral Load Change") +
+  guides(fill = guide_legend(title = "Adherence Group"))
+
+ggplotly(p)
+```
+
+This relationship is reflected in the boxplots: Groups with high adherence had a greater decrease in log viral load over 2 years compared to those with low adherence.
+
+Let's run the regression to ensure this difference is statistically significant.
+
+```{r}
+# Perform regression predicting log vload change by adherence group at year 2
+model <- lm(VLOAD_log_CHANGE ~ ADH_2, data = data_wide_2)
+
+# Examine Summary
+summary(model)
+```
+
+```{r}
+# Apply Bonferroni correction
+p_values <- summary(model)$coefficients[,4] # This line selects the fourth column of the resulting coefficients table from summary(model_attach), which is the p-values
+
+# Perform Bonferroni correction 
+p_adjusted <- p.adjust(p_values, method = "bonferroni")
+
+# Compare adjusted p-values to unadjusted p-values
+p_comparison <- cbind(p_values, p_adjusted)
+pretty_print(p_comparison)
+```
+
+```{r}
+# Relevel to change to the reference group to previous user
+data_wide_2$ADH_2 <- relevel(data_wide_2$ADH_2, ref = "75-94%")
+
+# Perform regression predicting log vload change by adherence group at year 2
+model <- lm(VLOAD_log_CHANGE ~ ADH_2, data = data_wide_2)
+
+# Examine Summary
+summary(model)
+
+# Apply Bonferroni correction
+p_values <- summary(model)$coefficients[,4] # This line selects the fourth column of the resulting coefficients table from summary(model_attach), which is the p-values
+
+# Perform Bonferroni correction 
+p_adjusted <- p.adjust(p_values, method = "bonferroni")
+
+# Compare adjusted p-values to unadjusted p-values
+p_comparison <- cbind(p_values, p_adjusted)
+pretty_print(p_comparison)
+```
+
+
+The overall model is significant (F~(3, 528)~= 8.261, p < .0001). 
+
+Looking at the between-group comparisons, the 100% group is statistically different from the 75-95% group (p-adjusted = 0.0008421) and the <75% group (p-adjusted = 0.0266202). 
+
+The 75-95% group is significantly different from the 95-99% group (p-adjusted = 0.0001454).
+
+The 100% and 95-99% group were not significantly different from each other (p > .05), and the 75-95% and <75% groups were not significantly different from each other (p-adjusted > 0.5) strong providing evidence for grouping these levels together and separating based on high vs low adherence.
+
+
+::: callout-note
+Based on the above findings, there is no difference between the two highest adherence level groups from each other, and the two lowest adherence level groups from each other.
+
+Therefore, analyses moving forward will only make comparisons between high vs low adherence.
+:::
+
+[Top of Tabset](#EDA)
+
+## Adherence High vs Low
+
+Based on the plots and regression results from looking at adherence group and log viral load, there is no difference between the two highest adherence level groups from each other, and the two lowest adherence level groups from each other.
+
+Therefore, it is more prudent to collapse this variable and make comparisons only between high (95-100%) adherence and low (<95%) adherence.
+
+Let's examine change in log viral load based on these criteria.
+
+```{r}
+# Filter out NA values
+data_no_na <- data_wide_2 %>% filter(!is.na(ADH_HIGHVSLOW))
+
+# Create boxplots of log viral load change by adherence group
+p <- ggplot(data_no_na, aes(x = ADH_HIGHVSLOW, y = VLOAD_log_CHANGE, fill = ADH_HIGHVSLOW)) +
+  geom_boxplot(alpha = 0.5) +
+  theme_minimal() +
+  scale_fill_brewer(palette = "Pastel2") +
+  labs(title = "Boxplot of Log Viral Load Change by Adherence at Year 2",
+       x = "Adherence Level",
+       y = "Log Viral Load Change") +
+  guides(fill = guide_legend(title = "Adherence Group"))
+
+ggplotly(p)
+```
+
+Indeed, this plot is simpler and encapsulates the true relationships better!
+
+The high adherence group had a greater decrease in log viral load over 2 years compared to the low adherence group.
+
+Let's perform the linear regression.
+
+```{r}
+# Perform regression predicting log vload change by adherence group at year 2
+model <- lm(VLOAD_log_CHANGE ~ ADH_HIGHVSLOW, data = data_wide_2)
+
+# Examine Summary
+summary(model)
+```
+
+The overall model is statistically significant (F~(1,518)~= 17.78, p = 0.00002922). On average, those in the high adherence group have a mean change in log viral load that is 1.86 times lower than those in the lower adherence group
+
+`ADH_HIGHVSLOW` will absolutely be included in the final model for `VLOAD_log`.
+
+[Top of Tabset](#EDA)
+
+## BMI
+
+The correlation matrix reveals a relationship between BMI and each outcome variable. Let's examine this relationship more closely.
+
+```{r}
+# Create a scatterplot of log vload change by BMI at baseline
+p <- ggplot(data_wide_2, aes(x = BMI_0, y = VLOAD_log_CHANGE, color = BMI_0)) + 
+  geom_point() +
+  labs(title = "Log Viral Load Change by BMI at Baseline",
+       y = "Log Viral Load Change",
+       x = "BMI at Baseline") + 
+  scale_fill_brewer(palette = "Pastel2")
+
+# Make the plot interactive
+ggplotly(p)
+```
+
+Let's run a regression to see if there is any kind of linear relationship in there.
+
+```{r}
+# Perform a linear regression predicting log viral load change by BMI at baseline
+model <- lm(VLOAD_log_CHANGE ~ BMI_0, data = data_wide_2)
+
+# Examine model summary
+summary(model)
+```
+
+`BMI` is not a significant predictor of log viral load change and should not be included in the final model.
+
+```{r}
+# Create a scatterplot of log vload change by BMI at baseline
+p <- ggplot(data_wide_2, aes(x = BMI_0, y = VLOAD_log_CHANGE, color = hard_drugs_grp)) + 
+  geom_point() +
+  labs(title = "Log Viral Load Change by BMI at Baseline",
+       y = "Log Viral Load Change",
+       x = "BMI at Baseline") + 
+  scale_fill_brewer(palette = "Pastel2")
+
+# Make the plot interactive
+ggplotly(p)
+```
+
+That's interesting. There doesn't appear to be an overall relationship between BMI and log viral load change, but there may be an interaction there based on hard drug use group. Where low BMI recent drug users have higher log viral loads compared to those with high BMIs
+
+Will investigate more later.
+
+We need to double check for multicollinearity between `BMI` and `EDUC_COLLEGE`. 
+
+```{r}
+# # Perform a point-biserial correlation to see if BMI and college education are correlated.
+# point_biserial <- cor.test(data_wide_2$BMI_0, data_wide_2$EDUC_COLLEGE)
+# point_biserial
+```
+
+The correlation between `BMI` and `EDUC_COLLEGE` is not significant or strong enough to be of concern. Both variables can be included in models without raising issues of multicollinearity.
+
+[Top of Tabset](#EDA)
+
+## College Education
+
+Based on the correlation matrix, `EDUC_COLLEGE` appears to be significantly associated with our outcome variables.
+
+```{r}
+# Create a scatterplot of log vload change by college education
+p <- ggplot(data_wide_2, aes(x = EDUC_COLLEGE, y = VLOAD_log_CHANGE, fill = EDUC_COLLEGE)) + 
+  geom_boxplot(alpha = 0.5) +
+  theme_minimal() +
+  labs(title = "Log Viral Load Change by College Education",
+       y = "Log Viral Load Change",
+       x = "College Education") + 
+  scale_fill_brewer(palette = "Pastel2")
+
+# Make the plot interactive
+ggplotly(p)
+```
+
+There appears to be a difference in log viral load change based on college education. Remember that this is on a logarithmic scale, so the real differences will be much more pronounced.
+
+Let's run the regression.
+
+```{r}
+# Perform a linear regression predicting log viral load change by college education
+model <- lm(VLOAD_log_CHANGE ~ EDUC_COLLEGE, data = data_wide_2)
+
+# Examine model summary
+summary(model)
+```
+
+The overall model is significant F~(1,530)~= 9.204, p = 0.002533). `EDUC_COLLEGE` is a significant predictor of log viral load change and should be included in the final model.
+
+[Top of Tabset](#EDA)
+
+:::
+
+::: panel-tabset
+
+We can also plot this relationship longitudinally.
+
+```{r}
+# Get means for each year
+summary_data <- data_2 %>%
+  group_by(hard_drugs, years) %>%
+  summarize(Average_VLOAD = mean(VLOAD_log, na.rm = TRUE))
+
+# Create plot
+ggplot(summary_data, aes(x = years, y = Average_VLOAD, color = hard_drugs)) +
+  geom_line(size = 1) +   # Line plot
+  geom_point(size = 2) +  # Add points for clarity
+  labs(title = "Average Log VLOAD by Hard Drug Use Over 8 Years",
+       x = "Year",
+       y = "Log VLOAD",
+       color = "Hard Drug Use Since Last Visit") +
+  theme_minimal() +       # Clean theme
+  scale_color_brewer(palette = "Pastel2")  # Nice color palette for groups
+```
+
+This plot shows that those who used hard drugs since the last visit had potentially lower viral load... the opposite of what you would expect if drug use weakens the immune system.
 
 [Top of tabset](#EDA)
+
+:::
+
+## CD4+ T Cell Count
+
+Now let's examine relationships for the model predicting CD4+ T Cell Count
+
+::: panel-tabset
+
+## PEV - Hard Drug Use Group
+
+```{r}
+# Create boxplots of CD4+ T Cell count change by hard drug use group
+p <- ggplot(data_wide_2, aes(x = hard_drugs_grp, y = LEU3N_CHANGE, fill = hard_drugs_grp)) +
+  geom_boxplot(alpha = 0.5) +
+  theme_minimal() +
+  scale_fill_brewer(palette="Pastel2") +
+  labs(title = "Boxplot of Log Viral Load Change by Hard Drug Use Group",
+       x = "Hard Drug Use Group",
+       y = "CD4+ T Cell Count Change") +
+  guides(fill = guide_legend(title = "Hard Drug Use Group"))
+
+ggplotly(p)
+```
+
+## Adherence
+
+```{r}
+# Get means for each year
+summary_data <- data_2 %>%
+  group_by(ADH, years) %>%
+  summarize(Average_LEU3N = mean(LEU3N, na.rm = TRUE))
+
+# Create plot
+ggplot(summary_data, aes(x = years, y = Average_LEU3N, color = ADH)) +
+  geom_line(size = 1) +   # Line plot
+  geom_point(size = 2) +  # Add points for clarity
+  labs(title = "Average LEU3N by Adherence Group Over 2 Years",
+       x = "Year",
+       y = "Average LEU3Ne",
+       color = "Adherence Group") +
+  theme_minimal() +       # Clean theme
+  scale_color_brewer(palette = "Pastel2")  # Nice color palette for groups
+```
+
+We have the same relationship here
+
+
+```{r}
+# Create boxplots of CD4+ T Cell Count change by adherence group
+p <- ggplot(data_wide_2, aes(x = ADH_2, y = LEU3N_CHANGE, fill = ADH_2)) +
+  geom_boxplot(alpha = 0.5) +
+  theme_minimal() +
+  scale_fill_brewer(palette="Pastel2") +
+  labs(title = "Boxplot of CD4+ T Cell Count by Adherence at Year 2",
+       x = "Adherence at year 2",
+       y = "CD4+ T Cell Count") +
+  guides(fill = guide_legend(title = "Adherence Group"))
+
+ggplotly(p)
+```
+
+```{r}
+# Create boxplots of CD4+ T Cell Count change by adherence group
+p <- ggplot(data_wide_2, aes(x = ADH_HIGHVSLOW, y = LEU3N_CHANGE, fill = ADH_HIGHVSLOW)) +
+  geom_boxplot(alpha = 0.5) +
+  theme_minimal() +
+  scale_fill_brewer(palette="Pastel2") +
+  labs(title = "Boxplot of CD4+ T Cell Count by Adherence at Year 2",
+       x = "Adherence at year 2",
+       y = "CD4+ T Cell Count") +
+  guides(fill = guide_legend(title = "Adherence Group"))
+
+ggplotly(p)
+```
+
+
+
+[Top of tabset](#EDA)
+
+:::
+
+:::::
+
+::::: panel-tabset
+::: panel-tabset
+
 
 ## CD4+ T Cell Count
 
@@ -2217,11 +2912,10 @@ ggplotly(p)
 
 Also doesn't look like a difference here.
 
+[Top of Tabset](#EDA)
 :::
 
-## Adherence
-
-::: panel-tabset
+##
 
 The researchers are interested in assessing adherence as a potential confounder for the relationship between hard drug use and the outcome variables. Let's assess
 
@@ -2300,23 +2994,42 @@ ggplotly(p)
 ```
 
 [Top of Tabset](#EDA)
-
-
 :::
-
-:::
+:::::
 
 ::::::
+
+
+# Final Model Log Viral Load Change
+
+```{r}
+model_log_VLOAD <- lm(VLOAD_log_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + EDUC_COLLEGE, data = data_wide_2)
+
+summary(model_log_VLOAD)
+
+model_log_VLOAD <- lm(VLOAD_log_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + EDUC_COLLEGE + hard_drugs_grp*ADH_HIGHVSLOW, data = data_wide_2)
+
+summary(model_log_VLOAD)
+```
+
+
+```{r}
+model_anova <- aov(VLOAD_log_CHANGE ~ hard_drugs_grp * ADH_HIGHVSLOW, data = data_wide_2)
+
+summary(model_anova)
+TukeyHSD(model_anova)
+```
+
+
+
+
 
 This doesn't tell us anything but I want to come back to this idea.
 
 ```{r}
 ggplot(data_wide_2, aes(x = newid, y = VLOAD_log_CHANGE, color = hard_drugs_grp)) +
   geom_point()
-
 ```
-
-
 
 # CONSORT Flow Chart
 
@@ -2350,6 +3063,266 @@ complete_data
 
 ```
 
-maybe do MI for TCHOl, or try clearing out outliers +- 3 SD from mean and re-plot hist and qqplots
+variables he said he'd include BMI, educbase, smoking
 
-turn my kable pretty print into a function that I can just call as pretty(df)
+Filtered table 1 based on likely variables for end model. or atleast dropping the crunk ones
+
+```{r}
+# Create Table 1 for the wideform data set,stratified by hard drug use group
+table1 <- table1(~AGG_MENT_0 + AGG_PHYS_0 + BMI_0 + HBP_0 + CESD_0 + SMOKE_0 + DKGRP_0 + LEU3N_0 +  VLOAD_log_0 + ADH_HIGHVSLOW + RACE_WHITEYN + EDUC_COLLEGE + age_0 + AGG_MENT_CHANGE + AGG_PHYS_CHANGE + VLOAD_log_CHANGE + LEU3N_CHANGE| hard_drugs_grp, data = data_wide_2, caption = "Descriptive Statistics at Baseline", overall = c(left="Total"))
+table1
+```
+
+I think I have to do an analysis of aggregate QOL scores predict adherence or dropout...
+
+```{r}
+p <- ggplot(data, aes(x = years, y = AGG_MENT, color = ADH)) +
+  geom_point()
+
+ggplotly(p)
+```
+
+```{r}
+
+# Get rid of that value of 1 for adherence at baseline for patient 426
+data$ADH[data$years == 0] <- NA
+
+# Get means for each year
+summary_data <- data %>%
+  group_by(ADH, years) %>%
+  summarize(Average_QOL = mean(AGG_MENT, na.rm = TRUE))
+
+# Create plot
+ggplot(summary_data, aes(x = years, y = Average_QOL, color = ADH)) +
+  geom_line(size = 1) +   # Line plot
+  geom_point(size = 2) +  # Add points for clarity
+  labs(title = "Average Mental QOL Score by Adherence Group Over 8 Years",
+       x = "Year",
+       y = "Average Mental QOL Score",
+       color = "Adherence Group") +
+  theme_minimal() +       # Clean theme
+  scale_color_brewer(palette = "Pastel2")  # Nice color palette for groups
+```
+
+Success! This is very interesting. It appears that the 100% adherence group has the highest average mental QOL score across the 8 year study, followed by the 95-99% group, followed by the \<75% group and followed by (with some variation) the \<75% and 75-94% groups.
+
+I think we're on to something here. This could mean that better adherence was improving mental QOL and thus patients were continuing the regimen. OR it could mean that for patients whom the medication was affecting negatively mentally, they adhered less to the drug or lessened their dose to control for adverse psychological effects.
+
+Let's do the same thing but for `AGG_PHYS`.
+
+```{r}
+# Get means for each year
+summary_data <- data %>%
+  group_by(ADH, years) %>%
+  summarize(Average_QOL = mean(AGG_PHYS, na.rm = TRUE))
+
+# Create plot
+ggplot(summary_data, aes(x = years, y = Average_QOL, color = ADH)) +
+  geom_line(size = 1) +   # Line plot
+  geom_point(size = 2) +  # Add points for clarity
+  labs(title = "Average Physical QOL Score by Adherence Group Over 8 Years",
+       x = "Year",
+       y = "Average Physical QOL Score",
+       color = "Adherence Group") +
+  theme_minimal() +       # Clean theme
+  scale_color_brewer(palette = "Pastel2")  # Nice color palette for groups
+```
+
+We see a similiar relationship here, though there's more variation. For some reason that \<75% group likes to spike in their QOL at year 7. Interesting.
+
+What about for our other outcome variables while we're at it?
+
+```{r}
+# Get means for each year
+summary_data <- data %>%
+  group_by(ADH, years) %>%
+  summarize(Average_LEU3N = mean(LEU3N, na.rm = TRUE))
+
+# Create plot
+p <- ggplot(summary_data, aes(x = years, y = Average_LEU3N, color = ADH)) +
+  geom_line(size = 1) +   # Line plot
+  geom_point(size = 2) +  # Add points for clarity
+  labs(title = "Average LEU3N  by Adherence Group Over 8 Years",
+       x = "Year",
+       y = "Average LEU3N",
+       color = "Adherence Group") +
+  theme_minimal() +       # Clean theme
+  scale_color_brewer(palette = "Pastel2")  # Nice color palette for groups
+
+ggplotly(p)
+
+```
+
+```{r}
+# Create log vload variable for original 8 year data set.
+data$VLOAD_log <- log(data$VLOAD)
+
+# Get means for each year
+summary_data <- data %>%
+  group_by(ADH, years) %>%
+  summarize(Average_VLOAD_log = mean(VLOAD_log, na.rm = TRUE))
+
+# Create plot
+p <- ggplot(summary_data, aes(x = years, y = Average_VLOAD_log, color = ADH)) +
+  geom_line(size = 1) +   # Line plot
+  geom_point(size = 2) +  # Add points for clarity
+  labs(title = "Average VLOAD log by Adherence Group Over 8 Years",
+       x = "Year",
+       y = "Average VLOAD log",
+       color = "Adherence Group") +
+  theme_minimal() +       # Clean theme
+  scale_color_brewer(palette = "Pastel2")  # Nice color palette for groups
+
+ggplotly(p)
+```
+
+That's very interesting. The groups with the highest vload log had the least adherence. There is an inverse relationship here.
+
+This is strong evidence that the treatment is efficacious and the `ADH` should be considered as a confounder.
+
+Ohhhhh, that's super cool. So there is an inverse relationship between `LEU3N` and `VLOAD_log`, such that spikes in one should be dips in the other. We can see that in this data set! It appears that for the adherence group of \<75%, they had viral load spikes at years 5 and 7, which correspond with leukocyte dips at years 5 and 7! They weren't adhering to the protocol, which resulted in them getting infected (?) more and having more of the virus present compared to the other groups.
+
+What about if we do this by hard drug use group?
+
+```{r}
+# Get means for each year
+summary_data <- data %>%
+  group_by(hard_drugs, years) %>%
+  summarize(Average_VLOAD_log = mean(VLOAD_log, na.rm = TRUE))
+
+# Create plot
+p <- ggplot(summary_data, aes(x = years, y = Average_VLOAD_log, color = hard_drugs)) +
+  geom_line(size = 1) +   # Line plot
+  geom_point(size = 2) +  # Add points for clarity
+  labs(title = "Average VLOAD log by Hard Drug Use Over 8 Years",
+       x = "Year",
+       y = "Average VLOAD log",
+       color = "Hard Drug Use") +
+  theme_minimal() +       # Clean theme
+  scale_color_brewer(palette = "Pastel2")  # Nice color palette for groups
+
+ggplotly(p)
+```
+
+This looks like those that use hard drugs have a lower log vload over the entire study. Is that because hard drug use is being confounded with adherence?
+
+dunno how to read that...
+
+```{r}
+# Assuming your dataset is called data_long and has columns: ID, Year, and Outcome_Var
+
+# Step 1: Create a variable to indicate dropout
+data <- data %>%
+  group_by(newid) %>%
+  mutate(Dropout = ifelse(any(is.na(VLOAD_log)), 1, 0))
+
+# Step 2: Create a summary dataset to show the dropout status
+dropout_status <- data %>%
+  group_by(newid) %>%
+  summarize(Dropout = max(Dropout))
+
+# Check the result
+head(dropout_status)
+
+
+
+```
+
+```{r}
+summary_data <- data %>%
+  group_by(Dropout, years, ADH) %>%
+  summarize(Average_VLOAD_log = mean(VLOAD_log, na.rm = TRUE))
+
+p <- ggplot(summary_data, aes(x = years, y = Average_VLOAD_log, color = ADH, linetype = as.factor(Dropout))) +
+  geom_line(size = 1) +   # Line plot
+  geom_point(size = 2) +  # Add points for clarity
+  labs(title = "Average VLOAD log by Adherence Group and Dropout Status Over 8 Years",
+       x = "Year",
+       y = "Average VLOAD log",
+       color = "Adherence Group",
+       linetype = "Dropout Status") +
+  theme_minimal() +       # Clean theme
+  scale_color_brewer(palette = "Pastel2")  # Nice color palette for groups
+
+ggplotly(p)
+```
+
+```{r}
+# Assuming your dataset is called data_long and has columns: ID, Year, and Dropout
+dropout_summary <- data %>%
+  group_by(years, ADH) %>%
+  summarize(Dropout_Count = sum(Dropout, na.rm = TRUE))
+
+# Check the summarized data
+head(dropout_summary)
+```
+
+```{r}
+# Create plot
+p <- ggplot(dropout_summary, aes(x = years, y = Dropout_Count, color = ADH)) +
+  geom_line(size = 1) +   # Line plot
+  geom_point(size = 2) +  # Add points for clarity
+  labs(title = "Dropout Count by Adherence Over 8 Years",
+       x = "Year",
+       y = "Dropout Count",
+       color = "Adherence") +
+  theme_minimal() +       # Clean theme
+  scale_color_brewer(palette = "Pastel2")  # Nice color palette for groups
+
+ggplotly(p)
+```
+
+```{r}
+# Summarize total participants per ADH group and year
+total_participants_per_adh <- data %>%
+  group_by(years, ADH) %>%
+  summarize(Total_Participants = n_distinct(newid))
+
+
+# Summarize dropout count and calculate dropout percent per ADH group
+dropout_summary <- data %>%
+  group_by(years, ADH) %>%
+  summarize(Dropout_Count = sum(Dropout, na.rm = TRUE)) %>%
+  left_join(total_participants_per_adh, by = c("years", "ADH")) %>%
+  mutate(Dropout_Percent = (Dropout_Count / Total_Participants) * 100)
+
+
+# Create plot
+p <- ggplot(dropout_summary, aes(x = years, y = Dropout_Percent, color = ADH)) +
+  geom_line(size = 1) +   # Line plot
+  geom_point(size = 2) +  # Add points for clarity
+  labs(title = "Dropout Percent by Adherence Over 8 Years",
+       x = "Year",
+       y = "Dropout Percent",
+       color = "Adherence") +
+  theme_minimal() +       # Clean theme
+  scale_color_brewer(palette = "Pastel2")  # Nice color palette for groups
+
+ggplotly(p)
+```
+
+I dunno how to read this lol
+
+Is there more dropout based on adherence?
+
+Is there more dropout based on quality of life?
+
+[**does QOL predict adherence?**]{.underline}
+
+```{r}
+model_test <- lm(AGG_MENT_CHANGE ~ ADH_2, data = data_wide_2)
+
+summary(model_test)
+
+```
+
+It does... that's not good I think.
+
+```{r}
+model_test_phys <- lm(AGG_PHYS_CHANGE ~ ADH_2, data = data_wide_2)
+summary(model_test_phys)
+```
+
+It also does for `AGG_PHYS`... weird.
+
+Compared to those with 100% adherence, those with 75-95% had a physical change score that was 3.66 points lower.
