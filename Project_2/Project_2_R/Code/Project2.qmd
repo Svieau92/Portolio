@@ -2409,7 +2409,7 @@ correlation_matrix <- cor(data_for_matrix, use = "complete.obs")
 corrplot(correlation_matrix, method = "circle")
 ```
 
-# Exploratory Data Analysis {#EDA}
+# Interactive Variable Selection {#EDA}
 
 Here I will plot the data and perform a number of simple linear regressions to examine relationships between variables in order to determine which covariates to include in the model.
 
@@ -2445,12 +2445,12 @@ p <- ggplot(data_wide_2, aes(x = hard_drugs_grp, y = VLOAD_log_CHANGE, fill = ha
 ggplotly(p)
 ```
 
-There may be a difference between log viral load change and hard drug use group, especially between never users and previous users. Visually, never users may have had more of a decrease in log viral load over time compared to previous users and potentially current users.
+There may be a difference between log viral load change and hard drug use group, especially between never users and previous users. Visually, it appears that that never use group had more of a decrease in log viral load over 2 years compared to the previous and current drug use groups.
 
 Let's run the regression to see if this relationship is statistically significant.
 
 ```{r}
-# Perform regression predicting log vload change by hard drug use group
+# Perform regression predicting log vload change by hard drug use group with never user as the reference group
 model <- lm(VLOAD_log_CHANGE ~ hard_drugs_grp, data = data_wide_2)
 
 # Examine Summary
@@ -2458,7 +2458,7 @@ summary(model)
 ```
 
 ```{r}
-# Apply Bonferroni correction
+# Gather p-values of the model
 p_values <- summary(model)$coefficients[,4] # This line selects the fourth column of the resulting coefficients table from summary(model_attach), which is the p-values
 
 # Perform Bonferroni correction 
@@ -2468,12 +2468,14 @@ p_adjusted <- p.adjust(p_values, method = "bonferroni")
 p_comparison <- cbind(p_values, p_adjusted)
 pretty_print(p_comparison)
 ```
+
+Change the reference level to previous users and re-run the model.
 
 ```{r}
 # Relevel to change to the reference group to previous user
 data_wide_2$hard_drugs_grp <- relevel(data_wide_2$hard_drugs_grp, ref = "Previous User")
 
-# Perform regression predicting log vload change by hard drug use group
+# Perform regression predicting log vload change by hard drug use group, with previous users as the reference group
 model <- lm(VLOAD_log_CHANGE ~ hard_drugs_grp, data = data_wide_2)
 
 # Examine Summary
@@ -2490,7 +2492,7 @@ p_comparison <- cbind(p_values, p_adjusted)
 pretty_print(p_comparison)
 ```
 
-The overall model is significant (F~(2,529)~= 3.991, p = 0.01903). The group comparisons were not significant after applying Bonferroni correction. However, they may be significant after including precision variables or confounders, and thus we continue with the analysis and include `hard_drugs_group` as the PEV.
+The overall model is significant (F~(2,529)~= 3.991, p = 0.01903). The group comparisons were not significant after applying Bonferroni correction however (all p-adjusted > 0.05). They may be significant after including precision variables or confounders, and thus we continue with the analysis and include `hard_drugs_group` as the PEV.
 
 
 [Top of Tabset](#EDA)
@@ -2499,7 +2501,9 @@ The overall model is significant (F~(2,529)~= 3.991, p = 0.01903). The group com
 
 The researchers are interested in if treatment response between the drug use groups can be explained by differences in adherence to the HAART treatment regimen.
 
-The first step toward investigating this is to examine if there is a relationship between adherence and treatment response, such as log viral load change.
+The first step toward investigating this is to examine if there is a relationship between adherence and treatment response, starting with log viral load change.
+
+We can examine this by plotting the average log viral loads each year by adherence group.
 
 ```{r}
 # Get rid of that value of 1 for adherence at baseline for patient 426
@@ -2522,7 +2526,7 @@ ggplot(summary_data, aes(x = years, y = Average_VLOAD_log, color = ADH)) +
   scale_color_brewer(palette = "Pastel2")  # Nice color palette for groups
 ```
 
-Indeed we can see that, across the first 2 years of the study, as adherence decreased, average log viral load increased.
+Indeed we can see that, across the first 2 years of the study, as adherence decreased, average log viral load increased!
 
 That is, groups with higher adherence had a smaller increase in log viral load over 2 years compared to those with lower adherence. This is evidence that the ART treatment is efficacious in reducing viral load!
 
@@ -2547,7 +2551,7 @@ This relationship is reflected in the boxplots: Groups with high adherence had a
 Let's run the regression to ensure this difference is statistically significant.
 
 ```{r}
-# Perform regression predicting log vload change by adherence group at year 2
+# Perform regression predicting log vload change by adherence group at year 2, with the 100% adherence group as the reference level
 model <- lm(VLOAD_log_CHANGE ~ ADH_2, data = data_wide_2)
 
 # Examine Summary
@@ -2566,11 +2570,13 @@ p_comparison <- cbind(p_values, p_adjusted)
 pretty_print(p_comparison)
 ```
 
+Change the reference level to the 75-94% group and re-run the model.
+
 ```{r}
-# Relevel to change to the reference group to previous user
+# Relevel to change to the reference group to 75-94%
 data_wide_2$ADH_2 <- relevel(data_wide_2$ADH_2, ref = "75-94%")
 
-# Perform regression predicting log vload change by adherence group at year 2
+# Perform regression predicting log vload change by adherence group at year 2, with the 75-94% group as the reference level
 model <- lm(VLOAD_log_CHANGE ~ ADH_2, data = data_wide_2)
 
 # Examine Summary
@@ -2590,17 +2596,19 @@ pretty_print(p_comparison)
 
 The overall model is significant (F~(3, 528)~= 8.261, p < .0001). 
 
-Looking at the between-group comparisons, the 100% group is statistically different from the 75-95% group (p-adjusted = 0.0008421) and the <75% group (p-adjusted = 0.0266202). 
+Looking at the between-group comparisons, the 100% group is statistically different from the 75-95% group (p-adjusted < 0.0001) and the <75% group (p-adjusted = 0.0266). 
 
-The 75-95% group is significantly different from the 95-99% group (p-adjusted = 0.0001454).
+The 75-95% group is significantly different from the 95-99% group (p-adjusted <0.0001).
 
-The 100% and 95-99% group were not significantly different from each other (p > .05), and the 75-95% and <75% groups were not significantly different from each other (p-adjusted > 0.5) strong providing evidence for grouping these levels together and separating based on high vs low adherence.
+The 100% and 95-99% group were not significantly different from each other (p-adjusted > .05), and the 75-95% and <75% groups were not significantly different from each other (p-adjusted > 0.5).
+
+In other words, there is no difference between the two highest adherence groups from each other, and between the two lowest adherence groups from each other, providing strong evidence for grouping these levels together and separating based on high vs low adherence.
 
 
 ::: callout-note
 Based on the above findings, there is no difference between the two highest adherence level groups from each other, and the two lowest adherence level groups from each other.
 
-Therefore, analyses moving forward will only make comparisons between high vs low adherence.
+Therefore, analyses moving forward will only make comparisons between high vs low adherence for ease of interpretation.
 :::
 
 [Top of Tabset](#EDA)
@@ -2609,7 +2617,7 @@ Therefore, analyses moving forward will only make comparisons between high vs lo
 
 Based on the plots and regression results from looking at adherence group and log viral load, there is no difference between the two highest adherence level groups from each other, and the two lowest adherence level groups from each other.
 
-Therefore, it is more prudent to collapse this variable and make comparisons only between high (95-100%) adherence and low (<95%) adherence.
+Therefore, it is more prudent to collapse this variable and make comparisons only between high adherence (95-100%) and low adherence (<95%) groups
 
 Let's examine change in log viral load based on these criteria.
 
@@ -2644,7 +2652,7 @@ model <- lm(VLOAD_log_CHANGE ~ ADH_HIGHVSLOW, data = data_wide_2)
 summary(model)
 ```
 
-The overall model is statistically significant (F~(1,518)~= 17.78, p = 0.00002922). On average, those in the high adherence group have a mean change in log viral load that is 1.86 times lower than those in the lower adherence group
+The overall model is statistically significant (F~(1,518)~= 17.78, p < 0.0001). On average, those in the high adherence group have a mean change in log viral load that is 1.86 log copies/mL (or 72.44 copies/mL) lower than those in the low adherence group
 
 `ADH_HIGHVSLOW` will absolutely be included in the final model for `VLOAD_log`.
 
@@ -2658,6 +2666,7 @@ The correlation matrix reveals a relationship between BMI and each outcome varia
 # Create a scatterplot of log vload change by BMI at baseline
 p <- ggplot(data_wide_2, aes(x = BMI_0, y = VLOAD_log_CHANGE, color = BMI_0)) + 
   geom_point() +
+  theme_minimal() +
   labs(title = "Log Viral Load Change by BMI at Baseline",
        y = "Log Viral Load Change",
        x = "BMI at Baseline") + 
@@ -2666,6 +2675,8 @@ p <- ggplot(data_wide_2, aes(x = BMI_0, y = VLOAD_log_CHANGE, color = BMI_0)) +
 # Make the plot interactive
 ggplotly(p)
 ```
+
+That does not look like a very strong association.
 
 Let's run a regression to see if there is any kind of linear relationship in there.
 
@@ -2677,34 +2688,7 @@ model <- lm(VLOAD_log_CHANGE ~ BMI_0, data = data_wide_2)
 summary(model)
 ```
 
-`BMI` is not a significant predictor of log viral load change and should not be included in the final model.
-
-```{r}
-# Create a scatterplot of log vload change by BMI at baseline
-p <- ggplot(data_wide_2, aes(x = BMI_0, y = VLOAD_log_CHANGE, color = hard_drugs_grp)) + 
-  geom_point() +
-  labs(title = "Log Viral Load Change by BMI at Baseline",
-       y = "Log Viral Load Change",
-       x = "BMI at Baseline") + 
-  scale_fill_brewer(palette = "Pastel2")
-
-# Make the plot interactive
-ggplotly(p)
-```
-
-That's interesting. There doesn't appear to be an overall relationship between BMI and log viral load change, but there may be an interaction there based on hard drug use group. Where low BMI recent drug users have higher log viral loads compared to those with high BMIs
-
-Will investigate more later.
-
-We need to double check for multicollinearity between `BMI` and `EDUC_COLLEGE`. 
-
-```{r}
-# # Perform a point-biserial correlation to see if BMI and college education are correlated.
-# point_biserial <- cor.test(data_wide_2$BMI_0, data_wide_2$EDUC_COLLEGE)
-# point_biserial
-```
-
-The correlation between `BMI` and `EDUC_COLLEGE` is not significant or strong enough to be of concern. Both variables can be included in models without raising issues of multicollinearity.
+`BMI` is not a significant predictor of log viral load change (p = 0.246) and will not be included in the final model.
 
 [Top of Tabset](#EDA)
 
@@ -2714,19 +2698,16 @@ Based on the correlation matrix, `EDUC_COLLEGE` appears to be significantly asso
 
 ```{r}
 # Create a scatterplot of log vload change by college education
-p <- ggplot(data_wide_2, aes(x = EDUC_COLLEGE, y = VLOAD_log_CHANGE, fill = EDUC_COLLEGE)) + 
+ggplot(data_wide_2, aes(x = EDUC_COLLEGE, y = VLOAD_log_CHANGE, fill = EDUC_COLLEGE)) + 
   geom_boxplot(alpha = 0.5) +
   theme_minimal() +
   labs(title = "Log Viral Load Change by College Education",
        y = "Log Viral Load Change",
        x = "College Education") + 
   scale_fill_brewer(palette = "Pastel2")
-
-# Make the plot interactive
-ggplotly(p)
 ```
 
-There appears to be a difference in log viral load change based on college education. Remember that this is on a logarithmic scale, so the real differences will be much more pronounced.
+There appears to be a difference in log viral load change based on college education. Remember that this is on a logarithmic scale, so the real differences will be much more pronounced, even if the differences seem small here!
 
 Let's run the regression.
 
@@ -2738,37 +2719,17 @@ model <- lm(VLOAD_log_CHANGE ~ EDUC_COLLEGE, data = data_wide_2)
 summary(model)
 ```
 
-The overall model is significant F~(1,530)~= 9.204, p = 0.002533). `EDUC_COLLEGE` is a significant predictor of log viral load change and should be included in the final model.
+The overall model is significant F~(1,530)~= 9.204, p = 0.002533). On average, those with a college educaton had change in viral load that was 0.8979 log copies/mL (or 7.9 copies/mL) than those who did not have a college education.
+
+`EDUC_COLLEGE` is a significant predictor of log viral load change and should be included in the final model.
 
 [Top of Tabset](#EDA)
 
-:::
+## Summary
 
-::: panel-tabset
+Based on the results of the exploratory data analysis, the variables that will be included in the final model for `VLOAD_log_CHANGE` are `hard_drug_grp`, `ADH_HIGHLOW`, and `EDUC_COLLEGE`.
 
-We can also plot this relationship longitudinally.
-
-```{r}
-# Get means for each year
-summary_data <- data_2 %>%
-  group_by(hard_drugs, years) %>%
-  summarize(Average_VLOAD = mean(VLOAD_log, na.rm = TRUE))
-
-# Create plot
-ggplot(summary_data, aes(x = years, y = Average_VLOAD, color = hard_drugs)) +
-  geom_line(size = 1) +   # Line plot
-  geom_point(size = 2) +  # Add points for clarity
-  labs(title = "Average Log VLOAD by Hard Drug Use Over 8 Years",
-       x = "Year",
-       y = "Log VLOAD",
-       color = "Hard Drug Use Since Last Visit") +
-  theme_minimal() +       # Clean theme
-  scale_color_brewer(palette = "Pastel2")  # Nice color palette for groups
-```
-
-This plot shows that those who used hard drugs since the last visit had potentially lower viral load... the opposite of what you would expect if drug use weakens the immune system.
-
-[Top of tabset](#EDA)
+[Top of Tabset](#EDA)
 
 :::
 
@@ -2778,15 +2739,20 @@ Now let's examine relationships for the model predicting CD4+ T Cell Count
 
 ::: panel-tabset
 
-## PEV - Hard Drug Use Group
+## PEV - Hard Drug Use
+
+Let's see if there is a a difference in CD4+ T Cell count based on hard drug use, the primary explanatory variable.
 
 ```{r}
+# Relevel to change the reference cateory to Never User
+data_wide_2$hard_drugs_grp <- relevel(data_wide_2$hard_drugs_grp, ref = "Never User")
+
 # Create boxplots of CD4+ T Cell count change by hard drug use group
 p <- ggplot(data_wide_2, aes(x = hard_drugs_grp, y = LEU3N_CHANGE, fill = hard_drugs_grp)) +
   geom_boxplot(alpha = 0.5) +
   theme_minimal() +
   scale_fill_brewer(palette="Pastel2") +
-  labs(title = "Boxplot of Log Viral Load Change by Hard Drug Use Group",
+  labs(title = "Boxplot of CD4+ T Cell Count Change by Hard Drug Use Group",
        x = "Hard Drug Use Group",
        y = "CD4+ T Cell Count Change") +
   guides(fill = guide_legend(title = "Hard Drug Use Group"))
@@ -2794,7 +2760,60 @@ p <- ggplot(data_wide_2, aes(x = hard_drugs_grp, y = LEU3N_CHANGE, fill = hard_d
 ggplotly(p)
 ```
 
-## Adherence
+Previous and current hard drug users may have low CD4+ T Cell count compared to never users.
+
+Let’s run the regression to see if this relationship is statistically significant.
+
+```{r}
+# Perform regression predicting CD4+ T Cell count change by hard drug use group with never user as the reference group
+model <- lm(LEU3N_CHANGE ~ hard_drugs_grp, data = data_wide_2)
+
+# Examine Summary
+summary(model)
+
+# Gather p-values of the model
+p_values <- summary(model)$coefficients[,4] # This line selects the fourth column of the resulting coefficients table from summary(model_attach), which is the p-values
+
+# Perform Bonferroni correction 
+p_adjusted <- p.adjust(p_values, method = "bonferroni")
+
+# Compare adjusted p-values to unadjusted p-values
+p_comparison <- cbind(p_values, p_adjusted)
+pretty_print(p_comparison)
+```
+
+Change the reference group to previous users and re-run the model. 
+
+```{r}
+# Relevel to change the reference category to Previous User
+data_wide_2$hard_drugs_grp <- relevel(data_wide_2$hard_drugs_grp, ref = "Previous User")
+
+# Perform regression predicting CD4+ T Cell count change by hard drug use group with previous user as the reference group
+model <- lm(LEU3N_CHANGE ~ hard_drugs_grp, data = data_wide_2)
+
+# Examine Summary
+summary(model)
+
+# Gather p-values of the model
+p_values <- summary(model)$coefficients[,4] # This line selects the fourth column of the resulting coefficients table from summary(model_attach), which is the p-values
+
+# Perform Bonferroni correction 
+p_adjusted <- p.adjust(p_values, method = "bonferroni")
+
+# Compare adjusted p-values to unadjusted p-values
+p_comparison <- cbind(p_values, p_adjusted)
+pretty_print(p_comparison)
+```
+
+The overall model is statistically significant F~(2,529)~ = 12.55, p < 0.0001). On average current drug users have a change in CD4+ T cell count that is 119.467 cells lower than never drug users (p-adjusted < 0.0001). The other between group comparisons were not significant (p-adjusted > 0.05).
+
+`hard_drug_grp` will be included as a predictor in the final model for `LEU3N`.
+
+[Top of tabset](#EDA)
+
+## Adherence High vs Low
+
+For ease of mind, let's plot our average `LEU3N` values each year by adherence group.
 
 ```{r}
 # Get means for each year
@@ -2806,212 +2825,818 @@ summary_data <- data_2 %>%
 ggplot(summary_data, aes(x = years, y = Average_LEU3N, color = ADH)) +
   geom_line(size = 1) +   # Line plot
   geom_point(size = 2) +  # Add points for clarity
-  labs(title = "Average LEU3N by Adherence Group Over 2 Years",
+  labs(title = "Average CD4+ T Cell Count change by Adherence Group Over 2 Years",
        x = "Year",
-       y = "Average LEU3Ne",
+       y = "Average CD4+ T Cell Count",
        color = "Adherence Group") +
   theme_minimal() +       # Clean theme
   scale_color_brewer(palette = "Pastel2")  # Nice color palette for groups
 ```
 
-We have the same relationship here
+We have the same relation we did with log viral load, where higher adherence groups tend to have better outcomes (higher average CD4+ T Cell count in this case). The <75% has a pretty high average CD4+ T cell count, but I think we can chalk this up to variance due to a smaller sample size. We still see the general trend that both high adherence groups are performing better than both low adherence groups, and we can safely collapse these categories into high adherence (95-100%) and low adherence (<95%) groups. 
 
-
-```{r}
-# Create boxplots of CD4+ T Cell Count change by adherence group
-p <- ggplot(data_wide_2, aes(x = ADH_2, y = LEU3N_CHANGE, fill = ADH_2)) +
-  geom_boxplot(alpha = 0.5) +
-  theme_minimal() +
-  scale_fill_brewer(palette="Pastel2") +
-  labs(title = "Boxplot of CD4+ T Cell Count by Adherence at Year 2",
-       x = "Adherence at year 2",
-       y = "CD4+ T Cell Count") +
-  guides(fill = guide_legend(title = "Adherence Group"))
-
-ggplotly(p)
-```
+Let’s examine change in CD4+ T Cell count based on high vs low adherence.
 
 ```{r}
-# Create boxplots of CD4+ T Cell Count change by adherence group
-p <- ggplot(data_wide_2, aes(x = ADH_HIGHVSLOW, y = LEU3N_CHANGE, fill = ADH_HIGHVSLOW)) +
+# Create boxplots of CD4+ T Cell count change by adherence group
+ggplot(data_no_na, aes(x = ADH_HIGHVSLOW, y = LEU3N_CHANGE, fill = ADH_HIGHVSLOW)) +
   geom_boxplot(alpha = 0.5) +
   theme_minimal() +
-  scale_fill_brewer(palette="Pastel2") +
-  labs(title = "Boxplot of CD4+ T Cell Count by Adherence at Year 2",
-       x = "Adherence at year 2",
-       y = "CD4+ T Cell Count") +
+  scale_fill_brewer(palette = "Pastel2") +
+  labs(title = "Boxplot of CD4+ T Cell Count Change by Adherence at Year 2",
+       x = "Adherence Level",
+       y = "CD4+ T Cell Count Change") +
   guides(fill = guide_legend(title = "Adherence Group"))
-
-ggplotly(p)
 ```
 
+It appears that the high adherence group may have a slightly higher gain in CD4+ T Cells over 2 years (its pretty close though).
 
+Let's run a regression to see if this is statistically significant.
+
+```{r}
+# Perform regression predicting CD4+ T Cell count change by adherence group at year 2
+model <- lm(LEU3N_CHANGE~ ADH_HIGHVSLOW, data = data_wide_2)
+
+# Examine Summary
+summary(model)
+```
+
+The overall model is not significant (F~(1,518)~= 2.152, p = 0.143).
+
+Just for sanity's sake let's run that with our uncollapsed adherence categories.
+
+```{r}
+# Perform regression predicting CD4+ T Cell count change by adherence group at year 2
+model <- lm(LEU3N_CHANGE~ ADH_2, data = data_wide_2)
+
+# Examine Summary
+summary(model)
+```
+
+The overall model is significant (F~(3, 528)~, = 4.353, p = 0.0048). However, none of those between group comparisons are significant after Bonferroni correction.
+
+So no matter how you run it, adherence is not related to CD4+ T Cell count.
+
+We will still include `ADH_HIGHLOW` as a covariate in the final model for `LEU3N_CHANGE`, since it was a confounder in the model predicting `VLOAD_log_CHANGE`, and new relationships may become apparent if it is included in this model.
 
 [Top of tabset](#EDA)
 
-:::
+## BMI
 
-:::::
+The correlation matrix reveals a potential relationship between BMI and each CD4+ T Cell count.
 
-::::: panel-tabset
-::: panel-tabset
-
-
-## CD4+ T Cell Count
+Let's assess.
 
 ```{r}
-# Create boxplots of CD4+ T Cell Count by hard drug use group
-p <- ggplot(data_wide_2, aes(x = hard_drugs_grp, y = LEU3N_CHANGE, fill = hard_drugs_grp)) +
-  geom_boxplot(alpha = 0.5) +
-  scale_fill_brewer(palette="Pastel2") +
-  labs(title = "Boxplot of CD4+ T Cell Count by Hard Drug Use Group",
-       x = "Hard Drug Use Group",
-       y = "CD4+ T Cell Count Change") +
-  guides(fill = guide_legend(title = "Hard Drug Use Group"))
-
-ggplotly(p)
+# Create a scatterplot of CD4+ T Cell Count change by BMI at baseline
+ggplot(data_wide_2, aes(x = BMI_0, y = LEU3N_CHANGE, color = BMI_0)) + 
+  geom_point() +
+  theme_minimal() +
+  labs(title = "CD4+ T Cell Count Change by BMI at Baseline",
+       y = "CD4+ T Cell Count Change",
+       x = "BMI at Baseline") + 
+  scale_fill_brewer(palette = "Pastel2")
 ```
 
-There does not appear to be much of a difference in CD4+ T cell count over 2 years based on hard drug use.
+There does not appear to be a strong relationship between BMI and CD4+ T Cell count change.
+
+We perform the regression to double check.
+
+```{r}
+# Perform a linear regression predicting CD4+ T Cell count change by BMI at baseline
+model <- lm(LEU3N_CHANGE ~ BMI_0, data = data_wide_2)
+
+# Examine model summary
+summary(model)
+```
+
+Let's plot the regression line.
+
+```{r}
+# Create a scatterplot of CD4+ T Cell Count change by BMI at baseline
+ggplot(data_wide_2, aes(x = BMI_0, y = LEU3N_CHANGE, color = BMI_0)) + 
+  geom_point() +
+  geom_smooth(method = "lm") +
+  theme_minimal() +
+  labs(title = "CD4+ T Cell Count Change by BMI at Baseline",
+       y = "CD4+ T Cell Count Change",
+       x = "BMI at Baseline") + 
+  scale_fill_brewer(palette = "Pastel2")
+```
+
+The overall model is non-significant (F~(1,517)~ = 2.798, p = 0.095). On average, every 1 unit increase in BMI is associated with a 0.0034 increase in CD4+ T Cell count. Though not significant, the model is below that p = 0.10 cutoff for potential covariates we established a priori. On average, every 1 unit increase in BMI is associated with a 0.0034 increase in CD4+ T Cell count.
+
+`BMI` will be included as a potential precision variable for the model predicting `LEU3N_CHANGE`.
 
 [Top of Tabset](#EDA)
+
+## Frailty Related Phenotype
+
+Fraily related phenotype was also correlated to CD4+ T Cell count in the correlation matrix. 
+
+Let's assess that relationship.
+
+```{r}
+# Filter out NA values
+data_no_na <- data_wide_2 %>% filter(!is.na(FRP_2))
+
+# Create boxplots of CD4+ T Cell count change by frailty related phenotype at year 2
+ggplot(data_no_na, aes(x = FRP_2, y = LEU3N_CHANGE, fill = FRP_2)) +
+  geom_boxplot(alpha = 0.5) +
+  theme_minimal() +
+  scale_fill_brewer(palette = "Pastel2") +
+  labs(title = "Boxplot of CD4+ T Cell Count Change by Frailty Related Phenotype",
+       x = "Frailty Related Phenotype",
+       y = "CD4+ T Cell Count Change") +
+  guides(fill = guide_legend(title = "Frailty Related Phenotype"))
+```
+It appears that those with a frailty related phenotype have a lower increase in CD4+ T Cell count over the 2 years of the study.
+
+Let's run a regression to see if that relationship is statistically significant.
+
+```{r}
+# Perform regression predicting physical QOL change by Frailty Related Phenotype
+model <- lm(LEU3N_CHANGE ~ FRP_2, data = data_wide_2)
+
+# Examine Summary
+summary(model)
+```
+
+The overall model is statistically significant (F~1,528)~= 11.66, p < 0.0001). On average, those with a frailty related phenotype had a change in CD4+ T Cell count over 2 years that was 124.046 cells lower than those without a frailty related phenotype (p < 0.0001).
+
+`FRP_2` will be included as a precision variable for the model predicting `LEU3N_CHANGE`.
+
+[Top of Tabset](#EDA)
+
+## College Education
+
+College education did not look strongly related to CD4+ T Cell count change, but let's run a simple regression just to make sure.
+
+```{r}
+# Create a scatterplot of CD4+ T Cell count change by college education
+ggplot(data_wide_2, aes(x = EDUC_COLLEGE, y = LEU3N_CHANGE, fill = EDUC_COLLEGE)) + 
+  geom_boxplot(alpha = 0.5) +
+  theme_minimal() +
+  labs(title = "CD4+ T Cell Count Change by College Education",
+       y = "CD4+ T Cell Count Change",
+       x = "College Education") + 
+  scale_fill_brewer(palette = "Pastel2")
+```
+They appear comparable, but there may be a slight difference. Run regression to be sure.
+
+```{r}
+# Perform regression predicting log vload change by college education
+model <- lm(LEU3N_CHANGE ~ EDUC_COLLEGE, data = data_wide_2)
+
+# Examine Summary
+summary(model)
+```
+
+The overall model is significant (F~(1,530)~= 4.231, p = 0.0401). On average, those with a college education had a change in CD4+ T cell count that was 40.20 cells higher than those without a college education.
+
+`EDUC_COLLEGE` will be included as a precision variable for the model predicting `LEU3N_CHANGE`.
+
+[Top of Tabset](#EDA)
+
+## Summary 
+
+[Top of Tabset](#EDA)
+
+Based on the results of the exploratory data analysis, the variables that will be included for consideration in the final model for `LEU3N_CHANGE` are `hard_drugs_grp`, `ADH_HIGHLOW`, `BMI_2`, `FRP_2`, and `EDUC_COLLEGE`
+:::
 
 ## Aggregate Mental QOL Change
 
+Now let's examine relationships for the model predicting aggregate mental QOL change. 
+
+The researchers are concerned that the a
+
+They want to investigate how mental QOL is after 2 years. If there is a 
+
+We can also see if mental QOL differs by hard drug use grp and adherence, and any other covariates.
+
+Does viral load predict mental QOL?
+
+does LEU3n predict mental QOL?
+
+Do I have to do something here concerning dropout?
+
+
+::: panel-tabset
+
+## PEV - Hard Drug Use
+
+Let's assess if mental QOL is related to the hard drug use categories.
+
 ```{r}
-# Create boxplots of aggregate mental QOL by hard drug use group
-p <- ggplot(data_wide_2, aes(x = hard_drugs_grp, y = AGG_MENT_CHANGE, fill = hard_drugs_grp)) +
+# Create boxplots of log viral load change by hard drug use group
+ggplot(data_wide_2, aes(x = hard_drugs_grp, y = AGG_MENT_CHANGE, fill = hard_drugs_grp)) +
   geom_boxplot(alpha = 0.5) +
+  theme_minimal() +
   scale_fill_brewer(palette="Pastel2") +
-  labs(title = "Boxplot of Aggregate Mental QOL by Hard Drug Use Group",
+  labs(title = "Boxplot of Mental QOL Change by Hard Drug Use Group",
        x = "Hard Drug Use Group",
        y = "Aggregate Mental QOL Change") +
   guides(fill = guide_legend(title = "Hard Drug Use Group"))
-
-ggplotly(p)
 ```
 
-Lots of variation in our boxplots there, but doesn't really look like a significant difference between groups.
+There does not appear to be much of a difference in mental QOL by hard drug use groups.
+
+Let's run a regression.
+
+```{r}
+# Perform regression predicting mental QOL change by hard drug use group
+model <- lm(AGG_MENT_CHANGE ~ hard_drugs_grp, data = data_wide_2)
+
+# Examine Summary
+summary(model)
+```
+
+`hard_drugs_grp` is not a significant predictor of `AGG_MENT_CHANGE`, and will be dropped from further consideration for this outcome variable.
+
+This is interesting, because when we plot average mental QOL over 8 years by hard drug use, we can see a clear relationship 
+
+```{r}
+# Get means for each year
+summary_data <- data %>%
+  group_by(hard_drugs, years) %>%
+  summarize(Average_agg_ment = mean(AGG_MENT, na.rm = TRUE))
+
+# Create plot
+ggplot(summary_data, aes(x = years, y = Average_agg_ment, color = hard_drugs)) +
+  geom_line(size = 1) +   # Line plot
+  geom_point(size = 2) +  # Add points for clarity
+  labs(title = "Average mental QOL by Hard Drug Use Over 8 Years",
+       x = "Year",
+       y = "Average mental QOL",
+       color = "Hard Drug Use") +
+  theme_minimal() +       # Clean theme
+  scale_color_brewer(palette = "Pastel2")  # Nice color palette for groups
+```
+
+Where those who did not use hard drugs since the last visit had higher mental QOL.
+
+It seems that somewhere when we created our 3 hard drug use categories of never user, previous user, and current user, we lost some of this information.
+
+`hard_drg_group` will still be included as a potential covariate in case there is a confounding variable present.
 
 [Top of Tabset](#EDA)
 
+## Adherence 
+
+If adverse reactions from the HAART treatment negatively impacted patients, then we would expect to see the higher adherence groups having a smaller increase, or even decrease, in mental QOL compared to those in the low adherence groups.
+
+Let's first examine this by plotting the average mental QOL for each year by adherence group.
+
+```{r}
+# Get means for each year
+summary_data <- data_2 %>%
+  group_by(ADH, years) %>%
+  summarize(Average_AGG_MENT = mean(AGG_MENT, na.rm = TRUE))
+
+# Create plot
+ggplot(summary_data, aes(x = years, y = Average_AGG_MENT, color = ADH)) +
+  geom_line(size = 1) +   # Line plot
+  geom_point(size = 2) +  # Add points for clarity
+  labs(title = "Average Mental QOL by Adherence Group Over 2 Years",
+       x = "Year",
+       y = "Average Mental QOL",
+       color = "Adherence Group") +
+  theme_minimal() +       # Clean theme
+  scale_color_brewer(palette = "Pastel2")  # Nice color palette for groups
+```
+
+This plot shows that, over the first 2 years, the < 75% adherence group had the highest increase in mental QOL! This is the opposite of expected; you would expect the 100% adherence group to have the highest mental QOL if there were no adverse effects from the drug and it was improving QOL overall by decreasing HIV viral load.
+
+However, the relationship looks different if we create this same plot over the entire 8 years of the study.
+
+```{r}
+# Get means for each year
+summary_data <- data %>%
+  group_by(ADH, years) %>%
+  summarize(Average_QOL = mean(AGG_MENT, na.rm = TRUE))
+
+# Create plot
+ggplot(summary_data, aes(x = years, y = Average_QOL, color = ADH)) +
+  geom_line(size = 1) +   # Line plot
+  geom_point(size = 2) +  # Add points for clarity
+  labs(title = "Average Mental QOL Score by Adherence Group Over 8 Years",
+       x = "Year",
+       y = "Average Mental QOL Score",
+       color = "Adherence Group") +
+  theme_minimal() +       # Clean theme
+  scale_color_brewer(palette = "Pastel2")  # Nice color palette for groups
+```
+
+Here we see the true relationship emerge! The 100% adherence group has the highest aggregate mental QOL score across the 8 years of the study, followed by the 95-99% adherence group, then the 75-94% and <75% adherence groups trailing behind with fair amounts of year to year variation.
+
+Could we calculate AUC and use that to answer the researchers' question?
+
+Therefore we can reasonably conclude that higher adherence is related to better overall mental QOL. Which would likely not be the case if the side effects of the drug were worse than the benefits from taking them.
+
+
+Let's examine these relationships with boxplots.
+
+First looking at adherence split into four categories.
+
+```{r}
+# Change reference group
+data_wide_2$ADH_2 <- relevel(data_wide_2$ADH_2, ref = "100%")
+
+# Create boxplots of mental QOL change by adherence group
+ggplot(data_wide_2, aes(x = ADH_2, y = AGG_MENT_CHANGE, fill = ADH_2)) +
+  geom_boxplot(alpha = 0.5) +
+  theme_minimal() +
+  scale_fill_brewer(palette="Pastel2") +
+  labs(title = "Boxplot of Mental QOL Change by Adherence at Year 2",
+       x = "Adherence at year 2",
+       y = "Mental QOL Change") +
+  guides(fill = guide_legend(title = "Adherence Group"))
+```
+
+And then adherence split into two categories of high vs low.
+
+```{r}
+# Filter out NA values
+data_no_na <- data_wide_2 %>% filter(!is.na(ADH_HIGHVSLOW))
+
+# Create boxplots of mental QOL change by adherence group
+ggplot(data_no_na, aes(x = ADH_HIGHVSLOW, y = AGG_MENT_CHANGE, fill = ADH_HIGHVSLOW)) +
+  geom_boxplot(alpha = 0.5) +
+  theme_minimal() +
+  scale_fill_brewer(palette="Pastel2") +
+  labs(title = "Boxplot of Mental QOL Change by Adherence at Year 2",
+       x = "Adherence at year 2",
+       y = "Mental QOL Change") +
+  guides(fill = guide_legend(title = "Adherence Group"))
+```
+This plot shows that there is a slight difference in aggregate mental QOL over the first 2 years of the study between the high and low adherence groups.
+
+While not a perfect encapsulation of the true relationship between adherence and mental QOL over time, I believe this comparison adequately captures the differences between adherence groups we can see with our data visualizations.
+
+Let's perform a regression to see if this relationship is statistically significant.
+
+```{r}
+# Perform regression predicting mental QOL change by adherence group
+model <- lm(AGG_MENT_CHANGE ~ ADH_HIGHVSLOW, data = data_wide_2)
+
+# Examine Summary
+summary(model)
+```
+
+Great! `ADH_HIGHLOW` is a significant predictor of mental QOL change over 2 years (F~(1,530)~= 6.092). On average, those who had high adherence to the treatment regiment had an aggregate mental QOL score that was 4.79 points higher than those who had low adherence (p = 0.0139).
+
+`ADH_HIGHLOW` will be included in the final model as a predictor of `AGG_MENT_CHANGE`.
+
+[Top of Tabset](#EDA)
+
+## CESD - Depression
+
+The only other variable that flagged as being associated with mental QOL was the CESD Depression score.
+
+Let's examine this relationship with a plot.
+
+```{r}
+# Create a scatterplot of mental QOL change score by depression at 2 years
+ggplot(data_wide_2, aes(x = CESD_2, y = AGG_MENT_CHANGE, color = CESD_2)) + 
+  geom_point() +
+  theme_minimal() +
+  labs(title = "Mental QOL Change by Depression at Baseline",
+       y = "Mental QOL Change ",
+       x = "Depression Score") + 
+  scale_fill_brewer(palette = "Pastel2")
+```
+
+There appears to be a negative linear relationship here. Let's run the regression and fit the model.
+
+```{r}
+# Perform a linear regression predicting mental QOL change by depression at baseline
+model <- lm(AGG_MENT_CHANGE ~ CESD_2, data = data_wide_2)
+
+# Examine model summary
+summary(model)
+```
+
+```{r}
+# Create a scatterplot of mental QOL change score by depression at baseline
+ggplot(data_wide_2, aes(x = CESD_2, y = AGG_MENT_CHANGE, color = CESD_2)) + 
+  geom_point() +
+  geom_smooth(method = "lm") +
+  theme_minimal() +
+  labs(title = "Mental QOL Change by Depression at Baseline",
+       y = "Mental QOL Change ",
+       x = "Depression Score") + 
+  scale_fill_brewer(palette = "Pastel2")
+```
+
+Depression score is a significant predictor of mental QOL change over the first 2 years of treatment (F~(1, 536)~= 52.05). On average, a 1-point increase in depression score is associated with a 0.33 point decrease in mental QOL score (p < 0.0001).
+
+`CESD_0` will be included as a precision variable in the model predicting `AGG_MENT_CHANGE`
+
+
+
+## Depression and Hard Drug Use
+
+It appears that depression and hard drug use may be correlated based on the correlation matrix. 
+
+If so, we have potential confounding between hard drug use and depression. Maybe those who used hard drugs have worse QOL, but it's because they are depressed. Or vice versa. 
+
+Let's assess.
+
+First we can plot depression by hard drug use group.
+
+```{r}
+# Create a scatterplot of depression score at year 2 by hard drug use group
+ggplot(data_wide_2, aes(x = hard_drugs_grp, y = CESD_2, fill = hard_drugs_grp)) + 
+  geom_boxplot() +
+  theme_minimal() +
+  labs(title = "Depression Score by Hard Drug Use Group",
+       y = "Depression Score ",
+       x = "Hard Drug Use Group") + 
+  scale_fill_brewer(palette = "Pastel2")
+```
+
+It appears that current and previous drug users have higher depression scores than those who never used drugs.
+
+Let's run a regression to see if that relationship is statistically significant.
+
+```{r}
+# Refactor to never users as reference group
+data_wide_2$hard_drugs_grp <- relevel(data_wide_2$hard_drugs_grp, ref = "Never User")
+
+# Perform a linear regression predicting depression by hard drug use group
+model <- lm(CESD_2 ~ hard_drugs_grp, data = data_wide_2)
+
+# Examine model summary
+summary(model)
+```
+
+Hard drug use is a significant predictor of depression score (F~(2, 542)~= 14.31). On average, current hard drug users had depression scores that were 5.23 points higher than never hard drug users (p < 0.0001), and previous hard drug users had depression scores that were 7.29 points higher than those who never used hard drugs (p < 0.0001).
+
+`hard_drug_grp` will be included as a possible confounder for the relationship between depression and mental QOL. Or rather depression will be included as a possible confounder for the relationship between hard_drug_use and mental QOL.
+
+[Top of Tabset](#EDA)
+
+:::
+
 ## Aggregate Physical QOL Change
+
+If the ART has a strong adverse effect on QOL, then we can expect those with high adherence to have worse QOL. Maybe.
+
+::: panel-tabset
+
+## Drug Use Groups
+
+Let’s assess if physical QOL is related to the hard drug use categories by itself.
 
 ```{r}
 # Create boxplots of aggregate physical QOL by hard drug use group
-p <- ggplot(data_wide_2, aes(x = hard_drugs_grp, y = AGG_PHYS_CHANGE, fill = hard_drugs_grp)) +
+ggplot(data_wide_2, aes(x = hard_drugs_grp, y = AGG_PHYS_CHANGE, fill = hard_drugs_grp)) +
   geom_boxplot(alpha = 0.5) +
+  theme_minimal() +
   scale_fill_brewer(palette="Pastel2") +
   labs(title = "Boxplot of Aggregate Physical QOL by Hard Drug Use Group",
        x = "Hard Drug Use Group",
        y = "Aggregate Physical QOL Change") +
   guides(fill = guide_legend(title = "Hard Drug Use Group"))
-
-ggplotly(p)
 ```
 
-Also doesn't look like a difference here.
+It looks like current hard drug users have a lower physical QOL score than never hard drug users.
+
+Let's run a regression to see if that difference is statistically significant.
+
+```{r}
+# Perform regression predicting physical QOL change by hard drug use group
+model <- lm(AGG_PHYS_CHANGE ~ hard_drugs_grp, data = data_wide_2)
+
+# Examine Summary
+summary(model)
+```
+
+```{r}
+# Gather p-values of the model
+p_values <- summary(model)$coefficients[,4] # This line selects the fourth column of the resulting coefficients table from summary(model_attach), which is the p-values
+
+# Perform Bonferroni correction 
+p_adjusted <- p.adjust(p_values, method = "bonferroni")
+
+# Compare adjusted p-values to unadjusted p-values
+p_comparison <- cbind(p_values, p_adjusted)
+pretty_print(p_comparison)
+```
+
+Change the reference group to previous drug users and re-run the model.
+
+```{r}
+# Relevel hard drug use to have the reference level as previous users
+data_wide_2$hard_drugs_grp <- relevel(data_wide_2$hard_drugs_grp, ref = "Previous User")
+
+# Perform regression predicting physical QOL change by hard drug use group
+model <- lm(AGG_PHYS_CHANGE ~ hard_drugs_grp, data = data_wide_2)
+
+# Examine Summary
+summary(model)
+
+# Gather p-values of the model
+p_values <- summary(model)$coefficients[,4] # This line selects the fourth column of the resulting coefficients table from summary(model_attach), which is the p-values
+
+# Perform Bonferroni correction 
+p_adjusted <- p.adjust(p_values, method = "bonferroni")
+
+# Compare adjusted p-values to unadjusted p-values
+p_comparison <- cbind(p_values, p_adjusted)
+pretty_print(p_comparison)
+```
+
+Yes it is. Hard drug use is a significant predictor of physical QOL change over 2 years (F~(2, 540)~= 9.019). On average, current drug users have a physical QOL score that is 4.90 points lower than never drug users (p-adjusted = 0.0000792), and 4.65 points lower than previous drug users (p-adjusted = 0.0147).
+
+`hard_drug_group` will be included as a predictor of `AGG_PHYS_CHANGE`.
 
 [Top of Tabset](#EDA)
+
+## Adherence
+
+If adverse reactions from the HAART treatment negatively impacted patients, then we would expect to see the higher adherence groups having a smaller increase, or even decrease, in physical QOL compared to those in the low adherence groups.
+
+Let’s first examine this by plotting the average mental QOL for each year by adherence group.
+
+```{r}
+# Get means for each year
+summary_data <- data_2 %>%
+  group_by(ADH, years) %>%
+  summarize(Average_AGG_PHYS = mean(AGG_PHYS, na.rm = TRUE))
+```
+
+```{r}
+# Create plot
+ggplot(summary_data, aes(x = years, y = Average_AGG_PHYS, color = ADH)) +
+  geom_line(size = 1) +   # Line plot
+  geom_point(size = 2) +  # Add points for clarity
+  labs(title = "Average Physical QOL by Adherence Group Over 2 Years",
+       x = "Year",
+       y = "Average Physical QOL",
+       color = "Adherence Group") +
+  theme_minimal() +       # Clean theme
+  scale_color_brewer(palette = "Pastel2")  # Nice color palette for groups
+```
+
+Here we can see that the 2 highest adherence groups have the highest physical QOL scores, which tracks with what we would expect if the drugs were helping.
+
+For good measure, let's examine this relationship across the entire 8 years of the study.
+
+```{r}
+# Get rid of that value of 1 for adherence at baseline for patient 426
+data$ADH[data$years == 0] <- NA
+
+# Get means for each year
+summary_data <- data %>%
+  group_by(ADH, years) %>%
+  summarize(Average_AGG_PHYS = mean(AGG_PHYS, na.rm = TRUE))
+
+# Create plot
+ggplot(summary_data, aes(x = years, y = Average_AGG_PHYS, color = ADH)) +
+  geom_line(size = 1) +   # Line plot
+  geom_point(size = 2) +  # Add points for clarity
+  labs(title = "Average Physical QOL Score by Adherence Group Over 8 Years",
+       x = "Year",
+       y = "Average Physical QOL Score",
+       color = "Adherence Group") +
+  theme_minimal() +       # Clean theme
+  scale_color_brewer(palette = "Pastel2")  # Nice color palette for groups
+```
+
+We see a similiar relationship looking at the full 8 years of the study. You can visualize how the two highest adherence groups would have a greater AUC than the two lowest adherence groups.
+
+Let’s examine these relationships with boxplots.
+
+First looking at adherence split into four categories.
+
+```{r}
+# Change reference group
+data_wide_2$ADH_2 <- relevel(data_wide_2$ADH_2, ref = "100%")
+
+# Create boxplots of physical QOL change by adherence group
+ggplot(data_wide_2, aes(x = ADH_2, y = AGG_PHYS_CHANGE, fill = ADH_2)) +
+  geom_boxplot(alpha = 0.5) +
+  theme_minimal() +
+  scale_fill_brewer(palette="Pastel2") +
+  labs(title = "Boxplot of Physical QOL Change by Adherence at Year 2",
+       x = "Adherence at year 2",
+       y = "Physical QOL Change") +
+  guides(fill = guide_legend(title = "Adherence Group"))
+```
+
+That doesn't look as informative as our high vs low comparison should be.
+
+```{r}
+# Filter out NA values
+data_no_na <- data_wide_2 %>% filter(!is.na(ADH_HIGHVSLOW))
+
+# Create boxplots of Physical QOL change by adherence group
+ggplot(data_no_na, aes(x = ADH_HIGHVSLOW, y = AGG_PHYS_CHANGE, fill = ADH_HIGHVSLOW)) +
+  geom_boxplot(alpha = 0.5) +
+  theme_minimal() +
+  scale_fill_brewer(palette="Pastel2") +
+  labs(title = "Boxplot of Physical QOL Change by Adherence at Year 2",
+       x = "Adherence at year 2",
+       y = "Physical QOL Change") +
+  guides(fill = guide_legend(title = "Adherence Group"))
+```
+It appears that the high adherence group has a higher increase in physical quality of life compared to the low adherence groups. 
+
+Let's run the regression to see if that difference is statistically significant.
+
+```{r}
+# Perform regression predicting physical QOL change by adherence
+model <- lm(AGG_PHYS_CHANGE ~ ADH_HIGHVSLOW, data = data_wide_2)
+
+# Examine Summary
+summary(model)
+```
+
+The overall model is statistically significant (F~(1,530)~=12.7). On average, those with high adherence had a change in physical QOL score that was 4.81 points higher than those with low adherance. (p = 0.00399).
+
+`ADH_HIGHVSLOW` will be included as a predictor for `AGG_PHYS_CHANGE`.
+
+[Top of Tabset](#EDA)
+
+## Frailty Related Phenotype
+
+Frailty related phenotype was strongly correlated to pysical QOL change in the correlation matrix.
+
+Let’s assess that relationship.
+
+```{r}
+# Filter out NA values
+data_no_na <- data_wide_2 %>% filter(!is.na(FRP_2))
+
+# Create boxplots of physical QOL change by frailty related phenotype at year 2
+ggplot(data_no_na, aes(x = FRP_2, y = AGG_PHYS_CHANGE, fill = FRP_2)) +
+  geom_boxplot(alpha = 0.5) +
+  theme_minimal() +
+  scale_fill_brewer(palette = "Pastel2") +
+  labs(title = "Boxplot of Physical QOL Change by Frailty Related Phenotype",
+       x = "Frailty Related Phenotype",
+       y = "Physical QOL Change") +
+  guides(fill = guide_legend(title = "Frailty Related Phenotype"))
+```
+
+There is a very strong association here: those with frailty related phenotype have a large decrease in physical QOL over 2 years compared to those without a frailty related phenotype, who seem to have barely had any decrease in physical QOL at all.
+
+Let's assess this relationship with a regression.
+
+```{r}
+# Perform regression predicting physical QOL change by Frailty Related Phenotype
+model <- lm(AGG_PHYS_CHANGE ~ FRP_2, data = data_wide_2)
+
+# Examine Summary
+summary(model)
+```
+
+The overall model is statistically significant (F~(1,541)~ = 72.39. On average, those with a frailty related phenotype had a change in physical QOL that was 12.79 points lower than those without a frailty related phenotype (p < .0001).
+
+`FRP_2` will be included as a precision variable for the full model predicting  `AGG_PHYS_CHANGE`.
+
+[Top of Tabset](#EDA)
+
+## CESD Depression
+
+```{r}
+# Perform regression predicting physical QOL change by depression
+model <- lm(AGG_PHYS_CHANGE ~ CESD_2, data = data_wide_2)
+
+# Examine Summary
+summary(model)
+```
+
+Is sig. but teeny tiny amount, not really needed.
+
+[Top of Tabset](#EDA)
+
+## LEU3N
+
+```{r}
+# Perform regression predicting physical QOL change by CD4+ T Cell Count
+model <- lm(AGG_PHYS_CHANGE ~ LEU3N_CHANGE, data = data_wide_2)
+
+# Examine Summary
+summary(model)
+```
+
+Is sig but that doesn't even make sense cause that's one of our outcome variables.
+
+Unless we're making this a complex model with multiple inputs.
+
+[Top of Tabset](#EDA)
+
+## College Education
+
+```{r}
+# Perform regression predicting physical QOL change by college education
+model <- lm(AGG_PHYS_CHANGE ~ EDUC_COLLEGE, data = data_wide_2)
+
+# Examine Summary
+summary(model)
+```
+
+Not sig baby. Don't need to include.
+
+[Top of Tabset](#EDA)
+
+## Age
+
+```{r}
+# Perform regression predicting physical QOL change by age
+model <- lm(AGG_PHYS_CHANGE ~ age_2, data = data_wide_2)
+
+# Examine Summary
+summary(model)
+```
+
+Woohoo, not sig, don't need to include.
+
+## BMI
+
+```{r}
+# Perform regression predicting physical QOL change by BMI
+model <- lm(AGG_PHYS_CHANGE ~ BMI_2, data = data_wide_2)
+
+# Examine Summary
+summary(model)
+```
+
+Is significant.
+
+## DKGRP
+
+```{r}
+# Perform regression predicting physical QOL change by drinking group
+model <- lm(AGG_PHYS_CHANGE ~ DKGRP_2, data = data_wide_2)
+
+# Examine Summary
+summary(model)
+```
+ Could maybe include
+
+## Multicollinearity 
+
+I just need to recheck what I just did for multicollinearity tho.
+
+[Top of Tabset](#EDA)
+
 :::
+::::::
 
-##
+# Data Analysis {#Data_Analysis}
 
-The researchers are interested in assessing adherence as a potential confounder for the relationship between hard drug use and the outcome variables. Let's assess
+Now we will perform the actual analysis.
+
+ADD STUFF HERE ABOUT THE STATISTICAL HYPOTHESES IN LATEX NOTATION.
+
+## Log Viral Load Change
+
+::: panel-tabset
 
 ## Log Viral Load Change
 
 ```{r}
-# Create boxplots of log viral load change by adherence group
-p <- ggplot(data_wide_2, aes(x = ADH_2, y = VLOAD_log_CHANGE, fill = ADH_2)) +
-  geom_boxplot(alpha = 0.5) +
-  scale_fill_brewer(palette="Pastel2") +
-  labs(title = "Boxplot of Log Viral Load Change by Adherence",
-       x = "Adherence",
-       y = "Log Viral Load Change") +
-  guides(fill = guide_legend(title = "Adherence"))
+# Refactor reference level of hard drug use group back to Never User
+data_wide_2$hard_drugs_grp <- relevel(data_wide_2$hard_drugs_grp, ref = "Never User")
 
-ggplotly(p)
-```
+# Perform final model regression predicting log viral load change by hard drug use group, adherence group, and college education
+model_log_VLOAD1 <- lm(VLOAD_log_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + EDUC_COLLEGE, data = data_wide_2)
 
-It does appear that log viral load change differs based on adherence. It seems that the low adherence groups have a less of a decrease in log viral load compared to the high adherence groups.
+# Examine summary
+summary(model_log_VLOAD1)
 
-If this relationship is significant we will definitely have to include adherence as a covariate.
+# Refactor reference level of hard drug use group to Previous User
+data_wide_2$hard_drugs_grp <- relevel(data_wide_2$hard_drugs_grp, ref = "Previous User")
 
-[Top of Tabset](#EDA)
+# Perform final model regression predicting log viral load change by hard drug use group, adherence group, and college education
+model_log_VLOAD2 <- lm(VLOAD_log_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + EDUC_COLLEGE, data = data_wide_2)
 
-## CD4+ T Cell Count Change
+# Examine summary
+summary(model_log_VLOAD2)
 
-```{r}
-# Create boxplots of CD4+ T Cell Count by adherence group
-p <- ggplot(data_wide_2, aes(x = ADH_2, y = LEU3N_CHANGE, fill = ADH_2)) +
-  geom_boxplot(alpha = 0.5) +
-  scale_fill_brewer(palette="Pastel2") +
-  labs(title = "Boxplot of CD4+ T Cell Count by Adherence",
-       x = "Adherence",
-       y = "CD4+ T Cell Count Change") +
-  guides(fill = guide_legend(title = "Adherence"))
-
-ggplotly(p)
-```
-
-There does not appear to be much of a difference in CD4+ T Cell Count based on adherence.
-
-[Top of Tabset](#EDA)
-
-## Aggregate Mental QOL Change
-
-```{r}
-# Create boxplots of aggregate mental QOL change by adherence group
-p <- ggplot(data_wide_2, aes(x = ADH_2, y = AGG_MENT_CHANGE, fill = ADH_2)) +
-  geom_boxplot(alpha = 0.5) +
-  scale_fill_brewer(palette="Pastel2") +
-  labs(title = "Boxplot of CD4+ T Cell Count by Adherence",
-       x = "Adherence",
-       y = "Aggregate Mental QOL Change") +
-  guides(fill = guide_legend(title = "Adherence"))
-
-ggplotly(p)
-```
-
-There does not appear to be much of a difference in aggregate mental QOL change based on adherence.
-
-[Top of Tabset](#EDA)
-
-## Aggregate Physical QOL Change
-
-```{r}
-# Create boxplots of aggregate physical QOL change by adherence group
-p <- ggplot(data_wide_2, aes(x = ADH_2, y = AGG_PHYS_CHANGE, fill = ADH_2)) +
-  geom_boxplot(alpha = 0.5) +
-  scale_fill_brewer(palette="Pastel2") +
-  labs(title = "Boxplot of CD4+ T Cell Count by Adherence",
-       x = "Adherence",
-       y = "Aggregate Physical QOL Change") +
-  guides(fill = guide_legend(title = "Adherence"))
-
-ggplotly(p)
-```
-
-[Top of Tabset](#EDA)
-:::
-:::::
-
-::::::
-
-
-# Final Model Log Viral Load Change
-
-```{r}
-model_log_VLOAD <- lm(VLOAD_log_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + EDUC_COLLEGE, data = data_wide_2)
-
-summary(model_log_VLOAD)
+# Testing with an interaction term. I don't believe this is the appropriate method.
 
 model_log_VLOAD <- lm(VLOAD_log_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + EDUC_COLLEGE + hard_drugs_grp*ADH_HIGHVSLOW, data = data_wide_2)
 
 summary(model_log_VLOAD)
 ```
+I guess the interaction term shows that there is an interaction for never and previous users, based on adherence. Look into this more later. It may be that never users with low adherence are different from previous users with high adherence!! HOW TO INTERPRET??
 
+So it seems that adherence IS a confounder for drug use.
+
+When we ran `drug_use_grp` by itself as a predictor on log viral load, the overall model was significant, but after correcting for multiple pairwise comparisons, none of the between-group comparisons was significant (p > 0.05).
+
+However, after including `ADH_HIGHLOW` in the model, the overall model was still significant, but now the current vs never drug use comparison is significant, even after performing a bonferroni correction (p-adjusted = 0.0447). This is in comparison to the model without ADH, where this same p-adjusted value was 0.1377. The beta coefficient is not > 10% different, however based on the shifts in the p-values, I will conclude that adherence is a confounder for the relationship between hard drug use and log viral load.
+
+Take a look at the unadjusted vs adjusted CIs for hard drug use groups.
+
+Add stuff here about pre-inclusion and post-inclusion SEs and parameter estimates.
+
+2.50 2.65
 
 ```{r}
 model_anova <- aov(VLOAD_log_CHANGE ~ hard_drugs_grp * ADH_HIGHVSLOW, data = data_wide_2)
@@ -3019,17 +3644,348 @@ model_anova <- aov(VLOAD_log_CHANGE ~ hard_drugs_grp * ADH_HIGHVSLOW, data = dat
 summary(model_anova)
 TukeyHSD(model_anova)
 ```
+Based on the results of the ANOVA, we can see that at high adherence, there is no difference between the never and previous drug use groups (p = .9835298). However, there is a difference when 
+adherence for both groups is low (p = 0.0000455) and when never users have high adherence and previous users have low adherence (p = 0.0000001), but NOT when Previous Users have High Adherence and Never User have Low Adherence (p = 0.9687938).
+
+In other words, the relationship between never and previous drug users depends on adherence. If adherence is high, then there is no statistical difference in log viral load change over 2 years between both groups. However, if adherence is low
+
+In other words, previous hard drug users can make up for the impact of hard drug use on log viral load by having high adherence to the treatment regiment. Where if they have high adherence, their log viral loads are comparable to those who never used hard drugs.
+
+How to show that in a plot??
+
+CHECK HERE IF THERE IS AN ASSOCIATION BETWEEN HARD DRUG USE GROUP AND ADHERENCE
+
+IF YES THEN ADHERENCE IS A CONFOUNDER
+
+Under the classical but not but not operational definition (% change not > 20%). It is therefore a Maverick variable!!!
 
 
+Under the classical definition of a confounder, a variable Z is a confounder if:
 
-
-
-This doesn't tell us anything but I want to come back to this idea.
+ - 1) It is associated with outcome Y
+ - 2) It is associated with PEV X
+ - 3) It is not on the causal pathway (not a mediator)
+ 
+To assess if Adherence is associated with hard drug use group, we can run a chi-square test
 
 ```{r}
-ggplot(data_wide_2, aes(x = newid, y = VLOAD_log_CHANGE, color = hard_drugs_grp)) +
-  geom_point()
+# Make a contingency table for hard drug use and adherence high vs low
+contingency_table <- table(data_wide_2$hard_drugs_grp, data_wide_2$ADH_HIGHVSLOW)
+contingency_table
+
+# We have to run Fisher's Exact test since we have fewer than 5 observations in some categories
+fisher_test <- fisher.test(contingency_table)
+
+fisher_test
 ```
+
+They are NOT associated. Which means that adherence is NOT a confounder????? But it basically is.
+
+However, it is NOT necessary for this associaton to be statistically significant for there to be important confounding present.
+
+In our case I think we conclude adherence IS a confounder for the relationship between hard drug use and log viral load.
+
+ADD INTERPRETATIONS HERE.
+
+[Top of Tabset](#Data_Analysis)
+
+## Test
+
+:::
+
+## CD4+ T Cell Count Change
+
+The second outcome variable of interest was change in CD4+ T Cell Count over the first 2 years of the study.
+
+::: panel-tabset
+
+## Full Model 
+
+The candidate variables for inclusion in our model predicting `LEU3N_CHANGE` were `LEU3N_CHANGE are `hard_drugs_grp`, `ADH_HIGHLOW`, `BMI_2`, `FRP_2`, and `EDUC_COLLEGE`.
+
+We begin by examining the full model with the PEV, potential confounder, and all potential covariates.
+
+```{r}
+# Relevel to change to the reference group to never user
+data_wide_2$hard_drugs_grp<- relevel(data_wide_2$hard_drugs_grp, ref = "Never User")
+
+# Perform regression on CD4+ T Cell count change by hard drugs group, include adherence as confounder, and BMI, frailty related phenotype, and college education as precision variables.
+model_LEU3N_full <- lm(LEU3N_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + BMI_2 + FRP_2 + EDUC_COLLEGE, data = data_wide_2)
+
+# Exmamine the summary
+summary(model_LEU3N_full)
+```
+
+```{r}
+# Gather p-values of the model
+p_values <- summary(model_LEU3N_full)$coefficients[,4] # This line selects the fourth column of the resulting coefficients table from summary(model_attach), which is the p-values
+
+# Perform Bonferroni correction 
+p_adjusted <- p.adjust(p_values, method = "bonferroni")
+
+# Compare adjusted p-values to unadjusted p-values
+p_comparison <- cbind(p_values, p_adjusted)
+pretty_print(p_comparison)
+```
+
+
+Relevel to set previous user as the reference category and re-run the model.
+
+```{r}
+# Relevel to change to the reference group to previous user
+data_wide_2$hard_drugs_grp<- relevel(data_wide_2$hard_drugs_grp, ref = "Previous User")
+
+# Perform regression on CD4+ T Cell count change by hard drugs group, include adherence as confounder, and BMI, frailty related phenotype, and college education as precision variables.
+model_LEU3N_full <- lm(LEU3N_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + BMI_2 + FRP_2 + EDUC_COLLEGE, data = data_wide_2)
+
+# Exmamine the summary
+summary(model_LEU3N_full)
+```
+
+```{r}
+# Gather p-values of the model
+p_values <- summary(model_LEU3N_full)$coefficients[,4] # This line selects the fourth column of the resulting coefficients table from summary(model_attach), which is the p-values
+
+# Perform Bonferroni correction 
+p_adjusted <- p.adjust(p_values, method = "bonferroni")
+
+# Compare adjusted p-values to unadjusted p-values
+p_comparison <- cbind(p_values, p_adjusted)
+pretty_print(p_comparison)
+```
+
+
+The overall model is significant (F~(6,454)~= 9.62, p < .0001). 
+
+Current hard drug users have an average change in CD4+ T Cell count that is 118.45 cells lower than never drug users (p-adjusted < 0.0001), and previous drug users have an average change in CD4+ T Cell count that is 94.636 cells lower (p-adjusted = 0.0190) than never drug users, while controlling for all the other variables in the model. The other between group comparisons were not significant (p-adjusted > 0.05).
+
+`ADH_HIGHLOW` is now significant in the full model (p = 0.02463), when it was not by itself. This means that, while controlling for hard drug use and the precision variables in the model, those who had high adherence to the treatment regiment had a change in CD4+ T Cell count that was 75.017 cells higher than those with low adherence on average.
+
+For precision variables, we can see that `BMI` is now statistically significant (p = 0.00603), when it was not so by itself. `FRP_2` is still a significant predictor (p = 0.00343).
+
+However, `EDUC_COLLEGE` is not longer a predictor of `LEU3N_CHANGE` when controlling for the other variables in the model (p = 0.15395).
+
+[Top of Tabset](#Data_Analysis)
+
+## Reduced Model
+
+Let's examine a reduced model excluding `EDUC_COLLEGE`., since it was no longer significant in the full model.
+
+```{r}
+# Relevel to change to the reference group to Never user
+data_wide_2$hard_drugs_grp<- relevel(data_wide_2$hard_drugs_grp, ref = "Never User")
+
+# Perform regression on CD4+ T Cell count change by hard drugs group, include adherence as confounder, and BMI, FRP, as precision variables.
+model_LEU3N_red <- lm(LEU3N_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + BMI_2 + FRP_2, data = data_wide_2)
+
+# Exmamine the summary
+summary(model_LEU3N_red)
+
+# Gather p-values of the model
+p_values <- summary(model_LEU3N_red)$coefficients[,4] # This line selects the fourth column of the resulting coefficients table from summary(model_attach), which is the p-values
+
+# Perform Bonferroni correction 
+p_adjusted <- p.adjust(p_values, method = "bonferroni")
+
+# Compare adjusted p-values to unadjusted p-values
+p_comparison <- cbind(p_values, p_adjusted)
+pretty_print(p_comparison)
+```
+
+```{r}
+# Relevel to change to the reference group to previous user
+data_wide_2$hard_drugs_grp<- relevel(data_wide_2$hard_drugs_grp, ref = "Previous User")
+
+# Perform regression on CD4+ T Cell count change by hard drugs group, include adherence as confounder, and BMI, FRP, as precision variables.
+model_LEU3N_red <- lm(LEU3N_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + BMI_2 + FRP_2, data = data_wide_2)
+
+# Exmamine the summary
+summary(model_LEU3N_red)
+
+# Get the 95% CIs
+conf_intervals <- confint(model_LEU3N_red)
+pretty_print(conf_intervals)
+```
+```{r}
+# Relevel to change to the reference group to previous user
+data_wide_2$hard_drugs_grp<- relevel(data_wide_2$hard_drugs_grp, ref = "Previous User")
+
+# Perform regression on CD4+ T Cell count change by hard drugs group, include adherence as confounder, and BMI, FRP, as precision variables.
+model_LEU3N_red <- lm(LEU3N_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + BMI_2 + FRP_2, data = data_wide_2)
+
+# Exmamine the summary
+summary(model_LEU3N_red)
+```
+
+
+The previous relationships all hold, with a similar adjusted R-squared (0.1011 in the full model, now 0.09901). 
+
+We can perform a nested F-Test to determine if the additional variable of `EDUC_COLLEGE` in the full model significantly improves the model fit compared to the reduced model without it.
+
+```{r}
+# Perform a nested/partial F-Test to compare the full and reduced model
+anova(model_LEU3N_full, model_LEU3N_red)
+```
+
+The partial F-test is not signifant (p = 0.154), and we conclude that the addition of `EDUC_COLLEGE` does not significantly improve the model fit. Thus the reduced model without it will be considered the final model for `LEU3N_CHANGE`.
+
+[Top of Tabset](#Data_Analysis)
+
+### [Conclusion:]{.underline}
+
+The overall model is significant (F~(6,455)~= 11.11, p < .0001). 
+
+Current hard drug users have an average change in CD4+ T Cell count that is 115.502 cells lower than never drug users (95% CI: 165.88 cells to 65.13 cells lower; p-adjusted < 0.0001), and previous drug users have an average change in CD4+ T Cell count that is 107.272 cells lower (95% CI: 166.54 cells lower to 48.00 cells lower; p-adjusted = 0.00249) than never drug users, while controlling for all the other variables in the model. Previous and current drug users did not differ in CD4+ T Cell count change over 2 years (p-adjusted > 0.05).
+
+Adherence to the treatment regiment was a significant predictor for change in CD4+ T Cell count over 2 years, while controlling for hard drug use and the precision variables in the model (t = 2.30, p =  0.0219). Those who had high adherence to the treatment regiment had a change in CD4+ T Cell count that was 76.60 cells higher than those with low adherence on average (95% CI: 11.17 to 142.019 cells higher).
+
+BMI is a significant predictor of change in CD4+ T cell count over 2 years, while controlling for the other variables in the model (t = 2.974, p = 0.00310). On average, every 1 unit increase in BMI is associated with a 6.24 cell increase in CD4+ T cell count (95% CI: 2.12 to 10.38 cells higher).
+
+Frailty related phenotype is a significant predictor for change in CD4+ T Cell count over 2 years, while controlling for the other variables in the model (t = -2.901, p = 0.0039). On average, those with a frailty related phenotype had a change in CD4+ T Cell count that was 104.74 cells lower than those without a frailty related phenotype (95% CI: 175.69 to 33.79 cells lower).
+
+[Top of Tabset](#Data_Analysis)
+
+:::
+
+## Mental QOL Change
+
+The candidate variables for mental QOL change as determined by interactive variable selection are `hard_drug_grp`, `ADH_HIGHLOW`, `CESD_2`.
+
+::: panel-tabset
+
+## Full Model
+
+```{r}
+# Relevel to change to the reference group to never user
+data_wide_2$hard_drugs_grp <- relevel(data_wide_2$hard_drugs_grp, ref = "Never User")
+
+# Perform regression on mental QOL change by hard drugs group, include adherence highlow and depression score.
+model_MENT_full <- lm(AGG_MENT_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + CESD_2, data = data_wide_2)
+
+# Exmamine the summary
+summary(model_MENT_full)
+```
+
+
+## Reduced Model 1
+
+Let's try that removing `hard_drugs_grp`
+
+```{r}
+# Relevel to change to the reference group to never user
+data_wide_2$hard_drugs_grp <- relevel(data_wide_2$hard_drugs_grp, ref = "Never User")
+
+# Perform regression on mental QOL change by adherence highlow and depression score.
+model_MENT_red1 <- lm(AGG_MENT_CHANGE ~ ADH_HIGHVSLOW + CESD_2, data = data_wide_2)
+
+# Exmamine the summary
+summary(model_MENT_red1)
+```
+
+Adherence is no longer significant.
+
+What about with an interaction term?
+```{r}
+# Relevel to change to the reference group to never user
+data_wide_2$hard_drugs_grp <- relevel(data_wide_2$hard_drugs_grp, ref = "Never User")
+
+# Perform regression on mental QOL change by adherence highlow and depression score.
+model_MENT_red2 <- lm(AGG_MENT_CHANGE ~ ADH_HIGHVSLOW + CESD_2 + ADH_HIGHVSLOW*CESD_2, data = data_wide_2)
+
+# Exmamine the summary
+summary(model_MENT_red2)
+```
+
+there's no interaction
+
+```{r}
+# Perform regression on mental QOL change by adherence highlow and depression score.
+model_MENT_red3 <- lm(AGG_MENT_CHANGE ~ hard_drugs_grp + CESD_2, data = data_wide_2)
+
+# Exmamine the summary
+summary(model_MENT_red3)
+```
+
+
+```{r}
+# Relevel to change to the reference group to previous user
+data_wide_2$hard_drugs_grp <- relevel(data_wide_2$hard_drugs_grp, ref = "Previous User")
+
+# Perform regression on mental QOL change by adherence highlow and depression score.
+model_MENT_red3 <- lm(AGG_MENT_CHANGE ~ hard_drugs_grp + CESD_2, data = data_wide_2)
+
+# Exmamine the summary
+summary(model_MENT_red3)
+```
+
+```{r}
+# Relevel to change to the reference group to Never user
+data_wide_2$hard_drugs_grp <- relevel(data_wide_2$hard_drugs_grp, ref = "Never User")
+
+# Perform regression on mental QOL change by adherence highlow and depression score.
+model_MENT_red4 <- lm(AGG_MENT_CHANGE ~ hard_drugs_grp + CESD_2 + hard_drugs_grp*CESD_2, data = data_wide_2)
+
+# Exmamine the summary
+summary(model_MENT_red4)
+```
+
+```{r}
+# Relevel to change to the reference group to Previous user
+data_wide_2$hard_drugs_grp <- relevel(data_wide_2$hard_drugs_grp, ref = "Previous User")
+
+# Perform regression on mental QOL change by adherence highlow and depression score.
+model_MENT_red4 <- lm(AGG_MENT_CHANGE ~ hard_drugs_grp + CESD_2 + hard_drugs_grp*CESD_2, data = data_wide_2)
+
+# Exmamine the summary
+summary(model_MENT_red4)
+```
+
+We have interaction. That just looks really crazy to interpret...
+
+Let's try plotting it.
+
+```{r}
+# Create a scatterplot of mental QOLchange by depression score, colored by hard drug use group.
+ggplot(data_wide_2, aes(x = CESD_2, y = AGG_MENT_CHANGE, color = hard_drugs_grp)) + 
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  theme_minimal() +
+  labs(title = "Mental QOL Change by Depression at 2 years, Colored by Hard Drug Use Group",
+       y = "Mental QOL Change",
+       x = "Depression Score") + 
+  scale_fill_brewer(palette = "Pastel2")
+```
+
+Does this show previous drug users are dealing with withdrawls and mental pains of quitting still?
+
+Yeah I guess so.
+
+Maybe the downsides of the drug are so bad that taking hard drugs helps with it??
+
+```{r}
+# Relevel to change to the reference group to Never user
+data_wide_2$hard_drugs_grp <- relevel(data_wide_2$hard_drugs_grp, ref = "Never User")
+
+# Perform regression on mental QOL change by adherence highlow and depression score.
+model_MENT_red5 <- lm(AGG_MENT_CHANGE ~ hard_drugs_grp + CESD_2 + ADH_HIGHVSLOW + hard_drugs_grp*CESD_2, data = data_wide_2)
+
+# Exmamine the summary
+summary(model_MENT_red5)
+```
+
+So we def don't include adherence into this model.
+
+The main driver of mental QOL change is not adherence to the protocol, but drug use and depression scores!!!
+
+Do I have to predict depression scores with mental QOL??? Or adherence??? 
+
+:::
+
+_______
+TO DO: PERFORM BACKWARDS SELECTION AND COMPARE THE RESULTING MODEL WITH MY MANUALLY SELECTED MODEL USING AICC AND BIC AND PICK BEST MODEL.
+_____
+
+# Backwards Selection
 
 # CONSORT Flow Chart
 
@@ -3072,6 +4028,27 @@ Filtered table 1 based on likely variables for end model. or atleast dropping th
 table1 <- table1(~AGG_MENT_0 + AGG_PHYS_0 + BMI_0 + HBP_0 + CESD_0 + SMOKE_0 + DKGRP_0 + LEU3N_0 +  VLOAD_log_0 + ADH_HIGHVSLOW + RACE_WHITEYN + EDUC_COLLEGE + age_0 + AGG_MENT_CHANGE + AGG_PHYS_CHANGE + VLOAD_log_CHANGE + LEU3N_CHANGE| hard_drugs_grp, data = data_wide_2, caption = "Descriptive Statistics at Baseline", overall = c(left="Total"))
 table1
 ```
+______________
+Checking for multicollinearity between BMI and College education
+
+`BMI` may still be associated with another outcome variable, so we should check for multicollinearity between `BMI` and `EDUC_COLLEGE`. 
+
+```{r}
+
+data_wide_2$EDUC_COLLEGE <- as.numeric(data_wide_2$EDUC_COLLEGE)
+
+# # Perform a point-biserial correlation to see if BMI and college education are correlated.
+point_biserial <- cor.test(data_wide_2$BMI_0, data_wide_2$EDUC_COLLEGE)
+point_biserial
+```
+
+The correlation between `BMI` and `EDUC_COLLEGE` is not significant (p = 0.083) or strong enough (r = 0.075) to be of concern. Both variables can be included in models without raising issues of multicollinearity.
+
+
+# Bonus
+
+Out of curiosity I started look into the 8 year relationships we have in this data set, and found some interesting results.
+
 
 I think I have to do an analysis of aggregate QOL scores predict adherence or dropout...
 
@@ -3326,3 +4303,91 @@ summary(model_test_phys)
 It also does for `AGG_PHYS`... weird.
 
 Compared to those with 100% adherence, those with 75-95% had a physical change score that was 3.66 points lower.
+
+
+
+
+
+# Weird relationship with depression and mental QOL
+
+If we plot it with depression at baseline, the relationship is positive, opposite of expected.
+
+If we plot it with depression at 2 years, the relationship is negative, as expected.
+
+```{r}
+# Create a scatterplot of mental QOL change score by depression at baseline
+ggplot(data_wide_2, aes(x = CESD_0, y = AGG_MENT_CHANGE, color = CESD_0)) + 
+  geom_point() +
+  theme_minimal() +
+  labs(title = "Mental QOL Change by Depression at Baseline",
+       y = "Mental QOL Change ",
+       x = "Depression Score") + 
+  scale_fill_brewer(palette = "Pastel2")
+```
+
+There appears to be a linear relationship here. Let's run the regression and fit the model.
+
+```{r}
+# Perform a linear regression predicting mental QOL change by depression at baseline
+model <- lm(AGG_MENT_CHANGE ~ CESD_0, data = data_wide_2)
+
+# Examine model summary
+summary(model)
+```
+
+```{r}
+# Create a scatterplot of mental QOL change score by depression at baseline
+ggplot(data_wide_2, aes(x = CESD_0, y = AGG_MENT_CHANGE, color = CESD_0)) + 
+  geom_point() +
+  geom_smooth(method = "lm") +
+  theme_minimal() +
+  labs(title = "Mental QOL Change by Depression at Baseline",
+       y = "Mental QOL Change ",
+       x = "Depression Score") + 
+  scale_fill_brewer(palette = "Pastel2")
+```
+
+Depression score is a significant predictor of mental QOL change over the first 2 years of treatment (F~(1, 527)~= 92.64). On average, a 1-point increase in depression score is associated with a 0.41 point increase in mental QOL score (p < 0.0001).
+
+This is the complete opposite of what is expected. Those with more depression should have lower mental QOL. Is this due to confounding?
+
+
+If we plot it with depression at 2 years, the relationship is negative, as expected.
+
+```{r}
+# Create a scatterplot of mental QOL change score by depression at baseline
+ggplot(data_wide_2, aes(x = CESD_2, y = AGG_MENT_CHANGE, color = CESD_2)) + 
+  geom_point() +
+  theme_minimal() +
+  labs(title = "Mental QOL Change by Depression at Baseline",
+       y = "Mental QOL Change ",
+       x = "Depression Score") + 
+  scale_fill_brewer(palette = "Pastel2")
+```
+
+There appears to be a linear relationship here. Let's run the regression and fit the model.
+
+```{r}
+# Perform a linear regression predicting mental QOL change by depression at baseline
+model <- lm(AGG_MENT_CHANGE ~ CESD_2, data = data_wide_2)
+
+# Examine model summary
+summary(model)
+```
+
+```{r}
+# Create a scatterplot of mental QOL change score by depression at baseline
+ggplot(data_wide_2, aes(x = CESD_2, y = AGG_MENT_CHANGE, color = CESD_2)) + 
+  geom_point() +
+  geom_smooth(method = "lm") +
+  theme_minimal() +
+  labs(title = "Mental QOL Change by Depression at Baseline",
+       y = "Mental QOL Change ",
+       x = "Depression Score") + 
+  scale_fill_brewer(palette = "Pastel2")
+```
+
+
+
+Should I calculate a depression change score???
+

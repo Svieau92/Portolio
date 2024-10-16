@@ -14,9 +14,9 @@ website:
             href: Project_1_Regression/Project_1_Regression_R/Project_1_Regression.qmd
           - text: Regression (SAS)
             href: _site/Project_1_Regression/Project_1_Regression_SAS/Project_1_Regression_SAS.html
-          - text: Regression with Moderator (R)
+          - text: MLR With Confounding and Interaction (R)
             href: Project_2/Project_2_R/Code/Project2.qmd
-          - text: Regression with Moderator (SAS)
+          - text: MLR With Confounding and Interaction (SAS)
       - text: Data Wrangling
       - text: Clinical Research Informatics
       - text: CV
