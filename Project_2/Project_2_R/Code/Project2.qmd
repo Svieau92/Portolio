@@ -57,6 +57,7 @@ library(tidyr) # Used for reshaping
 library(bestNormalize) # Used in selecting best transformation for a variable
 library(corrplot) # Used to make the correlation matrix
 library(corrtable) # used to make the table for the correlation matrix
+library(interactions) # Easy plotting of interactions
 ```
 
 Then we import the data set.
@@ -2459,7 +2460,7 @@ summary(model)
 
 ```{r}
 # Gather p-values of the model
-p_values <- summary(model)$coefficients[,4] # This line selects the fourth column of the resulting coefficients table from summary(model_attach), which is the p-values
+p_values <- summary(model)$coefficients[,4] # This line selects the fourth column of the resulting coefficients table from summary(model), which is the p-values
 
 # Perform Bonferroni correction 
 p_adjusted <- p.adjust(p_values, method = "bonferroni")
@@ -2482,7 +2483,7 @@ model <- lm(VLOAD_log_CHANGE ~ hard_drugs_grp, data = data_wide_2)
 summary(model)
 
 # Apply Bonferroni correction
-p_values <- summary(model)$coefficients[,4] # This line selects the fourth column of the resulting coefficients table from summary(model_attach), which is the p-values
+p_values <- summary(model)$coefficients[,4] # This line selects the fourth column of the resulting coefficients table from summary(model), which is the p-values
 
 # Perform Bonferroni correction 
 p_adjusted <- p.adjust(p_values, method = "bonferroni")
@@ -2560,7 +2561,7 @@ summary(model)
 
 ```{r}
 # Apply Bonferroni correction
-p_values <- summary(model)$coefficients[,4] # This line selects the fourth column of the resulting coefficients table from summary(model_attach), which is the p-values
+p_values <- summary(model)$coefficients[,4] # This line selects the fourth column of the resulting coefficients table from summary(model), which is the p-values
 
 # Perform Bonferroni correction 
 p_adjusted <- p.adjust(p_values, method = "bonferroni")
@@ -2583,7 +2584,7 @@ model <- lm(VLOAD_log_CHANGE ~ ADH_2, data = data_wide_2)
 summary(model)
 
 # Apply Bonferroni correction
-p_values <- summary(model)$coefficients[,4] # This line selects the fourth column of the resulting coefficients table from summary(model_attach), which is the p-values
+p_values <- summary(model)$coefficients[,4] # This line selects the fourth column of the resulting coefficients table from summary(model), which is the p-values
 
 # Perform Bonferroni correction 
 p_adjusted <- p.adjust(p_values, method = "bonferroni")
@@ -2772,7 +2773,7 @@ model <- lm(LEU3N_CHANGE ~ hard_drugs_grp, data = data_wide_2)
 summary(model)
 
 # Gather p-values of the model
-p_values <- summary(model)$coefficients[,4] # This line selects the fourth column of the resulting coefficients table from summary(model_attach), which is the p-values
+p_values <- summary(model)$coefficients[,4] # This line selects the fourth column of the resulting coefficients table from summary(model), which is the p-values
 
 # Perform Bonferroni correction 
 p_adjusted <- p.adjust(p_values, method = "bonferroni")
@@ -2795,7 +2796,7 @@ model <- lm(LEU3N_CHANGE ~ hard_drugs_grp, data = data_wide_2)
 summary(model)
 
 # Gather p-values of the model
-p_values <- summary(model)$coefficients[,4] # This line selects the fourth column of the resulting coefficients table from summary(model_attach), which is the p-values
+p_values <- summary(model)$coefficients[,4] # This line selects the fourth column of the resulting coefficients table from summary(model), which is the p-values
 
 # Perform Bonferroni correction 
 p_adjusted <- p.adjust(p_values, method = "bonferroni")
@@ -2998,7 +2999,30 @@ The overall model is significant (F~(1,530)~= 4.231, p = 0.0401). On average, th
 
 [Top of Tabset](#EDA)
 
+
+## CESD Depression
+
+Is depression related to CD4+ T cell count? Is it related to adherence? Do we have to control for it?
+
+
 ## Summary 
+```{r}
+model <- lm(LEU3N_CHANGE ~ CESD_2, data = data_wide_2)
+
+summary(model)
+```
+
+Oh shoot, it is! Need to go back and re-include to final model.
+
+
+Is depression related to adherence?
+
+```{r}
+model <- lm(CESD_2 ~ ADH_HIGHVSLOW, data = data_wide_2)
+summary(model)
+```
+
+Very significant, but a low r squared so I think we include it as a potential confounder, instead of worrying about VIF. Also should be able to run a model and get VIF output
 
 [Top of Tabset](#EDA)
 
@@ -3315,7 +3339,7 @@ summary(model)
 
 ```{r}
 # Gather p-values of the model
-p_values <- summary(model)$coefficients[,4] # This line selects the fourth column of the resulting coefficients table from summary(model_attach), which is the p-values
+p_values <- summary(model)$coefficients[,4] # This line selects the fourth column of the resulting coefficients table from summary(model), which is the p-values
 
 # Perform Bonferroni correction 
 p_adjusted <- p.adjust(p_values, method = "bonferroni")
@@ -3338,7 +3362,7 @@ model <- lm(AGG_PHYS_CHANGE ~ hard_drugs_grp, data = data_wide_2)
 summary(model)
 
 # Gather p-values of the model
-p_values <- summary(model)$coefficients[,4] # This line selects the fourth column of the resulting coefficients table from summary(model_attach), which is the p-values
+p_values <- summary(model)$coefficients[,4] # This line selects the fourth column of the resulting coefficients table from summary(model), which is the p-values
 
 # Perform Bonferroni correction 
 p_adjusted <- p.adjust(p_values, method = "bonferroni")
@@ -3513,7 +3537,7 @@ Is sig. but teeny tiny amount, not really needed.
 
 [Top of Tabset](#EDA)
 
-## LEU3N
+## CD4+ T Cell Count
 
 ```{r}
 # Perform regression predicting physical QOL change by CD4+ T Cell Count
@@ -3591,74 +3615,403 @@ I just need to recheck what I just did for multicollinearity tho.
 
 Now we will perform the actual analysis.
 
-ADD STUFF HERE ABOUT THE STATISTICAL HYPOTHESES IN LATEX NOTATION.
-
 ## Log Viral Load Change
 
 ::: panel-tabset
 
-## Log Viral Load Change
+## Full Model
 
+As determined by [interactive variable selection](#EDA), the variables of interest for a model predicting `VLOAD_log_CHANGE` are `hard_drug_grp`, `ADH_HIGHVSLOW`, and `EDUC_COLLEGE`. 
+
+The researchers are interested in if differences in treatment response between the drug use groups can be explained by differences in adherence to the HAART regimen, so we will also include an interaction term between hard drug use group and adherence.
+
+Thus the full model is:
+
+
+
+                                         ADD LATEX MATH SYNTAX HERE.
+                                         
+Change the reference category of hard drug use group to never users, and the reference group of adherence to low adherence to compare the impact of hard drug use groups for those with low adherence to the treatment regiment.
+                                        
 ```{r}
-# Refactor reference level of hard drug use group back to Never User
+# Relevel reference group
 data_wide_2$hard_drugs_grp <- relevel(data_wide_2$hard_drugs_grp, ref = "Never User")
 
-# Perform final model regression predicting log viral load change by hard drug use group, adherence group, and college education
-model_log_VLOAD1 <- lm(VLOAD_log_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + EDUC_COLLEGE, data = data_wide_2)
+# Relevel reference group
+data_wide_2$ADH_HIGHVSLOW <- relevel(data_wide_2$ADH_HIGHVSLOW, ref = "Low Adherence")
+
+# Perform the regression on log viral load change with the full model
+model_VLOAD_full1 <- lm(VLOAD_log_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + hard_drugs_grp*ADH_HIGHVSLOW + EDUC_COLLEGE, data = data_wide_2)
 
 # Examine summary
-summary(model_log_VLOAD1)
-
-# Refactor reference level of hard drug use group to Previous User
-data_wide_2$hard_drugs_grp <- relevel(data_wide_2$hard_drugs_grp, ref = "Previous User")
-
-# Perform final model regression predicting log viral load change by hard drug use group, adherence group, and college education
-model_log_VLOAD2 <- lm(VLOAD_log_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + EDUC_COLLEGE, data = data_wide_2)
-
-# Examine summary
-summary(model_log_VLOAD2)
-
-# Testing with an interaction term. I don't believe this is the appropriate method.
-
-model_log_VLOAD <- lm(VLOAD_log_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + EDUC_COLLEGE + hard_drugs_grp*ADH_HIGHVSLOW, data = data_wide_2)
-
-summary(model_log_VLOAD)
+summary(model_VLOAD_full1)
 ```
-I guess the interaction term shows that there is an interaction for never and previous users, based on adherence. Look into this more later. It may be that never users with low adherence are different from previous users with high adherence!! HOW TO INTERPRET??
-
-So it seems that adherence IS a confounder for drug use.
-
-When we ran `drug_use_grp` by itself as a predictor on log viral load, the overall model was significant, but after correcting for multiple pairwise comparisons, none of the between-group comparisons was significant (p > 0.05).
-
-However, after including `ADH_HIGHLOW` in the model, the overall model was still significant, but now the current vs never drug use comparison is significant, even after performing a bonferroni correction (p-adjusted = 0.0447). This is in comparison to the model without ADH, where this same p-adjusted value was 0.1377. The beta coefficient is not > 10% different, however based on the shifts in the p-values, I will conclude that adherence is a confounder for the relationship between hard drug use and log viral load.
-
-Take a look at the unadjusted vs adjusted CIs for hard drug use groups.
-
-Add stuff here about pre-inclusion and post-inclusion SEs and parameter estimates.
-
-2.50 2.65
 
 ```{r}
-model_anova <- aov(VLOAD_log_CHANGE ~ hard_drugs_grp * ADH_HIGHVSLOW, data = data_wide_2)
+p_values <- summary(model_VLOAD_full1)$coefficients[,4] # This line selects the fourth column of the resulting coefficients table from summary(model), which is the p-values
 
-summary(model_anova)
-TukeyHSD(model_anova)
+# Perform Bonferroni correction 
+p_adjusted <- p.adjust(p_values, method = "bonferroni")
+
+# Get the 95% CIs
+conf_intervals <- confint(model_VLOAD_full1)
+
+# Compare adjusted p-values to unadjusted p-values, with 95% CI's
+p_comparison <- cbind(p_values, p_adjusted, conf_intervals)
+pretty_print(p_comparison)
 ```
-Based on the results of the ANOVA, we can see that at high adherence, there is no difference between the never and previous drug use groups (p = .9835298). However, there is a difference when 
-adherence for both groups is low (p = 0.0000455) and when never users have high adherence and previous users have low adherence (p = 0.0000001), but NOT when Previous Users have High Adherence and Never User have Low Adherence (p = 0.9687938).
 
-In other words, the relationship between never and previous drug users depends on adherence. If adherence is high, then there is no statistical difference in log viral load change over 2 years between both groups. However, if adherence is low
 
-In other words, previous hard drug users can make up for the impact of hard drug use on log viral load by having high adherence to the treatment regiment. Where if they have high adherence, their log viral loads are comparable to those who never used hard drugs.
+Change the reference category to high adherence, to compare the impact of hard drug use groups for those with high adherence to the treatment regiment.
 
-How to show that in a plot??
+```{r}
+# Relevel reference group
+data_wide_2$ADH_HIGHVSLOW <- relevel(data_wide_2$ADH_HIGHVSLOW, ref = "High Adherence")
 
-CHECK HERE IF THERE IS AN ASSOCIATION BETWEEN HARD DRUG USE GROUP AND ADHERENCE
+# Perform the regression on log viral load change with the full model
+model_VLOAD_full1 <- lm(VLOAD_log_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + hard_drugs_grp*ADH_HIGHVSLOW + EDUC_COLLEGE, data = data_wide_2)
 
-IF YES THEN ADHERENCE IS A CONFOUNDER
+# Examine summary
+summary(model_VLOAD_full1)
+```
 
-Under the classical but not but not operational definition (% change not > 20%). It is therefore a Maverick variable!!!
+```{r}
+p_values <- summary(model_VLOAD_full1)$coefficients[,4] # This line selects the fourth column of the resulting coefficients table from summary(model), which is the p-values
 
+# Perform Bonferroni correction 
+p_adjusted <- p.adjust(p_values, method = "bonferroni")
+
+# Get the 95% CIs
+conf_intervals <- confint(model_VLOAD_full1)
+
+# Compare adjusted p-values to unadjusted p-values, with 95% CI's
+p_comparison <- cbind(p_values, p_adjusted, conf_intervals)
+pretty_print(p_comparison)
+```
+
+Change the reference categories to previous users and low adherence to compare the impact of hard drug use groups for those with low adherence to the treatment regiment.
+
+```{r}
+# Relevel reference group
+data_wide_2$hard_drugs_grp <- relevel(data_wide_2$hard_drugs_grp, ref = "Previous User")
+
+# Relevel reference group
+data_wide_2$ADH_HIGHVSLOW <- relevel(data_wide_2$ADH_HIGHVSLOW, ref = "High Adherence")
+
+# Perform the regression on log viral load change with the full model
+model_VLOAD_full1 <- lm(VLOAD_log_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + hard_drugs_grp*ADH_HIGHVSLOW + EDUC_COLLEGE, data = data_wide_2)
+
+# Examine summary
+summary(model_VLOAD_full1)
+
+p_values <- summary(model_VLOAD_full1)$coefficients[,4] # This line selects the fourth column of the resulting coefficients table from summary(model), which is the p-values
+
+# Perform Bonferroni correction 
+p_adjusted <- p.adjust(p_values, method = "bonferroni")
+
+# Get the 95% CIs
+conf_intervals <- confint(model_VLOAD_full1)
+
+# Compare adjusted p-values to unadjusted p-values, with 95% CI's
+p_comparison <- cbind(p_values, p_adjusted, conf_intervals)
+pretty_print(p_comparison)
+```
+
+
+```{r}
+# Gather p-values of the model
+p_values <- summary(model_VLOAD_full1)$coefficients[,4] # This line selects the fourth column of the resulting coefficients table from summary(model), which is the p-values
+
+# Perform Bonferroni correction 
+p_adjusted <- p.adjust(p_values, method = "bonferroni")
+
+# Get the 95% CIs
+conf_intervals <- confint(model_VLOAD_full1)
+
+# Compare adjusted p-values to unadjusted p-values, with 95% CI's
+p_comparison <- cbind(p_values, p_adjusted, conf_intervals)
+pretty_print(p_comparison)
+```
+
+
+Change the reference group to previous drug users and low adherence.
+
+```{r}
+# Relevel reference group
+data_wide_2$hard_drugs_grp <- relevel(data_wide_2$hard_drugs_grp, ref = "Previous User")
+
+# Relevel reference group
+data_wide_2$ADH_HIGHVSLOW <- relevel(data_wide_2$ADH_HIGHVSLOW, ref = "Low Adherence")
+
+# Perform the regression on log viral load change with the full model
+model_VLOAD_full2 <- lm(VLOAD_log_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + hard_drugs_grp*ADH_HIGHVSLOW + EDUC_COLLEGE, data = data_wide_2)
+
+# Examine summary
+summary(model_VLOAD_full2)
+```
+
+```{r}
+# Get p-values
+p_values <- summary(model_VLOAD_full2)$coefficients[,4] # This line selects the fourth column of the resulting coefficients table from summary(model), which is the p-values
+
+# Perform Bonferroni correction 
+p_adjusted <- p.adjust(p_values, method = "bonferroni")
+
+# Get the 95% CIs
+conf_intervals <- confint(model_VLOAD_full2)
+
+# Compare adjusted p-values to unadjusted p-values, with 95% CI's
+p_comparison <- cbind(p_values, p_adjusted, conf_intervals)
+pretty_print(p_comparison)
+```
+
+Change the reference categories to current users and low adherence to compare the impact of hard drug use groups for those with low adherence to the treatment regiment.
+
+```{r}
+# Relevel reference group
+data_wide_2$hard_drugs_grp <- relevel(data_wide_2$hard_drugs_grp, ref = "Current User")
+
+# Relevel reference group
+data_wide_2$ADH_HIGHVSLOW <- relevel(data_wide_2$ADH_HIGHVSLOW, ref = "Low Adherence")
+
+# Perform the regression on log viral load change with the full model
+model_VLOAD_full3 <- lm(VLOAD_log_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + hard_drugs_grp*ADH_HIGHVSLOW + EDUC_COLLEGE, data = data_wide_2)
+
+# Examine summary
+summary(model_VLOAD_full3)
+```
+
+```{r}
+# Get p-values
+p_values <- summary(model_VLOAD_full3)$coefficients[,4] # This line selects the fourth column of the resulting coefficients table from summary(model), which is the p-values
+
+# Perform Bonferroni correction 
+p_adjusted <- p.adjust(p_values, method = "bonferroni")
+
+# Get the 95% CIs
+conf_intervals <- confint(model_VLOAD_full3)
+
+# Compare adjusted p-values to unadjusted p-values, with 95% CI's
+p_comparison <- cbind(p_values, p_adjusted, conf_intervals)
+pretty_print(p_comparison)
+```
+
+
+
+We can see that all variables, including `EDUC_COLLEGE`, are significant, and thus there is no need to compare the full model to reduced models; [this is our final model for `VLOAD_log_CHANGE`]{.underline}
+
+We can double check this with a partial F-test comparing the full model with the reduced model without the interaction term 
+
+```{r}
+# Perform full model with interaction term
+model_log_VLOAD_full <- lm(VLOAD_log_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + EDUC_COLLEGE + hard_drugs_grp*ADH_HIGHVSLOW, data = data_wide_2)
+
+# Perform reduced model without interaction term
+model_log_VLOAD_red <- lm(VLOAD_log_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + EDUC_COLLEGE, data = data_wide_2)
+
+# Perform F-Test
+anova(model_log_VLOAD_red, model_log_VLOAD_full)
+```
+
+The p-value is significant (p < 0.0001), indicating that the interaction term adds explanator power to the model and should be included. Thus we move on with interpretting the interaction.
+
+### Final Model Interpretation
+
+There were significant differences in change in log viral load based on hard drug usage and adherence to the treatment regiment, while controlling for education at baseline (F~(6, 513)~= 9.51), p < 0.0001). 
+
+The relationship between adherence and log viral load differed by hard drug usage.
+
+For those with low adherence to the treatment regiment, current hard drug users had a change in log viral load that was 3.48 log copies/mL (or change in copies/mL that was 32.32 times) higher than never hard drug users (t = 2.458, p-adjusted  = 0.04284, 95% CI: 0.70 to 6.25 log copies/mL, or 2.01 to 519.78 times copies/mL). Additionally, for those with low adherence to the treatment regimen, previous hard drug users had a change in log viral load that was 5.81 log copies/mL (or change in copies/mL that was 333.05 times) greater than never hard drug user (t = 4.90, p-adjusted < 0.0001, 95% CI: 3.48 to 8.14 log copies/mL, or 32.42 to 3421.49 times copies/mL). For those with low adherence to the treatment regiment, the difference between previous and current drug users was not statistically significant (t = -1.35, p-adjusted = 0.177, 95% CI: -5.72 to 1.05 log copies/mL, or 0.0033 to 2.87 times copies/mL). 
+
+For those with high adherence to the protocol, there was no difference in log viral load between current and never hard drug users (t = 1.920, p-adjusted = 0.388), previous and never hard drug users (t = -0.086, p-adjusted = 1.00), or previous and current hard drug users (t = 1.355, p-adjusted = 1.00).
+
+The relationship between drug use and log viral load differed by adherence to the treatment regiment.
+
+For current drug users, those with high adherence had a change in log viral load that was 3.53 log copies/mL less (or 0.029 times) than that of those with low adherence (t = -2.554, p-adjusted = 0.0999936, 95% CI: -6.25 to -0.70 log copies/mL, or 0.0019 to 0.50 times). This relationship was not statistically significant following Bonferroni correction however, likely due to the small number of patients who were hard drug users with low protocol adherence (n = 4). This relationship however appears to be real based on trends in the data, and we recommend increasing the sample size to discover the true differences. 
+
+For previous drug users, those with high adherence had a change in log viral load that was 6.64 log copies/mL less (or 0.0013 times) than those with low adherence (t = -5.63, p-adjusted < 0.0001, 95% CI: -8.95 to -4.32 log copies/mL, or 0.00013 to 0.013 times).
+
+For never drug users, the difference in log viral load between those with high adherence and low adherence was not statistically significant (t = -1.61, p-adusted = 0.759, 95% CI: -1.75 to 0.17 log copies/mL, or 0.17 to 1.19 times). 
+
+Education at baseline is a significant predictor for change in log viral load over 2 years, while controlling for drug use and adherence to treatment regiment (t = -2.872, p = 0.00424). On average, those with a college education had an 0.85 log copies/mL (or 8.06 copies/mL) greater decrease in log viral load than those without a college education (95% CI:-1.43 to -0.27 log copies/mL).
+
+There are additional comparisons we can make, but they are of little clinical relevance (e.g. current drug users with low adherence had a higher viral load compared to never drug users with high adherence). Basically, any comparison made between a current or previous had drug user with low adherence will be significant.
+
+The interaction between hard drug use and adherence group on log viral load can be visualized in the graph below.
+
+```{r}
+# Relevel reference group
+data_wide_2$hard_drugs_grp <- relevel(data_wide_2$hard_drugs_grp, ref = "Never User")
+
+# Relevel reference group
+data_wide_2$ADH_HIGHVSLOW <- relevel(data_wide_2$ADH_HIGHVSLOW, ref = "Low Adherence")
+
+# Perform a regression of the full model predicting log viral load change
+model_VLOAD_full <- lm(VLOAD_log_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + hard_drugs_grp * ADH_HIGHVSLOW + EDUC_COLLEGE, data = data_wide_2)
+
+# Use interactions package to plot interaction
+cat_plot(model_VLOAD_full, pred = hard_drugs_grp, modx = ADH_HIGHVSLOW, geom = "line", colors = "Pastel2")
+```
+
+This very clearly illustrates the relationships we saw in our model.
+
+```{r}
+
+# # Create a new data frame for predictions
+# new_data <- expand.grid(hard_drugs_grp = data_wide_2$hard_drugs_grp,
+#                         ADH_HIGHVSLOW = data_wide_2$ADH_HIGHVSLOW,
+#                         EDUC_COLLEGE = data_wide_2$EDUC_COLLEGE)
+# 
+# new_data <- new_data %>%
+#   mutate(predicted_VLOAD = predict(model_VLOAD_full1, newdata = new_data))
+# 
+# 
+# ggplot(data_wide_2, aes(x = hard_drugs_grp, y = predicted_VLOAD, color = ADH_HIGHVSLOW, group = ADH_HIGHVSLOW)) +
+#   geom_line(size = 1) +
+#   scale_color_brewer(palette = "Pastel2") +
+#   labs(title = "Interaction between Hard Drugs and Adherence on Predicted Viral Load",
+#        x = "Hard Drugs Group",
+#        y = "Predicted Log Viral Load",
+#        color = "Adherence Group") +
+#   theme_minimal()
+
+```
+
+We can see the main effects for adherence: for previous and current hard drug users, those with high adherence had a reduced viral load.
+
+Similarly, we can see the main effects for hard drug use: For those with low adherence, previous and current drug users had a higher viral load compared to those with high adherence. 
+
+Interestingly, viral load did not seem to differ for never users based on adherence, suggesting that the ART treatment is most important for those with current or previous hard drug use history. 
+
+Importantly however, this plot is not replicated exactly when I recreate it in ggplot2.
+
+```{r}
+# Filter out NA values
+data_no_na <- data_wide_2 %>% filter(!is.na(ADH_HIGHVSLOW))
+
+# Summarize the data (using mean as an example)
+data_summary <- data_no_na %>%
+  group_by(hard_drugs_grp, ADH_HIGHVSLOW) %>%
+  summarize(mean_VLOAD_log_CHANGE = mean(VLOAD_log_CHANGE, na.rm = TRUE))
+
+# Create the plot with lines
+ggplot(data_no_na, aes(x = hard_drugs_grp, y = VLOAD_log_CHANGE, fill = ADH_HIGHVSLOW)) +
+  geom_boxplot(alpha = 0.5) +
+  scale_fill_brewer(palette = "Pastel2") +
+  labs(title = "Interaction between Hard Drugs and Adherence on Log Viral Load Change",
+       x = "Hard Drugs Group",
+       y = "Log Viral Load Change") +
+  guides(fill = guide_legend(title = "Adherence Group")) +
+   theme_minimal() 
+```
+
+We can see that the boxplot for low adherence previous users (n = 4), and low adherence hard drug users (n = 6) are either really tiny or really large, respectively. This makes sense, because the sample size for both of those categories is so small.
+
+```{r}
+# Create table of hard drugs group by adherence group
+pretty_print(table(data_wide_2$hard_drugs_grp, data_wide_2$ADH_HIGHVSLOW))
+```
+
+And let's examine how close those 4 values all are to each other.
+
+```{r}
+data_wide_2 %>%
+  filter(hard_drugs_grp == "Current User" & ADH_HIGHVSLOW == "Low Adherence") %>%
+  select(newid, VLOAD_log_CHANGE, hard_drugs_grp, ADH_HIGHVSLOW)
+```
+
+```{r}
+data_wide_2 %>%
+  filter(hard_drugs_grp == "Previous User" & ADH_HIGHVSLOW == "Low Adherence") %>%
+  select(newid, VLOAD_log_CHANGE, hard_drugs_grp, ADH_HIGHVSLOW)
+```
+
+The values for current users with low adherence have low variance, explaining the tiny boxplot, and the values for previous users with low adherence have high variance, explaining the larger boxplot.
+
+So I guess that's just a testament to the fact that you can't rely on packages!
+
+
+::: callout-note
+This is a very important limitation that will need to be addressed in the discussion!! 
+
+While we see this interaction between hard drug use and adherence on the outcome variables in the data, more data must be collected to get a minimum of 30 patients per group and the analyses re-run to confirm these relationships hold!!
+::: 
+
+
+## Make this a new Tab - Main Effects
+
+Understanding the limitations of an interaction model with only n=4 or n=6 in some categories, we chose to also run the model without the interaction term to acquire the main effects of hard drug use group and adherence on log viral load change, while controlling for baseline education.
+
+```{r}
+# Relevel reference group
+data_wide_2$hard_drugs_grp <- relevel(data_wide_2$hard_drugs_grp, ref = "Never User")
+
+# Perform a regression on log viral load change without interaction term
+model_VLOAD_red1 <- lm(VLOAD_log_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + EDUC_COLLEGE, data = data_wide_2)
+
+# Examine summary
+summary(model_VLOAD_red1)
+```
+
+```{r}
+# Get p-values
+p_values <- summary(model_VLOAD_red1)$coefficients[,4] # This line selects the fourth column of the resulting coefficients table from summary(model), which is the p-values
+
+# Perform Bonferroni correction 
+p_adjusted <- p.adjust(p_values, method = "bonferroni")
+
+# Get the 95% CIs
+conf_intervals <- confint(model_VLOAD_red1)
+
+# Compare adjusted p-values to unadjusted p-values, with 95% CI's
+p_comparison <- cbind(p_values, p_adjusted, conf_intervals)
+pretty_print(p_comparison)
+```
+
+```{r}
+# Relevel reference group
+data_wide_2$hard_drugs_grp <- relevel(data_wide_2$hard_drugs_grp, ref = "Previous User")
+
+# Perform a regression on log viral load change without interaction term
+model_VLOAD_red1 <- lm(VLOAD_log_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + EDUC_COLLEGE, data = data_wide_2)
+
+# Examine summary
+summary(model_VLOAD_red1)
+```
+
+```{r}
+# Get p-values
+p_values <- summary(model_VLOAD_red1)$coefficients[,4] # This line selects the fourth column of the resulting coefficients table from summary(model), which is the p-values
+
+# Perform Bonferroni correction 
+p_adjusted <- p.adjust(p_values, method = "bonferroni")
+
+# Get the 95% CIs
+conf_intervals <- confint(model_VLOAD_red1)
+
+# Compare adjusted p-values to unadjusted p-values, with 95% CI's
+p_comparison <- cbind(p_values, p_adjusted, conf_intervals)
+pretty_print(p_comparison)
+```
+
+
+
+The overall model is significant (F(~4, 515)~= 8.241, p < 0.0001).
+
+Hard drug use is a significant predictor of log viral load change, while controlling for adherence to the treatment regiment and college education. Specifically, current hard drug users had a change in log viral load that was 0.92 log copies/mL (or 2.50 times) greater than never hard drug users (t = 2.442, p-adjusted = 0.0447, 95% CI: 0.18 to 1.65 log copies/mL, or 1.20 to 5.23 times). There was no difference between previous and current hard drug users (t = 0.363, p-adjusted = 1.00, 95% CI: -0.87 to 1.27 log copies/mL, or 0.42 to 4.81 times).
+
+Adherence to the treatment regiment is a significant predictor of change in log viral load, while controlling for hard drug usage and college education (t = -4.21, p < 0.0001). Specifically, those with high adherence to the protocol had an average change in log viral load that was 1.84 log copies/mL (or 0.16 times) less than those with low adherence to the protocol.
+
+Finally, college education is a significant predictor of log viral load change, while controlling for hard drug usage and adherence to the treatment regiment (t = -2.32, p = 0.0206). On average, those with a college education had a change in log viral load that was 0.69 log copies/mL (or 1.99 times) less than those without a college education (95% CI: -2.70 to -0.98 log copies/mL, or 0.067 to 0.37 times).
+
+
+### Comparisons
+
+The reduced model without the interaction has an adjusted R-squared of 0.0529, compared to the full model with the interaction term (R^2-adjusted = 0.090).
+
+Therefore, dropping the interaction term causes us to lose explanation of 3.71% of the variance in log viral load change, but is also more statistically sound since we no longer have small sample size issues. 
+
+### Confounding
 
 Under the classical definition of a confounder, a variable Z is a confounder if:
 
@@ -3666,12 +4019,13 @@ Under the classical definition of a confounder, a variable Z is a confounder if:
  - 2) It is associated with PEV X
  - 3) It is not on the causal pathway (not a mediator)
  
-To assess if Adherence is associated with hard drug use group, we can run a chi-square test
+We know that `ADH_HIGHVSLOW` is a predictor of `VLOAD_log_CHANGE`.
+
+To assess if `ADH_HIGHVSLOW` is associated with hard drug use group, we can run a Fisher's test
 
 ```{r}
-# Make a contingency table for hard drug use and adherence high vs low
+# Create a contingency table
 contingency_table <- table(data_wide_2$hard_drugs_grp, data_wide_2$ADH_HIGHVSLOW)
-contingency_table
 
 # We have to run Fisher's Exact test since we have fewer than 5 observations in some categories
 fisher_test <- fisher.test(contingency_table)
@@ -3679,13 +4033,34 @@ fisher_test <- fisher.test(contingency_table)
 fisher_test
 ```
 
-They are NOT associated. Which means that adherence is NOT a confounder????? But it basically is.
+They are not associated. 
 
-However, it is NOT necessary for this associaton to be statistically significant for there to be important confounding present.
+However, it is not necessary for this associaton to be statistically significant for there to be important confounding present.
 
-In our case I think we conclude adherence IS a confounder for the relationship between hard drug use and log viral load.
+When we ran `drug_use_grp` by itself as a predictor on log viral load, the overall model was significant, but after correcting for multiple pairwise comparisons, none of the between-group comparisons was significant (p > 0.05).
 
-ADD INTERPRETATIONS HERE.
+However, after including `ADH_HIGHVSLOW` in the model, the current vs never drug use comparison is significant, even after performing a Bonferroni correction (p-adjusted = 0.0447). In the model without ADH, this same comparison was p-adjusted =  0.1377. 
+
+Thus, `ADH_HIGHVSLOW` is associated with the outcome variable, and changes the relationship between the PEV and outcome variable in a meaningful way when included in the model (changes it from not significant to significant), meeting the definition of a confounder under the classical definition. However, the beta coefficient of the PEV does not change by > 20%, not satisfying the  operational definition of a confounder.
+
+Adherence to the treatment regiment is therefore a maverick variable!
+
+## Backwards Selection
+
+This is me testing backwards selection
+
+Let's say the full model has the interaction term between hard drug use and adherence high low
+
+```{r}
+# Perform full model with interaction term
+model_log_VLOAD_full <- lm(VLOAD_log_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + EDUC_COLLEGE + hard_drugs_grp*ADH_HIGHVSLOW, data = data_wide_2)
+
+# Perform backwards selection model
+step_model <- step(model_log_VLOAD_full, direction = "backward")
+
+summary(step_model)
+```
+
 
 [Top of Tabset](#Data_Analysis)
 
@@ -3701,24 +4076,112 @@ The second outcome variable of interest was change in CD4+ T Cell Count over the
 
 ## Full Model 
 
-The candidate variables for inclusion in our model predicting `LEU3N_CHANGE` were `LEU3N_CHANGE are `hard_drugs_grp`, `ADH_HIGHLOW`, `BMI_2`, `FRP_2`, and `EDUC_COLLEGE`.
+The candidate variables for inclusion in our model predicting `LEU3N_CHANGE` were `hard_drugs_grp`, `ADH_HIGHLOW`, `BMI_2`, `FRP_2`, and `EDUC_COLLEGE`. The researchers are interested in if differences in treatment response between the drug use groups can be explained by differences in adherence to the HAART regimen, so we will also include an interaction term between hard drug use group and adherence.
 
-We begin by examining the full model with the PEV, potential confounder, and all potential covariates.
+We begin by examining the full model with all these variables included.
 
 ```{r}
 # Relevel to change to the reference group to never user
 data_wide_2$hard_drugs_grp<- relevel(data_wide_2$hard_drugs_grp, ref = "Never User")
 
+# Relevel to change to the reference group to never user
+data_wide_2$ADH_HIGHVSLOW <- relevel(data_wide_2$ADH_HIGHVSLOW, ref = "Low Adherence")
+
 # Perform regression on CD4+ T Cell count change by hard drugs group, include adherence as confounder, and BMI, frailty related phenotype, and college education as precision variables.
-model_LEU3N_full <- lm(LEU3N_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + BMI_2 + FRP_2 + EDUC_COLLEGE, data = data_wide_2)
+model_LEU3N_full <- lm(LEU3N_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + BMI_2 + FRP_2 + EDUC_COLLEGE + hard_drugs_grp*ADH_HIGHVSLOW, data = data_wide_2)
 
 # Exmamine the summary
 summary(model_LEU3N_full)
 ```
 
+BMI is significant, but has 10% missing values. Let's try running without it. (it's also correlated to college education, so we can kind if capture it with that variable).
+
+```{r}
+# Relevel to change to the reference group to never user
+data_wide_2$hard_drugs_grp<- relevel(data_wide_2$hard_drugs_grp, ref = "Current User")
+
+# Relevel to change to the reference group to never user
+data_wide_2$ADH_HIGHVSLOW <- relevel(data_wide_2$ADH_HIGHVSLOW, ref = "Low Adherence")
+
+# Perform regression on CD4+ T Cell count change by hard drugs group, include adherence as confounder, and BMI, frailty related phenotype, and college education as precision variables.
+model_LEU3N_full <- lm(LEU3N_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + FRP_2 + EDUC_COLLEGE + hard_drugs_grp*ADH_HIGHVSLOW, data = data_wide_2)
+
+# Exmamine the summary
+summary(model_LEU3N_full)
+
+# Use interactions package to plot interaction
+cat_plot(model_LEU3N_full, pred = hard_drugs_grp, modx = ADH_HIGHVSLOW, geom = "line", colors = "Pastel2")
+```
+
+
+```{r}
+# Filter out NA values
+data_no_na <- data_wide_2 %>% filter(!is.na(ADH_HIGHVSLOW))
+
+# Create the plot with lines
+ggplot(data_no_na, aes(x = hard_drugs_grp, y = LEU3N_CHANGE, fill = ADH_HIGHVSLOW)) +
+  geom_boxplot(alpha = 0.5) +
+  scale_fill_brewer(palette = "Pastel2") +
+  labs(title = "Interaction between Hard Drugs and Adherence on LEU3N Change",
+       x = "Hard Drugs Group",
+       y = "LEU3N Change") +
+  guides(fill = guide_legend(title = "Adherence Group")) +
+   theme_minimal() 
+```
+
+
+
+```{r}
+# Relevel to change to the reference group to never user
+data_wide_2$hard_drugs_grp<- relevel(data_wide_2$hard_drugs_grp, ref = "Never User")
+
+# Relevel to change to the reference group to never user
+data_wide_2$ADH_HIGHVSLOW <- relevel(data_wide_2$ADH_HIGHVSLOW, ref = "Low Adherence")
+
+# Perform regression on CD4+ T Cell count change by hard drugs group, include adherence as confounder, and BMI, frailty related phenotype, and college education as precision variables.
+model_LEU3N_fullb <- lm(LEU3N_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + BMI_2 + FRP_2 + EDUC_COLLEGE, data = data_wide_2)
+
+# Examine the summary
+summary(model_LEU3N_fullb)
+```
+
+```{r}
+# Relevel to change to the reference group to never user
+data_wide_2$hard_drugs_grp<- relevel(data_wide_2$hard_drugs_grp, ref = "Never User")
+
+# Relevel to change to the reference group to never user
+data_wide_2$ADH_HIGHVSLOW <- relevel(data_wide_2$ADH_HIGHVSLOW, ref = "Low Adherence")
+
+# Perform regression on CD4+ T Cell count change by hard drugs group, include adherence as confounder, and BMI, frailty related phenotype, and college education as precision variables.
+model_LEU3N_fulla <- lm(LEU3N_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + BMI_2 + FRP_2, data = data_wide_2)
+
+# Examine the summary
+summary(model_LEU3N_fulla)
+
+anova(model_LEU3N_fulla, model_LEU3N_fullb)
+```
+
+We get an NA for the interaction term. This is likely because dropped the n=4 patients that were current hard drug users with low adherence, making the interaction impossible to make. Indeed we can see we only have 7, 453 DF.
+
+```{r}
+# Relevel to change to the reference group to never user
+data_wide_2$hard_drugs_grp<- relevel(data_wide_2$hard_drugs_grp, ref = "Never User")
+
+# Relevel to change to the reference group to never user
+data_wide_2$ADH_HIGHVSLOW <- relevel(data_wide_2$ADH_HIGHVSLOW, ref = "Low Adherence")
+
+# Perform regression on CD4+ T Cell count change by hard drugs group, include adherence as confounder, and BMI, frailty related phenotype, and college education as precision variables.
+model_LEU3N_full <- lm(LEU3N_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + BMI_2 + FRP_2 + hard_drugs_grp*ADH_HIGHVSLOW, data = data_wide_2)
+
+# Exmamine the summary
+summary(model_LEU3N_full)
+```
+
+
+
 ```{r}
 # Gather p-values of the model
-p_values <- summary(model_LEU3N_full)$coefficients[,4] # This line selects the fourth column of the resulting coefficients table from summary(model_attach), which is the p-values
+p_values <- summary(model_LEU3N_full)$coefficients[,4] # This line selects the fourth column of the resulting coefficients table from summary(model), which is the p-values
 
 # Perform Bonferroni correction 
 p_adjusted <- p.adjust(p_values, method = "bonferroni")
@@ -3741,10 +4204,18 @@ model_LEU3N_full <- lm(LEU3N_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + BMI_2 + F
 # Exmamine the summary
 summary(model_LEU3N_full)
 ```
+_____
+Get VIF 
+____
+```{r}
+library(car)
+vif_values <- vif(model_LEU3N_full)
+vif_values
+```
 
 ```{r}
 # Gather p-values of the model
-p_values <- summary(model_LEU3N_full)$coefficients[,4] # This line selects the fourth column of the resulting coefficients table from summary(model_attach), which is the p-values
+p_values <- summary(model_LEU3N_full)$coefficients[,4] # This line selects the fourth column of the resulting coefficients table from summary(model), which is the p-values
 
 # Perform Bonferroni correction 
 p_adjusted <- p.adjust(p_values, method = "bonferroni")
@@ -3782,7 +4253,7 @@ model_LEU3N_red <- lm(LEU3N_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + BMI_2 + FR
 summary(model_LEU3N_red)
 
 # Gather p-values of the model
-p_values <- summary(model_LEU3N_red)$coefficients[,4] # This line selects the fourth column of the resulting coefficients table from summary(model_attach), which is the p-values
+p_values <- summary(model_LEU3N_red)$coefficients[,4] # This line selects the fourth column of the resulting coefficients table from summary(model), which is the p-values
 
 # Perform Bonferroni correction 
 p_adjusted <- p.adjust(p_values, method = "bonferroni")
@@ -3799,13 +4270,15 @@ data_wide_2$hard_drugs_grp<- relevel(data_wide_2$hard_drugs_grp, ref = "Previous
 # Perform regression on CD4+ T Cell count change by hard drugs group, include adherence as confounder, and BMI, FRP, as precision variables.
 model_LEU3N_red <- lm(LEU3N_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + BMI_2 + FRP_2, data = data_wide_2)
 
-# Exmamine the summary
+# Examine the summary
 summary(model_LEU3N_red)
 
 # Get the 95% CIs
 conf_intervals <- confint(model_LEU3N_red)
 pretty_print(conf_intervals)
 ```
+
+
 ```{r}
 # Relevel to change to the reference group to previous user
 data_wide_2$hard_drugs_grp<- relevel(data_wide_2$hard_drugs_grp, ref = "Previous User")
@@ -3854,6 +4327,81 @@ The candidate variables for mental QOL change as determined by interactive varia
 ::: panel-tabset
 
 ## Full Model
+
+
+```{r}
+# Relevel to change to the reference group to never user
+data_wide_2$hard_drugs_grp<- relevel(data_wide_2$hard_drugs_grp, ref = "Never User")
+
+# Relevel to change to the reference group to never user
+data_wide_2$ADH_HIGHVSLOW <- relevel(data_wide_2$ADH_HIGHVSLOW, ref = "Low Adherence")
+
+# Perform regression on mental QOL change by hard drugs group, full model
+model_MENT_full <- lm(AGG_MENT_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + CESD_2 + hard_drugs_grp*ADH_HIGHVSLOW, data = data_wide_2)
+
+# Exmamine the summary
+summary(model_MENT_full)
+
+# Use interactions package to plot interaction
+cat_plot(model_MENT_full, pred = hard_drugs_grp, modx = ADH_HIGHVSLOW, geom = "line", colors = "Pastel2")
+```
+
+```{r}
+# Relevel to change to the reference group
+data_wide_2$hard_drugs_grp<- relevel(data_wide_2$hard_drugs_grp, ref = "Previous User")
+
+# Relevel to change to the reference group to never user
+data_wide_2$ADH_HIGHVSLOW <- relevel(data_wide_2$ADH_HIGHVSLOW, ref = "Low Adherence")
+
+# Perform regression on mental QOL change by hard drugs group, full model
+model_MENT_full <- lm(AGG_MENT_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + CESD_2 + hard_drugs_grp*ADH_HIGHVSLOW, data = data_wide_2)
+
+# Exmamine the summary
+summary(model_MENT_full)
+```
+
+
+```{r}
+# Relevel to change to the reference group
+data_wide_2$hard_drugs_grp<- relevel(data_wide_2$hard_drugs_grp, ref = "Previous User")
+
+# Relevel to change to the reference group to never user
+data_wide_2$ADH_HIGHVSLOW <- relevel(data_wide_2$ADH_HIGHVSLOW, ref = "Low Adherence")
+
+# Perform regression on mental QOL change by hard drugs group, full model
+model_MENT_full <- lm(AGG_MENT_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + CESD_2, data = data_wide_2)
+
+# Exmamine the summary
+summary(model_MENT_full)
+```
+
+```{r}
+# Relevel to change to the reference group
+data_wide_2$hard_drugs_grp<- relevel(data_wide_2$hard_drugs_grp, ref = "Previous User")
+
+# Relevel to change to the reference group to never user
+data_wide_2$ADH_HIGHVSLOW <- relevel(data_wide_2$ADH_HIGHVSLOW, ref = "Low Adherence")
+
+# Perform regression on mental QOL change by hard drugs group, full model
+model_MENT_full <- lm(AGG_MENT_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + hard_drugs_grp*ADH_HIGHVSLOW, data = data_wide_2)
+
+# Examine the summary
+summary(model_MENT_full)
+```
+
+
+```{r}
+# Relevel to change to the reference group to never user
+data_wide_2$hard_drugs_grp<- relevel(data_wide_2$hard_drugs_grp, ref = "Current User")
+
+# Relevel to change to the reference group to never user
+data_wide_2$ADH_HIGHVSLOW <- relevel(data_wide_2$ADH_HIGHVSLOW, ref = "Low Adherence")
+
+# Use interactions package to plot interaction
+cat_plot(model_MENT_full, pred = hard_drugs_grp, modx = ADH_HIGHVSLOW, geom = "line", colors = "Pastel2")
+```
+
+
 
 ```{r}
 # Relevel to change to the reference group to never user
@@ -3979,6 +4527,26 @@ The main driver of mental QOL change is not adherence to the protocol, but drug 
 
 Do I have to predict depression scores with mental QOL??? Or adherence??? 
 
+
+## Physical QOL Score
+
+```{r}
+# Relevel to change to the reference group to never user
+data_wide_2$hard_drugs_grp<- relevel(data_wide_2$hard_drugs_grp, ref = "Never User")
+
+# Relevel to change to the reference group to never user
+data_wide_2$ADH_HIGHVSLOW <- relevel(data_wide_2$ADH_HIGHVSLOW, ref = "Low Adherence")
+
+# Perform regression on Physical QOL change by hard drugs group, full model
+model_PHYS_full <- lm(AGG_PHYS_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + hard_drugs_grp*ADH_HIGHVSLOW, data = data_wide_2)
+
+# Exmamine the summary
+summary(model_PHYS_full)
+
+# Use interactions package to plot interaction
+cat_plot(model_PHYS_full, pred = hard_drugs_grp, modx = ADH_HIGHVSLOW, geom = "line", colors = "Pastel2")
+```
+
 :::
 
 _______
@@ -4006,18 +4574,6 @@ kable(colSums(is.na(data_2)), format = "html", col.names = "Missing") %>%
 
 "The transformations contained in this package and implemented in bestNormalize are reversible (i.e., 1-1), which allows for straight-forward interpretation and consistency. In other words, any analysis performed on the normalized data can be interpreted using the original unit (see application)." Cool.
 
-```{r}
-library(mice)
-
-imputed_data <- mice(mtcars, m = 5, method = 'pmm', maxit = 50, seed = 500)
-
-# Check the imputed data
-summary(imputed_data)
-
-complete_data <- complete(imputed_data, 1) # 1 refers to the first imputed dataset
-complete_data
-
-```
 
 variables he said he'd include BMI, educbase, smoking
 
@@ -4070,7 +4626,7 @@ summary_data <- data %>%
   summarize(Average_QOL = mean(AGG_MENT, na.rm = TRUE))
 
 # Create plot
-ggplot(summary_data, aes(x = years, y = Average_QOL, color = ADH)) +
+p <- ggplot(summary_data, aes(x = years, y = Average_QOL, color = ADH)) +
   geom_line(size = 1) +   # Line plot
   geom_point(size = 2) +  # Add points for clarity
   labs(title = "Average Mental QOL Score by Adherence Group Over 8 Years",
@@ -4079,6 +4635,8 @@ ggplot(summary_data, aes(x = years, y = Average_QOL, color = ADH)) +
        color = "Adherence Group") +
   theme_minimal() +       # Clean theme
   scale_color_brewer(palette = "Pastel2")  # Nice color palette for groups
+
+ggplotly(p)
 ```
 
 Success! This is very interesting. It appears that the 100% adherence group has the highest average mental QOL score across the 8 year study, followed by the 95-99% group, followed by the \<75% group and followed by (with some variation) the \<75% and 75-94% groups.
@@ -4152,6 +4710,126 @@ p <- ggplot(summary_data, aes(x = years, y = Average_VLOAD_log, color = ADH)) +
 
 ggplotly(p)
 ```
+
+
+```{r}
+data$ADH_HIGHLOW <- ifelse(data$ADH == "<75%" | data$ADH == "75-94%", 0, 1)
+
+data$ADH_HIGHLOW <- factor(data$ADH_HIGHLOW,
+                           levels = c(0,1),
+                           labels = c("Low Adherence", "High Adherence"))
+
+#### tRY WITH HIGH LOW ADH
+# Create log vload variable for original 8 year data set.
+data$VLOAD_log <- log(data$VLOAD)
+
+# Get means for each year
+summary_data <- data %>%
+  group_by(ADH_HIGHLOW, years) %>%
+  summarize(Average_VLOAD_log = mean(VLOAD_log, na.rm = TRUE))
+
+# Create plot
+p <- ggplot(summary_data, aes(x = years, y = Average_VLOAD_log, color = ADH_HIGHLOW)) +
+  geom_line(size = 1) +   # Line plot
+  geom_point(size = 2) +  # Add points for clarity
+  labs(title = "Average VLOAD log by Adherence Group Over 8 Years",
+       x = "Year",
+       y = "Average VLOAD log",
+       color = "Adherence Group") +
+  theme_minimal() +       # Clean theme
+  scale_color_brewer(palette = "Pastel2")  # Nice color palette for groups
+
+ggplotly(p)
+```
+
+
+```{r}
+data$perfADH <- ifelse(data$ADH == "100%", 1, 0)
+
+data$perfADH <- factor(data$perfADH,
+                           levels = c(0,1),
+                           labels = c("Low Adherence", "PERF Adherence"))
+
+#### tRY WITH HIGH LOW ADH
+# Create log vload variable for original 8 year data set.
+data$VLOAD_log <- log(data$VLOAD)
+
+# Get means for each year
+summary_data <- data %>%
+  group_by(perfADH, years) %>%
+  summarize(Average_VLOAD_log = mean(VLOAD_log, na.rm = TRUE))
+
+# Create plot
+p <- ggplot(summary_data, aes(x = years, y = Average_VLOAD_log, color = perfADH)) +
+  geom_line(size = 1) +   # Line plot
+  geom_point(size = 2) +  # Add points for clarity
+  labs(title = "Average VLOAD log by PERFECT Adherence Group Over 8 Years",
+       x = "Year",
+       y = "Average VLOAD log",
+       color = "Adherence Group") +
+  theme_minimal() +       # Clean theme
+  scale_color_brewer(palette = "Pastel2")  # Nice color palette for groups
+
+ggplotly(p)
+```
+
+
+doing same for leu3n
+
+```{r}
+#### tRY WITH HIGH LOW ADH
+
+# Get means for each year
+summary_data <- data %>%
+  group_by(ADH_HIGHLOW, years) %>%
+  summarize(Average_LEU3N = mean(LEU3N, na.rm = TRUE))
+
+# Create plot
+p <- ggplot(summary_data, aes(x = years, y = Average_LEU3N, color = ADH_HIGHLOW)) +
+  geom_line(size = 1) +   # Line plot
+  geom_point(size = 2) +  # Add points for clarity
+  labs(title = "Average LEU3N by Adherence Group Over 8 Years",
+       x = "Year",
+       y = "Average LEU3N log",
+       color = "Adherence Group") +
+  theme_minimal() +       # Clean theme
+  scale_color_brewer(palette = "Pastel2")  # Nice color palette for groups
+
+ggplotly(p)
+```
+
+
+
+```{r}
+data$ADH_HIGHLOW <- ifelse(data$ADH == "<75%" | data$ADH == "75-94%", 0, 1)
+
+data$ADH_HIGHLOW <- factor(data$ADH_HIGHLOW,
+                           levels = c(0,1),
+                           labels = c("Low Adherence", "High Adherence"))
+
+#### tRY WITH HIGH LOW ADH
+# Create log vload variable for original 8 year data set.
+data$VLOAD_log <- log(data$VLOAD)
+
+# Get means for each year
+summary_data <- data %>%
+  group_by(ADH_HIGHLOW, years) %>%
+  summarize(Average_VLOAD_log = mean(VLOAD_log, na.rm = TRUE))
+
+# Create plot
+p <- ggplot(summary_data, aes(x = years, y = Average_VLOAD_log, color = ADH_HIGHLOW)) +
+  geom_line(size = 1) +   # Line plot
+  geom_point(size = 2) +  # Add points for clarity
+  labs(title = "Average VLOAD log by Adherence Group Over 8 Years",
+       x = "Year",
+       y = "Average VLOAD log",
+       color = "Adherence Group") +
+  theme_minimal() +       # Clean theme
+  scale_color_brewer(palette = "Pastel2")  # Nice color palette for groups
+
+ggplotly(p)
+```
+
 
 That's very interesting. The groups with the highest vload log had the least adherence. There is an inverse relationship here.
 
@@ -4388,6 +5066,33 @@ ggplot(data_wide_2, aes(x = CESD_2, y = AGG_MENT_CHANGE, color = CESD_2)) +
 ```
 
 
-
 Should I calculate a depression change score???
+
+
+For log viral load change of beta -5.72 , do you do exp(-5.72 ) or exp(5.72) and take the negative?
+
+
+THis is another (and probably easier) way of doing between group comparisons. But I noticed that the estimates are slightly off and it makes me wonder at relying on a package.
+
+
+```{r}
+library(emmeans)
+
+# Perform a regression of the full model predicting log viral load change
+model_VLOAD_full <- lm(VLOAD_log_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + hard_drugs_grp * ADH_HIGHVSLOW + EDUC_COLLEGE, data = data_wide_2)
+
+emm <- emmeans(model_VLOAD_full, ~ hard_drugs_grp * ADH_HIGHVSLOW)
+
+contrast(emm, method = "pairwise")
+
+# Plot EMMs
+plot(emm, comparisons = TRUE)
+```
+
+
+# Other literature
+
+https://pmc.ncbi.nlm.nih.gov/articles/PMC9234842/
+
+This one shows that poor adherence is related to anxiety and depression, leading credence to why I want to examine the impact of hard drugs and adherence while controlling for depression.
 
