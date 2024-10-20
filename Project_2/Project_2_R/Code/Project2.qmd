@@ -5383,6 +5383,841 @@ Additionally, we have evidence that even at high adherence, current hard drug us
 :::
 
 :::
+
+
+# Evaluating Assumptions {#Assumptions}
+
+In order to evaluate the assumptions of our models, we will first gather the residuals for the final model predicting each outcome variable.
+
+```{r}
+# Calculate the jackknife residuals of the model predicting VLOAD
+jackknife_residuals_VLOAD <- rstudent(model_VLOAD_full1)
+
+# Calculate the jackknife residuals of the model predicting VLOAD sub analyss
+jackknife_residuals_VLOAD_sub <- rstudent(model_VLOAD_red1)
+
+# Calculate the jackknife residuals of the model predicting LEU3N
+jackknife_residuals_LEU3N <- rstudent(model_LEU3N_final1)
+
+# Calculate the jackknife residuals of the model predicting mental QOL 1
+jackknife_residuals_MENT_main <- rstudent(model_MENT_main1)
+
+# Calculate the jackknife residuals of the model predicting mental QOL 2
+jackknife_residuals_MENT_sub <- rstudent(model_MENT_sub1)
+
+# Calculate the jackknife residuals of the model predicting physical QOL
+jackknife_residuals_PHYS <- rstudent(model_PHYS_final1)
+
+```
+
+## Log Viral Load 
+
+::: panel-tabset
+
+## Linearity
+
+Since the mains IVs are categorical, we do not need to evaluate linearity.
+
+[Top of Tabset](#Assumptions)
+
+## Independence
+
+Independence can be assessed in part by the study design and how the data was collected. Based on the information provided by the PI, I will assume subjects are independent from each other.
+
+Additionally, we can examine a scatter plot of the model’s residuals against any time point variable (such as ID).
+
+```{r}
+
+data_VLOAD <- data_wide_2 %>%
+  dplyr::select(newid, VLOAD_log_CHANGE, hard_drugs_grp, ADH_HIGHVSLOW, EDUC_COLLEGE) %>%
+  filter(
+    !is.na(newid) & 
+    !is.na(VLOAD_log_CHANGE) &
+    !is.na(hard_drugs_grp) & 
+    !is.na(ADH_HIGHVSLOW) & 
+    !is.na(EDUC_COLLEGE) 
+  )
+
+# Create a scatterplot of jackknife residuals vs ID to assess independence 
+ggplot(data_VLOAD, aes(x = newid, y = jackknife_residuals_VLOAD)) + 
+  geom_point() +
+  geom_hline(yintercept = 0) +
+  labs(title = "Scatterplot of Jackknife Residuals vs ID for Log Viral Load",
+       x = "ID",
+       y = "Jackknife Residuals")
+```
+
+We may have some non-independence as seen by the further spread above 0.
+
+[Top of Tabset](#Assumptions)
+
+## Normality
+
+Here we will asses that, for any fixed value of X, Y has a normal distribution. We will do this using Q-Q plots and histograms of the residuals.
+
+```{r}
+# Make the Q-Q plots using the jackknife residuals
+qqnorm(jackknife_residuals_VLOAD, main = "Q-Q plots of Jackknife Residuals for Log Viral Load")
+qqline(jackknife_residuals_VLOAD, col = "black")
+
+# Create histogram of jackknife residuals
+hist(jackknife_residuals_VLOAD, main = "Histogram of Jackknife Residuals",
+     breaks = 24,
+     xlab = "Jackknife Residuals",
+     col = "lightblue",
+     border = "black")
+```
+
+We can also include the Shapiro-Wilk test of normality, which provides a p-value and allows us to numerically establish that the assumption of normality is met. If the p-value is < 0.05 you conclude that the assumption of normality is not met.
+
+```{r}
+shapiro.test(jackknife_residuals_VLOAD)
+```
+
+
+We have some non-normality as seen by the higher end of the Q-Q Plot.
+
+Looking at the histograms, the pattern is slightly bimodal, and may have some outliers at the high range.
+
+We also fail Shapiro-Wilk's test, indicating non-normality.
+
+[Top of Tabset](#Assumptions)
+
+## Equal Variances (Homoscedasticity)
+
+To assess homoscedasticity we examine the residual scatterplots by treatment group. The warning sign to look for here is if the variance differs greatly across groups.
+
+```{r}
+# Make the residual scatterplot using the jackknife residuals
+ggplot(data_VLOAD, aes(x = hard_drugs_grp, y = jackknife_residuals_VLOAD)) +
+  geom_boxplot() + 
+  labs(title = "Jackknife Residuals vs Hard Drug Use for Log Viral Load",
+       x = "Hard Drug Use Group",
+       y = "JackKnife Residuals")
+```
+```{r}
+# Make the residual scatterplot using the jackknife residuals
+ggplot(data_VLOAD, aes(x = ADH_HIGHVSLOW, y = jackknife_residuals_VLOAD)) +
+  geom_boxplot() + 
+  labs(title = "Jackknife Residuals vs Adherence for Log Viral Load",
+       x = "Adherence",
+       y = "JackKnife Residuals")
+```
+
+It appears that our hard drug use groups have unequal variances.
+
+Additionally, while it is not recommended to perform a statistical test to assess for equality of variances (because formal tests of equality of variance are not very powerful), we can still do this using Bartlett’s test. The null hypothesis of the Bartlett test is that the variances are equal. Thus failing to reject the null (p > 0.05) indicates that the data are consistent with the equal variance assumption.
+
+```{r}
+# Perform Bartlett's test to check for homogeneity of variances
+bartlett.test(VLOAD_log_CHANGE ~ hard_drugs_grp, data = data_VLOAD)
+```
+
+We also do not meet the assumption for equality of variances (p < 0.05). 
+
+This is likely because our patients were not randomly assigned into these groups!
+
+[Top of Tabset](#Assumptions)
+
+## Residuals Centered Around Zero
+
+To start, we can simply check that the mean of our residuals is close to 0.
+```{r}
+# Generate the mean of the jackknife residuals. Should be close to 0.
+mean(jackknife_residuals_VLOAD)
+
+# Generate vectors containing the fitted values vs jackknife residuals so we can plot them 
+fitted_values_VLOAD <- fitted(model_VLOAD_full1)
+
+ggplot(data_VLOAD, aes(x = fitted_values_VLOAD, y = jackknife_residuals_VLOAD)) + 
+  geom_point() +
+  geom_smooth(method = "lm")
+```
+
+We definitely have outliers present.
+
+The mean is close to 0.
+
+A more sophisticated approach is to plot the fitted values vs jackknife residuals. We can then compare the trend between groups to see if they are random. The fitted line should gravitate around 0 with no obvious trends.
+
+[Top of Tabset](#Assumptions)
+
+## Summary
+
+[Top of Tabset](#Assumptions)
+
+
+:::
+
+
+## CD4+ T Cell Count 
+
+
+
+::: panel-tabset
+
+## Linearity
+
+We do not need to assess linearity since our main PEVs are categorical.
+
+[Top of Tabset](#Assumptions)
+
+## Independence
+
+Independence can be assessed in part by the study design and how the data was collected. Based on the information provided by the PI, I will assume subjects are independent from each other.
+
+Additionally, we can examine a scatter plot of the model’s residuals against any time point variable (such as ID).
+
+```{r}
+# Filter to create same data set as in the final analysis
+data_LEU3N <- data_wide_2 %>%
+  dplyr::select(newid, LEU3N_CHANGE, hard_drugs_grp, ADH_HIGHVSLOW, FRP_2) %>%
+  filter(
+    !is.na(newid) & 
+    !is.na(LEU3N_CHANGE) &
+    !is.na(hard_drugs_grp) & 
+    !is.na(ADH_HIGHVSLOW) & 
+    !is.na(FRP_2) 
+  )
+
+# Create a scatterplot of jackknife residuals vs ID to assess independence 
+ggplot(data_LEU3N, aes(x = newid, y = jackknife_residuals_LEU3N)) + 
+  geom_point() +
+  geom_hline(yintercept = 0) +
+  labs(title = "Scatterplot of Jackknife Residuals vs ID for CD4+ T Cells",
+       x = "ID",
+       y = "Jackknife Residuals")
+```
+
+Looks like we have 4 outlier points beyound 3 residuals from 0, but otherwise looking good.
+
+
+[Top of Tabset](#Assumptions)
+
+## Normality
+
+Here we will asses that, for any fixed value of X, Y has a normal distribution. We will do this using Q-Q plots and histograms of the residuals.
+
+```{r}
+# Make the Q-Q plots using the jackknife residuals
+qqnorm(jackknife_residuals_LEU3N, main = "Q-Q plots of Jackknife Residuals for Log Viral Load")
+qqline(jackknife_residuals_LEU3N, col = "black")
+
+# Create histogram of jackknife residuals
+hist(jackknife_residuals_LEU3N, main = "Histogram of Jackknife Residuals",
+     breaks = 24,
+     xlab = "Jackknife Residuals",
+     col = "lightblue",
+     border = "black")
+```
+
+We look very normal here, sans some obvious outliers.
+
+```{r}
+shapiro.test(jackknife_residuals_LEU3N)
+```
+
+We have non-normality, but that is due to outliers.
+
+[Top of Tabset](#Assumptions)
+
+## Equal Variances (Homoscedasticity)
+
+To assess homoscedasticity we examine the residual scatterplots by treatment group. The warning sign to look for here is if the variance differs greatly across groups.
+
+```{r}
+# Make the residual scatterplot using the jackknife residuals
+ggplot(data_LEU3N, aes(x = hard_drugs_grp, y = jackknife_residuals_LEU3N)) +
+  geom_boxplot() + 
+  labs(title = "Jackknife Residuals vs Hard Drug Use for CD4+ T Cell Count Change",
+       x = "Hard Drug Use Group",
+       y = "JackKnife Residuals")
+
+# Make the residual scatterplot using the jackknife residuals
+ggplot(data_LEU3N, aes(x = ADH_HIGHVSLOW, y = jackknife_residuals_LEU3N)) +
+  geom_boxplot() + 
+  labs(title = "Jackknife Residuals vs Adherence for CD4+ T Cell Count Change",
+       x = "Hard Drug Use Group",
+       y = "JackKnife Residuals")
+```
+
+```{r}
+# Perform Bartlett's test to check for homogeneity of variances
+bartlett.test(LEU3N_CHANGE ~ hard_drugs_grp, data = data_LEU3N)
+```
+We can actually conclude that we have equality of variances! This will look even better once we get rid of outliers.
+
+[Top of Tabset](#Assumptions)
+
+## Residuals Centered Around Zero
+
+to start, we can simply check that the mean of our residuals is close to 0.
+
+```{r}
+# Generate the mean of the jackknife residuals. Should be close to 0.
+mean(jackknife_residuals_LEU3N)
+
+# Generate vectors containing the fitted values vs jackknife residuals so we can plot them 
+fitted_values_LEU3N <- fitted(model_LEU3N_final1)
+
+ggplot(data_LEU3N, aes(x = fitted_values_LEU3N, y = jackknife_residuals_LEU3N)) + 
+  geom_point() +
+  geom_smooth(method = "lm")
+
+```
+
+The mean is close to 0. The residuals look centered around 0 excepting the outliers.
+
+[Top of Tabset](#Assumptions)
+
+## Summary
+
+[Top of Tabset](#Assumptions)
+
+
+:::
+
+
+## Mental Quality of Life
+
+::: panel-tabset
+
+## Linearity
+
+We do not need to assess linearity since our main PEVs are categorical.
+
+
+[Top of Tabset](#Assumptions)
+
+## Independence
+
+Independence can be assessed in part by the study design and how the data was collected. Based on the information provided by the PI, I will assume subjects are independent from each other.
+
+Additionally, we can examine a scatter plot of the model’s residuals against any time point variable (such as ID).
+
+```{r}
+# Filter to create same data set as in the final analysis
+data_MENT_main <- data_wide_2 %>%
+  dplyr::select(newid, AGG_MENT_CHANGE, hard_drugs_grp, ADH_HIGHVSLOW) %>%
+  filter(
+    !is.na(newid) & 
+    !is.na(AGG_MENT_CHANGE) &
+    !is.na(hard_drugs_grp) & 
+    !is.na(ADH_HIGHVSLOW) 
+  )
+
+# Create a scatterplot of jackknife residuals vs ID to assess independence 
+ggplot(data_MENT_main, aes(x = newid, y = jackknife_residuals_MENT_main)) + 
+  geom_point() +
+  geom_hline(yintercept = 0) +
+  labs(title = "Scatterplot of Jackknife Residuals vs ID for Mental QOL Change",
+       x = "ID",
+       y = "Jackknife Residuals")
+```
+
+No clear pattern, we meet the assumption of independence.
+
+[Top of Tabset](#Assumptions)
+
+## Normality
+
+Here we will asses that, for any fixed value of X, Y has a normal distribution. We will do this using Q-Q plots and histograms of the residuals.
+
+```{r}
+# Make the Q-Q plots using the jackknife residuals
+qqnorm(jackknife_residuals_MENT_main, main = "Q-Q plots of Jackknife Residuals for Mental QOL Change")
+qqline(jackknife_residuals_MENT_main, col = "black")
+
+# Create histogram of jackknife residuals
+hist(jackknife_residuals_MENT_main, main = "Histogram of Jackknife Residuals",
+     breaks = 24,
+     xlab = "Jackknife Residuals",
+     col = "lightblue",
+     border = "black")
+```
+```{r}
+shapiro.test(jackknife_residuals_MENT_main)
+```
+
+We have non-normality. It does not look like outliers are driving this.
+
+[Top of Tabset](#Assumptions)
+
+## Equal Variances (Homoscedasticity)
+
+To assess homoscedasticity we examine the residual scatterplots by treatment group. The warning sign to look for here is if the variance differs greatly across groups.
+
+```{r}
+# Make the residual scatterplot using the jackknife residuals
+ggplot(data_MENT_main, aes(x = hard_drugs_grp, y = jackknife_residuals_MENT_main)) +
+  geom_boxplot() + 
+  labs(title = "Jackknife Residuals vs Hard Drug Use for Mental QOL Change",
+       x = "Hard Drug Use Group",
+       y = "JackKnife Residuals")
+```
+
+```{r}
+# Make the residual scatterplot using the jackknife residuals
+ggplot(data_MENT_main, aes(x = ADH_HIGHVSLOW, y = jackknife_residuals_MENT_main)) +
+  geom_boxplot() + 
+  labs(title = "Jackknife Residuals vs Adherence for Mental QOL Change",
+       x = "Hard Drug Use Group",
+       y = "JackKnife Residuals")
+```
+
+```{r}
+# Perform Bartlett's test to check for homogeneity of variances
+bartlett.test(AGG_MENT_CHANGE ~ hard_drugs_grp, data = data_MENT_main)
+```
+
+The test is significant, and we conclude we do not have homogeneity of variances.
+
+[Top of Tabset](#Assumptions)
+
+## Residuals Centered Around Zero
+
+```{r}
+# Generate the mean of the jackknife residuals. Should be close to 0.
+mean(jackknife_residuals_MENT_main)
+
+# Generate vectors containing the fitted values vs jackknife residuals so we can plot them 
+fitted_values_MENT_main <- fitted(model_MENT_main1)
+
+ggplot(data_MENT_main, aes(x = fitted_values_MENT_main, y = jackknife_residuals_MENT_main)) + 
+  geom_point() +
+  geom_smooth(method = "lm")
+```
+
+Our residuals look centered around 0, sans a few outlier points.
+
+[Top of Tabset](#Assumptions)
+
+## Summary
+
+We have non-normality and non homogeneity of variances.
+
+[Top of Tabset](#Assumptions)
+
+:::
+
+## Physical Quality of Life 
+
+::: panel-tabset
+
+## Linearity
+
+We do not need to assess linearity since our main PEVs are categorical.
+
+[Top of Tabset](#Assumptions)
+
+## Independence
+
+
+Independence can be assessed in part by the study design and how the data was collected. Based on the information provided by the PI, I will assume subjects are independent from each other.
+
+Additionally, we can examine a scatter plot of the model’s residuals against any time point variable (such as ID).
+
+```{r}
+# Filter to create same data set as in the final analysis
+data_PHYS <- data_wide_2 %>%
+  dplyr::select(newid, AGG_PHYS_CHANGE, hard_drugs_grp, ADH_HIGHVSLOW, FRP_2) %>%
+  filter(
+    !is.na(newid) & 
+    !is.na(AGG_PHYS_CHANGE) &
+    !is.na(hard_drugs_grp) & 
+    !is.na(ADH_HIGHVSLOW) &
+    !is.na(FRP_2)
+  )
+
+# Create a scatterplot of jackknife residuals vs ID to assess independence 
+ggplot(data_PHYS, aes(x = newid, y = jackknife_residuals_PHYS)) + 
+  geom_point() +
+  geom_hline(yintercept = 0) +
+  labs(title = "Scatterplot of Jackknife Residuals vs ID for Physical QOL Change",
+       x = "ID",
+       y = "Jackknife Residuals")
+```
+
+Independence looks pretty good.
+
+[Top of Tabset](#Assumptions)
+
+## Normality
+
+Here we will asses that, for any fixed value of X, Y has a normal distribution. We will do this using Q-Q plots and histograms of the residuals.
+
+```{r}
+
+# Make the Q-Q plots using the jackknife residuals
+qqnorm(jackknife_residuals_PHYS, main = "Q-Q plots of Jackknife Residuals for Mental QOL Change")
+qqline(jackknife_residuals_PHYS, col = "black")
+
+# Create histogram of jackknife residuals
+hist(jackknife_residuals_PHYS, main = "Histogram of Jackknife Residuals",
+     breaks = 24,
+     xlab = "Jackknife Residuals",
+     col = "lightblue",
+     border = "black")
+
+shapiro.test(jackknife_residuals_PHYS)
+
+```
+
+Physical QOL looks mostly normal. There may be 1 outier at the upper and lower bound.
+
+Shapiro Wilk's does say we fail normality however.
+
+[Top of Tabset](#Assumptions)
+
+## Equal Variances (Homoscedasticity)
+
+To assess homoscedasticity we examine the residual scatterplots by treatment group. The warning sign to look for here is if the variance differs greatly across groups.
+
+```{r}
+# Make the residual scatterplot using the jackknife residuals
+ggplot(data_PHYS, aes(x = hard_drugs_grp, y = jackknife_residuals_PHYS)) +
+  geom_boxplot() + 
+  labs(title = "Jackknife Residuals vs Hard Drug Use for Physical QOL Change",
+       x = "Hard Drug Use Group",
+       y = "JackKnife Residuals")
+
+# Perform Bartlett's test to check for homogeneity of variances
+bartlett.test(AGG_PHYS_CHANGE ~ hard_drugs_grp, data = data_PHYS)
+```
+
+We do have homogeneity of variances for physical QOL.
+
+[Top of Tabset](#Assumptions)
+
+## Residuals Centered Around Zero
+
+```{r}
+# Generate the mean of the jackknife residuals. Should be close to 0.
+mean(jackknife_residuals_PHYS)
+
+# Generate vectors containing the fitted values vs jackknife residuals so we can plot them 
+fitted_values_PHYS <- fitted(model_PHYS_final1)
+
+ggplot(data_PHYS, aes(x = fitted_values_PHYS, y = jackknife_residuals_PHYS)) + 
+  geom_point() +
+  geom_smooth(method = "lm")
+```
+
+
+[Top of Tabset](#Assumptions)
+
+## Summary
+
+The assumptions for CD4+ T cell count are almost met. Likely once removing those 4 or so outliers they would be perfect.
+
+[Top of Tabset](#Assumptions)
+
+To assess homoscedasticity we examine the residual scatterplots by treatment group. The warning sign to look for here is if the variance differs greatly across groups.
+
+```{r}
+# Make the residual scatterplot using the jackknife residuals
+ggplot(data_PHYS, aes(x = hard_drugs_grp, y = jackknife_residuals_PHYS)) +
+  geom_boxplot() + 
+  labs(title = "Jackknife Residuals vs Hard Drug Use for Physical QOL Change",
+       x = "Hard Drug Use Group",
+       y = "JackKnife Residuals")
+```
+
+```{r}
+# Make the residual scatterplot using the jackknife residuals
+ggplot(data_PHYS, aes(x = ADH_HIGHVSLOW, y = jackknife_residuals_PHYS)) +
+  geom_boxplot() + 
+  labs(title = "Jackknife Residuals vs Adherence for Physical QOL Change",
+       x = "Hard Drug Use Group",
+       y = "JackKnife Residuals")
+```
+
+```{r}
+# Perform Bartlett's test to check for homogeneity of variances
+bartlett.test(AGG_PHYS_CHANGE ~ hard_drugs_grp, data = data_PHYS)
+```
+
+We do have homogeneity of variances.
+
+## Residuals Centered Around Zero
+
+```{r}
+# Generate the mean of the jackknife residuals. Should be close to 0.
+mean(jackknife_residuals_PHYS)
+
+# Generate vectors containing the fitted values vs jackknife residuals so we can plot them 
+fitted_values_PHYS <- fitted(model_PHYS_final1)
+
+ggplot(data_PHYS, aes(x = fitted_values_PHYS, y = jackknife_residuals_PHYS)) + 
+  geom_point() +
+  geom_smooth(method = "lm")
+```
+
+The residuals appear centered around zero, for the most part.
+
+## Summary
+
+We do not meet the assumption of normality for physical QOL.
+
+:::
+
+# Outliers
+
+Here we will investigate outliers using the jackknife residuals to assess leverage and influence.
+
+Let’s generate a table so we can handily compare: ID, jackknife residual, leverage (diagonal hat), DFFITS, and DFBETAs for each participant.
+
+::: panel-tabset
+
+## Log Viral Load
+
+```{r}
+# Get leverage values (hat values)
+hat_values_VLOAD <- hatvalues(model_VLOAD_full1)
+
+# Get Cook's D values
+cooks_d_VLOAD <- cooks.distance(model_VLOAD_full1)
+
+# Get the DFFITS values
+dffits_VLOAD <- dffits(model_VLOAD_full1)
+
+# Get the DFBETAS
+dfbetas_VLOAD <- dfbetas(model_VLOAD_full1)
+
+# Make a table with ID and all diagnostic values
+diagnostics_VLOAD <- data.frame(id = data_VLOAD$newid, jackknife_residuals = jackknife_residuals_VLOAD, leverage = hat_values_VLOAD, cooks_D = cooks_d_VLOAD, dffits = dffits_VLOAD, dfbetas = dfbetas_VLOAD)
+
+pretty_print(head(diagnostics_VLOAD))
+```
+
+Plot to assess influence and leverage.
+
+```{r}
+# Influence plot
+influencePlot(model_VLOAD_full1, main = "Influence Plot",
+              sub = "Circle size is proportional to Cook's Distance")
+
+
+# infIndexPlot gives us a series of plots that we need to investigate influence points
+infIndexPlot(model_VLOAD_full1)
+```
+
+We have two immediately obvious values for participants 319 and 356. Let's examine them.
+
+```{r}
+diagnostics_VLOAD %>%
+  arrange(-cooks_D) %>%
+  head()
+```
+
+The values for 319 and 356 are actually all comparable to 11 and 15, I think they are just so far off to the side like that because otherwise you wouldn't be able to see anything in all those overlapping circles.
+
+Let's remove them and replot, and I bet 11 and 15 will flag as outliers.
+
+```{r}
+# Remove outlier patients
+data_VLOAD_outliers <- data_VLOAD %>%
+  filter(!newid %in% c(11, 15, 319, 356))
+
+# Re-run the model
+# Perform the regression on log viral load change with the full model
+model_VLOAD_full1 <- lm(VLOAD_log_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + hard_drugs_grp*ADH_HIGHVSLOW + EDUC_COLLEGE, data = data_VLOAD_outliers)
+
+# Influence plot
+influencePlot(model_VLOAD_full1, main = "Influence Plot",
+              sub = "Circle size is proportional to Cook's Distance")
+
+
+# infIndexPlot gives us a series of plots that we need to investigate influence points
+infIndexPlot(model_VLOAD_full1)
+```
+
+
+Yup, 11 and 15 are now flagging as outliers, which makes sense because they had basically exactly the same values of who we just deleted.
+
+That looks as good as it gets without removing too many observations.
+```{r}
+summary(model_VLOAD_full1)
+
+# Remove outlier patients
+diagnostics_VLOAD <- diagnostics_VLOAD %>%
+  filter(!id %in% c(11, 15, 319, 356))
+
+diagnostics_VLOAD %>%
+  arrange(-cooks_D) %>%
+  head()
+```
+
+At this point it appears that we have removed too many data points to be able to run our main interaction of interest.
+
+This will have to be noted as a limitation in this analysis!
+
+## CD4 + T Cell Count
+
+```{r}
+# Influence plot
+influencePlot(model_LEU3N_final1, main = "Influence Plot",
+              sub = "Circle size is proportional to Cook's Distance")
+
+
+# infIndexPlot gives us a series of plots that we need to investigate influence points
+infIndexPlot(model_LEU3N_final1)
+```
+
+Remove 63, 255, and 88, and 301 (residuals > +- 3)
+
+```{r}
+# Remove outlier patients
+data_LEU3N_outliers <- data_LEU3N %>%
+  filter(!newid %in% c(63, 255, 301, 88))
+
+# Re-run the model
+# Perform the regression on log viral load change with the full model
+model_LEU3N_final1 <- lm(LEU3N_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + hard_drugs_grp*ADH_HIGHVSLOW + FRP_2, data = data_LEU3N_outliers)
+
+# Influence plot
+influencePlot(model_LEU3N_final1, main = "Influence Plot",
+              sub = "Circle size is proportional to Cook's Distance")
+
+# infIndexPlot gives us a series of plots that we need to investigate influence points
+infIndexPlot(model_LEU3N_final1)
+
+summary(model_LEU3N_final1)
+```
+
+```{r}
+# Calculate the jackknife residuals of the model predicting LEU3N
+jackknife_residuals_LEU3N <- rstudent(model_LEU3N_final1)
+
+# Make the Q-Q plots using the jackknife residuals
+qqnorm(jackknife_residuals_LEU3N, main = "Q-Q plots of Jackknife Residuals for Log Viral Load")
+qqline(jackknife_residuals_LEU3N, col = "black")
+```
+
+The final model for `LEU3N_CHANGE` now meets all assumptions! And it doesn't look like any of our p-values changed.
+
+## Mental QOL Change
+
+```{r}
+# Influence plot
+influencePlot(model_MENT_main1, main = "Influence Plot",
+              sub = "Circle size is proportional to Cook's Distance")
+
+
+# infIndexPlot gives us a series of plots that we need to investigate influence points
+infIndexPlot(model_MENT_main1)
+```
+
+11 and 15 are flagging as outliers again. Let's remove them.
+
+```{r}
+# Remove outlier patients
+data_MENT_outliers <- data_MENT_main %>%
+  filter(!newid %in% c(11, 15, 319, 356))
+
+data_MENT_outliers %>% arrange(AGG_MENT_CHANGE)
+
+# Re-run the model
+# Perform the regression on log viral load change with the full model
+model_MENT_main1 <- lm(AGG_MENT_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + hard_drugs_grp*ADH_HIGHVSLOW, data = data_MENT_outliers)
+
+# Influence plot
+influencePlot(model_MENT_main1, main = "Influence Plot",
+              sub = "Circle size is proportional to Cook's Distance")
+
+# infIndexPlot gives us a series of plots that we need to investigate influence points
+infIndexPlot(model_MENT_main1)
+
+summary(model_MENT_main1)
+```
+
+```{r}
+# Make the Q-Q plots using the jackknife residuals
+qqnorm(jackknife_residuals_MENT_main, main = "Q-Q plots of Jackknife Residuals for Mental QOL Change")
+qqline(jackknife_residuals_MENT_main, col = "black")
+
+# Create histogram of jackknife residuals
+hist(jackknife_residuals_MENT_main, main = "Histogram of Jackknife Residuals",
+     breaks = 24,
+     xlab = "Jackknife Residuals",
+     col = "lightblue",
+     border = "black")
+```
+
+This doesn't appear to do much for our assumptions for this model however.
+
+It doesn't appear that outliers are driving this shape.
+
+## Physical Quality of Life
+
+```{r}
+# Influence plot
+influencePlot(model_PHYS_final1, main = "Influence Plot",
+              sub = "Circle size is proportional to Cook's Distance")
+
+# infIndexPlot gives us a series of plots that we need to investigate influence points
+infIndexPlot(model_PHYS_final1)
+```
+
+Same high leverage points we saw with mental QOL.
+
+```{r}
+# Remove outlier patients
+data_PHYS_outliers <- data_PHYS %>%
+  filter(!newid %in% c(11, 15, 319, 356))
+
+# Perform the regression on log viral load change with the full model
+model_PHYS_final1 <- lm(AGG_PHYS_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + hard_drugs_grp*ADH_HIGHVSLOW + FRP_2, data = data_PHYS_outliers)
+
+# Influence plot
+influencePlot(model_PHYS_final1, main = "Influence Plot",
+              sub = "Circle size is proportional to Cook's Distance")
+
+# infIndexPlot gives us a series of plots that we need to investigate influence points
+infIndexPlot(model_PHYS_final1)
+```
+
+```{r}
+# Get leverage values (hat values)
+hat_values_PHYS <- hatvalues(model_PHYS_final1)
+
+# Make a table with ID and all diagnostic values
+diagnostics_PHYS <- data.frame(id = data_PHYS_outliers$newid, leverage = hat_values_PHYS)
+
+diagnostics_PHYS %>% arrange(-leverage)
+```
+
+```{r}
+# Perform the regression on log viral load change with the full model
+model_PHYS_final1 <- lm(AGG_PHYS_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + hard_drugs_grp*ADH_HIGHVSLOW + FRP_2, data = data_PHYS_outliers)
+
+# Influence plot
+influencePlot(model_PHYS_final1, main = "Influence Plot",
+              sub = "Circle size is proportional to Cook's Distance")
+
+# infIndexPlot gives us a series of plots that we need to investigate influence points
+infIndexPlot(model_PHYS_final1)
+```
+
+```{r}
+# Make the Q-Q plots using the jackknife residuals
+qqnorm(jackknife_residuals_PHYS, main = "Q-Q plots of Jackknife Residuals for Physical QOL Change")
+qqline(jackknife_residuals_PHYS, col = "black")
+
+# Create histogram of jackknife residuals
+hist(jackknife_residuals_PHYS, main = "Histogram of Jackknife Residuals",
+     breaks = 24,
+     xlab = "Jackknife Residuals",
+     col = "lightblue",
+     border = "black")
+```
+
+The data looks slightly more normally distributed
+
+:::
+
+
+
 # CONSORT Flow Chart
 
 Here is where I will go back and add details for how many participants we removed at each stage.
