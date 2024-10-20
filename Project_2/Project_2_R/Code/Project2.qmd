@@ -78,6 +78,7 @@ library(corrplot) # Used to make the correlation matrix
 library(corrtable) # used to make the table for the correlation matrix
 library(interactions) # Easy plotting of interactions
 library(car) # Used to get VIFs
+library(olsrr) # used for backwards elimination model.
 ```
 
 Then we import the data set.
@@ -289,7 +290,7 @@ data_wide_2 <- data_wide_2 %>% select(-RACE_1, -RACE_2, -EDUCBAS_1, -EDUCBAS_2, 
 
 Now that our data sets are adequately prepared, we can move on to performing our data checks to ensure fidelity of the data set.
 
-# Missingness
+# Missingness I
 
 First we begin by examining missingness in our data set
 
@@ -1700,8 +1701,9 @@ COME BACK TO THIS BECAUSE i THINK I NEED TO COME BACK AND DELETE OUTLIERS.
 
 <a href="#Clean_IVs">Back to top of tabset</a>
 :::
+:::
 
-## Missingness Redux
+# Missingness II
 
 We first examined missingness before performing data cleaning just to get a sense of the data set.
 
@@ -2973,31 +2975,54 @@ The overall model is significant (F~(1,530)~= 4.231, p = 0.0401). On average, th
 
 ## CESD Depression
 
-Is depression related to CD4+ T cell count? Is it related to adherence? Do we have to control for it?
+Depression was lightly correlated to CD4+ T Cell Count based on the correlation matrix.
 
+Let's examine that relationship.
 
-## Summary 
 ```{r}
+# Create a scatterplot of CD4+ T Cell Count change by BMI at baseline
+ggplot(data_wide_2, aes(x = CESD_0, y = LEU3N_CHANGE, color = CESD_2)) + 
+  geom_point() +
+  theme_minimal() +
+  labs(title = "CD4+ T Cell Count Change by Depression at Year Two",
+       y = "CD4+ T Cell Count Change",
+       x = "Depression at Year Two") + 
+  scale_fill_brewer(palette = "Pastel2")
+```
+
+```{r}
+# Perform a linear regression predicting CD4+ T Cell count change by depressions core
 model <- lm(LEU3N_CHANGE ~ CESD_2, data = data_wide_2)
 
+# Examine model summary
 summary(model)
 ```
-
-Oh shoot, it is! Need to go back and re-include to final model.
-
-
-Is depression related to adherence?
 
 ```{r}
-model <- lm(CESD_2 ~ ADH_HIGHVSLOW, data = data_wide_2)
-summary(model)
+# Create a scatterplot of CD4+ T Cell Count change by BMI at baseline
+ggplot(data_wide_2, aes(x = CESD_0, y = LEU3N_CHANGE, color = CESD_2)) + 
+  geom_point() +
+  geom_smooth(method = "lm") +
+  theme_minimal() +
+  labs(title = "CD4+ T Cell Count Change by Depression at Year Two",
+       y = "CD4+ T Cell Count Change",
+       x = "Depression at Year Two") + 
+  scale_fill_brewer(palette = "Pastel2")
 ```
 
-Very significant, but a low r squared so I think we include it as a potential confounder, instead of worrying about VIF. Also should be able to run a model and get VIF output
+The overall model is significant (F~(1, 525)~= 4.23, p = 0.0403). On average, every 1 point increase in CES-Depression score was associated with a 1.53 cell decrease in CD4+ T Cell count.
+
+The association is very weak (R-squared = 0.0080), but we can still include it in the final model. It makes sense that people who are more depressed have fewer white blood cells, and we may as well account for this in the final model.
+
+`CESD_2` is will be included as a precision variable in the model predicting `LEU3N_CHANGE`.
 
 [Top of Tabset](#EDA)
 
-Based on the results of the exploratory data analysis, the variables that will be included for consideration in the final model for `LEU3N_CHANGE` are `hard_drugs_grp`, `ADH_HIGHLOW`, `BMI_2`, `FRP_2`, and `EDUC_COLLEGE`
+## Summary 
+
+Based on the results of the exploratory data analysis, the variables that will be included for consideration in the final model for `LEU3N_CHANGE` are `hard_drugs_grp`, `ADH_HIGHLOW`, `BMI_2`, `FRP_2`, and `EDUC_COLLEGE`, and `CESD_2`.
+
+[Top of Tabset](#EDA)
 :::
 
 ## Aggregate Mental QOL Change
@@ -3770,7 +3795,7 @@ For those with high adherence to the protocol, there was no difference in log vi
 
 #### Adherence
 
-The relationship between adherence to the treatment regiment and change in log viral load over 2 yeras differed by hard drug use.
+The relationship between adherence to the treatment regiment and change in log viral load over 2 years differed by hard drug use.
 
 ##### Adherence for Current Hard Drug Users
 
@@ -4033,32 +4058,6 @@ ggplot(data_no_na, aes(x = ADH_HIGHVSLOW, y = VLOAD_log_CHANGE, fill = ADH_HIGHV
 ```
 And here we can see those with high adherence had a higher decrease in log viral load over 2 years compared to those with low adherence.
 :::
-
-## Backwards Selection
-
-This is me testing backwards selection
-
-Let's say the full model has the interaction term between hard drug use and adherence high low
-
-```{r}
-# Perform full model with interaction term
-model_log_VLOAD_full <- lm(VLOAD_log_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + EDUC_COLLEGE + hard_drugs_grp*ADH_HIGHVSLOW, data = data_wide_2)
-
-# Perform backwards selection model
-step_model <- step(model_log_VLOAD_full, direction = "backward")
-
-summary(step_model)
-```
-
-[Top of Tabset](#Data_Analysis)
-
-## Test
-
-```{r}
-
-```
-
-
 :::
 
 ## CD4+ T Cell Count Change
@@ -4069,7 +4068,13 @@ The second outcome variable of interest was change in CD4+ T Cell Count over the
 
 ## Full Model 
 
-The candidate variables for inclusion in our model predicting `LEU3N_CHANGE` were `hard_drugs_grp`, `ADH_HIGHLOW`, `BMI_2`, `FRP_2`, and `EDUC_COLLEGE`. The researchers are interested in if differences in treatment response between the drug use groups can be explained by differences in adherence to the HAART regimen, so we will also include an interaction term between hard drug use group and adherence.
+::: panel-tabset
+
+## Model Selection
+
+The candidate variables for inclusion in our model predicting `LEU3N_CHANGE` were `hard_drugs_grp`, `ADH_HIGHLOW`, `BMI_2`, `FRP_2`, and `EDUC_COLLEGE`. 
+
+The researchers are interested in if differences in treatment response between the drug use groups can be explained by differences in adherence to the HAART regimen, so we will also include an interaction term between hard drug use group and adherence.
 
 We begin by examining the full model with all these variables included.
 
@@ -4081,13 +4086,14 @@ data_wide_2$hard_drugs_grp<- relevel(data_wide_2$hard_drugs_grp, ref = "Never Us
 data_wide_2$ADH_HIGHVSLOW <- relevel(data_wide_2$ADH_HIGHVSLOW, ref = "Low Adherence")
 
 # Perform regression on CD4+ T Cell count change by hard drugs group, include adherence as confounder, and BMI, frailty related phenotype, and college education as precision variables.
-model_LEU3N_full <- lm(LEU3N_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + BMI_2 + FRP_2 + EDUC_COLLEGE + hard_drugs_grp*ADH_HIGHVSLOW, data = data_wide_2)
+model_LEU3N_full1 <- lm(LEU3N_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + BMI_2 + FRP_2 + EDUC_COLLEGE + CESD_2 + hard_drugs_grp*ADH_HIGHVSLOW, data = data_wide_2)
 
 # Exmamine the summary
-summary(model_LEU3N_full)
+summary(model_LEU3N_full1)
 ```
+We get an NA for the interaction term. This is likely because we dropped the n=6 patients that were previous hard drug users with low adherence, making the interaction impossible to make. Indeed we can see we only have 7, 453 degrees of freedom.
 
-BMI is significant, but has 10% missing values. Let's try running without it. (it's also correlated to college education, so we can kind if capture it with that variable).
+BMI is significant, but has 10% missing values. Let's try running the regression without it so we can examine that interaction term, which is the main research question. (it's also correlated to college education, so we can kind of capture it with that variable).
 
 ```{r}
 # Relevel to change to the reference group to never user
@@ -4097,16 +4103,217 @@ data_wide_2$hard_drugs_grp<- relevel(data_wide_2$hard_drugs_grp, ref = "Current 
 data_wide_2$ADH_HIGHVSLOW <- relevel(data_wide_2$ADH_HIGHVSLOW, ref = "Low Adherence")
 
 # Perform regression on CD4+ T Cell count change by hard drugs group, include adherence as confounder, and BMI, frailty related phenotype, and college education as precision variables.
-model_LEU3N_full <- lm(LEU3N_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + FRP_2 + EDUC_COLLEGE + hard_drugs_grp*ADH_HIGHVSLOW, data = data_wide_2)
+model_LEU3N_red1 <- lm(LEU3N_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + FRP_2 + EDUC_COLLEGE + CESD_2 + hard_drugs_grp*ADH_HIGHVSLOW, data = data_wide_2)
 
 # Exmamine the summary
-summary(model_LEU3N_full)
+summary(model_LEU3N_red1)
+```
 
-# Use interactions package to plot interaction
-cat_plot(model_LEU3N_full, pred = hard_drugs_grp, modx = ADH_HIGHVSLOW, geom = "line", colors = "Pastel2")
+### Backwards Elimination
+
+We will perform model selection using backwards elimination and BIC to select the most parsimonious model.
+
+A delta BIC of >2 indicates a difference in model performance.
+
+```{r}
+# Perform backward elimination regression selection based on BIC 
+ols_step_backward_sbc(model_LEU3N_red1, include = c("hard_drugs_grp", "ADH_HIGHVSLOW"))
+```
+As predicted, the most parsimonious model is with `CESD_2` and `EDUC_COLLEGE` removed, and only including `FRP_2` as a precision variable.
+
+[Top of Tabset](#Data_Analysis)
+
+## Analysis
+
+Let's investigate the key relationships in the final model for `LEU3N_CHANGE` as determined through backwards selection.
+
+First let's look at the impact of hard drug use on CD4+ T Cell change, at low adherence.
+
+```{r}
+# Relevel to change to the reference group to never user
+data_wide_2$hard_drugs_grp<- relevel(data_wide_2$hard_drugs_grp, ref = "Never User")
+
+# Relevel to change to the reference group to never user
+data_wide_2$ADH_HIGHVSLOW <- relevel(data_wide_2$ADH_HIGHVSLOW, ref = "Low Adherence")
+
+# Perform regression on CD4+ T Cell count change by hard drugs group with covariates as determined by backward elimination
+model_LEU3N_final1 <- lm(LEU3N_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + FRP_2 + hard_drugs_grp*ADH_HIGHVSLOW, data = data_wide_2)
+
+# Examine the summary
+summary(model_LEU3N_final1)
 ```
 
 ```{r}
+# Print useful model parameters
+model_results(model_LEU3N_final1)
+```
+
+The overall model is highly significant (F~(6,512)~= 8.42, p < 0.00001).
+
+At low adherence, previous hard drug users have a higher CD4+ T Cell count than never hard drug users (p-adjusted = 0.043), but current hard drugs users did not differ from never drug users (p-adjusted = 0.40).
+
+Additionally, for never hard drug users, those with high adherence have a higher CD4+ T Cell count than those with low adherence (p = 0.011895)
+
+Now let's compare hard drug usage for those with high adherence.
+
+```{r}
+# Relevel to change to the reference group to never user
+data_wide_2$hard_drugs_grp<- relevel(data_wide_2$hard_drugs_grp, ref = "Never User")
+
+# Relevel to change to the reference group to never user
+data_wide_2$ADH_HIGHVSLOW <- relevel(data_wide_2$ADH_HIGHVSLOW, ref = "High Adherence")
+
+# Perform regression on CD4+ T Cell count change by hard drugs group with covariates as determined by backward elimination
+model_LEU3N_final2 <- lm(LEU3N_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + FRP_2 + hard_drugs_grp*ADH_HIGHVSLOW, data = data_wide_2)
+
+# Examine the summary
+summary(model_LEU3N_final2)
+```
+
+
+```{r}
+# Print useful model parameters
+model_results(model_LEU3N_final2)
+```
+
+For those with high adherence, previous hard drug users had a lower CD4+ T Cell count (p-adjusted = 0.0032), and current hard drug users had a lower CD4+ T Cell (p-adjusted < 0.0001) count compared to never hard users.
+
+Now we make the same comparisons with previous hard drug users as the baseline.
+
+```{r}
+# Relevel to change to the reference group to never user
+data_wide_2$hard_drugs_grp<- relevel(data_wide_2$hard_drugs_grp, ref = "Previous User")
+
+# Relevel to change to the reference group to never user
+data_wide_2$ADH_HIGHVSLOW <- relevel(data_wide_2$ADH_HIGHVSLOW, ref = "Low Adherence")
+
+# Perform regression on CD4+ T Cell count change by hard drugs group with covariates as determined by backward elimination
+model_LEU3N_final2 <- lm(LEU3N_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + FRP_2 + hard_drugs_grp*ADH_HIGHVSLOW, data = data_wide_2)
+
+# Examine the summary
+summary(model_LEU3N_final2)
+```
+
+```{r}
+# Print useful model parameters
+model_results(model_LEU3N_final2)
+```
+
+At low adherence, current hard drug users had a CD4+ T Cell count compared to previous hard drug users (p-adjusted = 0.011).
+
+Additionally, for previous hard drug users, those with high adherence had a greater decrease in CD4+ T Cell count compared to those with low adherence (p = 0.0073).
+
+Now let's change the reference level to compare high adherence previous vs current drug users.
+
+```{r}
+# Relevel to change to the reference group to never user
+data_wide_2$hard_drugs_grp <- relevel(data_wide_2$hard_drugs_grp, ref = "Previous User")
+
+# Relevel to change to the reference group to never user
+data_wide_2$ADH_HIGHVSLOW <- relevel(data_wide_2$ADH_HIGHVSLOW, ref = "High Adherence")
+
+# Perform regression on CD4+ T Cell count change by hard drugs group with covariates as determined by backward elimination
+model_LEU3N_final3 <- lm(LEU3N_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + FRP_2 + hard_drugs_grp*ADH_HIGHVSLOW, data = data_wide_2)
+
+# Examine the summary
+summary(model_LEU3N_final3)
+```
+
+```{r}
+# Print useful model parameters
+model_results(model_LEU3N_final3)
+```
+
+
+
+For those with high adherence, previous vs current hard drug users did not differ in CD4+ T Cell Count (p-adjusted= 1.00).
+
+Finally let's compare the impact of adherence for hard drug users.
+
+```{r}
+# Relevel to change to the reference group to never user
+data_wide_2$hard_drugs_grp <- relevel(data_wide_2$hard_drugs_grp, ref = "Current User")
+
+# Relevel to change to the reference group to never user
+data_wide_2$ADH_HIGHVSLOW <- relevel(data_wide_2$ADH_HIGHVSLOW, ref = "Low Adherence")
+
+# Perform regression on CD4+ T Cell count change by hard drugs group with covariates as determined by backward elimination
+model_LEU3N_final4 <- lm(LEU3N_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + FRP_2 + hard_drugs_grp*ADH_HIGHVSLOW, data = data_wide_2)
+
+# Examine the summary
+summary(model_LEU3N_final4)
+```
+
+```{r}
+# Print useful model parameters
+model_results(model_LEU3N_final4)
+```
+
+For current hard drug users, those with high adherence did not differ significantly compared to those with low adherence (p = 0.22)
+
+`FRP_2` was a significant predictor for `LEU3N_CHANGE`, while controlling for hard drug use and adherence to the treatment regiment (t = -3.21, p = 0.0014). On average, those with a Frailty Related Phenotype had a decrease in CD4+ T cells that was 113.63 cells greater than those without a Frailty Related Phenotype (95% CI: 44.12 to  183.13 cells).
+
+[Top of Tabset](#Data_Analysis)
+
+## Interpretation
+
+### Overall Model
+
+There were significant differences in change in CD4+ T Cell count over 2 years based on hard drug usage and adherence to the treatment regiment, while controlling for Frailty Related Phenotype (F~(6,512)~ = 8.42, p < 0.00001). 
+
+#### Hard Drug Use
+
+The relationship between hard drug use and change in CD4+ T Cell count over 2 years depended on adherence to the treatment regiment.
+
+##### Hard Drug Use at Low Adherence
+
+For those with low adherence to the treatment regiment, previous hard drug users had on average a 197.90 cells greater *increase* in CD4+ T Cell count compared to never hard drug users (t = 2.46, p-adjusted =  0.043,
+95%: 39.77	to 356.03). Current hard drug users did not differ from never hard drug users (t = -1.50, p-adjusted = 0.40, 95% CI: -332.74 to 44.54). Additionally, current hard drug users had on average a -342.00 cells greater decrease in CD4+ T Cell count compared to previous hard drug users (t = -2.922, p-adjusted = 0.011, 95% CI: -571.97 to -112.02).
+
+##### Hard Drug Use at High Adherence
+
+For those with high adherence to the treatment regiment, previous hard drug users had on average a 99.23 cells greater decrease (t = -3.29, p-adjusted = 0.0032, 95% CI: -158.4533 to -40.00727), and current hard drug users had on average a 111.16	cells greater decrease (t = -4.27, p-adjusted < 0.0001, 95% CI: -162.31	to -60.00) compared to never hard drug users. in CD4+ T cell count compared never hard drug users. Current hard drug users did not differ from previous hard drug users on change in CD4+ T Cell count over 2 years (t = -0.32, p-adjusted= 1.00, 95% CI: -85.79	to 61.93).
+
+### Adherence
+
+The relationship between adherence to the treatment regiment and change in CD4+ T Cell count over 2 years differed by hard drug use.
+
+#### Adherence for Current Hard Drug Users
+
+For current hard drug users, those with high adherence did not differ significantly in average change in CD4+ T Cells over two years compared to those with low adherence (t = 1.24, p-adjusted = 0.22, 95% CI: -68.51 to 300.57). 
+
+### Adherence for Previous Hard Drug Users
+
+For previous hard drug users, those with high adherence had on average a 214.03 cells greater decrease in CD4+ T Cell count compared to those with low adherence (t = -2.70, p = 0.0073, 95% CI: -370.05 to -58.020).	
+
+### Adherence for Never Hard Drug Users
+
+For never drug users, those with high adherence had on average a 83.09 cells greater decrease in CD4+ T Cell count compared to those with low adherence (t = 2.52, p = 0.0119, 95% CI: 18.42283	147.76529).
+
+### Additional Interaction Comparisons
+
+There are additional comparisons we can make in the interaction between hard drug usage and adherence, but they are of little clinical relevance (e.g. comparing current hard drug users with low adherence to never hard drug users with high adherence). 
+### Frailty Related Phenotype
+
+Frailty Related Phenotype was a significant predictor for change in CD4+ T Cell count over 2 years, while controlling for hard drug use and adherence to the treatment regiment (t = -3.21, p = 0.0014). On average, those with a Frailty Related Phenotype had a 113.63 cells greater decrease in CD4+ T Cell count than those without a Frailty Related Phenotype (95% CI: 44.12 to  183.13 cells).
+
+[Top of Tabset](#Data_Analysis)
+
+## Visualizing the Interaction
+
+The below plot is useful in interpreting the interaction
+
+```{r}
+# Use interactions package to plot interaction
+cat_plot(
+  model_LEU3N_final1, 
+  pred = hard_drugs_grp, 
+  modx = ADH_HIGHVSLOW, 
+  geom = "line", 
+  colors = "Pastel2",
+  x.label = "Hard Drugs Group",
+  y.label = "Predicted CD4+ T Cell Count Change")
+
 # Filter out NA values
 data_no_na <- data_wide_2 %>% filter(!is.na(ADH_HIGHVSLOW))
 
@@ -4121,37 +4328,29 @@ ggplot(data_no_na, aes(x = hard_drugs_grp, y = LEU3N_CHANGE, fill = ADH_HIGHVSLO
    theme_minimal() 
 ```
 
-```{r}
-# Relevel to change to the reference group to never user
-data_wide_2$hard_drugs_grp<- relevel(data_wide_2$hard_drugs_grp, ref = "Never User")
+Here we can see the key relationships in our model.
 
-# Relevel to change to the reference group to never user
-data_wide_2$ADH_HIGHVSLOW <- relevel(data_wide_2$ADH_HIGHVSLOW, ref = "Low Adherence")
+For current hard drug users, those with high adherence did not differ from those with low adherence. This may be an artifact of the small number of current hard drug users with low adherence, however (n = 6). 
 
-# Perform regression on CD4+ T Cell count change by hard drugs group, include adherence as confounder, and BMI, frailty related phenotype, and college education as precision variables.
-model_LEU3N_fullb <- lm(LEU3N_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + BMI_2 + FRP_2 + EDUC_COLLEGE, data = data_wide_2)
+For previous hard drug users, those with high adherence had *a smaller increase* in CD4+ T Cell count compared to those with low adherence. **This is a counter-inuitive finding and may be an artifact of the small number of previous hard drug users with low adherence, however (n=4).** It may be of interest to the clinicians however, and we therefore report it here.
 
-# Examine the summary
-summary(model_LEU3N_fullb)
-```
+For never hard drug users, those with high adherence had a greater increase in CD4+ T Cell count compared to those with low adherence.
 
-```{r}
-# Relevel to change to the reference group to never user
-data_wide_2$hard_drugs_grp<- relevel(data_wide_2$hard_drugs_grp, ref = "Never User")
+At low adherence, previous hard drug users had *greater increase* in CD4+ T Cell count compared to never hard drug users, and also  when compared to current hard drug users. Current hard drugs users did not differ crom never hard drug users in change in CD4+ T Cell count at low adherence.
 
-# Relevel to change to the reference group to never user
-data_wide_2$ADH_HIGHVSLOW <- relevel(data_wide_2$ADH_HIGHVSLOW, ref = "Low Adherence")
+At high adherence, never drug users had a greater increase in CD4+ T cell count compared to previous and current hard drug users. Current hard drug users did not differ from previous hard drug users at high adherence.
 
-# Perform regression on CD4+ T Cell count change by hard drugs group, include adherence as confounder, and BMI, frailty related phenotype, and college education as precision variables.
-model_LEU3N_fulla <- lm(LEU3N_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + BMI_2 + FRP_2, data = data_wide_2)
+[Top of Tabset](#Data_Analysis)
 
-# Examine the summary
-summary(model_LEU3N_fulla)
+:::
 
-anova(model_LEU3N_fulla, model_LEU3N_fullb)
-```
+## Reduced Model - No Interaction
 
-We get an NA for the interaction term. This is likely because dropped the n=4 patients that were current hard drug users with low adherence, making the interaction impossible to make. Indeed we can see we only have 7, 453 DF.
+::: panel-tabset
+
+Understanding the limitations of an interaction model with only n=4 or n=6 in some categories, we chose to also run the model without the interaction term to acquire the main effects of hard drug use group and adherence on change in CD4+ T Cell count, while controlling for Frailty Related Phenotype.
+
+## Analysis
 
 ```{r}
 # Relevel to change to the reference group to never user
@@ -4160,154 +4359,119 @@ data_wide_2$hard_drugs_grp<- relevel(data_wide_2$hard_drugs_grp, ref = "Never Us
 # Relevel to change to the reference group to never user
 data_wide_2$ADH_HIGHVSLOW <- relevel(data_wide_2$ADH_HIGHVSLOW, ref = "Low Adherence")
 
-# Perform regression on CD4+ T Cell count change by hard drugs group, include adherence as confounder, and BMI, frailty related phenotype, and college education as precision variables.
-model_LEU3N_full <- lm(LEU3N_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + BMI_2 + FRP_2 + hard_drugs_grp*ADH_HIGHVSLOW, data = data_wide_2)
-
-# Exmamine the summary
-summary(model_LEU3N_full)
-```
-
-
-
-```{r}
-# Gather p-values of the model
-p_values <- summary(model_LEU3N_full)$coefficients[,4] # This line selects the fourth column of the resulting coefficients table from summary(model), which is the p-values
-
-# Perform Bonferroni correction 
-p_adjusted <- p.adjust(p_values, method = "bonferroni")
-
-# Compare adjusted p-values to unadjusted p-values
-p_comparison <- cbind(p_values, p_adjusted)
-pretty_print(p_comparison)
-```
-
-
-Relevel to set previous user as the reference category and re-run the model.
-
-```{r}
-# Relevel to change to the reference group to previous user
-data_wide_2$hard_drugs_grp<- relevel(data_wide_2$hard_drugs_grp, ref = "Previous User")
-
-# Perform regression on CD4+ T Cell count change by hard drugs group, include adherence as confounder, and BMI, frailty related phenotype, and college education as precision variables.
-model_LEU3N_full <- lm(LEU3N_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + BMI_2 + FRP_2 + EDUC_COLLEGE, data = data_wide_2)
-
-# Exmamine the summary
-summary(model_LEU3N_full)
-```
-_____
-Get VIF 
-____
-```{r}
-library(car)
-vif_values <- vif(model_LEU3N_full)
-vif_values
-```
-
-```{r}
-# Gather p-values of the model
-p_values <- summary(model_LEU3N_full)$coefficients[,4] # This line selects the fourth column of the resulting coefficients table from summary(model), which is the p-values
-
-# Perform Bonferroni correction 
-p_adjusted <- p.adjust(p_values, method = "bonferroni")
-
-# Compare adjusted p-values to unadjusted p-values
-p_comparison <- cbind(p_values, p_adjusted)
-pretty_print(p_comparison)
-```
-
-
-The overall model is significant (F~(6,454)~= 9.62, p < .0001). 
-
-Current hard drug users have an average change in CD4+ T Cell count that is 118.45 cells lower than never drug users (p-adjusted < 0.0001), and previous drug users have an average change in CD4+ T Cell count that is 94.636 cells lower (p-adjusted = 0.0190) than never drug users, while controlling for all the other variables in the model. The other between group comparisons were not significant (p-adjusted > 0.05).
-
-`ADH_HIGHLOW` is now significant in the full model (p = 0.02463), when it was not by itself. This means that, while controlling for hard drug use and the precision variables in the model, those who had high adherence to the treatment regiment had a change in CD4+ T Cell count that was 75.017 cells higher than those with low adherence on average.
-
-For precision variables, we can see that `BMI` is now statistically significant (p = 0.00603), when it was not so by itself. `FRP_2` is still a significant predictor (p = 0.00343).
-
-However, `EDUC_COLLEGE` is not longer a predictor of `LEU3N_CHANGE` when controlling for the other variables in the model (p = 0.15395).
-
-[Top of Tabset](#Data_Analysis)
-
-## Reduced Model
-
-Let's examine a reduced model excluding `EDUC_COLLEGE`., since it was no longer significant in the full model.
-
-```{r}
-# Relevel to change to the reference group to Never user
-data_wide_2$hard_drugs_grp<- relevel(data_wide_2$hard_drugs_grp, ref = "Never User")
-
-# Perform regression on CD4+ T Cell count change by hard drugs group, include adherence as confounder, and BMI, FRP, as precision variables.
-model_LEU3N_red <- lm(LEU3N_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + BMI_2 + FRP_2, data = data_wide_2)
-
-# Exmamine the summary
-summary(model_LEU3N_red)
-
-# Gather p-values of the model
-p_values <- summary(model_LEU3N_red)$coefficients[,4] # This line selects the fourth column of the resulting coefficients table from summary(model), which is the p-values
-
-# Perform Bonferroni correction 
-p_adjusted <- p.adjust(p_values, method = "bonferroni")
-
-# Compare adjusted p-values to unadjusted p-values
-p_comparison <- cbind(p_values, p_adjusted)
-pretty_print(p_comparison)
-```
-
-```{r}
-# Relevel to change to the reference group to previous user
-data_wide_2$hard_drugs_grp<- relevel(data_wide_2$hard_drugs_grp, ref = "Previous User")
-
-# Perform regression on CD4+ T Cell count change by hard drugs group, include adherence as confounder, and BMI, FRP, as precision variables.
-model_LEU3N_red <- lm(LEU3N_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + BMI_2 + FRP_2, data = data_wide_2)
+# Perform regression on CD4+ T Cell count change by hard drugs group with covariates as determined by backward elimination
+model_LEU3N_final_noX1 <- lm(LEU3N_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + FRP_2, data = data_wide_2)
 
 # Examine the summary
-summary(model_LEU3N_red)
-
-# Get the 95% CIs
-conf_intervals <- confint(model_LEU3N_red)
-pretty_print(conf_intervals)
+summary(model_LEU3N_final_noX1)
 ```
 
+```{r}
+# Examine the summary
+model_results(model_LEU3N_final_noX1)
+```
+
+Change the reference level to previous users and re-run the model
 
 ```{r}
-# Relevel to change to the reference group to previous user
+# Relevel to change to the reference group to never user
 data_wide_2$hard_drugs_grp<- relevel(data_wide_2$hard_drugs_grp, ref = "Previous User")
 
-# Perform regression on CD4+ T Cell count change by hard drugs group, include adherence as confounder, and BMI, FRP, as precision variables.
-model_LEU3N_red <- lm(LEU3N_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + BMI_2 + FRP_2, data = data_wide_2)
+# Relevel to change to the reference group to never user
+data_wide_2$ADH_HIGHVSLOW <- relevel(data_wide_2$ADH_HIGHVSLOW, ref = "Low Adherence")
 
-# Exmamine the summary
-summary(model_LEU3N_red)
+# Perform regression on CD4+ T Cell count change by hard drugs group with covariates as determined by backward elimination
+model_LEU3N_final_noX2 <- lm(LEU3N_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + FRP_2, data = data_wide_2)
+
+# Examine the summary
+summary(model_LEU3N_final_noX2)
 ```
-
-
-The previous relationships all hold, with a similar adjusted R-squared (0.1011 in the full model, now 0.09901). 
-
-We can perform a nested F-Test to determine if the additional variable of `EDUC_COLLEGE` in the full model significantly improves the model fit compared to the reduced model without it.
 
 ```{r}
-# Perform a nested/partial F-Test to compare the full and reduced model
-anova(model_LEU3N_full, model_LEU3N_red)
+# Examine the summary
+model_results(model_LEU3N_final_noX2)
 ```
 
-The partial F-test is not signifant (p = 0.154), and we conclude that the addition of `EDUC_COLLEGE` does not significantly improve the model fit. Thus the reduced model without it will be considered the final model for `LEU3N_CHANGE`.
+## Interpretation
+
+### Overall Model
+
+The overall model is significant (F~(4, 514)~ = 9.31, p < .0001). 
+
+### Hard Drug Use
+
+Hard drug use is a significant predictor of change in CD4+ T Cell count over 2 years.
+
+Current hard drug users had an average change in CD4+ T Cell count that was 112.84 cells lower than never drug users, while controlling for adherence to treatment regiment and Frailty Related Phenotype (p-adjusted < 0.0001, 95% CI: -162.70 to -62.98). 
+
+Previous hard drug users did not differ from never hard drugs users (p-adjusted = 0.088, 95% CI:-118.33 to	-6.29), or current hard drug users (p-adjusted = 0.483, 95% CI: -121.26 to 20.20).
+
+### Adherence
+
+Adherence was not a significant predictor for change in CD4+ T Cell count over 2 years, after controlling for hard drug use and Frailty Related Phenotype (t = 1.60,  p = 0.110).
+
+### Frailty Related Phenotype
+
+Frailty related phenotype is a significant predictor for change in CD4+ T Cell count over 2 years, while controlling for hard drug use and adherence to the treatment regiment (t = -3.20, p = 0.00145). On average, those with a frailty related phenotype had a change in CD4+ T Cell count that was 114.33 cells lower than those without a frailty related phenotype (95% CI: -184.51 to -44.16).
 
 [Top of Tabset](#Data_Analysis)
 
-### [Conclusion:]{.underline}
+## Visualizing Main Effects
 
-The overall model is significant (F~(6,455)~= 11.11, p < .0001). 
+### Hard Drug Use
 
-Current hard drug users have an average change in CD4+ T Cell count that is 115.502 cells lower than never drug users (95% CI: 165.88 cells to 65.13 cells lower; p-adjusted < 0.0001), and previous drug users have an average change in CD4+ T Cell count that is 107.272 cells lower (95% CI: 166.54 cells lower to 48.00 cells lower; p-adjusted = 0.00249) than never drug users, while controlling for all the other variables in the model. Previous and current drug users did not differ in CD4+ T Cell count change over 2 years (p-adjusted > 0.05).
+Here we will create some simple plots to help with visualizing the main effects of hard drug use and adherence on change in CD4+ T Cell count.
 
-Adherence to the treatment regiment was a significant predictor for change in CD4+ T Cell count over 2 years, while controlling for hard drug use and the precision variables in the model (t = 2.30, p =  0.0219). Those who had high adherence to the treatment regiment had a change in CD4+ T Cell count that was 76.60 cells higher than those with low adherence on average (95% CI: 11.17 to 142.019 cells higher).
+```{r}
+# Relevel to change the reference cateory to Never User
+data_wide_2$hard_drugs_grp <- relevel(data_wide_2$hard_drugs_grp, ref = "Never User")
 
-BMI is a significant predictor of change in CD4+ T cell count over 2 years, while controlling for the other variables in the model (t = 2.974, p = 0.00310). On average, every 1 unit increase in BMI is associated with a 6.24 cell increase in CD4+ T cell count (95% CI: 2.12 to 10.38 cells higher).
+# Create boxplots of CD4+ T Cell count change by hard drug use group
+ggplot(data_wide_2, aes(x = hard_drugs_grp, y = LEU3N_CHANGE, fill = hard_drugs_grp)) +
+  geom_boxplot(alpha = 0.5) +
+  theme_minimal() +
+  scale_fill_brewer(palette="Pastel2") +
+  labs(title = "Boxplot of CD4+ T Cell Count Change by Hard Drug Use Group",
+       x = "Hard Drug Use Group",
+       y = "CD4+ T Cell Count Change") +
+  guides(fill = guide_legend(title = "Hard Drug Use Group"))
+```
+Current hard drug users had less of an increase in CD4+ T Cells over 2 years compared to never hard drug users. All other between-group comparisons were not significant.
 
-Frailty related phenotype is a significant predictor for change in CD4+ T Cell count over 2 years, while controlling for the other variables in the model (t = -2.901, p = 0.0039). On average, those with a frailty related phenotype had a change in CD4+ T Cell count that was 104.74 cells lower than those without a frailty related phenotype (95% CI: 175.69 to 33.79 cells lower).
+### Adherence
 
-[Top of Tabset](#Data_Analysis)
+```{r}
+# Create boxplots of CD4+ T Cell count change by adherence group
+ggplot(data_no_na, aes(x = ADH_HIGHVSLOW, y = LEU3N_CHANGE, fill = ADH_HIGHVSLOW)) +
+  geom_boxplot(alpha = 0.5) +
+  theme_minimal() +
+  scale_fill_brewer(palette = "Pastel2") +
+  labs(title = "Boxplot of CD4+ T Cell Count Change by Adherence at Year 2",
+       x = "Adherence Level",
+       y = "CD4+ T Cell Count Change") +
+  guides(fill = guide_legend(title = "Adherence Group"))
+```
+Change in CD4+ T Cell count did not differ based on adherence.
 
+### Frailty Related Phenotype
+
+```{r}
+# Filter out NA values
+data_no_na <- data_wide_2 %>% filter(!is.na(FRP_2))
+
+# Create boxplots of CD4+ T Cell count change by frailty related phenotype at year 2
+ggplot(data_no_na, aes(x = FRP_2, y = LEU3N_CHANGE, fill = FRP_2)) +
+  geom_boxplot(alpha = 0.5) +
+  theme_minimal() +
+  scale_fill_brewer(palette = "Pastel2") +
+  labs(title = "Boxplot of CD4+ T Cell Count Change by Frailty Related Phenotype",
+       x = "Frailty Related Phenotype",
+       y = "CD4+ T Cell Count Change") +
+  guides(fill = guide_legend(title = "Frailty Related Phenotype"))
+```
+Those with a Frailty Related Phenotype had less of an increase in CD4+ T Cell count compared to those without.
+
+:::
 :::
 
 ## Mental QOL Change
@@ -4542,8 +4706,6 @@ _______
 TO DO: PERFORM BACKWARDS SELECTION AND COMPARE THE RESULTING MODEL WITH MY MANUALLY SELECTED MODEL USING AICC AND BIC AND PICK BEST MODEL.
 _____
 
-# Backwards Selection
-
 # CONSORT Flow Chart
 
 Here is where I will go back and add details for how many participants we removed at each stage.
@@ -4563,6 +4725,29 @@ kable(colSums(is.na(data_2)), format = "html", col.names = "Missing") %>%
 
 "The transformations contained in this package and implemented in bestNormalize are reversible (i.e., 1-1), which allows for straight-forward interpretation and consistency. In other words, any analysis performed on the normalized data can be interpreted using the original unit (see application)." Cool.
 
+## Depression and adherence
+
+Is depression related to adherence?
+
+```{r}
+model <- lm(CESD_2 ~ ADH_HIGHVSLOW, data = data_wide_2)
+summary(model)
+```
+
+Very significant, but a low r squared so I think we include it as a potential confounder, instead of worrying about VIF. Also should be able to run a model and get VIF output
+
+
+## Code for backwards selection
+
+```{r}
+# Perform full model with interaction term
+model_log_VLOAD_full <- lm(VLOAD_log_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + EDUC_COLLEGE + hard_drugs_grp*ADH_HIGHVSLOW, data = data_wide_2)
+
+# Perform backwards selection model
+step_model <- step(model_log_VLOAD_full, direction = "backward")
+
+summary(step_model)
+```
 
 ## Descriptive Statistics Filter
 
@@ -5084,4 +5269,18 @@ plot(emm, comparisons = TRUE)
 https://pmc.ncbi.nlm.nih.gov/articles/PMC9234842/
 
 This one shows that poor adherence is related to anxiety and depression, leading credence to why I want to examine the impact of hard drugs and adherence while controlling for depression.
+
+# Crazy interaction with depression and hard drugs and mental qol
+```{r}
+# Create a scatterplot of mental QOLchange by depression score, colored by hard drug use group.
+ggplot(data_wide_2, aes(x = CESD_2, y = AGG_MENT_CHANGE, color = hard_drugs_grp)) + 
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  theme_minimal() +
+  labs(title = "Mental QOL Change by Depression at 2 years, Colored by Hard Drug Use Group",
+       y = "Mental QOL Change",
+       x = "Depression Score") + 
+  scale_fill_brewer(palette = "Pastel2")
+```
+
 
