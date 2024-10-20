@@ -4480,7 +4480,13 @@ The candidate variables for mental QOL change as determined by interactive varia
 
 ::: panel-tabset
 
-## Full Model
+## Model Exploration
+
+::: panel-tabset
+
+## Analyses
+
+Let's begin by running the full model as determined by interactive model selection.
 
 ```{r}
 # Relevel to change to the reference group to never user
@@ -4490,58 +4496,71 @@ data_wide_2$hard_drugs_grp<- relevel(data_wide_2$hard_drugs_grp, ref = "Never Us
 data_wide_2$ADH_HIGHVSLOW <- relevel(data_wide_2$ADH_HIGHVSLOW, ref = "Low Adherence")
 
 # Perform regression on mental QOL change by hard drugs group, full model
-model_MENT_full <- lm(AGG_MENT_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + CESD_2 + hard_drugs_grp*ADH_HIGHVSLOW, data = data_wide_2)
-
-# Exmamine the summary
-summary(model_MENT_full)
-
-# Use interactions package to plot interaction
-cat_plot(model_MENT_full, pred = hard_drugs_grp, modx = ADH_HIGHVSLOW, geom = "line", colors = "Pastel2")
-```
-
-```{r}
-# Relevel to change to the reference group
-data_wide_2$hard_drugs_grp<- relevel(data_wide_2$hard_drugs_grp, ref = "Previous User")
-
-# Relevel to change to the reference group to never user
-data_wide_2$ADH_HIGHVSLOW <- relevel(data_wide_2$ADH_HIGHVSLOW, ref = "Low Adherence")
-
-# Perform regression on mental QOL change by hard drugs group, full model
-model_MENT_full <- lm(AGG_MENT_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + CESD_2 + hard_drugs_grp*ADH_HIGHVSLOW, data = data_wide_2)
-
-# Exmamine the summary
-summary(model_MENT_full)
-```
-
-
-```{r}
-# Relevel to change to the reference group
-data_wide_2$hard_drugs_grp<- relevel(data_wide_2$hard_drugs_grp, ref = "Previous User")
-
-# Relevel to change to the reference group to never user
-data_wide_2$ADH_HIGHVSLOW <- relevel(data_wide_2$ADH_HIGHVSLOW, ref = "Low Adherence")
-
-# Perform regression on mental QOL change by hard drugs group, full model
-model_MENT_full <- lm(AGG_MENT_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + CESD_2, data = data_wide_2)
-
-# Exmamine the summary
-summary(model_MENT_full)
-```
-
-```{r}
-# Relevel to change to the reference group
-data_wide_2$hard_drugs_grp<- relevel(data_wide_2$hard_drugs_grp, ref = "Previous User")
-
-# Relevel to change to the reference group to never user
-data_wide_2$ADH_HIGHVSLOW <- relevel(data_wide_2$ADH_HIGHVSLOW, ref = "Low Adherence")
-
-# Perform regression on mental QOL change by hard drugs group, full model
-model_MENT_full <- lm(AGG_MENT_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + hard_drugs_grp*ADH_HIGHVSLOW, data = data_wide_2)
+model_MENT_full1 <- lm(AGG_MENT_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW +  CESD_2 + hard_drugs_grp*ADH_HIGHVSLOW, data = data_wide_2)
 
 # Examine the summary
-summary(model_MENT_full)
+summary(model_MENT_full1)
 ```
 
+Compare hard drug use groups at high adherence
+
+```{r}
+# Relevel to change to the reference group to never user
+data_wide_2$hard_drugs_grp<- relevel(data_wide_2$hard_drugs_grp, ref = "Never User")
+
+# Relevel to change to the reference group to never user
+data_wide_2$ADH_HIGHVSLOW <- relevel(data_wide_2$ADH_HIGHVSLOW, ref = "High Adherence")
+
+# Perform regression on mental QOL change by hard drugs group, full model
+model_MENT_full2 <- lm(AGG_MENT_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW +  CESD_2 + hard_drugs_grp*ADH_HIGHVSLOW, data = data_wide_2)
+
+# Examine the summary
+summary(model_MENT_full2)
+```
+
+Compare hard drug use groups at low adherence
+
+```{r}
+# Relevel to change to the reference group to never user
+data_wide_2$hard_drugs_grp<- relevel(data_wide_2$hard_drugs_grp, ref = "Previous User")
+
+# Relevel to change to the reference group to never user
+data_wide_2$ADH_HIGHVSLOW <- relevel(data_wide_2$ADH_HIGHVSLOW, ref = "Low Adherence")
+
+# Perform regression on mental QOL change by hard drugs group, full model
+model_MENT_full3 <- lm(AGG_MENT_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW +  CESD_2 + hard_drugs_grp*ADH_HIGHVSLOW, data = data_wide_2)
+
+# Examine the summary
+summary(model_MENT_full3)
+```
+
+```{r}
+# Relevel to change to the reference group to never user
+data_wide_2$hard_drugs_grp<- relevel(data_wide_2$hard_drugs_grp, ref = "Previous User")
+
+# Relevel to change to the reference group to never user
+data_wide_2$ADH_HIGHVSLOW <- relevel(data_wide_2$ADH_HIGHVSLOW, ref = "High Adherence")
+
+# Perform regression on mental QOL change by hard drugs group, full model
+model_MENT_full4 <- lm(AGG_MENT_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW +  CESD_2 + hard_drugs_grp*ADH_HIGHVSLOW, data = data_wide_2)
+
+# Examine the summary
+summary(model_MENT_full4)
+```
+
+```{r}
+# Relevel to change to the reference group to never user
+data_wide_2$hard_drugs_grp<- relevel(data_wide_2$hard_drugs_grp, ref = "Current User")
+
+# Relevel to change to the reference group to never user
+data_wide_2$ADH_HIGHVSLOW <- relevel(data_wide_2$ADH_HIGHVSLOW, ref = "High Adherence")
+
+# Perform regression on mental QOL change by hard drugs group, full model
+model_MENT_full5 <- lm(AGG_MENT_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW +  CESD_2 + hard_drugs_grp*ADH_HIGHVSLOW, data = data_wide_2)
+
+# Examine the summary
+summary(model_MENT_full5)
+```
 
 ```{r}
 # Relevel to change to the reference group to never user
@@ -4550,105 +4569,465 @@ data_wide_2$hard_drugs_grp<- relevel(data_wide_2$hard_drugs_grp, ref = "Current 
 # Relevel to change to the reference group to never user
 data_wide_2$ADH_HIGHVSLOW <- relevel(data_wide_2$ADH_HIGHVSLOW, ref = "Low Adherence")
 
+# Perform regression on mental QOL change by hard drugs group, full model
+model_MENT_full6 <- lm(AGG_MENT_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW +  CESD_2 + hard_drugs_grp*ADH_HIGHVSLOW, data = data_wide_2)
+
+# Examine the summary
+summary(model_MENT_full6)
+```
+
+Interestingly, we have lost a lot of the significant relationships we were seeing before with our main predictors of hard drug use and adherence.
+
+It seems that the main driver of this model, and best predictor of change in mental QOL score is depression score.
+
+Within adherence levels, none of the hard drug use groups differed from each other on QOL (p-adjusted > 0.05).
+
+The only significant difference in mental QOL change is for previous drug users. For previous drug users, those with low adherence have a mental QOL change that is on average 13.39 points lower than those with high adherence (p= 0.0118). Depending on how we handle multiple pairwise comparisons, this may not be significant!
+
+Something fishy is going on here...
+
+Let's examine this in a simplified model with no interactions.
+
+```{r}
+# Relevel to change to the reference group to never user
+data_wide_2$hard_drugs_grp<- relevel(data_wide_2$hard_drugs_grp, ref = "Previous User")
+
+# Relevel to change to the reference group to never user
+data_wide_2$ADH_HIGHVSLOW <- relevel(data_wide_2$ADH_HIGHVSLOW, ref = "Low Adherence")
+
+# Perform regression on mental QOL change by hard drugs group, full model
+model_MENT_simple <- lm(AGG_MENT_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW +  CESD_2, data = data_wide_2)
+
+# Examine the summary
+summary(model_MENT_simple)
+```
+
+Indeed, we can see that, when including depression in the model, hard drug use and adherence are no longer significant predictors of change in mental QOL!
+
+This suggests that depression score is either a mediator, a moderator, or a confounder for the relationship between hard drug use and adherence on mental QOL.
+
+Let's explore.
+
+[Top of Tabset](#Data_Analysis)
+
+## Depression as a Confounder
+
+### Confounder is related to PEV
+
+We saw [earlier](#EDA) that hard drug use was a significant predictor for depression. Specifically:
+
+Hard drug use is a significant predictor of depression score (F~(2, 542)~= 14.31). On average, current hard drug users had depression scores that were 5.23 points higher than never hard drug users (p < 0.0001), and previous hard drug users had depression scores that were 7.29 points higher than those who never used hard drugs (p < 0.0001).
+
+Thus, depression meets criteria 1 of the classical definition for a confounder: It is related to the PEV.
+
+### Confounder is related to the Outcome Measure
+
+We also saw in the interactive variable selection that depression was significantly related change in mental QOL change.
+
+Thus depression meets criteria 2 of the classical definition for a confounder: it is related to the main outcome.
+
+### Confounder is not a Mediator
+
+It is possible that depression is on the causal pathway for mental QOL (hard drug use -> depression -> mental QOL), but it is likewise possible that mental QOL is on the causal pathway for depression (hard drug use -> mental QOL -> depression). Thus we cannot conclude that depression is a mediator.
+
+### Confounder Meaningfully Changes the Relationship of PEV on Outcome
+
+We also saw that including depression in the model changed hard drug use from being significant to not significant. Thus depression score changes the relationship between the PEV and outcome measure in a very meaningful way.
+
+I therefore feel justified in exploring depression as a confounder, and analyzing whether an interaction term between hard drug use group and depression will add explanatory power to our model. 
+
+[Top of Tabset](#Data_Analysis)
+
+## Including Depression Interaction Term
+
+Let's run a new full model, with the included interaction term between hard drug use group and depression. In essence we are running a three way interaction. It will need to be emphasized in the discussion that this was exploratory data analysis.
+
+```{r}
+# Relevel to change to the reference group
+data_wide_2$hard_drugs_grp<- relevel(data_wide_2$hard_drugs_grp, ref = "Current User")
+
+# Relevel to change to the reference group
+data_wide_2$ADH_HIGHVSLOW <- relevel(data_wide_2$ADH_HIGHVSLOW, ref = "Low Adherence")
+
+# Perform regression on mental QOL change by hard drugs group, full model
+model_MENT_newfull <- lm(AGG_MENT_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW +  CESD_2 + hard_drugs_grp*ADH_HIGHVSLOW + hard_drugs_grp*CESD_2, data = data_wide_2)
+
+# Examine the summary
+summary(model_MENT_newfull)
+```
+We get a highly significant p-value for the interaction between hard drug use group and depression (p < 0.0001) 
+
+Our adjusted R-squared also shot up from 0.090 to 0.16. We're on to something here.
+
+Let's run backwards model selection and examine the BIC to see if we need to include the hard drug use * depression interaction score. 
+
+### Backwards Elimination
+
+We are going to force inclusion of our main variables of interest, `hard_drugs_grp` and `ADH_HIGHVSLOW`, and the interaction between them, since those were the main questions the researchers posed.
+
+```{r}
+# Relevel to change to the reference group to never user
+data_wide_2$hard_drugs_grp<- relevel(data_wide_2$hard_drugs_grp, ref = "Never User")
+
+# Relevel to change to the reference group to never user
+data_wide_2$ADH_HIGHVSLOW <- relevel(data_wide_2$ADH_HIGHVSLOW, ref = "Low Adherence")
+
+# Perform regression on mental QOL change by hard drugs group, full model
+model_MENT_newfull <- lm(AGG_MENT_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW +  CESD_2 + hard_drugs_grp*ADH_HIGHVSLOW + hard_drugs_grp*CESD_2, data = data_wide_2)
+
+# Perform backward elimination regression selection based on BIC 
+ols_step_backward_sbc(model_MENT_newfull, include = c("hard_drugs_grp", "ADH_HIGHVSLOW", "hard_drugs_grp:ADH_HIGHVSLOW"))
+```
+
+No variable was removed from the model, indicating that the interaction between hard drug use group and depression adds significant explanatory power and should be included in the model.
+
+This puts us in a tricky position, it is clear that there is a relationship between hard drug use and mental quality of life, and that this differs based on both adherence and depression. However we don't necessarily have the sample size to run a three-way interaction.
+
+### Next Steps
+
+Thus, we will proceed in two ways from here, and run separate models for:
+
+ - 1) Does the relationship between hard drug use and mental QOL differ based on adherence (irrespective of depression)?
+ - 2) Does the relationship between hard drug use and mental QOL differ based on depression (irrespective of adherence)?
+ 
+Removing the confounder of depression in model 1 allows us to answer the main research question for this project. Model 2) will be presented as an exploratory data analysis and allows us to explore how depression is related to hard drug use, and how that is affecting our main model.
+
+[Top of Tabset](#Data_Analysis)
+
+:::
+
+## Model 1 - Main Research Question
+
+This is the model predicting `AGG_MENT_CHANGE`, including only `hard_drugs_grp` and `ADH_HIGHVSLOW`, and their interaction term. 
+
+This addresses the main research question of how mental QOL is impacted by ART, based on hard drug use and adherence to the treatment regimen.
+
+::: panel-tabset
+
+## Analysis
+
+Let's run the regression as specified.
+
+```{r}
+# Relevel to change to the reference group to never user
+data_wide_2$hard_drugs_grp<- relevel(data_wide_2$hard_drugs_grp, ref = "Never User")
+
+# Relevel to change to the reference group to never user
+data_wide_2$ADH_HIGHVSLOW <- relevel(data_wide_2$ADH_HIGHVSLOW, ref = "Low Adherence")
+
+# Perform regression on mental QOL change by hard drugs group, full model
+model_MENT_main1 <- lm(AGG_MENT_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW+ hard_drugs_grp*ADH_HIGHVSLOW, data = data_wide_2)
+
+# Examine the summary
+summary(model_MENT_main1)
+```
+
+```{r}
+# Print useful model parameters
+model_results(model_MENT_main1)
+
+# Get the VIFs
+vif_values <- vif(model_MENT_main1)
+pretty_print(vif_values)
+```
+
+The overall model is significant (F~(5,526)~ = 4.78, p = 0.000278, and we are getting significant interactions.
+
+At the same time, this is a weaker model than when we included depression. Our R-adjusted is now 0.034, meaning we now only explain 3.4% of the variance in mental QOL (compared to 16% in the full model).
+
+At low adherence, the previous group has a greater decrease in mental QOL compared to never users.
+
+For never users, there is no difference in mental QOL based on high or low adherence (t = 1.5744837, p-adjusted = 0.116, 95% CI: -0.85 to 7.72).
+
+Change the reference group to compare drug use group at high adherence
+
+```{r}
+# Relevel to change to the reference group to never user
+data_wide_2$hard_drugs_grp<- relevel(data_wide_2$hard_drugs_grp, ref = "Never User")
+
+# Relevel to change to the reference group to never user
+data_wide_2$ADH_HIGHVSLOW <- relevel(data_wide_2$ADH_HIGHVSLOW, ref = "High Adherence")
+
+# Perform regression on mental QOL change by hard drugs group, full model
+model_MENT_main2 <- lm(AGG_MENT_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW+ hard_drugs_grp*ADH_HIGHVSLOW, data = data_wide_2)
+
+# Examine the summary
+summary(model_MENT_main2)
+```
+
+```{r}
+# Print useful model parameters
+model_results(model_MENT_main2)
+```
+
+
+At high adherence, there is no difference in mental QOL between previous and never hard drug users (t = 1.41,  p-adjusted = 0.48, 95% CI: -1.12 to 6.73), or between current and never hard drug users (t = -1.85, p-adjusted = 0.195, 95% CI: -6.55 to	0.20).
+
+Change reference level to compare previous hard drug users at low adherence.
+
+```{r}
+# Relevel to change to the reference group to never user
+data_wide_2$hard_drugs_grp<- relevel(data_wide_2$hard_drugs_grp, ref = "Previous User")
+
+# Relevel to change to the reference group to never user
+data_wide_2$ADH_HIGHVSLOW <- relevel(data_wide_2$ADH_HIGHVSLOW, ref = "Low Adherence")
+
+# Perform regression on mental QOL change by hard drugs group, full model
+model_MENT_main3 <- lm(AGG_MENT_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW+ hard_drugs_grp*ADH_HIGHVSLOW, data = data_wide_2)
+
+# Examine the summary
+summary(model_MENT_main3)
+```
+
+```{r}
+# Print useful model parameters
+model_results(model_MENT_main3)
+```
+
+Here we can see that all our p-values are now very low (all have at least 2 decimal places). This gives me confidence that this is a meaningful and strong model. All the most important comparisons are with previous drug users at low adherence!
+
+At low adherence, current hard drug users have a higher mental QOL (p-adjusted = 0.00657), and never hard drug users have a higher mental QOL (p-adjusted = 0.00886) compared to previous hard drug users.
+
+Additionally, for previous hard drug users, those with high adherence had a higher increase in mental QOL compared to those with low adherence (p < 0.0001).
+
+Change reference category to compare high adherence previous hard drug users.
+
+```{r}
+# Relevel to change to the reference group to never user
+data_wide_2$hard_drugs_grp <- relevel(data_wide_2$hard_drugs_grp, ref = "Previous User")
+
+# Relevel to change to the reference group to never user
+data_wide_2$ADH_HIGHVSLOW <- relevel(data_wide_2$ADH_HIGHVSLOW, ref = "High Adherence")
+
+# Perform regression on mental QOL change by hard drugs group, full model
+model_MENT_main4 <- lm(AGG_MENT_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + hard_drugs_grp*ADH_HIGHVSLOW, data = data_wide_2)
+
+# Examine the summary
+summary(model_MENT_main4)
+```
+
+```{r}
+# Print useful model parameters
+model_results(model_MENT_main4)
+```
+
+At high adherence, there is a borderline significant difference between previous and current drug users (p-adjusted = 0.050). Considering the small sample size in both categories, this could become a non significant difference with a larger N.
+
+Change the reference level to compare current hard drug users
+
+```{r}
+# Relevel to change to the reference group to never user
+data_wide_2$hard_drugs_grp <- relevel(data_wide_2$hard_drugs_grp, ref = "Current User")
+
+# Relevel to change to the reference group to never user
+data_wide_2$ADH_HIGHVSLOW <- relevel(data_wide_2$ADH_HIGHVSLOW, ref = "Low Adherence")
+
+# Perform regression on mental QOL change by hard drugs group, full model
+model_MENT_main5 <- lm(AGG_MENT_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + hard_drugs_grp*ADH_HIGHVSLOW, data = data_wide_2)
+
+# Examine the summary
+summary(model_MENT_main5)
+```
+
+```{r}
+# Print useful model parameters
+model_results(model_MENT_main5)
+```
+
+For current hard drug users, there was no difference in mental QOL based on adherence (t = -1.24, p = 0.227, 95% CI: -19.94 to	4.53).
+
+[Top of Tabset](Data_Analysis)
+
+## Interpretation
+
+### Overall model
+
+There were significant differences in change mental QOL over 2 years based on hard drug usage and adherence to the treatment regiment (F~(5,526)~ = 4.78, p = 0.000278).
+
+### Hard Drug Use
+
+The relationship between hard drug use and change in mental QOL over 2 years depended on adherence to the treatment regiment.
+
+#### Hard Drug Use at Low Adherence
+
+For those with low adherence to the treatment regiment, previous hard drug users had a 15.95 point decrease in mental QOL compared to never hard drug users (t = -2.99, p-adjusted = 0.00886, 95% CI: -26.46 to -5.50), and a 23.91 point decrease compared to current hard drug users (t = 3.078, p-adjusted =  0.00657, 95% CI: 8.65 to 39.17). There was no difference in mental QOL between current and never hard drug users at low adherence (t = 1.25,	p-adjusted = 0.636, 95% CI: -4.56 to	20.48).
+
+#### Hard Drug use at High Adherence
+
+For those with low adherence to the treatment regiment, there was no difference in mental QOL between previous and never hard drug users (t = 1.41,  p-adjusted = 0.48, 95% CI: -1.12 to 6.73), or between current and never hard drug users (t = -1.85, p-adjusted = 0.195, 95% CI: -6.55 to	0.20). The difference in mental QOL for current and previous users was borderline significant (t= -2.40, p-adjusted = 0.050, 95% CI: -10.88	to -1.09), and with a larger sample size may become non-significant.
+
+### Adherence
+
+The relationship between adherence to the treatment regiment and change in mental QOL over 2 years differed by hard drug use.
+
+#### Adherence for Current Hard Drug Users
+
+For current hard drug users,there was no difference in mental QOL change over 2 years based on adherence (t = -1.24, p = 0.227, 95% CI: -19.94 to	4.53).
+
+#### Adherence for Previous Hard Drug Users
+
+For previous hard drug users, there was a statistically significant difference in change in mental QOL over 2 years based on adherence (t = 4.21, p-adjusted =  0.000536). On average, previous hard drug users with high adherence had a 22.19 point increase in mental QOL over 2 years compared to those with low adherence (95% CI: 11.84 to 32.54).
+
+#### Adherence for Never Hard Drug Users
+
+For never hard drug users, there was no difference in change in mental QOL over 2 years based on high or low adherence (t = 1.5744837, p-adjusted = 0.116, 95% CI: -0.85 to 7.72).
+
+[Top of Tabset](#Data_Analysis)
+
+## Visualizing the Interaction
+
+The below plot is useful in interpreting the interaction
+
+```{r}
+# Relevel to change to the reference group to never user
+data_wide_2$hard_drugs_grp<- relevel(data_wide_2$hard_drugs_grp, ref = "Never User")
+
+# Relevel to change to the reference group to never user
+data_wide_2$ADH_HIGHVSLOW <- relevel(data_wide_2$ADH_HIGHVSLOW, ref = "Low Adherence")
+
 # Use interactions package to plot interaction
-cat_plot(model_MENT_full, pred = hard_drugs_grp, modx = ADH_HIGHVSLOW, geom = "line", colors = "Pastel2")
+cat_plot(model_MENT_main1, pred = hard_drugs_grp, modx = ADH_HIGHVSLOW, geom = "line", colors = "Pastel2")
 ```
+Here we see the main interaction finding: for previous users, those with low adherence had a decrease in mental QOL over 2 years compared to those with high adherence who had an slight increase.
 
+Additionally, for those with low adherence, previous hard drug users had a decrease in mental QOL over 2 years compared to current hard drug users and never hard drug users.
 
+We interpret this to mean that previous hard drug users (those in either their first or second year of sobriety) are struggling to deal with withdrawals, addiction, or the adverse effects of the treatment. While current users are in the midst of using hard drugs as a coping mechanism, and thus are protected from the negative impact of the treatment on mental QOL.
+
+Thus, **previous hard drug users are a vulnerable population, and high adherence to the treatment regiment might buffer them against the adverse effects of the HAART treatment.**
+
+[Top of Tabset](#Data_Analysis)
+
+:::
+
+## Model 2 - Depression Interaction Term
+
+This is the model predicting `AGG_MENT_CHANGE`, including only `hard_drugs_grp` and `CESD_2`, and their interaction term. 
+
+This addresses the confounding of depression on the relationship between hard drug use and change in mental QOL.
+
+::: panel-tabset
+
+## Analysis
+
+Compare slopes for never users.
 
 ```{r}
 # Relevel to change to the reference group to never user
-data_wide_2$hard_drugs_grp <- relevel(data_wide_2$hard_drugs_grp, ref = "Never User")
+data_wide_2$hard_drugs_grp<- relevel(data_wide_2$hard_drugs_grp, ref = "Never User")
 
-# Perform regression on mental QOL change by hard drugs group, include adherence highlow and depression score.
-model_MENT_full <- lm(AGG_MENT_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + CESD_2, data = data_wide_2)
+# Perform regression on mental QOL change by hard drugs group, full model
+model_MENT_sub1 <- lm(AGG_MENT_CHANGE ~ hard_drugs_grp + CESD_2 + hard_drugs_grp*CESD_2, data = data_wide_2)
 
-# Exmamine the summary
-summary(model_MENT_full)
+# Examine the summary
+summary(model_MENT_sub1)
+
+# Get the VIFs
+vif_values <- vif(model_MENT_sub1)
+pretty_print(vif_values)
 ```
 
+```{r}
+# Print useful model parameters
+model_results(model_MENT_sub1)
+```
 
-## Reduced Model 1
+The overall model is highly significant (F~(5, 532)~ = 19.84, p < 0.0001, adjusted R-squared = 0.149).
 
-Let's try that removing `hard_drugs_grp`
+For never hard drug users, there was a significant relationship between depression and mental QOL (t = -4.42, p < 0.0001). Specifically, for never hard drug users, a 1 point increase in depression score was associated with 0.23 point decrease in mental QOL (95% CI: -0.34 to -0.13).
+
+Current hard drug users did not differ significantly from never hard drug users while controlling for the other variables in the model (t = -1.05, p-adjusted = 0.89, 95% CI: -8.74 to 2.66). Previous hard drug users had on average a 16.98 higher increase in mental QOL compared to never hard drug users (at low depression scores?) (t = 2.91062, p-adjusted < 0.0001.
+
+The slope for depression on mental QOL did not differ between current and never hard drug users (t = 0.73, p-adjusted = 1.00, 95% CI: -0.19 to 0.41). However, the slope for depression on mental QOL did differ between previous and never hard drug users (t = -6.17, p-adjusted < 0.0001). For each point increase in depression, the mental QOL score for previous hard drug users decreases an additional 0.80 points compared to never hard drug users (95% CI: -1.06	to -0.55).
+
+Previous hard drug users have an increase of approximately 16.98 units in mental QOL, holding all other variables constant. This difference is statistically significant, suggesting that prior hard drug use is associated with a considerably higher outcome measure in this model. (It's significant because we're not account for the interaction with this estimate.)
+
+Compare slopes for previous users.
 
 ```{r}
 # Relevel to change to the reference group to never user
-data_wide_2$hard_drugs_grp <- relevel(data_wide_2$hard_drugs_grp, ref = "Never User")
+data_wide_2$hard_drugs_grp<- relevel(data_wide_2$hard_drugs_grp, ref = "Previous User")
 
-# Perform regression on mental QOL change by adherence highlow and depression score.
-model_MENT_red1 <- lm(AGG_MENT_CHANGE ~ ADH_HIGHVSLOW + CESD_2, data = data_wide_2)
+# Perform regression on mental QOL change by hard drugs group, full model
+model_MENT_sub2 <- lm(AGG_MENT_CHANGE ~ hard_drugs_grp + CESD_2 + hard_drugs_grp*CESD_2, data = data_wide_2)
 
-# Exmamine the summary
-summary(model_MENT_red1)
+# Examine the summary
+summary(model_MENT_sub2)
 ```
 
-Adherence is no longer significant.
+```{r}
+# Print useful model parameters
+model_results(model_MENT_sub2)
+```
 
-What about with an interaction term?
+For previous hard drug users, there was a significant relationship between depression and mental QOL (t = -8.74, p < 0.0001). Specifically, for previous hard drug users, a 1 point increase in depression score was associated with a 1.04 point decrease in mental QOL (95% CI: -1.27 to -0.80). That is nearly 5 times more of a decrease compared to never users!
+
+Compare slopes for current users.
+
 ```{r}
 # Relevel to change to the reference group to never user
-data_wide_2$hard_drugs_grp <- relevel(data_wide_2$hard_drugs_grp, ref = "Never User")
+data_wide_2$hard_drugs_grp<- relevel(data_wide_2$hard_drugs_grp, ref = "Current User")
 
-# Perform regression on mental QOL change by adherence highlow and depression score.
-model_MENT_red2 <- lm(AGG_MENT_CHANGE ~ ADH_HIGHVSLOW + CESD_2 + ADH_HIGHVSLOW*CESD_2, data = data_wide_2)
+# Perform regression on mental QOL change by hard drugs group, full model
+model_MENT_sub3 <- lm(AGG_MENT_CHANGE ~ hard_drugs_grp + CESD_2 + hard_drugs_grp*CESD_2, data = data_wide_2)
 
-# Exmamine the summary
-summary(model_MENT_red2)
-```
-
-there's no interaction
-
-```{r}
-# Perform regression on mental QOL change by adherence highlow and depression score.
-model_MENT_red3 <- lm(AGG_MENT_CHANGE ~ hard_drugs_grp + CESD_2, data = data_wide_2)
-
-# Exmamine the summary
-summary(model_MENT_red3)
-```
-
-
-```{r}
-# Relevel to change to the reference group to previous user
-data_wide_2$hard_drugs_grp <- relevel(data_wide_2$hard_drugs_grp, ref = "Previous User")
-
-# Perform regression on mental QOL change by adherence highlow and depression score.
-model_MENT_red3 <- lm(AGG_MENT_CHANGE ~ hard_drugs_grp + CESD_2, data = data_wide_2)
-
-# Exmamine the summary
-summary(model_MENT_red3)
+# Examine the summary
+summary(model_MENT_sub3)
 ```
 
 ```{r}
-# Relevel to change to the reference group to Never user
-data_wide_2$hard_drugs_grp <- relevel(data_wide_2$hard_drugs_grp, ref = "Never User")
-
-# Perform regression on mental QOL change by adherence highlow and depression score.
-model_MENT_red4 <- lm(AGG_MENT_CHANGE ~ hard_drugs_grp + CESD_2 + hard_drugs_grp*CESD_2, data = data_wide_2)
-
-# Exmamine the summary
-summary(model_MENT_red4)
+# Print useful model parameters
+model_results(model_MENT_sub3)
 ```
 
-```{r}
-# Relevel to change to the reference group to Previous user
-data_wide_2$hard_drugs_grp <- relevel(data_wide_2$hard_drugs_grp, ref = "Previous User")
+For current users, the relationship between depression and mental QOL is not significant (t = 0.88, p = 0.377, 95% CI: -0.40 to 0.15).               
 
-# Perform regression on mental QOL change by adherence highlow and depression score.
-model_MENT_red4 <- lm(AGG_MENT_CHANGE ~ hard_drugs_grp + CESD_2 + hard_drugs_grp*CESD_2, data = data_wide_2)
+The slope for depression on mental QOL depended on hard drug use (t = -4.946, p-adjusted < 0.0001). For each point increase in depression, the mental QOL score for previous hard drug users decreased by an additional 0.91 points compared to current hard drug users (95%: -1.28 to -0.55).
 
-# Exmamine the summary
-summary(model_MENT_red4)
-```
+[Top of Tabset](#Data_Analysis)
 
-We have interaction. That just looks really crazy to interpret...
+## Interpretation 
 
-Let's try plotting it.
+### Overall Model
+
+The overall model is highly significant (F~(5, 532)~ = 19.84, p < 0.0001, adjusted R-squared = 0.149).
+
+The relationship between depression and mental QOL depended on hard drug use.
+
+### Depression Slopes **within** Hard Drug Use Group
+
+#### Depression for Current Hard Drug Users
+
+For current hard drug users, the relationship between depression and mental QOL is not significant (t = 0.88, p = 0.377, 95% CI: -0.40 to 0.15). 
+
+#### Depression for Previous Hard Drug Users
+
+For previous hard drug users, there was a significant relationship between depression and mental QOL (t = -8.74, p < 0.0001). Specifically, a 1 point increase in depression score was associated with a 1.04 point decrease in mental QOL for previous hard drug users (95% CI: -1.27 to -0.80). That is nearly 5 times more of a decrease compared to never users!
+
+#### Depression for Never Hard Drug Users
+
+For never hard drug users, there was a significant relationship between depression and mental QOL (t = -4.42, p < 0.0001). Specifically, a 1 point increase in depression score was associated with 0.23 point decrease in mental QOL for never hard drug users (95% CI: -0.34 to -0.13).
+
+### Depression Slopes **between** Hard Drug use Group
+
+The slopes for the relationship between depression and QOL differed based on hard drug use.
+
+For each point increase in depression, the mental QOL score for previous hard drug users decreased an additional 0.80 points compared to never hard drug users (t = -6.17, p-adjusted < 0.0001, 95% CI: -1.06	to -0.55).
+
+Additionally, for each point increase in depression, the mental QOL score for previous hard drug users decreased by an additional 0.91 points compared to current hard drug users (t = -4.946, p-adjusted < 0.0001, 95%: -1.28 to -0.55).
+
+The slope for depression on mental QOL did not differ between current and never hard drug users (t = 0.73, p-adjusted = 1.00, 95% CI: -0.19 to 0.41). 
+
+[Top of Tabset](#Data_Analysis)
+
+## Visualizing the Interaction
+
+The plot below is helpful in interpreting the interaction between hard drug use and depression on mental QOL.
 
 ```{r}
 # Create a scatterplot of mental QOLchange by depression score, colored by hard drug use group.
 ggplot(data_wide_2, aes(x = CESD_2, y = AGG_MENT_CHANGE, color = hard_drugs_grp)) + 
-  geom_point() +
+  geom_point(alpha = 0.5) +
   geom_smooth(method = "lm", se = FALSE) +
   theme_minimal() +
   labs(title = "Mental QOL Change by Depression at 2 years, Colored by Hard Drug Use Group",
@@ -4657,36 +5036,142 @@ ggplot(data_wide_2, aes(x = CESD_2, y = AGG_MENT_CHANGE, color = hard_drugs_grp)
   scale_fill_brewer(palette = "Pastel2")
 ```
 
-Does this show previous drug users are dealing with withdrawls and mental pains of quitting still?
+Here we can see the key relationships found in the model.
 
-Yeah I guess so.
+There is a negative relationship between depression and mental QOL scores at each level of drug usage. However, this relationship is much stronger for previous hard drug users, where every 1 point increase in depression scores is associated with an almost 5x greater decrease in mental QOL score over 2 years (~1 point for previous users compared to ~0.2 points for current and never user).
 
-Maybe the downsides of the drug are so bad that taking hard drugs helps with it??
+And most importantly the slopes differed significantly by hard drug use group, with previous hard drug users having an additional 0.8 or 0.9 greater decrease in mental QOL score compared to never and current hard drug users, respectively.
 
-```{r}
-# Relevel to change to the reference group to Never user
-data_wide_2$hard_drugs_grp <- relevel(data_wide_2$hard_drugs_grp, ref = "Never User")
+Thus, we used this relationship as **further evidence that previous hard drug users are a vulnerable group**. They are susceptible to losses in mental QOL if they have low adherence to the treatment regiment, and depression has a greater impact on the mental QOL of previous hard drug users compared to current and never hard drug users.
 
-# Perform regression on mental QOL change by adherence highlow and depression score.
-model_MENT_red5 <- lm(AGG_MENT_CHANGE ~ hard_drugs_grp + CESD_2 + ADH_HIGHVSLOW + hard_drugs_grp*CESD_2, data = data_wide_2)
+[Top of Tabset](#Data_Analysis)
+:::
 
-# Exmamine the summary
-summary(model_MENT_red5)
-```
+## Conclusion
 
-So we def don't include adherence into this model.
+We found a dual interaction where the impact of hard drug use on mental QOL depended on both adherence to the treatment regimen and depression.
 
-The main driver of mental QOL change is not adherence to the protocol, but drug use and depression scores!!!
+For adherence, those with previous hard drug use had a decrease in mental QOL if and only if they had low adherence to the treatment regiment.
 
-Do I have to predict depression scores with mental QOL??? Or adherence??? 
+For depression, previous hard drug users had a larger decrease in mental QOL compared to never and current hard drug users.
 
+Thus, we used both of these relationships as **strong evidence that previous hard drug users are a vulnerable population**. They are susceptible to losses in mental QOL if they have low adherence to the treatment regiment, and depression has a greater impact on their mental QOL compared to current and never hard drug users.
 
-## Physical QOL Score
+This finding has great clinical relevance for the treatment of HIV in hard drug users. Specifically, extra efforts should be made to help previous hard drug users in two ways: One, adherence appears to serve as a buffer for previous hard drug users in the relationship between hard drug use and mental QOL. Efforts to increase adherence should therefore be made to help patients receive this ameliorative effect. Two, previous hard drug users do not have the coping mechanism of heroin or opiates available to them to buffer against the impact of adverse effects from ART, and thus extra aid perhaps in the form of increased therapy should be provided to these patients to provide them with alternate coping strategies.
+
+[Top of Tabset](#Data_Analysis)
+
+## Bonus - Predicting Depression
+
+Just for completion's sake, we can run a regression predicting depression score based on the interaction between hard drug use and adherence.
 
 ```{r}
 # Relevel to change to the reference group to never user
 data_wide_2$hard_drugs_grp<- relevel(data_wide_2$hard_drugs_grp, ref = "Never User")
 
+# Relevel to change to the reference group to never user
+data_wide_2$ADH_HIGHVSLOW <- relevel(data_wide_2$ADH_HIGHVSLOW, ref = "Low Adherence")
+
+# Perform regression on mental QOL change by hard drugs group, full model
+model_MENT_full1 <- lm(CESD_2 ~ hard_drugs_grp + ADH_HIGHVSLOW+ hard_drugs_grp*ADH_HIGHVSLOW, data = data_wide_2)
+
+# Examine the summary
+summary(model_MENT_full1)
+```
+
+```{r}
+# Use interactions package to plot interaction
+cat_plot(model_MENT_full1, pred = hard_drugs_grp, modx = ADH_HIGHVSLOW, geom = "line", colors = "Pastel2")
+```
+The interaction is significant, and we can see that previous hard drug users with low adherence had higher depression scores at year 2, and that those with high adherance were buffered from this effect.
+
+The fact that depression and mental QOL both have this relationship, and are similar constructs, lends credence to the likelihood that this is a real relationship, and a strong one at that.
+
+:::
+
+## Physical QOL Score {#Phys}
+
+The fourth outcome variable of interest was change physcal QOL over the first 2 years of the study.
+
+::: panel-tabset
+
+## Full Model
+
+::: panel-tabset
+
+## Model Selection
+
+The candidate variables for inclusion in our model predicting `AGG_PHYS_CHANGE` were `hard_drugs_grp`, `ADH_HIGHVSLOW`, `FRP_2`, `CESD_2`, `BMI`, and `DKGRP_2`
+
+We will remove `BMI` based on the missing values issue identified in the mental QOL model.
+
+Let's run the full model including all those variables and the interaction between hard drug use group and adherence high vs low.
+
+```{r}
+# Relevel to change to the reference group to never user
+data_wide_2$hard_drugs_grp<- relevel(data_wide_2$hard_drugs_grp, ref = "Never User")
+
+
+# Relevel to change to the reference group to never user
+data_wide_2$ADH_HIGHVSLOW <- relevel(data_wide_2$ADH_HIGHVSLOW, ref = "Low Adherence")
+
+# Perform regression on Physical QOL change
+model_PHYS_full1 <- lm(AGG_PHYS_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + FRP_2 + CESD_2 + DKGRP_2 + hard_drugs_grp*ADH_HIGHVSLOW, data = data_wide_2)
+
+# Examine the model
+summary(model_PHYS_full1)
+```
+
+```{r}
+# Get the VIFs
+vif_values <- vif(model_PHYS_full1)
+pretty_print(vif_values)
+```
+
+The overall model is highly significant (F~(10,510)~ = 12.92, p < 0.0001, Adjusted R-squared = 0.187).
+
+We have some nice significant covariates, but it looks like `FRP_2` is the main driver for this model.
+
+We might have another double interaction situation like we did for the mental QOL model. Let's create an interaction term between `hard_drugs_grp` and `FRP_2` and run it through backwards elimination to select our final model based on BIC.
+
+
+### Backwards Elimination
+
+We will perform model selection using backwards elimination and BIC to select the most parsimonious model.
+
+A delta BIC of >2 indicates a difference in model performance.
+
+```{r}
+# Relevel to change to the reference group to never user
+data_wide_2$hard_drugs_grp<- relevel(data_wide_2$hard_drugs_grp, ref = "Never User")
+
+# Relevel to change to the reference group to never user
+data_wide_2$ADH_HIGHVSLOW <- relevel(data_wide_2$ADH_HIGHVSLOW, ref = "Low Adherence")
+
+# Perform regression on physical QOL change
+model_PHYS_full1 <- lm(AGG_PHYS_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + FRP_2 + CESD_2 + DKGRP_2 + hard_drugs_grp*ADH_HIGHVSLOW + hard_drugs_grp*FRP_2, data = data_wide_2)
+
+# Perform backward elimination regression selection based on BIC 
+ols_step_backward_sbc(model_PHYS_full1, include = c("hard_drugs_grp", "ADH_HIGHVSLOW", "hard_drugs_grp:ADH_HIGHVSLOW"))
+```
+The final model selected for `AGG_PHYS_CHANGE` includes the PEVs of `hard_drugs_grp` and `ADH_HIGHVSLOW` and their interaction term, and `FRP_2` as a precision variable. Luckily we only have to interpret one interaction for this model!
+
+
+```{r}
+# Relevel to change to the reference group to never user
+data_wide_2$hard_drugs_grp<- relevel(data_wide_2$hard_drugs_grp, ref = "Never User")
+
+
+# Relevel to change to the reference group to never user
+data_wide_2$ADH_HIGHVSLOW <- relevel(data_wide_2$ADH_HIGHVSLOW, ref = "Low Adherence")
+
+# Perform regression on Physical QOL change
+model_PHYS_full1 <- lm(AGG_PHYS_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + FRP_2 + CESD_2 + DKGRP_2 + hard_drugs_grp*ADH_HIGHVSLOW, data = data_wide_2)
+
+# Examine the model
+summary(model_PHYS_full1)
+```
+```{r}
 # Relevel to change to the reference group to never user
 data_wide_2$ADH_HIGHVSLOW <- relevel(data_wide_2$ADH_HIGHVSLOW, ref = "Low Adherence")
 
@@ -4700,12 +5185,204 @@ summary(model_PHYS_full)
 cat_plot(model_PHYS_full, pred = hard_drugs_grp, modx = ADH_HIGHVSLOW, geom = "line", colors = "Pastel2")
 ```
 
+[Top of Tabset](#Phys)
+
+## Analysis
+
+Let’s investigate the key relationships in the final model for `AGG_PHYS_CHANGE` as determined through backwards selection.
+
+First let’s look at the impact of hard drug use on physical QOL at low adherence.
+
+```{r}
+# Relevel to change to the reference group to never user
+data_wide_2$hard_drugs_grp<- relevel(data_wide_2$hard_drugs_grp, ref = "Never User")
+
+# Relevel to change to the reference group to never user
+data_wide_2$ADH_HIGHVSLOW <- relevel(data_wide_2$ADH_HIGHVSLOW, ref = "Low Adherence")
+
+# Perform regression on phys QOL
+model_PHYS_final1 <- lm(AGG_PHYS_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + FRP_2 + hard_drugs_grp*ADH_HIGHVSLOW, data = data_wide_2)
+
+# Examine the summary
+summary(model_PHYS_final1)
+```
+
+```{r}
+# Print useful model parameters
+model_results(model_PHYS_final1)
+```
+
+
+The overall model is highly significant (F~(6, 525)~ = 20.67, p < 0.0001, adjusted R-squared = 0.1818).
+
+At low adherence, previous hard drug users had on average a 10.89 point decrease in physical QOL compared to never hard drug users (t = -3.16, p-adjusted = 0.00493, 95% CI: -17.66	to -4.13). Current hard drug users did not differ significantly from never hard drug users at low adherence (t = -2.35, p-adjusted =0.0574, 95% CI: -17.72 to -1.58), although with a larger sample size that could become significant. 
+
+For never hard drug users, those with high adherence had a 3.19 point increase in physical QOL compared to those with low adherence (t = 2.27, p = 0.0239).
+
+Compare hard drug use groups at high adherence
+
+```{r}
+
+# Relevel to change to the reference group to never user
+data_wide_2$hard_drugs_grp<- relevel(data_wide_2$hard_drugs_grp, ref = "Never User")
+
+# Relevel to change to the reference group to never user
+data_wide_2$ADH_HIGHVSLOW <- relevel(data_wide_2$ADH_HIGHVSLOW, ref = "High Adherence")
+
+# Perform regression on phys QOL
+model_PHYS_final2 <- lm(AGG_PHYS_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + FRP_2 + hard_drugs_grp*ADH_HIGHVSLOW, data = data_wide_2)
+
+# Examine the summary
+summary(model_PHYS_final2)
+```
+
+```{r}
+# Print useful model parameters
+model_results(model_PHYS_final2)
+```
+
+At high adherence, current hard drug users had on average a 3.94 point decrease in physical QOL compared to never hard drug users (t = -3.545, p-adjusted = 0.00128, 95% CI: -6.12 to -1.75). Additionally, previous hard drug users did not differ significantly from never hard drug users at high adherence (t = 1.100, p-adjusted = 0.815, 95% CI: -1.11 to 3.94).
+
+Change reference level to compare previous users
+
+```{r}
+
+# Relevel to change to the reference group to never user
+data_wide_2$hard_drugs_grp<- relevel(data_wide_2$hard_drugs_grp, ref = "Previous User")
+
+# Relevel to change to the reference group to never user
+data_wide_2$ADH_HIGHVSLOW <- relevel(data_wide_2$ADH_HIGHVSLOW, ref = "Low Adherence")
+
+# Perform regression on phys QOL
+model_PHYS_final3 <- lm(AGG_PHYS_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + FRP_2 + hard_drugs_grp*ADH_HIGHVSLOW, data = data_wide_2)
+
+# Examine the summary
+summary(model_PHYS_final3)
+```
+
+```{r}
+# Print useful model parameters
+model_results(model_PHYS_final3)
+```
+
+At low adherence, previous hard drug users did not differ significantly on change in physical QOL compared to current hard drug users (t = 0.25, p-adjusted = 1.00, 95% CI: -8.59 to 11.08).
+
+For previous hard drug users, those with high adherence to the treatment regiment had on average a 15.49 point increase in physical QOL compared to those with low adherence (t = 4.56, p-adjusted < 0.0001, 95% CI: 8.82 to 22.17).
+
+Change the reference level to current hard drug users.
+
+```{r}
+# Relevel to change to the reference group to never user
+data_wide_2$hard_drugs_grp<- relevel(data_wide_2$hard_drugs_grp, ref = "Current User")
+
+# Relevel to change to the reference group to never user
+data_wide_2$ADH_HIGHVSLOW <- relevel(data_wide_2$ADH_HIGHVSLOW, ref = "Low Adherence")
+
+# Perform regression on phys QOL
+model_PHYS_final4 <- lm(AGG_PHYS_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + FRP_2 + hard_drugs_grp*ADH_HIGHVSLOW, data = data_wide_2)
+
+# Examine the summary
+summary(model_PHYS_final4)
+```
+
+
+```{r}
+# Print useful model parameters
+model_results(model_PHYS_final4)
+```
+
+For current hard drug users, those with high adherence had on average an 8.90 point increase in physical QOL compared to those with low adherence (t = 2.22, p = 0.027, 95% CI: 1.00 to 16.79).
+
+Change reference level to high adherence to compare last group.
+
+```{r}
+# Relevel to change to the reference group to never user
+data_wide_2$hard_drugs_grp<- relevel(data_wide_2$hard_drugs_grp, ref = "Current User")
+
+# Relevel to change to the reference group to never user
+data_wide_2$ADH_HIGHVSLOW <- relevel(data_wide_2$ADH_HIGHVSLOW, ref = "High Adherence")
+
+# Perform regression on phys QOL
+model_PHYS_final5 <- lm(AGG_PHYS_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + FRP_2 + hard_drugs_grp*ADH_HIGHVSLOW, data = data_wide_2)
+
+# Examine the summary
+summary(model_PHYS_final5)
+```
+
+
+```{r}
+# Print useful model parameters
+model_results(model_PHYS_final5)
+```
+
+At high adherence, current hard drug users had on average a change in physical QOL that was 5.35 points less than previous hard drug users (t = 3.33, p-adjusted = 0.00279, 95% CI: 2.19 to 8.51).
+
+[Top of Tabset](#Phys)
+
+## Interpretation
+
+### Overall Model
+
+There were significant differences in change in physical QOL over 2 years based on hard drug usage and adherence to the treatment regiment, while controlling for Frailty Related Phenotype (F~(6, 525)~ = 20.67, p < 0.0001, adjusted R-squared = 0.1818).
+
+#### Hard Drug Use
+
+The relationship between hard drug use and change in physical QOL over 2 years depended on adherence to the treatment regiment.
+
+#### Hard Drug Use at Low Adherence
+
+At low adherence, previous hard drug users had on average a 10.89 point decrease in physical QOL compared to never hard drug users (t = -3.16, p-adjusted = 0.00493, 95% CI: -17.66	to -4.13), but did not differ significantly on change in physical QOL compared to current hard drug users (t = 0.25, p-adjusted = 1.00, 95% CI: -8.59 to 11.08).
+. Current hard drug users did not differ significantly from never hard drug users at low adherence (t = -2.35, p-adjusted =0.0574, 95% CI: -17.72 to -1.58), although with a larger sample size that could become significant. 
+
+#### Hard Drug Use at High Adherence
+
+At high adherence, current hard drug users had on average a 3.94 point decrease in physical QOL compared to never hard drug users (t = -3.545, p-adjusted = 0.00128, 95% CI: -6.12 to -1.75), and 5.35 points decrease compared to previous hard drug users (t = 3.33, p-adjusted = 0.00279, 95% CI: 2.19 to 8.51). Additionally, previous hard drug users did not differ significantly from never hard drug users at high adherence (t = 1.100, p-adjusted = 0.815, 95% CI: -1.11 to 3.94).
+
+### Adherence
+The relationship between adherence and  change in physical QOL over 2 years depended on hard drug use.
+
+#### Adherence for Current Hard Drug Users
+
+For current hard drug users, those with high adherence had on average an 8.90 point increase in physical QOL compared to those with low adherence (t = 2.22, p = 0.027, 95% CI: 1.00 to 16.79).
+
+#### Adherence for Previous Hard Drug Users
+
+For previous hard drug users, those with high adherence to the treatment regiment had on average a 15.49 point increase in physical QOL compared to those with low adherence (t = 4.56, p-adjusted < 0.0001, 95% CI: 8.82 to 22.17).
+
+#### Adherence for Never Hard Drug Users
+
+For never hard drug users, those with high adherence had a 3.19 point increase in physical QOL compared to those with low adherence (t = 2.27, p = 0.0239).
+
+### Frailty Related Phenotype
+
+Frailty related phenotype was a significant predictor of change in physical QOL over 2 years (t = -8.72, p < 0.0001). On average, those with a frailty related phenotype had a 12.76 decrease in physical QOL compared to those without a frailty related phenotype (95% CI: -15.63 to -9.88).
+
+
+[Top of Tabset](#Phys)
+
+## Visualizing the Interaction 
+
+The below plot is useful in interpreting the interaction.
+
+
+```{r}
+# Use interactions package to plot interaction
+cat_plot(model_PHYS_final1, pred = hard_drugs_grp, modx = ADH_HIGHVSLOW, geom = "line", colors = "Pastel2")
+```
+
+For those with low adherence, previous users had a greater decrease in physical QOL compared to never users. The difference between current and never hard drug users at low adherence is borderline significant, and may be so with a larger sample size.
+
+For those with high adherence, the current hard drug use group had a greater decrease in physical QOL compared to both never and previous hard drug users.
+
+And most importantly, for previous hard drug users, those with low adherence had a decrease in physical QOL when compared to those with high adherence.
+
+We take this as **further evidence that previous hard drug users are at a vulnerable population**. High adherence serves as a buffer and could protect patients that have quit heroin or opiates within the past 2 years. 
+
+Additionally, we have evidence that even at high adherence, current hard drug users have worse overall physical QOL.
+
 :::
 
-_______
-TO DO: PERFORM BACKWARDS SELECTION AND COMPARE THE RESULTING MODEL WITH MY MANUALLY SELECTED MODEL USING AICC AND BIC AND PICK BEST MODEL.
-_____
-
+:::
 # CONSORT Flow Chart
 
 Here is where I will go back and add details for how many participants we removed at each stage.
@@ -4720,35 +5397,6 @@ kable(colSums(is.na(data_2)), format = "html", col.names = "Missing") %>%
 
 # To do
 
--   Go back and add title and axes labels to all your plots dude
--   investigate these to analyze non normal data: quantile regression, best normalized r package, gamma link GLM
-
-"The transformations contained in this package and implemented in bestNormalize are reversible (i.e., 1-1), which allows for straight-forward interpretation and consistency. In other words, any analysis performed on the normalized data can be interpreted using the original unit (see application)." Cool.
-
-## Depression and adherence
-
-Is depression related to adherence?
-
-```{r}
-model <- lm(CESD_2 ~ ADH_HIGHVSLOW, data = data_wide_2)
-summary(model)
-```
-
-Very significant, but a low r squared so I think we include it as a potential confounder, instead of worrying about VIF. Also should be able to run a model and get VIF output
-
-
-## Code for backwards selection
-
-```{r}
-# Perform full model with interaction term
-model_log_VLOAD_full <- lm(VLOAD_log_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + EDUC_COLLEGE + hard_drugs_grp*ADH_HIGHVSLOW, data = data_wide_2)
-
-# Perform backwards selection model
-step_model <- step(model_log_VLOAD_full, direction = "backward")
-
-summary(step_model)
-```
-
 ## Descriptive Statistics Filter
 
 Filtered table 1 based on likely variables for end models, dropping extraneous variables.
@@ -4758,27 +5406,10 @@ Filtered table 1 based on likely variables for end models, dropping extraneous v
 table1 <- table1(~AGG_MENT_0 + AGG_PHYS_0 + BMI_0 + CESD_0 + DKGRP_0 + LEU3N_0 +  VLOAD_log_0 + ADH_HIGHVSLOW + RACE_WHITEYN + EDUC_COLLEGE + age_0 + AGG_MENT_CHANGE + AGG_PHYS_CHANGE + VLOAD_log_CHANGE + LEU3N_CHANGE| hard_drugs_grp, data = data_wide_2, caption = "Descriptive Statistics at Baseline", overall = c(left="Total"))
 table1
 ```
-______________
-Checking for multicollinearity between BMI and College education
-
-`BMI` may still be associated with another outcome variable, so we should check for multicollinearity between `BMI` and `EDUC_COLLEGE`. 
-
-```{r}
-
-data_wide_2$EDUC_COLLEGE <- as.numeric(data_wide_2$EDUC_COLLEGE)
-
-# # Perform a point-biserial correlation to see if BMI and college education are correlated.
-point_biserial <- cor.test(data_wide_2$BMI_0, data_wide_2$EDUC_COLLEGE)
-point_biserial
-```
-
-The correlation between `BMI` and `EDUC_COLLEGE` is not significant (p = 0.083) or strong enough (r = 0.075) to be of concern. Both variables can be included in models without raising issues of multicollinearity.
-
 
 # Bonus
 
 Out of curiosity I started look into the 8 year relationships we have in this data set, and found some interesting results.
-
 
 I think I have to do an analysis of aggregate QOL scores predict adherence or dropout...
 
@@ -5130,12 +5761,6 @@ p <- ggplot(dropout_summary, aes(x = years, y = Dropout_Percent, color = ADH)) +
 ggplotly(p)
 ```
 
-I dunno how to read this lol
-
-Is there more dropout based on adherence?
-
-Is there more dropout based on quality of life?
-
 [**does QOL predict adherence?**]{.underline}
 
 ```{r}
@@ -5282,5 +5907,144 @@ ggplot(data_wide_2, aes(x = CESD_2, y = AGG_MENT_CHANGE, color = hard_drugs_grp)
        x = "Depression Score") + 
   scale_fill_brewer(palette = "Pastel2")
 ```
+If you were a previous hard drug user, increases in depression score was associated with decreases in mental QOL over 2 years.
 
+```{r}
+# Create a scatterplot of mental QOLchange by depression score, colored by hard drug use group.
+ggplot(data_wide_2, aes(x = AGG_MENT_CHANGE, y = CESD_2, color = hard_drugs_grp)) + 
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  theme_minimal() +
+  labs(title = "Mental QOL Change by Depression at 2 years, Colored by Hard Drug Use Group",
+       y = "Depression Score",
+       x = "Mental QOL Change") + 
+  scale_fill_brewer(palette = "Pastel2")
+```
+If you were a previous hard drug user, increases in mental QOL predicted lower depression scores over 2 years.
+
+They are saying the same thing.
+
+Except this plot is showing that never drug users were less depressed compared to curent users, regardless of whether they increased or decreased in mental QOL.
+
+So mental QOL increase is protective for previous drug users in particular.
+
+```{r}
+# Create a scatterplot of mental QOLchange by depression score, colored by hard drug use group.
+ggplot(data_no_na, aes(x = CESD_2, y = AGG_MENT_CHANGE, color = ADH_HIGHVSLOW)) + 
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  theme_minimal() +
+  labs(title = "Mental QOL Change by Depression at 2 years, Colored by Adherence",
+       y = "Mental QOL Change",
+       x = "Depression Score") + 
+  scale_fill_brewer(palette = "Pastel2")
+
+```
+
+It appears that high adherence is protective for those with high depression scores.
+
+I think there's a three way interaction going on here.
+
+
+
+
+## Depression and leu3n change are mediators for QOL score
+
+```{r}
+# Relevel to change to the reference group to never user
+data_wide_2$hard_drugs_grp<- relevel(data_wide_2$hard_drugs_grp, ref = "Never User")
+
+# Relevel to change to the reference group to never user
+data_wide_2$ADH_HIGHVSLOW <- relevel(data_wide_2$ADH_HIGHVSLOW, ref = "Low Adherence")
+
+# Perform regression on mental QOL change by hard drugs group, full model
+model_MENT_full1 <- lm(AGG_MENT_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + CESD_2 + LEU3N_CHANGE +  hard_drugs_grp*ADH_HIGHVSLOW, data = data_wide_2)
+
+# Examine the summary
+summary(model_MENT_full1)
+```
+
+
+
+## 3 way interaction with depression, hard drug use, and adherence on mental QOL
+
+```{r}
+# Relevel to change to the reference group to never user
+data_wide_2$hard_drugs_grp<- relevel(data_wide_2$hard_drugs_grp, ref = "Never User")
+
+# Relevel to change to the reference group to never user
+data_wide_2$ADH_HIGHVSLOW <- relevel(data_wide_2$ADH_HIGHVSLOW, ref = "Low Adherence")
+
+# Perform regression on mental QOL change by hard drugs group, full model
+model_MENT_full1 <- lm(AGG_MENT_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW +  CESD_2 + hard_drugs_grp*CESD_2*ADH_HIGHVSLOW, data = data_wide_2)
+
+# Examine the summary
+summary(model_MENT_full1)
+```
+
+I do NOT want to interpret that, but that is the highest r squared i've seen by far for this data set.
+
+Also we definitely do not have the sample size to run this.
+
+### More stuff on possible 3-way interaction 
+
+```{r}
+# Relevel to change to the reference group to never user
+data_wide_2$ADH_HIGHVSLOW <- relevel(data_wide_2$ADH_HIGHVSLOW, ref = "Low Adherence")
+
+# Perform regression on mental QOL change by hard drugs group, full model
+model_MENT_full1 <- lm(AGG_MENT_CHANGE ~ ADH_HIGHVSLOW + CESD_2 + ADH_HIGHVSLOW*CESD_2, data = data_wide_2)
+
+# Examine the summary
+summary(model_MENT_full1)
+```
+
+```{r}
+# Relevel to change to the reference group to never user
+data_wide_2$ADH_HIGHVSLOW <- relevel(data_wide_2$ADH_HIGHVSLOW, ref = "High Adherence")
+
+# Perform regression on mental QOL change by hard drugs group, full model
+model_MENT_full1 <- lm(AGG_MENT_CHANGE ~ ADH_HIGHVSLOW + CESD_2 + ADH_HIGHVSLOW*CESD_2, data = data_wide_2)
+
+# Examine the summary
+summary(model_MENT_full1)
+```
+
+
+```{r}
+# Create a scatterplot of mental QOLchange by depression score, colored by hard drug use group.
+ggplot(data_wide_2, aes(x = CESD_2, y = AGG_MENT_CHANGE, color = ADH_HIGHVSLOW)) + 
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  theme_minimal() +
+  labs(title = "Mental QOL Change by Depression at 2 years, Colored by Hard Drug Use Group",
+       y = "Mental QOL Change",
+       x = "Depression Score") + 
+  scale_fill_brewer(palette = "Pastel2")
+```
+
+I don't actually have to look at this because we're not too interesting in depression.
+
+## Mediation Test
+
+```{r}
+library(mediation)
+
+# Create NA omitted data set
+clean_data_test <- data_wide_2 %>%
+  dplyr::select(AGG_MENT_CHANGE, hard_drugs_grp, CESD_2) %>%
+  na.omit()
+
+# Fit the model with X predicting M
+model_mediator <- lm(CESD_2 ~ hard_drugs_grp, data = clean_data_test)
+
+# Fit the model with X and M predicting Y
+model_outcome <- lm(AGG_MENT_CHANGE ~ hard_drugs_grp + CESD_2, data = clean_data_test)
+
+# Check for mediation
+mediation_result <- mediate(model_mediator, model_outcome, treat = "hard_drugs_grp", mediator = "CESD_2")
+summary(mediation_result)
+
+```
+Apparently this means that while indirect mediation is significant, the combined direct and indirect effects are not. So depression is NOT a mediate for the relationship between hard drugs and mental QOL.
 
