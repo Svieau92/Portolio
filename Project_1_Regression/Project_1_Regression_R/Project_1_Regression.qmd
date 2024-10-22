@@ -327,7 +327,10 @@ correlation_matrix[upper.tri(correlation_matrix)] <- NA
 
 # Save the matrix as a LaTex file for paper
 cor_table <- xtable(correlation_matrix, caption = "Correlation Matrix", label = "tab:correlation")
-print(cor_table, type = "latex", file = "correlation_matrix.tex")
+print(cor_table, type = "latex", file = "correlation_matrix999.tex")
+
+kable(correlation_matrix, format = "html", table.attr = "class='table table-bordered'")
+
 ```
 
 ```{r, include = FALSE, echo = FALSE}
@@ -2205,3 +2208,8 @@ Options: Directly upload photos to online cloud and link to those Everytime you 
 alexkaizer.com/bios_6618 - can ask him how to turn my qmd into a website.
 
 look into Tableau for interactive graphs (she says its easy).
+
+```{r}
+table(data_wide_2$hard_drugs_grp, data_wide_2$ADH_HIGHVSLOW)
+```
+

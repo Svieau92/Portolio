@@ -2,6 +2,7 @@
 title: "Advanced Data Analysis - Project 2"
 author: "Sean Vieau"
 date: "October 9, 2024"
+editor: visual
 output: html_document
 toc: true
 ---
@@ -1676,7 +1677,7 @@ For the CONSORT diagram, we just removed:
 
 38 visits where patients did not report income.
 
-X BMI values that were missing and y values that were improbable.
+10% BMI values that were missing
 
 137 visits with insufficient data for a HBP diagnosis
 
@@ -1692,11 +1693,9 @@ X BMI values that were missing and y values that were improbable.
 
 718 visits with insufficent data for dyslipidemia diagnosis
 
-X visits with missing values for CESD
+< 5% visits with missing values for CESD
 
 20 visits where heroin or opiate use was not specified
-
-COME BACK TO THIS BECAUSE i THINK I NEED TO COME BACK AND DELETE OUTLIERS.
 
 <a href="#Clean_IVs">Back to top of tabset</a>
 :::
@@ -3621,10 +3620,6 @@ As determined by [interactive variable selection](#EDA), the variables of intere
 
 The researchers are interested in if differences in treatment response between the drug use groups can be explained by differences in adherence to the HAART regimen, so we will also include an interaction term between hard drug use group and adherence.
 
-Thus the full model is:
-
-                                         ADD LATEX MATH SYNTAX HERE.
-                                         
 ::: panel-tabset
 
 ## Analysis
@@ -3832,8 +3827,6 @@ data_wide_2$ADH_HIGHVSLOW <- relevel(data_wide_2$ADH_HIGHVSLOW, ref = "Low Adher
 
 # Perform a regression of the full model predicting log viral load change
 model_VLOAD_full <- lm(VLOAD_log_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + hard_drugs_grp * ADH_HIGHVSLOW + EDUC_COLLEGE, data = data_wide_2)
-
-library(interactions)
 
 # Use interactions package to plot interaction
 cat_plot(
@@ -6232,25 +6225,9 @@ The data looks slightly more normally distributed
 
 :::
 
-
-
-# CONSORT Flow Chart
-
-Here is where I will go back and add details for how many participants we removed at each stage.
-
-This function is useful for tabulating missing data for each variable.
-
-```{r}
-# Print number of missing data for each column 
-kable(colSums(is.na(data_2)), format = "html", col.names = "Missing") %>%
-  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
-```
-
-# To do
-
 ## Descriptive Statistics Filter
 
-Filtered table 1 based on likely variables for end models, dropping extraneous variables.
+Filtered table 1 based on variables used in final models, dropping extraneous variables.
 
 ```{r}
 # Create Table 1 for the wideform data set,stratified by hard drug use group
@@ -6258,18 +6235,11 @@ table1 <- table1(~RACE_WHITEYN + EDUC_COLLEGE + age_0 + FRP_2 + CESD_0 + ADH_HIG
 table1
 ```
 
-# Bonus
+# Bonus - Plotting Outcome Variables Across Full 8 Years
 
-Out of curiosity I started look into the 8 year relationships we have in this data set, and found some interesting results.
+The below plots were used as justification and evidence for separating adherence from four levels to two levels, as this seemed to be whether the most meaninfgul and true split was.
 
-I think I have to do an analysis of aggregate QOL scores predict adherence or dropout...
-
-```{r}
-p <- ggplot(data, aes(x = years, y = AGG_MENT, color = ADH)) +
-  geom_point()
-
-ggplotly(p)
-```
+## Mental QOL
 
 ```{r}
 
@@ -6297,7 +6267,7 @@ ggplotly(p)
 
 Success! This is very interesting. It appears that the 100% adherence group has the highest average mental QOL score across the 8 year study, followed by the 95-99% group, followed by the \<75% group and followed by (with some variation) the \<75% and 75-94% groups.
 
-I think we're on to something here. This could mean that better adherence was improving mental QOL and thus patients were continuing the regimen. OR it could mean that for patients whom the medication was affecting negatively mentally, they adhered less to the drug or lessened their dose to control for adverse psychological effects.
+## Physical QOL
 
 Let's do the same thing but for `AGG_PHYS`.
 
@@ -6321,7 +6291,7 @@ ggplot(summary_data, aes(x = years, y = Average_QOL, color = ADH)) +
 
 We see a similiar relationship here, though there's more variation. For some reason that \<75% group likes to spike in their QOL at year 7. Interesting.
 
-What about for our other outcome variables while we're at it?
+## Log Viral Load
 
 ```{r}
 # Get means for each year
@@ -6343,6 +6313,9 @@ p <- ggplot(summary_data, aes(x = years, y = Average_LEU3N, color = ADH)) +
 ggplotly(p)
 
 ```
+
+
+## CD4+ T Cell Count
 
 ```{r}
 # Create log vload variable for original 8 year data set.
@@ -6367,6 +6340,13 @@ p <- ggplot(summary_data, aes(x = years, y = Average_VLOAD_log, color = ADH)) +
 ggplotly(p)
 ```
 
+That's very interesting. The groups with the highest vload log had the least adherence. There is an inverse relationship here.
+
+This is strong evidence that the treatment is efficacious and the `ADH` should be considered as a confounder.
+
+Ohhhhh, that's super cool. So there is an inverse relationship between `LEU3N` and `VLOAD_log`, such that spikes in one should be dips in the other. We can see that in this data set! It appears that for the adherence group of \<75%, they had viral load spikes at years 5 and 7, which correspond with leukocyte dips at years 5 and 7! They weren't adhering to the protocol, which resulted in them getting infected (?) more and having more of the virus present compared to the other groups.
+
+## Comparing High Vs Low Adherence Groups
 
 ```{r}
 data$ADH_HIGHLOW <- ifelse(data$ADH == "<75%" | data$ADH == "75-94%", 0, 1)
@@ -6398,39 +6378,9 @@ p <- ggplot(summary_data, aes(x = years, y = Average_VLOAD_log, color = ADH_HIGH
 ggplotly(p)
 ```
 
+High adherence patients have lower viral load then low adherence
 
-```{r}
-data$perfADH <- ifelse(data$ADH == "100%", 1, 0)
-
-data$perfADH <- factor(data$perfADH,
-                           levels = c(0,1),
-                           labels = c("Low Adherence", "PERF Adherence"))
-
-#### tRY WITH HIGH LOW ADH
-# Create log vload variable for original 8 year data set.
-data$VLOAD_log <- log(data$VLOAD)
-
-# Get means for each year
-summary_data <- data %>%
-  group_by(perfADH, years) %>%
-  summarize(Average_VLOAD_log = mean(VLOAD_log, na.rm = TRUE))
-
-# Create plot
-p <- ggplot(summary_data, aes(x = years, y = Average_VLOAD_log, color = perfADH)) +
-  geom_line(size = 1) +   # Line plot
-  geom_point(size = 2) +  # Add points for clarity
-  labs(title = "Average VLOAD log by PERFECT Adherence Group Over 8 Years",
-       x = "Year",
-       y = "Average VLOAD log",
-       color = "Adherence Group") +
-  theme_minimal() +       # Clean theme
-  scale_color_brewer(palette = "Pastel2")  # Nice color palette for groups
-
-ggplotly(p)
-```
-
-
-doing same for leu3n
+Same for leu3n
 
 ```{r}
 #### tRY WITH HIGH LOW ADH
@@ -6446,7 +6396,7 @@ p <- ggplot(summary_data, aes(x = years, y = Average_LEU3N, color = ADH_HIGHLOW)
   geom_point(size = 2) +  # Add points for clarity
   labs(title = "Average LEU3N by Adherence Group Over 8 Years",
        x = "Year",
-       y = "Average LEU3N log",
+       y = "Average LEU3N",
        color = "Adherence Group") +
   theme_minimal() +       # Clean theme
   scale_color_brewer(palette = "Pastel2")  # Nice color palette for groups
@@ -6454,448 +6404,11 @@ p <- ggplot(summary_data, aes(x = years, y = Average_LEU3N, color = ADH_HIGHLOW)
 ggplotly(p)
 ```
 
-
-
-```{r}
-data$ADH_HIGHLOW <- ifelse(data$ADH == "<75%" | data$ADH == "75-94%", 0, 1)
-
-data$ADH_HIGHLOW <- factor(data$ADH_HIGHLOW,
-                           levels = c(0,1),
-                           labels = c("Low Adherence", "High Adherence"))
-
-#### tRY WITH HIGH LOW ADH
-# Create log vload variable for original 8 year data set.
-data$VLOAD_log <- log(data$VLOAD)
-
-# Get means for each year
-summary_data <- data %>%
-  group_by(ADH_HIGHLOW, years) %>%
-  summarize(Average_VLOAD_log = mean(VLOAD_log, na.rm = TRUE))
-
-# Create plot
-p <- ggplot(summary_data, aes(x = years, y = Average_VLOAD_log, color = ADH_HIGHLOW)) +
-  geom_line(size = 1) +   # Line plot
-  geom_point(size = 2) +  # Add points for clarity
-  labs(title = "Average VLOAD log by Adherence Group Over 8 Years",
-       x = "Year",
-       y = "Average VLOAD log",
-       color = "Adherence Group") +
-  theme_minimal() +       # Clean theme
-  scale_color_brewer(palette = "Pastel2")  # Nice color palette for groups
-
-ggplotly(p)
-```
-
-
-That's very interesting. The groups with the highest vload log had the least adherence. There is an inverse relationship here.
-
-This is strong evidence that the treatment is efficacious and the `ADH` should be considered as a confounder.
-
-Ohhhhh, that's super cool. So there is an inverse relationship between `LEU3N` and `VLOAD_log`, such that spikes in one should be dips in the other. We can see that in this data set! It appears that for the adherence group of \<75%, they had viral load spikes at years 5 and 7, which correspond with leukocyte dips at years 5 and 7! They weren't adhering to the protocol, which resulted in them getting infected (?) more and having more of the virus present compared to the other groups.
-
-What about if we do this by hard drug use group?
-
-```{r}
-# Get means for each year
-summary_data <- data %>%
-  group_by(hard_drugs, years) %>%
-  summarize(Average_VLOAD_log = mean(VLOAD_log, na.rm = TRUE))
-
-# Create plot
-p <- ggplot(summary_data, aes(x = years, y = Average_VLOAD_log, color = hard_drugs)) +
-  geom_line(size = 1) +   # Line plot
-  geom_point(size = 2) +  # Add points for clarity
-  labs(title = "Average VLOAD log by Hard Drug Use Over 8 Years",
-       x = "Year",
-       y = "Average VLOAD log",
-       color = "Hard Drug Use") +
-  theme_minimal() +       # Clean theme
-  scale_color_brewer(palette = "Pastel2")  # Nice color palette for groups
-
-ggplotly(p)
-```
-
-This looks like those that use hard drugs have a lower log vload over the entire study. Is that because hard drug use is being confounded with adherence?
-
-dunno how to read that...
-
-```{r}
-# Assuming your dataset is called data_long and has columns: ID, Year, and Outcome_Var
-
-# Step 1: Create a variable to indicate dropout
-data <- data %>%
-  group_by(newid) %>%
-  mutate(Dropout = ifelse(any(is.na(VLOAD_log)), 1, 0))
-
-# Step 2: Create a summary dataset to show the dropout status
-dropout_status <- data %>%
-  group_by(newid) %>%
-  summarize(Dropout = max(Dropout))
-
-# Check the result
-head(dropout_status)
-
-
-
-```
-
-```{r}
-summary_data <- data %>%
-  group_by(Dropout, years, ADH) %>%
-  summarize(Average_VLOAD_log = mean(VLOAD_log, na.rm = TRUE))
-
-p <- ggplot(summary_data, aes(x = years, y = Average_VLOAD_log, color = ADH, linetype = as.factor(Dropout))) +
-  geom_line(size = 1) +   # Line plot
-  geom_point(size = 2) +  # Add points for clarity
-  labs(title = "Average VLOAD log by Adherence Group and Dropout Status Over 8 Years",
-       x = "Year",
-       y = "Average VLOAD log",
-       color = "Adherence Group",
-       linetype = "Dropout Status") +
-  theme_minimal() +       # Clean theme
-  scale_color_brewer(palette = "Pastel2")  # Nice color palette for groups
-
-ggplotly(p)
-```
-
-```{r}
-# Assuming your dataset is called data_long and has columns: ID, Year, and Dropout
-dropout_summary <- data %>%
-  group_by(years, ADH) %>%
-  summarize(Dropout_Count = sum(Dropout, na.rm = TRUE))
-
-# Check the summarized data
-head(dropout_summary)
-```
-
-```{r}
-# Create plot
-p <- ggplot(dropout_summary, aes(x = years, y = Dropout_Count, color = ADH)) +
-  geom_line(size = 1) +   # Line plot
-  geom_point(size = 2) +  # Add points for clarity
-  labs(title = "Dropout Count by Adherence Over 8 Years",
-       x = "Year",
-       y = "Dropout Count",
-       color = "Adherence") +
-  theme_minimal() +       # Clean theme
-  scale_color_brewer(palette = "Pastel2")  # Nice color palette for groups
-
-ggplotly(p)
-```
-
-```{r}
-# Summarize total participants per ADH group and year
-total_participants_per_adh <- data %>%
-  group_by(years, ADH) %>%
-  summarize(Total_Participants = n_distinct(newid))
-
-
-# Summarize dropout count and calculate dropout percent per ADH group
-dropout_summary <- data %>%
-  group_by(years, ADH) %>%
-  summarize(Dropout_Count = sum(Dropout, na.rm = TRUE)) %>%
-  left_join(total_participants_per_adh, by = c("years", "ADH")) %>%
-  mutate(Dropout_Percent = (Dropout_Count / Total_Participants) * 100)
-
-
-# Create plot
-p <- ggplot(dropout_summary, aes(x = years, y = Dropout_Percent, color = ADH)) +
-  geom_line(size = 1) +   # Line plot
-  geom_point(size = 2) +  # Add points for clarity
-  labs(title = "Dropout Percent by Adherence Over 8 Years",
-       x = "Year",
-       y = "Dropout Percent",
-       color = "Adherence") +
-  theme_minimal() +       # Clean theme
-  scale_color_brewer(palette = "Pastel2")  # Nice color palette for groups
-
-ggplotly(p)
-```
-
-[**does QOL predict adherence?**]{.underline}
-
-```{r}
-model_test <- lm(AGG_MENT_CHANGE ~ ADH_2, data = data_wide_2)
-
-summary(model_test)
-
-```
-
-It does... that's not good I think.
-
-```{r}
-model_test_phys <- lm(AGG_PHYS_CHANGE ~ ADH_2, data = data_wide_2)
-summary(model_test_phys)
-```
-
-It also does for `AGG_PHYS`... weird.
-
-Compared to those with 100% adherence, those with 75-95% had a physical change score that was 3.66 points lower.
-
-
-
-
-
-# Weird relationship with depression and mental QOL
-
-If we plot it with depression at baseline, the relationship is positive, opposite of expected.
-
-If we plot it with depression at 2 years, the relationship is negative, as expected.
-
-```{r}
-# Create a scatterplot of mental QOL change score by depression at baseline
-ggplot(data_wide_2, aes(x = CESD_0, y = AGG_MENT_CHANGE, color = CESD_0)) + 
-  geom_point() +
-  theme_minimal() +
-  labs(title = "Mental QOL Change by Depression at Baseline",
-       y = "Mental QOL Change ",
-       x = "Depression Score") + 
-  scale_fill_brewer(palette = "Pastel2")
-```
-
-There appears to be a linear relationship here. Let's run the regression and fit the model.
-
-```{r}
-# Perform a linear regression predicting mental QOL change by depression at baseline
-model <- lm(AGG_MENT_CHANGE ~ CESD_0, data = data_wide_2)
-
-# Examine model summary
-summary(model)
-```
-
-```{r}
-# Create a scatterplot of mental QOL change score by depression at baseline
-ggplot(data_wide_2, aes(x = CESD_0, y = AGG_MENT_CHANGE, color = CESD_0)) + 
-  geom_point() +
-  geom_smooth(method = "lm") +
-  theme_minimal() +
-  labs(title = "Mental QOL Change by Depression at Baseline",
-       y = "Mental QOL Change ",
-       x = "Depression Score") + 
-  scale_fill_brewer(palette = "Pastel2")
-```
-
-Depression score is a significant predictor of mental QOL change over the first 2 years of treatment (F~(1, 527)~= 92.64). On average, a 1-point increase in depression score is associated with a 0.41 point increase in mental QOL score (p < 0.0001).
-
-This is the complete opposite of what is expected. Those with more depression should have lower mental QOL. Is this due to confounding?
-
-
-If we plot it with depression at 2 years, the relationship is negative, as expected.
-
-```{r}
-# Create a scatterplot of mental QOL change score by depression at baseline
-ggplot(data_wide_2, aes(x = CESD_2, y = AGG_MENT_CHANGE, color = CESD_2)) + 
-  geom_point() +
-  theme_minimal() +
-  labs(title = "Mental QOL Change by Depression at Baseline",
-       y = "Mental QOL Change ",
-       x = "Depression Score") + 
-  scale_fill_brewer(palette = "Pastel2")
-```
-
-There appears to be a linear relationship here. Let's run the regression and fit the model.
-
-```{r}
-# Perform a linear regression predicting mental QOL change by depression at baseline
-model <- lm(AGG_MENT_CHANGE ~ CESD_2, data = data_wide_2)
-
-# Examine model summary
-summary(model)
-```
-
-```{r}
-# Create a scatterplot of mental QOL change score by depression at baseline
-ggplot(data_wide_2, aes(x = CESD_2, y = AGG_MENT_CHANGE, color = CESD_2)) + 
-  geom_point() +
-  geom_smooth(method = "lm") +
-  theme_minimal() +
-  labs(title = "Mental QOL Change by Depression at Baseline",
-       y = "Mental QOL Change ",
-       x = "Depression Score") + 
-  scale_fill_brewer(palette = "Pastel2")
-```
-
-
-Should I calculate a depression change score???
-
-
-For log viral load change of beta -5.72 , do you do exp(-5.72 ) or exp(5.72) and take the negative?
-
-
-THis is another (and probably easier) way of doing between group comparisons. But I noticed that the estimates are slightly off and it makes me wonder at relying on a package.
-
-
-```{r}
-library(emmeans)
-
-# Perform a regression of the full model predicting log viral load change
-model_VLOAD_full <- lm(VLOAD_log_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + hard_drugs_grp * ADH_HIGHVSLOW + EDUC_COLLEGE, data = data_wide_2)
-
-emm <- emmeans(model_VLOAD_full, ~ hard_drugs_grp * ADH_HIGHVSLOW)
-
-contrast(emm, method = "pairwise")
-
-# Plot EMMs
-plot(emm, comparisons = TRUE)
-```
-
+High adherence users have higher CD4+ T Cells, for the most part.
 
 # Other literature
 
 https://pmc.ncbi.nlm.nih.gov/articles/PMC9234842/
 
 This one shows that poor adherence is related to anxiety and depression, leading credence to why I want to examine the impact of hard drugs and adherence while controlling for depression.
-
-# Crazy interaction with depression and hard drugs and mental qol
-```{r}
-# Create a scatterplot of mental QOLchange by depression score, colored by hard drug use group.
-ggplot(data_wide_2, aes(x = CESD_2, y = AGG_MENT_CHANGE, color = hard_drugs_grp)) + 
-  geom_point() +
-  geom_smooth(method = "lm", se = FALSE) +
-  theme_minimal() +
-  labs(title = "Mental QOL Change by Depression at 2 years, Colored by Hard Drug Use Group",
-       y = "Mental QOL Change",
-       x = "Depression Score") + 
-  scale_fill_brewer(palette = "Pastel2")
-```
-If you were a previous hard drug user, increases in depression score was associated with decreases in mental QOL over 2 years.
-
-```{r}
-# Create a scatterplot of mental QOLchange by depression score, colored by hard drug use group.
-ggplot(data_wide_2, aes(x = AGG_MENT_CHANGE, y = CESD_2, color = hard_drugs_grp)) + 
-  geom_point() +
-  geom_smooth(method = "lm", se = FALSE) +
-  theme_minimal() +
-  labs(title = "Mental QOL Change by Depression at 2 years, Colored by Hard Drug Use Group",
-       y = "Depression Score",
-       x = "Mental QOL Change") + 
-  scale_fill_brewer(palette = "Pastel2")
-```
-If you were a previous hard drug user, increases in mental QOL predicted lower depression scores over 2 years.
-
-They are saying the same thing.
-
-Except this plot is showing that never drug users were less depressed compared to curent users, regardless of whether they increased or decreased in mental QOL.
-
-So mental QOL increase is protective for previous drug users in particular.
-
-```{r}
-# Create a scatterplot of mental QOLchange by depression score, colored by hard drug use group.
-ggplot(data_no_na, aes(x = CESD_2, y = AGG_MENT_CHANGE, color = ADH_HIGHVSLOW)) + 
-  geom_point() +
-  geom_smooth(method = "lm", se = FALSE) +
-  theme_minimal() +
-  labs(title = "Mental QOL Change by Depression at 2 years, Colored by Adherence",
-       y = "Mental QOL Change",
-       x = "Depression Score") + 
-  scale_fill_brewer(palette = "Pastel2")
-
-```
-
-It appears that high adherence is protective for those with high depression scores.
-
-I think there's a three way interaction going on here.
-
-
-
-
-## Depression and leu3n change are mediators for QOL score
-
-```{r}
-# Relevel to change to the reference group to never user
-data_wide_2$hard_drugs_grp<- relevel(data_wide_2$hard_drugs_grp, ref = "Never User")
-
-# Relevel to change to the reference group to never user
-data_wide_2$ADH_HIGHVSLOW <- relevel(data_wide_2$ADH_HIGHVSLOW, ref = "Low Adherence")
-
-# Perform regression on mental QOL change by hard drugs group, full model
-model_MENT_full1 <- lm(AGG_MENT_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + CESD_2 + LEU3N_CHANGE +  hard_drugs_grp*ADH_HIGHVSLOW, data = data_wide_2)
-
-# Examine the summary
-summary(model_MENT_full1)
-```
-
-
-
-## 3 way interaction with depression, hard drug use, and adherence on mental QOL
-
-```{r}
-# Relevel to change to the reference group to never user
-data_wide_2$hard_drugs_grp<- relevel(data_wide_2$hard_drugs_grp, ref = "Never User")
-
-# Relevel to change to the reference group to never user
-data_wide_2$ADH_HIGHVSLOW <- relevel(data_wide_2$ADH_HIGHVSLOW, ref = "Low Adherence")
-
-# Perform regression on mental QOL change by hard drugs group, full model
-model_MENT_full1 <- lm(AGG_MENT_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW +  CESD_2 + hard_drugs_grp*CESD_2*ADH_HIGHVSLOW, data = data_wide_2)
-
-# Examine the summary
-summary(model_MENT_full1)
-```
-
-I do NOT want to interpret that, but that is the highest r squared i've seen by far for this data set.
-
-Also we definitely do not have the sample size to run this.
-
-### More stuff on possible 3-way interaction 
-
-```{r}
-# Relevel to change to the reference group to never user
-data_wide_2$ADH_HIGHVSLOW <- relevel(data_wide_2$ADH_HIGHVSLOW, ref = "Low Adherence")
-
-# Perform regression on mental QOL change by hard drugs group, full model
-model_MENT_full1 <- lm(AGG_MENT_CHANGE ~ ADH_HIGHVSLOW + CESD_2 + ADH_HIGHVSLOW*CESD_2, data = data_wide_2)
-
-# Examine the summary
-summary(model_MENT_full1)
-```
-
-```{r}
-# Relevel to change to the reference group to never user
-data_wide_2$ADH_HIGHVSLOW <- relevel(data_wide_2$ADH_HIGHVSLOW, ref = "High Adherence")
-
-# Perform regression on mental QOL change by hard drugs group, full model
-model_MENT_full1 <- lm(AGG_MENT_CHANGE ~ ADH_HIGHVSLOW + CESD_2 + ADH_HIGHVSLOW*CESD_2, data = data_wide_2)
-
-# Examine the summary
-summary(model_MENT_full1)
-```
-
-
-```{r}
-# Create a scatterplot of mental QOLchange by depression score, colored by hard drug use group.
-ggplot(data_wide_2, aes(x = CESD_2, y = AGG_MENT_CHANGE, color = ADH_HIGHVSLOW)) + 
-  geom_point() +
-  geom_smooth(method = "lm", se = FALSE) +
-  theme_minimal() +
-  labs(title = "Mental QOL Change by Depression at 2 years, Colored by Hard Drug Use Group",
-       y = "Mental QOL Change",
-       x = "Depression Score") + 
-  scale_fill_brewer(palette = "Pastel2")
-```
-
-I don't actually have to look at this because we're not too interesting in depression.
-
-## Mediation Test
-
-```{r}
-library(mediation)
-
-# Create NA omitted data set
-clean_data_test <- data_wide_2 %>%
-  dplyr::select(AGG_MENT_CHANGE, hard_drugs_grp, CESD_2) %>%
-  na.omit()
-
-# Fit the model with X predicting M
-model_mediator <- lm(CESD_2 ~ hard_drugs_grp, data = clean_data_test)
-
-# Fit the model with X and M predicting Y
-model_outcome <- lm(AGG_MENT_CHANGE ~ hard_drugs_grp + CESD_2, data = clean_data_test)
-
-# Check for mediation
-mediation_result <- mediate(model_mediator, model_outcome, treat = "hard_drugs_grp", mediator = "CESD_2")
-summary(mediation_result)
-
-```
-Apparently this means that while indirect mediation is significant, the combined direct and indirect effects are not. So depression is NOT a mediate for the relationship between hard drugs and mental QOL.
 

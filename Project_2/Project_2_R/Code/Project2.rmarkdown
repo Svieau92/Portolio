@@ -39,6 +39,9 @@ model_results <- function(x) {
 options(scipen = 999)
 ```
 
+
+
+
 # Introduction
 
 The aim of the current study is to assess how treatment response differs for HIV+ patients 2 years after initiating Highly Active Antiretroviral Therapy (HAART) based on hard drug usage (such as heroin or cocaine). This study is of particular scientific interest because it is unclear whether the use of hard drugs inhibits the immune system in humans; treatment strategies may differ based on these results. The researchers are interested in comparing subjects who never used hard drugs to current hard drug users (those that use hard drugs at year 2) or previous hard drug users (those who used drugs at year 0 or 1). Outcomes of interest are: viral load (HIV copies in a mL of blood), CD4+ T cell count (a measure of immunologic health), and aggregate physical and quality of life scores from the SF-36.
@@ -63,6 +66,9 @@ Potential covariates of interest include: marijuana usage since last visit and f
 
 First we load the necessary packages
 
+
+
+
 ```{r, message = FALSE}
 library(dplyr)
 library(ggplot2)
@@ -80,25 +86,43 @@ library(car) # Used to get VIFs
 library(olsrr) # used for backwards elimination model.
 ```
 
+
+
+
 Then we import the data set.
+
+
+
 
 ```{r, message = FALSE}
 # Read in data
 data <- read_csv("C:/Users/sviea/Documents/Portfolio/Project_2/Project_2_R/RawData/hiv_dataset.csv")
 ```
 
+
+
+
 And take a look.
+
+
+
 
 ```{r}
 # Examine data
 glimpse(data)
 ```
 
+
+
+
 Everything appears properly imported, however all our categorical variables are coded as doubles.
 
 ## Labeling Categorical Variables
 
 Let's factor and label our categorical variables so they are appropriately represented (and not doubles, which will yield incorrect results in models)
+
+
+
 
 ```{r, results='hide'}
 # Converting all appropriate variables from doubles to categorical variables
@@ -211,12 +235,21 @@ label(data$years) <- "Year of Visit"
 label(data$hard_drugs) <- "Hard Drug Usage"
 ```
 
+
+
+
 Let's take another look to check that those variables are no longer doubles.
+
+
+
 
 ```{r}
 # Examine data
 glimpse(data)
 ```
+
+
+
 
 Looks good.
 
@@ -224,14 +257,23 @@ Looks good.
 
 Now let's take a look at the header to get a good feeling for our data.
 
+
+
+
 ```{r}
 # Pretty print data header
 pretty_print(head(data))
 ```
 
+
+
+
 Hmm, we have 8 years worth of data points, but the experimenters are only interested in the first 2 years.
 
 Out of curiosity, let's look at how many participants they had each year.
+
+
+
 
 ```{r}
 # Visualize patient drop off over 8 years of study
@@ -241,9 +283,15 @@ barplot(table(data$years))
 pretty_print(table(data$years))
 ```
 
+
+
+
 This is interesting, we don't seem to have as drastic a drop off as I expected. The researchers managed to retain all participants for the first 2 years, and 50% by the end of the 8-year study.
 
 Let's filter to only include values from the first 2 years, as this is the timeframe the researchers are interested in.
+
+
+
 
 ```{r}
 # Filter long form data set to be include only first 2 years
@@ -253,12 +301,21 @@ data_2 <- data[data$years <= 2,]
 dim(data_2)
 ```
 
+
+
+
 We went from 3632 visits in the 8 year data set to 1650 in the 2 year filtered data set.
+
+
+
 
 ```{r}
 # Double check if any patients dropped out within the first 2 years
 any(is.na(data_2$years))
 ```
+
+
+
 
 Luckily, no patients dropped out within the first 2 years of the study!
 
@@ -266,26 +323,44 @@ Luckily, no patients dropped out within the first 2 years of the study!
 
 We can also see that the provided data set is in longform. Let's convert that to wideform.
 
+
+
+
 ```{r}
 # Create new wideform data set for first 2 years of study              
 data_wide_2 <- pivot_wider(data_2, id_cols = newid, names_from = years, values_from = -c(newid, years))
 ```
 
+
+
+
 And take a look at the header to check that was done correctly.
+
+
+
 
 ```{r}
 # Pretty print header of wideform data
 pretty_print(head(data_wide_2))
 ```
 
+
+
+
 Good. now we have a long and wide form of the data set for the first two years of the study.
 
 Finally, let's just clean that wide data set up a bit to drop repeat measures of variables that are constant over time (race, education at baseline, HIV serostatus, everART)
+
+
+
 
 ```{r}
 # Clean up the wide data set a bit by deleting multiple observations across time for constant variables such as race
 data_wide_2 <- data_wide_2 %>% select(-RACE_1, -RACE_2, -EDUCBAS_1, -EDUCBAS_2, -hivpos_1, - hivpos_2, -everART_1, -everART_2)
 ```
+
+
+
 
 Now that our data sets are adequately prepared, we can move on to performing our data checks to ensure fidelity of the data set.
 
@@ -293,19 +368,31 @@ Now that our data sets are adequately prepared, we can move on to performing our
 
 First we begin by examining missingness in our data set
 
+
+
+
 ```{r}
 # Check missingness for long form data
 gg_miss_var(data_2)
 ```
 
+
+
+
 This shows that we are missing the most values for `LDL`, `TRIG`, `ADH`, `TCHOL`, and `income`.
 
 A closer examination reveals...
+
+
+
 
 ```{r}
 # Visualize missing values for longform data
 vis_miss(data_2)
 ```
+
+
+
 
 53% of `LDL`, 53% of `TRIG`, 33% of `ADH`, 32% of `TCHOL`, and 24% of `income` values are missing.
 
@@ -315,14 +402,23 @@ vis_miss(data_2)
 
 But there's an odd, systematic pattern there... what if we look at the wide form of the data?
 
+
+
+
 ```{r}
 # Visualize missing values for wideform data
 vis_miss(data_wide_2)
 ```
 
+
+
+
 Ah, 1/3 of the values for `ADH` are missing because there are 3 time points and you can't have baseline adherence to a protocol you just started (i.e. `ADH_0`).
 
 There's a small blip there that looks like someone DOES have a value for `ADH_0`, I wonder what that's about...
+
+
+
 
 ```{r}
 # For some reason participant 426 has an adherence of 1 at baseline
@@ -335,12 +431,21 @@ pretty_print(adh_at_baseline)
 
 ```
 
+
+
+
 Apparently if you're participant 426, you can have 100% adherence to a protocol you've just started (clearly a typo). Let's fix that.
+
+
+
 
 ```{r}
 # Get rid of that value of 1 for adherence at baseline for patient 426
 data$ADH[data$years == 0] <- NA
 ```
+
+
+
 
 Great, we can still use `ADH` as a variable! We just have to use adherence at years 1 or 2.
 
@@ -351,6 +456,9 @@ We just examined missingness as a preliminary check. However there is more work 
 The dataset we received has variables that were coded inconsistently. For instance, some variables are coded so that missing values are represented by a blank, and some variables (like `CESD`) are coded so that missing values are represented by -1. In other cases, such as with `BMI`, improbable values are coded as 999.
 
 We can see this if we examine the mins and maxes for each numerical variable.
+
+
+
 
 ```{r}
 # Code from ChatGPT
@@ -372,6 +480,9 @@ summary_df <- map_dfr(data_2, summarize_column, .id = "Column") %>%
 # Pretty print the mins and maxes of longform data_2
 pretty_print(summary_df)
 ```
+
+
+
 
 In effect, our data is not correctly showing all missing values. Let's clean all that up, variable by variable.
 
@@ -407,6 +518,9 @@ Standardized viral load
 
 Our min max function earlier showed the max VLOAD was 190695039.60. I wonder if this is real or a data error?
 
+
+
+
 ```{r}
 # Set up the plotting area: 1 row, 2 columns
 par(mfrow = c(1, 2))
@@ -419,9 +533,15 @@ qqnorm(data_2$VLOAD)
 qqline(data_2$VLOAD)
 ```
 
+
+
+
 Yeah, looks like there are about 3 data points throwing off our qqplot from being normal.
 
 Let's investigate.
+
+
+
 
 ```{r}
 # Sort data set by descending viral load
@@ -432,6 +552,9 @@ sorted_data <- data_2[order(-data_2$VLOAD),] %>%
 pretty_print(head(sorted_data))
 ```
 
+
+
+
 So the highest VLOAD value is 75x the 5th highest, and the 4th highest is 2x 5th highest. All these values are from different patients at the baseline.
 
 Based on the data dictionary provided, these values fall below the specified range of 999,999,999 copies/ml. That the PI's specified this range could mean these are real data points. Maybe immediately after when someone is first exposed to HIV the viral load is incredibly high, and these 4 or so patients fell in that time period?
@@ -440,6 +563,9 @@ I will first check if removing them makes our data normally distributed.
 
 We will then add them back into the data set and keep them in mind. Checking with the jackknife residuals after we run our model will tell us if they are high leverage points.
 
+
+
+
 ```{r}
 # Create boxplot to assess for outliers
 outlier_vload <- boxplot(data_2$VLOAD, main = "Boxplot for VLOAD")$out
@@ -447,9 +573,15 @@ text(x = rep(1.2, length(outlier_vload)),
      y = outlier_vload, labels = outlier_vload, col = 'red', cex = 0.8)
 ```
 
+
+
+
 Indeed the boxplot shows these values really mess with our data.
 
 These top 4 patients based on VLOAD are 224, 78, 437, and 196. Patient 196 has double the VLOAD of the next highest person, which means this could be an outlier or real data, but let's remove them just to see.
+
+
+
 
 ```{r}
 # Set up the plotting area: 1 row, 2 columns
@@ -464,9 +596,15 @@ hist(data_vload_removed$VLOAD)
 qqnorm(data_vload_removed$VLOAD)
 ```
 
+
+
+
 Oh, that makes more sense. Those might not have been outliers, we just need to log transform viral load. Right, viral load is often used as a real world example of a biological measurement that is logarithmic...
 
 Let's do that log transform, and just pretend we remembered that from the start.
+
+
+
 
 ```{r}
 # Log transform viral load in the long form data set
@@ -485,6 +623,9 @@ qqline(data_2$VLOAD_log)
 # Create boxplot of log transformed viral load to assess for potential outliers
 outlier_vload <- boxplot(data_2$VLOAD_log, main = "Boxplot for VLOAD")
 ```
+
+
+
 
 That looks much better!
 
@@ -505,6 +646,9 @@ Number of CD4 positive cells (helpers)
 -   0 - 9999 cells
 -   Blank = Missing
 
+
+
+
 ```{r}
 # Set up the plotting area: 1 row, 2 columns
 par(mfrow = c(1, 2))
@@ -524,9 +668,15 @@ sorted_data <- data_2[order(-data_2$LEU3N),] %>%
 pretty_print(head(sorted_data))
 ```
 
+
+
+
 These values all look believable and like there was no errors during data collection or entering. It is unclear whether this variable is right tailed because of outliers, or if it needs to be transformed.
 
 Let's look at potential outliers.
+
+
+
 
 ```{r}
 # Create boxplot of CD4 T cell count to assess for outliers
@@ -535,9 +685,15 @@ text(x = rep(1.2, length(outlier_leu3n)),
      y = outlier_leu3n, labels = outlier_leu3n, col = 'red', cex = 0.8)
 ```
 
+
+
+
 Yeah, the boxplot is showing a lot of outliers.
 
 Let's try a log transform.
+
+
+
 
 ```{r}
 # Log transform CD4 T Cell count
@@ -554,7 +710,13 @@ qqnorm(data_2$LEU3N_log)
 qqline(data_2$LEU3N_log)
 ```
 
+
+
+
 That... didn't work. Maybe let's try standardization.
+
+
+
 
 ```{R}
 # Perform a standardization transformation of CD4 T Cell Count
@@ -571,11 +733,17 @@ qqnorm(data_2$LEU3N_standard)
 qqline(data_2$LEU3N_standard)
 ```
 
+
+
+
 Hmm, that didn't do the trick.
 
 At this point I asked my professor in passing and he recommended the bestNormalize package (which he happened to write) to help in selecting the best transformation for a variable.
 
 Let's take a shot at it.
+
+
+
 
 ```{r}
 # Use bestNormalize R package to select the best transformation for CD4 T Cell count
@@ -583,9 +751,15 @@ BNObject <- bestNormalize(data_2$LEU3N)
 BNObject
 ```
 
+
+
+
 The bestNormalize function selects the best transformation according to the Pearson P statistic (divided by its degrees of freedom), as calculated by the nortest package. There are a variety of normality tests out there, but the benefit of the Pearson P / df is that it is a relatively interpretable goodness of fit test, and the ratio P / df can be compared between transformations as an absolute measure of the departure from normality (if the data follows close to a normal distribution, this ratio will be close to 1).
 
 Here we can see that orderNorm (1.14), Yeo-Johnson (1.26), and Box-Cox (1.26) all perform relatively similar to each other. Let's see what those plots look like if I do those transformations.
+
+
+
 
 ```{r}
 # Peform ordernNorm transformation of CD4 T Cell count
@@ -610,6 +784,9 @@ boxplot(log10(BNObject$oos_preds), yaxt = 'n')
 axis(2, at=log10(c(.1,.5, 1, 2, 5, 10)), labels=c(.1,.5, 1, 2, 5, 10))
 ```
 
+
+
+
 I will select Box-Cox as those two names are more familiar to me so I trust it more per the availability heuristic (and because orderNorm looks TOO good to be true).
 
 More information on Box-Cox Transformation [here](https://www.statisticshowto.com/probability-and-statistics/normal-distributions/box-cox-transformation/)
@@ -625,6 +802,9 @@ More information on Box-Cox Transformation [here](https://www.statisticshowto.co
 The values for `AGG_MENT` in our data set range from 7.229315 to 73.31224, which is believable and leads us to conclude there were no data entry errors here.
 
 Let's examine normality.
+
+
+
 
 ```{r}
 # Set up the plotting area: 1 row, 2 columns
@@ -650,7 +830,13 @@ text(x = rep(1.2, length(outlier_AGG_MENT)),
      y = outlier_AGG_MENT, labels = outlier_AGG_MENT, col = 'red', cex = 0.8)
 ```
 
+
+
+
 It appears that `AGG_MENT` only has 2 potential outliers, and is also not normally distributed, it is left-tailed. Let's address that.
+
+
+
 
 ```{r}
 # Use bestNormalize function to test which transformation performs the best
@@ -658,13 +844,22 @@ BNobject <- bestNormalize(data_2$AGG_MENT)
 BNobject
 ```
 
+
+
+
 The orderNorm transformation beats out the other transformations by a mile. Let's perform that.
+
+
+
 
 ```{r}
 # Perform orderNorm transformation of aggregate mental QOL score
 data_2$AGG_MENT_orderNorm <- orderNorm(data_2$AGG_MENT)$x.t
 MASS::truehist(data_2$AGG_MENT_orderNorm, main = "OrderNorm transformation", nbins = 24)
 ```
+
+
+
 
 That appears to be what we have to do but I have some misgivings with orderNorm transforming everything...
 
@@ -678,6 +873,9 @@ That appears to be what we have to do but I have some misgivings with orderNorm 
 
 AGG_PHYS has a min of 9.12 and a max of 73.57. These are within the specified range of 0 - 100, and it appears there were no data error entries.
 
+
+
+
 ```{r}
 # Set up the plotting area: 1 row, 2 columns
 par(mfrow = c(1, 2))
@@ -690,9 +888,15 @@ qqnorm(data_2$AGG_PHYS)
 qqline(data_2$AGG_PHYS)
 ```
 
+
+
+
 `AGG_PHYS` is not normally distributed, it is left-tailed.
 
 Let's test which type of transformation might suit it.
+
+
+
 
 ```{r}
 # Use bestNormalize function to test which transformation performs the best
@@ -700,13 +904,22 @@ BNobject <- bestNormalize(data_2$AGG_PHYS)
 BNobject
 ```
 
+
+
+
 Again orderNorm performs the best.
+
+
+
 
 ```{r}
 # Perform orderNorm transformation of aggregate mental QOL score
 data_2$AGG_PHYS_orderNorm <- orderNorm(data_2$AGG_PHYS)$x.t
 MASS::truehist(data_2$AGG_PHYS_orderNorm, main = "OrderNorm transformation", nbins = 24)
 ```
+
+
+
 
 OrderNorm transforming all our DVs might make interpration difficult...
 
@@ -730,10 +943,16 @@ Hash/marijuana use since last visit
 -   2 = yes
 -   blank = missing
 
+
+
+
 ```{r}
 # Create a barplot for hash use
 barplot(table(data_2$HASHV))
 ```
+
+
+
 
 Missing data is correctly handled for this variable.
 
@@ -752,10 +971,16 @@ Frequency hash/marijuana was used since last visit.
 -   4 = Less Often
 -   Blank = Missing
 
+
+
+
 ```{r}
 # Create barplot for hash frequency
 barplot(table(data_2$HASHF))
 ```
+
+
+
 
 This variable is coded correctly. Most participants answered they have never used Hash.
 
@@ -776,6 +1001,9 @@ Income
 
 The min and max for income are 1 - 9, which matches that data dictionary.
 
+
+
+
 ```{r}
 # Create barplot for income
 barplot(table(data_2$income))
@@ -784,7 +1012,13 @@ barplot(table(data_2$income))
 pretty_print(table(data_2$income))
 ```
 
+
+
+
 We have to convert those values of 'Do not wish to answer' to be NA.
+
+
+
 
 ```{r}
 # Converting scores of 9 (do not wish to answer) to be NA
@@ -796,6 +1030,9 @@ data_2$income <- droplevels(data_2$income)
 # Create a barplot of income with cleaned values
 barplot(table(data_2$income))
 ```
+
+
+
 
 Looks good, we just converted 38 participants from do not wish to answer, to count as missing.
 
@@ -811,19 +1048,34 @@ We have a min of -1 and a max of 1000.
 
 -   999: Insufficient data (why it shows up with decimals and is not exactly 999, who knows).
 
+
+
+
 ```{r}
 # Create histogram of BMI
 hist(data_2$BMI)
 ```
 
+
+
+
 Let's convert those values of -1 and \>= 998 into missing values.
+
+
+
 
 ```{r}
 # Convert missing and improbably values to NA
 data_2$BMI[data_2$BMI < 0 | data_2$BMI >= 998] <- NA
 ```
 
+
+
+
 And check out the histogram again and the qqplot.
+
+
+
 
 ```{r}
 # Set up the plotting area: 1 row, 2 columns
@@ -839,11 +1091,17 @@ qqline(data_2$BMI)
 summarize_column(data_2$BMI)
 ```
 
+
+
+
 Looks better. Now we have a BMI range of 15.94 - 52.83.
 
 The histogram and qqplots show BMI is slightly right skewed, with more morbidly obese patients than underweight. Is this close enough to normal to ignore, if we take out outliers?
 
 The patient with a BMI of 52.83 may be an outlier based on the qqplot.
+
+
+
 
 ```{r}
 # Investigating highest BMI value to see if its an outlier
@@ -853,7 +1111,13 @@ highest_bmi <- data[data$newid == 206,]
 plot(highest_bmi$years, highest_bmi$BMI)
 ```
 
+
+
+
 Interestingly, participant 206 got heavier over the first year, then dropped weight in the proceeding years. Either that or that second year entry point was an error and was meant to be 42.83
+
+
+
 
 ```{r}
 # Set up the plotting area: 1 row, 2 columns
@@ -869,9 +1133,15 @@ qqline(data_2$BMI)
 data_2$BMI[data_2$newid == 206 & data_2$years == 1] <- 52.832
 ```
 
+
+
+
 After removing that highest BMI value, the histogram is still right tailed.
 
 What do the boxplots look like?
+
+
+
 
 ```{r}
 outlier_bmi <- boxplot(data_2$BMI, main = "Boxplot for BMI")$out
@@ -879,7 +1149,13 @@ text(x = rep(1.2, length(outlier_bmi)),
      y = outlier_bmi, labels = outlier_bmi, col = 'red', cex = 0.8)
 ```
 
+
+
+
 That's a lot of potential outliers for BMI. If we really want to use this variable we may have to remove these values to keep BMI normally distributed.
+
+
+
 
 ```{r}
 # Run simple correlation matrix to see if BMI correlated with any outcomes of interest
@@ -902,9 +1178,15 @@ cor_test_result <- cor.test(data_2$BMI, data_2$AGG_PHYS)
 cor_test_result
 ```
 
+
+
+
 BMI is correlated with all our outcome variables, so we should make sure it's cleaned.
 
 It looks like we have a lot of outliers for BMI we can clean out from our data set to make sure it has a normal distribution.
+
+
+
 
 ```{r}
 # Compute mean and sd values for BMI
@@ -938,7 +1220,13 @@ pretty_print(head(filtered_data))
 
 ```
 
+
+
+
 We have 22 patients that had a BMI +- 3 SD from the mean. Let's clear them from the data set.
+
+
+
 
 ```{r}
 # Filter our values greater than 3SD from the mean.
@@ -969,6 +1257,9 @@ fig
 
 ```
 
+
+
+
 Those all look a lot better! We can now conclude that `BMI` is normally distributed and can be used as a covariate in our models.
 
 <a href="#Clean_IVs">Back to top of tabset</a>
@@ -986,6 +1277,9 @@ High Blood Pressure (SBP \>= 140 or DBP \>= 90 or (diagnosed with hypertension a
 
 We will have to exclude values of 9 or -1.
 
+
+
+
 ```{r}
 # Create barplot of high blood pressure
 barplot(table(data_2$HBP))
@@ -996,7 +1290,13 @@ barplot(table(data_2$HBP))
 pretty_print(table(data_2$HBP))
 ```
 
+
+
+
 There are 137 participants with insufficient data. Let's purge them from the data set.
+
+
+
 
 ```{r}
 # Convert values of insufficient data to NA for high blood pressure
@@ -1011,6 +1311,9 @@ barplot(table(data_2$HBP))
 # Pretty print table
 pretty_print(table(data_2$HBP))
 ```
+
+
+
 
 Looks better.
 
@@ -1030,6 +1333,9 @@ Diabetes (GLUC 2 \>= 126 or (diagnosed with diabetes and use of medication))
 -   4 = Yes, based on data trajectory
 -   9 = Insufficient data
 
+
+
+
 ```{r}
 # Create barplot of diabetes
 barplot(table(data_2$DIAB))
@@ -1038,9 +1344,15 @@ barplot(table(data_2$DIAB))
 pretty_print(table(data_2$DIAB))
 ```
 
+
+
+
 There are 881 visits with patient who had insuffiicent data to make a diabetes diagnosis!
 
 Let's change those values to NA.
+
+
+
 
 ```{r}
 # Convert values of insufficient data to NA for diabetes
@@ -1057,6 +1369,9 @@ pretty_print(table(data_2$DIAB))
 
 ```
 
+
+
+
 Great, `HBP` is now cleaned.
 
 Notably, there were no visits with a yes, based on trajectory.
@@ -1071,6 +1386,9 @@ Liver disease stage 3/4 (SGPT or SGOP \> 150), preliminary algorithm
 -   2 = Yes
 -   9 = Insufficient data
 
+
+
+
 ```{r}
 # Create barplot of liver disease stage
 barplot(table(data_2$LIV34))
@@ -1079,9 +1397,15 @@ barplot(table(data_2$LIV34))
 pretty_print(table(data_2$LIV34))
 ```
 
+
+
+
 There are 507 patients with insufficient data for a liver disease diagnosis.
 
 Let's convert those values to NA to reflect this.
+
+
+
 
 ```{r}
 # Convert values of insufficient data to NA for liver disease stage
@@ -1096,6 +1420,9 @@ barplot(table(data_2$LIV34))
 # Pretty print table
 pretty_print(table(data_2$LIV34))
 ```
+
+
+
 
 Looks good, `LIV34` is now cleaned!
 
@@ -1115,6 +1442,9 @@ Kidney disease (EGFR \< 60 or UPRCR \>= 200)
 
 -   \- 9 = Insufficient data
 
+
+
+
 ```{r}
 # Create barplots of kidney disease
 barplot(table(data_2$KID))
@@ -1123,9 +1453,15 @@ barplot(table(data_2$KID))
 pretty_print(table(data_2$KID))
 ```
 
+
+
+
 There are 1068 visits where there was insufficient data for a diagnosis.
 
 Let's convert those to NA values.
+
+
+
 
 ```{r}
 # Convert values of insufficient data to NA for kidney disease
@@ -1137,6 +1473,9 @@ data_2$KID <- droplevels(data_2$KID)
 # Create barplot of kidney disease
 barplot(table(data_2$KID))
 ```
+
+
+
 
 Looks good, `KID` is now cleaned!
 
@@ -1150,6 +1489,9 @@ Frailty Related Phenotype (3 out of 4 conditions = YES; WTLOS, PHDWA, HLTWB, HLT
 -   2 = Yes
 -   9 = Insufficient data
 
+
+
+
 ```{r}
 # Create barplot of frailty related phenotype
 barplot(table(data_2$FRP))
@@ -1158,9 +1500,15 @@ barplot(table(data_2$FRP))
 pretty_print(table(data_2$FRP))
 ```
 
+
+
+
 Only 3 patients with insufficient data.
 
 Let's convert them to NA.
+
+
+
 
 ```{r}
 # Convert values of insufficient data to NA for frailty related phenotype
@@ -1172,6 +1520,9 @@ data_2$FRP <- droplevels(data_2$FRP)
 # Create barplot of frailty related phenotype
 barplot(table(data_2$FRP))
 ```
+
+
+
 
 Looks good, `FRP` is now cleaned.
 
@@ -1185,6 +1536,9 @@ Frailty Phenotype (3 out of 5 conditions = YES: WTLOS, PHWDA, HLTVA, SLOW, WEAK)
 -   2 = Yes
 -   9 = Insufficient Data
 
+
+
+
 ```{r}
 # Create barplot of frailty phenotype
 barplot(table(data_2$FP))
@@ -1193,7 +1547,13 @@ barplot(table(data_2$FP))
 pretty_print(table(data_2$FP))
 ```
 
+
+
+
 357 visits with insufficient data. Let's convert to NA.
+
+
+
 
 ```{r}
 # Convert values of insufficient data to NA for frailty phenotype
@@ -1206,6 +1566,9 @@ data_2$FP <- droplevels(data_2$FP)
 barplot(table(data_2$FP))
 ```
 
+
+
+
 Looks good, `FP` is now cleaned!
 
 <a href="#Clean_IVs">Back to top of tabset</a>
@@ -1213,6 +1576,9 @@ Looks good, `FP` is now cleaned!
 ## Total Cholesterol
 
 Total cholesterol mg/dL
+
+
+
 
 ```{r}
 # Set up the plotting area: 1 row, 2 columns
@@ -1226,7 +1592,13 @@ qqnorm(data_2$TCHOL)
 qqline(data_2$TCHOL)
 ```
 
+
+
+
 The histogram and qq plot show what may be outliers for total cholesterol at the higher range. How many values are potential outliers?
+
+
+
 
 ```{r}
 # Create boxplot to assess for outliers for total cholesterol
@@ -1242,7 +1614,13 @@ sorted_data <- data_2[order(-data_2$TCHOL),] %>%
 pretty_print(head(sorted_data))
 ```
 
+
+
+
 The highest cholesterol value is \~2x higher than the next highest value. Let's see what happens if we remove it.
+
+
+
 
 ```{r}
 # Delete highest total cholesterol value
@@ -1259,6 +1637,9 @@ qqnorm(data_2$TCHOL)
 qqline(data_2$TCHOL)
 ```
 
+
+
+
 Looks better but still slightly right skewed. This variable had \~30% missing values, so we may end up not using it.
 
 <a href="#Clean_IVs">Back to top of tabset</a>
@@ -1266,6 +1647,9 @@ Looks better but still slightly right skewed. This variable had \~30% missing va
 ## Triglycerides
 
 Triglycerides, mg/dL
+
+
+
 
 ```{r}
 # Set up the plotting area: 1 row, 2 columns
@@ -1279,6 +1663,9 @@ qqnorm(data_2$TRIG)
 qqline(data_2$TRIG)
 ```
 
+
+
+
 VERY skewed! Based on the qqplots, it looks like we would have to perform a log transform on `TRIG` if we wanted to use it. However we have nearly 50% missing values for this variable, so we should drop it as a covariate.
 
 <a href="#Clean_IVs">Back to top of tabset</a>
@@ -1287,12 +1674,21 @@ VERY skewed! Based on the qqplots, it looks like we would have to perform a log 
 
 Low Density Lipoprotein (fasting) mg/dL
 
+
+
+
 ```{r}
 # Create a histogram for LDL
 hist(data_2$LDL)
 ```
 
+
+
+
 Looks like we may have an erroneous value at the highest range there.
+
+
+
 
 ```{r}
 # Sort by descending total cholesterol
@@ -1302,6 +1698,9 @@ sorted_data <- data_2[order(-data_2$LDL),] %>%
 # Pretty print table
 pretty_print(head(sorted_data))
 ```
+
+
+
 
 Patients 19 and 413 have the same value of 704 at baseline. Clearly an error with the measurement process.
 
@@ -1319,6 +1718,9 @@ Dyslipidemia at visit. fasting TC \>=200 mg/dl or \>=130 mg/dl or HDL \< 40 mg/d
 -   4 = Yes from data trajectory
 -   9 = Insufficient data
 
+
+
+
 ```{r}
 # Create barplot of dyslipidemia
 barplot(table(data_2$DYSLIP))
@@ -1327,9 +1729,15 @@ barplot(table(data_2$DYSLIP))
 pretty_print(table(data_2$DYSLIP))
 ```
 
+
+
+
 There are 718 visits with insufficient data for a dyslipidemia diagnosis.
 
 Let's convert those to NAs to reflect this.
+
+
+
 
 ```{r}
 # Convert values of insufficient data to NA for dyslipidemia
@@ -1341,6 +1749,9 @@ data_2$DYSLIP <- droplevels(data_2$DYSLIP)
 # Create barplot of dyslipidemia
 barplot(table(data_2$DYSLIP))
 ```
+
+
+
 
 Looks good, `DYSLIP` is now cleaned!
 
@@ -1354,12 +1765,21 @@ Center for Epidemiological Studies Depression Scale ( \>= 16 is depressed).
 
 -   -1 = missing
 
+
+
+
 ```{r}
 # Create histogram for depression score
 hist(data_2$CESD)
 ```
 
+
+
+
 Let's correctly reflect those -1's as NA's
+
+
+
 
 ```{r}
 # Remove depression scores that were coded as missing
@@ -1376,9 +1796,15 @@ qqnorm(data_2$CESD)
 qqline(data_2$CESD)
 ```
 
+
+
+
 Looks good. `CESD` is now cleaned!
 
 For fun, let's see if a square root transformation helps at all.
+
+
+
 
 ```{r}
 # Try a sqrt transformation
@@ -1395,6 +1821,9 @@ qqnorm(data_2$CESD_sqrt)
 qqline(data_2$CESD_sqrt)
 ```
 
+
+
+
 That does look a bit better, but the central limit theorem justifies inclusion of `CESD` without performing transformation.
 
 <a href="#Clean_IVs">Back to top of tabset</a>
@@ -1408,10 +1837,16 @@ Smoking status
 -   3 = Current smoker
 -   Blank = missing
 
+
+
+
 ```{r}
 # Create barplot of smoking status
 barplot(table(data_2$SMOKE))
 ```
+
+
+
 
 Looks good, nothing to do here.
 
@@ -1427,10 +1862,16 @@ Alcohol use since last visit
 -   3 = More than 13 drinks/week
 -   Blank = Missing
 
+
+
+
 ```{r}
 # Create barplot of drinking group
 barplot(table(data_2$DKGRP))
 ```
+
+
+
 
 Looks good, nothing to do here.
 
@@ -1445,6 +1886,9 @@ Took heroin or other opiates since last visit?
 -   -9 = Not specified in form
 -   Blank = Missing
 
+
+
+
 ```{r}
 # Create barplot of heroin or opiate use
 barplot(table(data_2$HEROPIATE))
@@ -1453,9 +1897,15 @@ barplot(table(data_2$HEROPIATE))
 pretty_print(table(data_2$HEROPIATE))
 ```
 
+
+
+
 Only 20 visits where participants did not specify drinking frequency on their form.
 
 Let's correct those to be NA.
+
+
+
 
 ```{r}
 # Convert values of insufficient data to NA for heroin or opiate use
@@ -1467,6 +1917,9 @@ data_2$HEROPIATE <- droplevels(data_2$HEROPIATE)
 # Create barplot of heroin or opiate use
 barplot(table(data_2$HEROPIATE))
 ```
+
+
+
 
 Looks good. `HEROPIATE` is now cleaned!
 
@@ -1480,10 +1933,16 @@ Took/used drugs with a needle since last visit?
 -   2 = Yes
 -   Blank = Missing
 
+
+
+
 ```{r}
 # Create barplot of intravenous drug use
 barplot(table(data_2$IDU))
 ```
+
+
+
 
 Looks good. Nothing to do here
 
@@ -1499,6 +1958,9 @@ Adherence to meds taken since last visit
 -   4 \<75%
 -   Blank = Missing
 
+
+
+
 ```{r}
 # Create bar plot of adherence
 barplot(table(data_2$ADH))
@@ -1506,6 +1968,9 @@ barplot(table(data_2$ADH))
 # Pretty print table
 pretty_print(table(data_2$ADH))
 ```
+
+
+
 
 VERY interesting. I was thinking that 100% vs 95-99% adherence was an arbitrary difference to choose to divide groups on, and was actually planning to merge the two. However, this shows why the experimenters likely made that decision: both groups have close to the same amount of observations (\~500)\> That's really good to know.
 
@@ -1526,6 +1991,9 @@ Race
 -   7 = Other 8 = Other Hispanic (created for 2001-03 new recruits)
 -   Blank = Missing
 
+
+
+
 ```{r}
 # Create barplot of race
 barplot(table(data_2$RACE))
@@ -1533,6 +2001,9 @@ barplot(table(data_2$RACE))
 # Pretty print table
 pretty_print(table(data_2$RACE))
 ```
+
+
+
 
 This all looks coded properly. As is a common thing I am seeing, we have a predominant proportion of participants who are white, non-Hispanic. The data set might be large enough that we can use race as a covariate.
 
@@ -1553,6 +2024,9 @@ Baseline or earliest reported education (highest grade or level)
 -   7 = Post-graduate degree
 -   Blank = Missing
 
+
+
+
 ```{r}
 # Create barplot of education at baseline
 barplot(table(data_2$EDUCBAS))
@@ -1560,6 +2034,9 @@ barplot(table(data_2$EDUCBAS))
 # Pretty print table
 pretty_print(table(data_2$EDUCBAS))
 ```
+
+
+
 
 This all checks out. And it looks like there are enough participants in each group (except for 8th grade or less) to run analyses with this variable. It will be interesting to see what relationships arise, as I expect there to be a strong association between education and HIV exposure.
 
@@ -1572,10 +2049,16 @@ HIV Serostatus
 -   0 = Negative
 -   1 = Positive
 
+
+
+
 ```{r}
 # Checking that all patients are HIV pos
 any(is.na(data_2$hivpos))
 ```
+
+
+
 
 All patients in this data set are HIV+
 
@@ -1584,6 +2067,9 @@ All patients in this data set are HIV+
 ## Age
 
 Age at visit
+
+
+
 
 ```{r}
 # Set up the plotting area: 1 row, 2 columns
@@ -1597,6 +2083,9 @@ qqnorm(data_2$age)
 qqline(data_2$age)
 ```
 
+
+
+
 Nice and normally distributed, how we like it.
 
 <a href="#Clean_IVs">Back to top of tabset</a>
@@ -1608,6 +2097,9 @@ Take ART at visit
 -   0 = NO
 -   1 = YES
 
+
+
+
 ```{r}
 # Create barplot of antiretroviral therapy
 barplot(table(data_2$ART))
@@ -1615,6 +2107,9 @@ barplot(table(data_2$ART))
 # Pretty print table
 pretty_print(table(data_2$ART))
 ```
+
+
+
 
 I'm not too sure how useful this variable will be. It just means there were some visits where patients were not given ART, I suppose. But most visits had participants receiving ART.
 
@@ -1627,6 +2122,9 @@ Ever took ART.
 -   0 = NO
 -   1 = YES
 
+
+
+
 ```{r}
 # Create barplot of everART
 barplot(table(data_2$everART))
@@ -1635,12 +2133,21 @@ barplot(table(data_2$everART))
 pretty_print(table(data_2$everART))
 ```
 
+
+
+
 This has the exact same split as `ART`. Which makes me think they are exactly the same values for each participant
+
+
+
 
 ```{r}
 # Check if everART and ART are identical
 all(data_2$everART == data_2$ART)
 ```
+
+
+
 
 Yup, this is either an accidental duplicate of `ART`, or there is no distinction of significance between the two. What exactly does "Ever took ART" (the explanation provided by the data dictionary) mean? Was this taken at baseline?
 
@@ -1656,6 +2163,9 @@ Hard drug use (either injection drugs or illicit heroin/opiate use) since last v
 -   1 = Yes
 -   Blank = Missing
 
+
+
+
 ```{r}
 # Create barplot of hard drug use category
 barplot(table(data_2$hard_drugs))
@@ -1663,6 +2173,9 @@ barplot(table(data_2$hard_drugs))
 # Pretty print table
 pretty_print(table(data_2$hard_drugs))
 ```
+
+
+
 
 There were 198 visits where participants had used hard_drugs since the last visit.
 
@@ -1708,6 +2221,9 @@ We first examined missingness before performing data cleaning just to get a sens
 
 Let's compare what our missingness looked like pre- and post-data cleaning.
 
+
+
+
 ```{r}
 # Visualize missingness for pre-cleaned data
 gg_miss_var(data)
@@ -1716,9 +2232,15 @@ gg_miss_var(data)
 gg_miss_var(data_2)
 ```
 
+
+
+
 The order for missingness has changed, now with `KID` at the top, followed by `DIAB`, `LDL`, `TRIG`, and `DYSLIP`.
 
 `TCHOL`, `LIV34`, and `income` are further behind, with levels of missingness that may be salvageable (\~30%).
+
+
+
 
 ```{r}
 # Visualize missingness for pre-cleaned dataset
@@ -1728,7 +2250,13 @@ vis_miss(data)
 vis_miss(data_2)
 ```
 
+
+
+
 And for good measure let's now examine missingness in the wide form data set.
+
+
+
 
 ```{r}
 # Create new wideform data set for first 2 years of study              
@@ -1737,6 +2265,9 @@ data_wide_2 <- pivot_wider(data_2, id_cols = newid, names_from = years, values_f
 # Visualize missing values in the wideform data set
 vis_miss(data_wide_2)
 ```
+
+
+
 
 There are no real trends that become apparent when looking at this plot for the wideform data set.
 
@@ -1791,10 +2322,16 @@ Here we will create the variables necessary for the analysis.
 
 Since we cleaned the longform data set, let's go ahead and re-transpose it to update the wide form data set.
 
+
+
+
 ```{r}
 # Create new wideform data set for first 2 years of study              
 data_wide_2 <- pivot_wider(data_2, id_cols = newid, names_from = years, values_from = -c(newid, years))
 ```
+
+
+
 
 :::::: panel-tabset
 ## Outcome Variable Change Scores
@@ -1819,6 +2356,9 @@ Change scores are coded such that:
 -   For aggregate mental and physical QOL score, higher numbers signify an increase in mental/physical health from baseline. Negative values signify a decrease.
 :::
 
+
+
+
 ```{r}
 # Create change scores for outcome variables
 data_wide_2$VLOAD_log_CHANGE <- data_wide_2$VLOAD_log_2 - data_wide_2$VLOAD_log_0
@@ -1827,10 +2367,16 @@ data_wide_2$AGG_MENT_CHANGE <- data_wide_2$AGG_MENT_2 - data_wide_2$AGG_MENT_0
 data_wide_2$AGG_PHYS_CHANGE <- data_wide_2$AGG_PHYS_2 - data_wide_2$AGG_PHYS_0
 ```
 
+
+
+
 Now let's perform internal consistency checks to make sure those calculations were performed correctly, as well as reexamine the distributions of the change score for each variable.
 
 ::: panel-tabset
 ## Log Viral Load Change
+
+
+
 
 ```{r}
 # Select only variables related to change scores to double check we performed calculation correctly.
@@ -1841,7 +2387,13 @@ filtered_data <- data_wide_2 %>%
 pretty_print(head(filtered_data))
 ```
 
+
+
+
 The computation for change score was performed correctly.
+
+
+
 
 ```{r}
 # Set up the plotting area: 1 row, 2 columns
@@ -1858,11 +2410,17 @@ qqnorm(data_wide_2$VLOAD_log_CHANGE)
 qqline(data_wide_2$VLOAD_log_CHANGE)
 ```
 
+
+
+
 Looks like we have 1 outlier there that we should catch with the jackknife residuals after we fit the model, but `VLOAD_log_CHANGE` looks normally distributed!
 
 [Top of Tabset](#Variable_Creation)
 
 ## CD4+ T Cell Count Change
+
+
+
 
 ```{r}
 # Select only variables related to change scores to double check we performed calculation correctly.
@@ -1873,7 +2431,13 @@ filtered_data <- data_wide_2 %>%
 pretty_print(head(filtered_data))
 ```
 
+
+
+
 The computation for change score was performed correctly.
+
+
+
 
 ```{r}
 # Set up the plotting area: 1 row, 2 columns
@@ -1887,11 +2451,17 @@ qqnorm(data_wide_2$LEU3N_CHANGE)
 qqline(data_wide_2$LEU3N_CHANGE)
 ```
 
+
+
+
 CD4+ T Cell count change score looks normally distributed, with 1 or 2 outliers that we can examine the leverage and influence of.
 
 [Top of Tabset](#Variable_Creation)
 
 ## Aggregate Mental QOL Change
+
+
+
 
 ```{r}
 # Select only variables related to change scores to double check we performed calculation correctly.
@@ -1902,7 +2472,13 @@ filtered_data <- data_wide_2 %>%
 pretty_print(head(filtered_data))
 ```
 
+
+
+
 The computation for change score was performed correctly.
+
+
+
 
 ```{r}
 # Set up the plotting area: 1 row, 2 columns
@@ -1916,11 +2492,17 @@ qqnorm(data_wide_2$AGG_MENT_CHANGE)
 qqline(data_wide_2$AGG_MENT_CHANGE)
 ```
 
+
+
+
 That looks more normally distributed now, and our sample size is very large so we can also count on the central limit theorem to help us with the assumption of normality.
 
 [Top of Tabset](#Variable_Creation)
 
 ## Aggregate Physical QOL Change
+
+
+
 
 ```{r}
 # Select only variables related to change scores to double check we performed calculation correctly.
@@ -1931,7 +2513,13 @@ filtered_data <- data_wide_2 %>%
 pretty_print(head(filtered_data))
 ```
 
+
+
+
 The computation for change score was performed correctly.
+
+
+
 
 ```{r}
 # Set up the plotting area: 1 row, 2 columns
@@ -1944,6 +2532,9 @@ hist(data_wide_2$AGG_PHYS_CHANGE, breaks = 24)
 qqnorm(data_wide_2$AGG_PHYS_CHANGE)
 qqline(data_wide_2$AGG_PHYS_CHANGE)
 ```
+
+
+
 
 Aggregate physical QOL change score appears more normally distributed now.
 
@@ -1971,6 +2562,9 @@ The criteria outlined by the researchers are as follows:
 
 First we will create dummy codes for whether a patient was a never, previous, or current hard drug user.
 
+
+
+
 ```{r}
 # Create dummy code for current drug users (those who used at year 2)
 data_wide_2$current_drug <- ifelse(data_wide_2$hard_drugs_2 == "Yes", 1, 0) 
@@ -1983,7 +2577,13 @@ data_wide_2$never_drug <- ifelse(data_wide_2$hard_drugs_1 == "No" & data_wide_2$
 
 ```
 
+
+
+
 And perform some internal consistency checks to ensure we coded that correctly.
+
+
+
 
 ```{r}
 # Double check our criteria worked as intended
@@ -2006,6 +2606,9 @@ if (all_no_overlap) {
 
 ```
 
+
+
+
 Great, that looks like we coded it properly and there are no overlaps between drug use conditions (e.g. there are no current drug users who are also previous drug users).
 
 [Top of Tabset](#Variable_Creation)
@@ -2017,6 +2620,9 @@ Now we will use those dummy codes to make a variable for which group each patien
 -   0: Never User
 -   1: Previous User
 -   2: Current User
+
+
+
 
 ```{r, results = "hide"}
 # Create a single variable for drug use group
@@ -2034,7 +2640,13 @@ label(data_wide_2$hard_drugs_grp) <- "Hard Drug Use Group"
 
 ```
 
+
+
+
 And perform an internal consistency check to make sure there are no overlapping group assignments.
+
+
+
 
 ```{r}
 # Double check our criteria worked as intended
@@ -2045,12 +2657,21 @@ filtered_data <- data_wide_2 %>%
 pretty_print(head(filtered_data))
 ```
 
+
+
+
 Let's do a final check for how many patients we have in each group.
+
+
+
 
 ```{r}
 # Pretty print categories
 pretty_print(table(data_wide_2$hard_drugs_grp))
 ```
+
+
+
 
 Looks good, we can now move forward with analyses using the `hard_drgs_grp` variable!
 
@@ -2076,6 +2697,9 @@ Let's go ahead and create a new category for patients that had:
 
 We will be using adherence at year 2 for these categories.
 
+
+
+
 ```{r}
 # Create new groups based on high vs low adherence (based on adherence at 2 years)
 data_wide_2$ADH_HIGH <- ifelse(data_wide_2$ADH_2 == "100%" | data_wide_2$ADH_2 == "95-99%", 1, 0)
@@ -2099,7 +2723,13 @@ data_wide_2$ADH_HIGHVSLOW <- droplevels(data_wide_2$ADH_HIGHVSLOW)
 
 ```
 
+
+
+
 Let's perform a consistency check to make sure that coding worked as intended.
+
+
+
 
 ```{r}
 # Double check our criteria worked as intended
@@ -2110,6 +2740,9 @@ filtered_data <- data_wide_2 %>%
 pretty_print(head(filtered_data, 20))
 ```
 
+
+
+
 Looks great, now we have a new variable `ADH_HIGHVSLOW` to compare how high and low adherence to the medication regiment since the last visit impacts outcomes.
 
 [Top of Tabset](#Variable_Creation)
@@ -2118,16 +2751,25 @@ Looks great, now we have a new variable `ADH_HIGHVSLOW` to compare how high and 
 
 First let's examine how many patients of each race we have.
 
+
+
+
 ```{r}
 # Get number of patients of each race
 pretty_print(table(data_wide_2$RACE_0))
 ```
+
+
+
 
 We have a very low number of patients in the minority race categories.
 
 It may be informative to see how outcomes differ based on white vs non-white, as our sample is predominantly white and there is otherwise not enough patients in each category to use race as a meaningful variable.
 
 Let's create a variable that captures this.
+
+
+
 
 ```{r}
 # Create dummy variable for race, white vs non-white
@@ -2151,14 +2793,23 @@ filtered_data <- data_wide_2 %>%
 pretty_print(head(filtered_data, 10))
 ```
 
+
+
+
 Our dummy coding was performed correctly.
 
 Let's see what our counts looks like now.
+
+
+
 
 ```{r}
 # Check counts for each category in the new whiteYN variable.
 table(data_wide_2$RACE_WHITEYN)
 ```
+
+
+
 
 We have 186 non-white participants and 340 white participants.
 
@@ -2166,12 +2817,21 @@ We have 186 non-white participants and 340 white participants.
 
 ## Education Groups
 
+
+
+
 ```{r}
 # Get number patients in each education tier
 pretty_print(table(data_wide_2$EDUCBAS_0))
 ```
 
+
+
+
 Education at baseline is currently coded as a categorical variable with 7 levels. It may be more helpful to classify education as a bivariate variable of college vs no college.
+
+
+
 
 ```{r}
 # Create new dummy variable for college vs no college
@@ -2200,6 +2860,9 @@ pretty_print(head(filtered_data, 10))
 table(data_wide_2$EDUC_COLLEGE)
 ```
 
+
+
+
 Looks good, we have 125 patients with no college, and 425 with at least some college.
 
 [Top of Tabset](#Variable_Creation)
@@ -2210,6 +2873,9 @@ Looks good, we have 125 patients with no college, and 425 with at least some col
 Here we will acquire the descriptive statistics of our data set and create Table 1. Code modified from [cran.r-project.org](https://cran.r-project.org/web/packages/table1/vignettes/table1-examples.html)
 
 Please note: These descriptive statistics are based on the cleaned data set, and will be different from the original data (e.g. `income` values of "Do not wish to answer" have been recoded as missing values).
+
+
+
 
 ```{r, results = "hide"}
 # Create labels for variables to make the names of each variable more professional in outputs
@@ -2257,9 +2923,15 @@ table1 <- table1(~AGG_MENT_0 + AGG_PHYS_0 +  HASHV_0 + HASHF_0 + income_0 + BMI_
 table1
 ```
 
+
+
+
 # Correlation Matrix
 
 First we will begin by making a correlation matrix to assess whether any of our IVs are related to each other (multicollinearity). This will also inform which variables to incorporate into the final model.
+
+
+
 
 ```{r}
 # Let's clean our output by making a trimmed dataset excluding extaneous variables
@@ -2274,6 +2946,9 @@ correlation_matrix <- cor(data_for_matrix, use = "complete.obs")
 # Plot the matrix
 corrplot(correlation_matrix, method = "circle")
 ```
+
+
+
 
 There are a host of strong correlations in our data set.
 
@@ -2301,21 +2976,33 @@ We previously determined that `LDL`, `TRIG`, `DIAB`, `KID`, and `DYSLIP` had exc
 
 Now that we have seen that they are not strongly related to the outcome variables, we can be assured that we can safely remove them with no need for imputation.
 
+
+
+
 ```{r}
 # Drop variables with excessive missing values from the wideform data set
 data_2 <- data_2 %>%
   select(-LDL, -TRIG, -DIAB, -KID, -DYSLIP)
 ```
 
+
+
+
 `FRP` and `FP` are both precision variables for `AGG_PHYS`, but highly correlated to each other.
 
 `FP` has more missing values (22%) than `FRP`(\~0%), and will thus be dropped.
+
+
+
 
 ```{r}
 # Drop FP
 data_2 <- data_2 %>%
   select(-FP)
 ```
+
+
+
 
 `EDUCBASE` is highly correlated with `income`, `TCHOL`, `SMOKE`, and `RACE`.
 
@@ -2325,15 +3012,24 @@ data_2 <- data_2 %>%
 
 `SMOKE` and `RACE` will be dropped to avoid issues of multicollinearity, and `EDUCBASE` used as the covariate of choice.
 
+
+
+
 ```{r}
 # Drop income, total cholesterol, smoke, and race
 data_2 <- data_2 %>%
   select(-income, -TCHOL, -SMOKE, -RACE)
 ```
 
+
+
+
 `Hard_drugs` is highly correlated with `HEROPIATE` and `IDU`.
 
 `Hard_drugs` is our main independent variable of interest and thus we drop `HEROPIATE` and `IDU`.
+
+
+
 
 ```{r}
 # Drop income, total cholesterol, smoke, and race
@@ -2341,7 +3037,13 @@ data_2 <- data_2 %>%
   select(-HEROPIATE, -IDU)
 ```
 
+
+
+
 `HBP` is lightly correlated with `age` and `BMI`. Let's drop it to avoid multicollinearity.
+
+
+
 
 ```{r}
 # Drop high blood pressure.
@@ -2349,9 +3051,15 @@ data_2 <- data_2 %>%
   select(-HBP)
 ```
 
+
+
+
 ## Correlation Matrix Redux
 
 Let's take another look at that correlation matrix now that we have cleaned up our data set to remove variables with excessive missing values and issues of multicollinearity.
+
+
+
 
 ```{r}
 # Let's clean our output by making a trimmed dataset excluding extraneous variables
@@ -2366,6 +3074,9 @@ correlation_matrix <- cor(data_for_matrix, use = "complete.obs")
 # Plot the matrix
 corrplot(correlation_matrix, method = "circle")
 ```
+
+
+
 
 Looking MUCH better! Here we can see some potentially strong relationships emerge.
 
@@ -2405,6 +3116,9 @@ Let's focus first on a model predicting Log Viral Load change.
 
 Let's begin by seeing if there appears to be a difference in log viral load change based on hard drug use, the primary explanatory variable.
 
+
+
+
 ```{r}
 # Create boxplots of log viral load change by hard drug use group
 p <- ggplot(data_wide_2, aes(x = hard_drugs_grp, y = VLOAD_log_CHANGE, fill = hard_drugs_grp)) +
@@ -2419,9 +3133,15 @@ p <- ggplot(data_wide_2, aes(x = hard_drugs_grp, y = VLOAD_log_CHANGE, fill = ha
 ggplotly(p)
 ```
 
+
+
+
 There may be a difference between log viral load change and hard drug use group, especially between never users and previous users. Visually, it appears that that never use group had more of a decrease in log viral load over 2 years compared to the previous and current drug use groups.
 
 Let's run the regression to see if this relationship is statistically significant.
+
+
+
 
 ```{r}
 # Perform regression predicting log vload change by hard drug use group with never user as the reference group
@@ -2443,7 +3163,13 @@ p_comparison <- cbind(p_values, p_adjusted)
 pretty_print(p_comparison)
 ```
 
+
+
+
 Change the reference level to previous users and re-run the model.
+
+
+
 
 ```{r}
 # Relevel to change to the reference group to previous user
@@ -2466,6 +3192,9 @@ p_comparison <- cbind(p_values, p_adjusted)
 pretty_print(p_comparison)
 ```
 
+
+
+
 The overall model is significant (F~(2,529)~= 3.991, p = 0.01903). The group comparisons were not significant after applying Bonferroni correction however (all p-adjusted > 0.05). They may be significant after including precision variables or confounders, and thus we continue with the analysis and include `hard_drugs_group` as the PEV.
 
 [Top of Tabset](#EDA)
@@ -2477,6 +3206,9 @@ The researchers are interested in if treatment response between the drug use gro
 The first step toward investigating this is to examine if there is a relationship between adherence and treatment response, starting with log viral load change.
 
 We can examine this by plotting the average log viral loads each year by adherence group.
+
+
+
 
 ```{r}
 # Clear out that one participant that had an adherence value at year 0, which is a data entry error.
@@ -2499,11 +3231,17 @@ ggplot(summary_data, aes(x = years, y = Average_VLOAD_log, color = ADH)) +
   scale_color_brewer(palette = "Pastel2")  # Nice color palette for groups
 ```
 
+
+
+
 Indeed we can see that, across the first 2 years of the study, as adherence decreased, average log viral load increased!
 
 That is, groups with higher adherence had a smaller increase in log viral load over 2 years compared to those with lower adherence. This is evidence that the ART treatment is efficacious in reducing viral load!
 
 Let's examine that relationship with boxplots.
+
+
+
 
 ```{r}
 # Create boxplots of log viral load change by adherence group
@@ -2519,9 +3257,15 @@ p <- ggplot(data_wide_2, aes(x = ADH_2, y = VLOAD_log_CHANGE, fill = ADH_2)) +
 ggplotly(p)
 ```
 
+
+
+
 This relationship is reflected in the boxplots: Groups with high adherence had a greater decrease in log viral load over 2 years compared to those with low adherence.
 
 Let's run the regression to ensure this difference is statistically significant.
+
+
+
 
 ```{r}
 # Perform regression predicting log vload change by adherence group at year 2, with the 100% adherence group as the reference level
@@ -2543,7 +3287,13 @@ p_comparison <- cbind(p_values, p_adjusted)
 pretty_print(p_comparison)
 ```
 
+
+
+
 Change the reference level to the 75-94% group and re-run the model.
+
+
+
 
 ```{r}
 # Relevel to change to the reference group to 75-94%
@@ -2565,6 +3315,9 @@ p_adjusted <- p.adjust(p_values, method = "bonferroni")
 p_comparison <- cbind(p_values, p_adjusted)
 pretty_print(p_comparison)
 ```
+
+
+
 
 
 The overall model is significant (F~(3, 528)~= 8.261, p < .0001). 
@@ -2594,6 +3347,9 @@ Therefore, it is more prudent to collapse this variable and make comparisons onl
 
 Let's examine change in log viral load based on these criteria.
 
+
+
+
 ```{r}
 # Filter out NA values
 data_no_na <- data_wide_2 %>% filter(!is.na(ADH_HIGHVSLOW))
@@ -2611,11 +3367,17 @@ p <- ggplot(data_no_na, aes(x = ADH_HIGHVSLOW, y = VLOAD_log_CHANGE, fill = ADH_
 ggplotly(p)
 ```
 
+
+
+
 Indeed, this plot is simpler and encapsulates the true relationships better!
 
 The high adherence group had a greater decrease in log viral load over 2 years compared to the low adherence group.
 
 Let's perform the linear regression.
+
+
+
 
 ```{r}
 # Perform regression predicting log vload change by adherence group at year 2
@@ -2624,6 +3386,9 @@ model <- lm(VLOAD_log_CHANGE ~ ADH_HIGHVSLOW, data = data_wide_2)
 # Examine Summary
 summary(model)
 ```
+
+
+
 
 The overall model is statistically significant (F~(1,518)~= 17.78, p < 0.0001). On average, those in the high adherence group have a mean change in log viral load that is 1.86 log copies/mL (or 72.44 copies/mL) lower than those in the low adherence group
 
@@ -2634,6 +3399,9 @@ The overall model is statistically significant (F~(1,518)~= 17.78, p < 0.0001). 
 ## BMI
 
 The correlation matrix reveals a relationship between BMI and each outcome variable. Let's examine this relationship more closely.
+
+
+
 
 ```{r}
 # Create a scatterplot of log vload change by BMI at baseline
@@ -2649,9 +3417,15 @@ p <- ggplot(data_wide_2, aes(x = BMI_0, y = VLOAD_log_CHANGE, color = BMI_0)) +
 ggplotly(p)
 ```
 
+
+
+
 That does not look like a very strong association.
 
 Let's run a regression to see if there is any kind of linear relationship in there.
+
+
+
 
 ```{r}
 # Perform a linear regression predicting log viral load change by BMI at baseline
@@ -2661,6 +3435,9 @@ model <- lm(VLOAD_log_CHANGE ~ BMI_0, data = data_wide_2)
 summary(model)
 ```
 
+
+
+
 `BMI` is not a significant predictor of log viral load change (p = 0.246) and will not be included in the final model.
 
 [Top of Tabset](#EDA)
@@ -2668,6 +3445,9 @@ summary(model)
 ## College Education
 
 Based on the correlation matrix, `EDUC_COLLEGE` appears to be significantly associated with our outcome variables.
+
+
+
 
 ```{r}
 # Create a scatterplot of log vload change by college education
@@ -2680,9 +3460,15 @@ ggplot(data_wide_2, aes(x = EDUC_COLLEGE, y = VLOAD_log_CHANGE, fill = EDUC_COLL
   scale_fill_brewer(palette = "Pastel2")
 ```
 
+
+
+
 There appears to be a difference in log viral load change based on college education. Remember that this is on a logarithmic scale, so the real differences will be much more pronounced, even if the differences seem small here!
 
 Let's run the regression.
+
+
+
 
 ```{r}
 # Perform a linear regression predicting log viral load change by college education
@@ -2691,6 +3477,9 @@ model <- lm(VLOAD_log_CHANGE ~ EDUC_COLLEGE, data = data_wide_2)
 # Examine model summary
 summary(model)
 ```
+
+
+
 
 The overall model is significant F~(1,530)~= 9.204, p = 0.002533). On average, those with a college educaton had change in viral load that was 0.8979 log copies/mL (or 7.9 copies/mL) than those who did not have a college education.
 
@@ -2716,6 +3505,9 @@ Now let's examine relationships for the model predicting CD4+ T Cell Count
 
 Let's see if there is a a difference in CD4+ T Cell count based on hard drug use, the primary explanatory variable.
 
+
+
+
 ```{r}
 # Relevel to change the reference cateory to Never User
 data_wide_2$hard_drugs_grp <- relevel(data_wide_2$hard_drugs_grp, ref = "Never User")
@@ -2733,9 +3525,15 @@ p <- ggplot(data_wide_2, aes(x = hard_drugs_grp, y = LEU3N_CHANGE, fill = hard_d
 ggplotly(p)
 ```
 
+
+
+
 Previous and current hard drug users may have low CD4+ T Cell count compared to never users.
 
 Let’s run the regression to see if this relationship is statistically significant.
+
+
+
 
 ```{r}
 # Perform regression predicting CD4+ T Cell count change by hard drug use group with never user as the reference group
@@ -2755,7 +3553,13 @@ p_comparison <- cbind(p_values, p_adjusted)
 pretty_print(p_comparison)
 ```
 
+
+
+
 Change the reference group to previous users and re-run the model. 
+
+
+
 
 ```{r}
 # Relevel to change the reference category to Previous User
@@ -2778,6 +3582,9 @@ p_comparison <- cbind(p_values, p_adjusted)
 pretty_print(p_comparison)
 ```
 
+
+
+
 The overall model is statistically significant F~(2,529)~ = 12.55, p < 0.0001). On average current drug users have a change in CD4+ T cell count that is 119.467 cells lower than never drug users (p-adjusted < 0.0001). The other between group comparisons were not significant (p-adjusted > 0.05).
 
 `hard_drug_grp` will be included as a predictor in the final model for `LEU3N`.
@@ -2787,6 +3594,9 @@ The overall model is statistically significant F~(2,529)~ = 12.55, p < 0.0001). 
 ## Adherence High vs Low
 
 For ease of mind, let's plot our average `LEU3N` values each year by adherence group.
+
+
+
 
 ```{r}
 # Get means for each year
@@ -2806,9 +3616,15 @@ ggplot(summary_data, aes(x = years, y = Average_LEU3N, color = ADH)) +
   scale_color_brewer(palette = "Pastel2")  # Nice color palette for groups
 ```
 
+
+
+
 We have the same relation we did with log viral load, where higher adherence groups tend to have better outcomes (higher average CD4+ T Cell count in this case). The <75% has a pretty high average CD4+ T cell count, but I think we can chalk this up to variance due to a smaller sample size. We still see the general trend that both high adherence groups are performing better than both low adherence groups, and we can safely collapse these categories into high adherence (95-100%) and low adherence (<95%) groups. 
 
 Let’s examine change in CD4+ T Cell count based on high vs low adherence.
+
+
+
 
 ```{r}
 # Create boxplots of CD4+ T Cell count change by adherence group
@@ -2822,9 +3638,15 @@ ggplot(data_no_na, aes(x = ADH_HIGHVSLOW, y = LEU3N_CHANGE, fill = ADH_HIGHVSLOW
   guides(fill = guide_legend(title = "Adherence Group"))
 ```
 
+
+
+
 It appears that the high adherence group may have a slightly higher gain in CD4+ T Cells over 2 years (its pretty close though).
 
 Let's run a regression to see if this is statistically significant.
+
+
+
 
 ```{r}
 # Perform regression predicting CD4+ T Cell count change by adherence group at year 2
@@ -2834,9 +3656,15 @@ model <- lm(LEU3N_CHANGE~ ADH_HIGHVSLOW, data = data_wide_2)
 summary(model)
 ```
 
+
+
+
 The overall model is not significant (F~(1,518)~= 2.152, p = 0.143).
 
 Just for sanity's sake let's run that with our uncollapsed adherence categories.
+
+
+
 
 ```{r}
 # Perform regression predicting CD4+ T Cell count change by adherence group at year 2
@@ -2845,6 +3673,9 @@ model <- lm(LEU3N_CHANGE~ ADH_2, data = data_wide_2)
 # Examine Summary
 summary(model)
 ```
+
+
+
 
 The overall model is significant (F~(3, 528)~, = 4.353, p = 0.0048). However, none of those between group comparisons are significant after Bonferroni correction.
 
@@ -2860,6 +3691,9 @@ The correlation matrix reveals a potential relationship between BMI and each CD4
 
 Let's assess.
 
+
+
+
 ```{r}
 # Create a scatterplot of CD4+ T Cell Count change by BMI at baseline
 ggplot(data_wide_2, aes(x = BMI_0, y = LEU3N_CHANGE, color = BMI_0)) + 
@@ -2871,9 +3705,15 @@ ggplot(data_wide_2, aes(x = BMI_0, y = LEU3N_CHANGE, color = BMI_0)) +
   scale_fill_brewer(palette = "Pastel2")
 ```
 
+
+
+
 There does not appear to be a strong relationship between BMI and CD4+ T Cell count change.
 
 We perform the regression to double check.
+
+
+
 
 ```{r}
 # Perform a linear regression predicting CD4+ T Cell count change by BMI at baseline
@@ -2883,7 +3723,13 @@ model <- lm(LEU3N_CHANGE ~ BMI_0, data = data_wide_2)
 summary(model)
 ```
 
+
+
+
 Let's plot the regression line.
+
+
+
 
 ```{r}
 # Create a scatterplot of CD4+ T Cell Count change by BMI at baseline
@@ -2897,6 +3743,9 @@ ggplot(data_wide_2, aes(x = BMI_0, y = LEU3N_CHANGE, color = BMI_0)) +
   scale_fill_brewer(palette = "Pastel2")
 ```
 
+
+
+
 The overall model is non-significant (F~(1,517)~ = 2.798, p = 0.095). On average, every 1 unit increase in BMI is associated with a 0.0034 increase in CD4+ T Cell count. Though not significant, the model is below that p = 0.10 cutoff for potential covariates we established a priori. On average, every 1 unit increase in BMI is associated with a 0.0034 increase in CD4+ T Cell count.
 
 `BMI` will be included as a potential precision variable for the model predicting `LEU3N_CHANGE`.
@@ -2908,6 +3757,9 @@ The overall model is non-significant (F~(1,517)~ = 2.798, p = 0.095). On average
 Fraily related phenotype was also correlated to CD4+ T Cell count in the correlation matrix. 
 
 Let's assess that relationship.
+
+
+
 
 ```{r}
 # Filter out NA values
@@ -2923,9 +3775,15 @@ ggplot(data_no_na, aes(x = FRP_2, y = LEU3N_CHANGE, fill = FRP_2)) +
        y = "CD4+ T Cell Count Change") +
   guides(fill = guide_legend(title = "Frailty Related Phenotype"))
 ```
+
+
+
 It appears that those with a frailty related phenotype have a lower increase in CD4+ T Cell count over the 2 years of the study.
 
 Let's run a regression to see if that relationship is statistically significant.
+
+
+
 
 ```{r}
 # Perform regression predicting physical QOL change by Frailty Related Phenotype
@@ -2934,6 +3792,9 @@ model <- lm(LEU3N_CHANGE ~ FRP_2, data = data_wide_2)
 # Examine Summary
 summary(model)
 ```
+
+
+
 
 The overall model is statistically significant (F~1,528)~= 11.66, p < 0.0001). On average, those with a frailty related phenotype had a change in CD4+ T Cell count over 2 years that was 124.046 cells lower than those without a frailty related phenotype (p < 0.0001).
 
@@ -2945,6 +3806,9 @@ The overall model is statistically significant (F~1,528)~= 11.66, p < 0.0001). O
 
 College education did not look strongly related to CD4+ T Cell count change, but let's run a simple regression just to make sure.
 
+
+
+
 ```{r}
 # Create a scatterplot of CD4+ T Cell count change by college education
 ggplot(data_wide_2, aes(x = EDUC_COLLEGE, y = LEU3N_CHANGE, fill = EDUC_COLLEGE)) + 
@@ -2955,7 +3819,13 @@ ggplot(data_wide_2, aes(x = EDUC_COLLEGE, y = LEU3N_CHANGE, fill = EDUC_COLLEGE)
        x = "College Education") + 
   scale_fill_brewer(palette = "Pastel2")
 ```
+
+
+
 They appear comparable, but there may be a slight difference. Run regression to be sure.
+
+
+
 
 ```{r}
 # Perform regression predicting log vload change by college education
@@ -2964,6 +3834,9 @@ model <- lm(LEU3N_CHANGE ~ EDUC_COLLEGE, data = data_wide_2)
 # Examine Summary
 summary(model)
 ```
+
+
+
 
 The overall model is significant (F~(1,530)~= 4.231, p = 0.0401). On average, those with a college education had a change in CD4+ T cell count that was 40.20 cells higher than those without a college education.
 
@@ -2977,6 +3850,9 @@ The overall model is significant (F~(1,530)~= 4.231, p = 0.0401). On average, th
 Depression was lightly correlated to CD4+ T Cell Count based on the correlation matrix.
 
 Let's examine that relationship.
+
+
+
 
 ```{r}
 # Create a scatterplot of CD4+ T Cell Count change by BMI at baseline
@@ -3008,6 +3884,9 @@ ggplot(data_wide_2, aes(x = CESD_0, y = LEU3N_CHANGE, color = CESD_2)) +
        x = "Depression at Year Two") + 
   scale_fill_brewer(palette = "Pastel2")
 ```
+
+
+
 
 The overall model is significant (F~(1, 525)~= 4.23, p = 0.0403). On average, every 1 point increase in CES-Depression score was associated with a 1.53 cell decrease in CD4+ T Cell count.
 
@@ -3047,6 +3926,9 @@ Do I have to do something here concerning dropout?
 
 Let's assess if mental QOL is related to the hard drug use categories.
 
+
+
+
 ```{r}
 # Create boxplots of log viral load change by hard drug use group
 ggplot(data_wide_2, aes(x = hard_drugs_grp, y = AGG_MENT_CHANGE, fill = hard_drugs_grp)) +
@@ -3059,9 +3941,15 @@ ggplot(data_wide_2, aes(x = hard_drugs_grp, y = AGG_MENT_CHANGE, fill = hard_dru
   guides(fill = guide_legend(title = "Hard Drug Use Group"))
 ```
 
+
+
+
 There does not appear to be much of a difference in mental QOL by hard drug use groups.
 
 Let's run a regression.
+
+
+
 
 ```{r}
 # Perform regression predicting mental QOL change by hard drug use group
@@ -3071,9 +3959,15 @@ model <- lm(AGG_MENT_CHANGE ~ hard_drugs_grp, data = data_wide_2)
 summary(model)
 ```
 
+
+
+
 `hard_drugs_grp` is not a significant predictor of `AGG_MENT_CHANGE`.
 
 This is interesting, because when we plot average mental QOL over 8 years by hard drug use, we can see a clear relationship 
+
+
+
 
 ```{r}
 # Get means for each year
@@ -3093,6 +3987,9 @@ ggplot(summary_data, aes(x = years, y = Average_agg_ment, color = hard_drugs)) +
   scale_color_brewer(palette = "Pastel2")  # Nice color palette for groups
 ```
 
+
+
+
 Where those who did not use hard drugs since the last visit had higher mental QOL.
 
 It seems that somewhere when we created our 3 hard drug use categories of never user, previous user, and current user, we lost some of this information.
@@ -3106,6 +4003,9 @@ It seems that somewhere when we created our 3 hard drug use categories of never 
 If adverse reactions from the HAART treatment negatively impacted patients, then we would expect to see the higher adherence groups having a smaller increase, or even decrease, in mental QOL compared to those in the low adherence groups.
 
 Let's first examine this by plotting the average mental QOL for each year by adherence group.
+
+
+
 
 ```{r}
 # Get means for each year
@@ -3125,9 +4025,15 @@ ggplot(summary_data, aes(x = years, y = Average_AGG_MENT, color = ADH)) +
   scale_color_brewer(palette = "Pastel2")  # Nice color palette for groups
 ```
 
+
+
+
 This plot shows that, over the first 2 years, the < 75% adherence group had the highest increase in mental QOL! This is the opposite of expected; you would expect the 100% adherence group to have the highest mental QOL if there were no adverse effects from the drug and it was improving QOL overall by decreasing HIV viral load.
 
 However, the relationship looks different if we create this same plot over the entire 8 years of the study.
+
+
+
 
 ```{r}
 # Get means for each year
@@ -3147,6 +4053,9 @@ ggplot(summary_data, aes(x = years, y = Average_QOL, color = ADH)) +
   scale_color_brewer(palette = "Pastel2")  # Nice color palette for groups
 ```
 
+
+
+
 Here we see the true relationship emerge! The 100% adherence group has the highest aggregate mental QOL score across the 8 years of the study, followed by the 95-99% adherence group, then the 75-94% and <75% adherence groups trailing behind with fair amounts of year to year variation.
 
 Could we calculate AUC and use that to answer the researchers' question?
@@ -3157,6 +4066,9 @@ Therefore we can reasonably conclude that higher adherence is related to better 
 Let's examine these relationships with boxplots.
 
 First looking at adherence split into four categories.
+
+
+
 
 ```{r}
 # Change reference group
@@ -3173,7 +4085,13 @@ ggplot(data_wide_2, aes(x = ADH_2, y = AGG_MENT_CHANGE, fill = ADH_2)) +
   guides(fill = guide_legend(title = "Adherence Group"))
 ```
 
+
+
+
 And then adherence split into two categories of high vs low.
+
+
+
 
 ```{r}
 # Filter out NA values
@@ -3189,11 +4107,17 @@ ggplot(data_no_na, aes(x = ADH_HIGHVSLOW, y = AGG_MENT_CHANGE, fill = ADH_HIGHVS
        y = "Mental QOL Change") +
   guides(fill = guide_legend(title = "Adherence Group"))
 ```
+
+
+
 This plot shows that there is a slight difference in aggregate mental QOL over the first 2 years of the study between the high and low adherence groups.
 
 While not a perfect encapsulation of the true relationship between adherence and mental QOL over time, I believe this comparison adequately captures the differences between adherence groups we can see with our data visualizations.
 
 Let's perform a regression to see if this relationship is statistically significant.
+
+
+
 
 ```{r}
 # Perform regression predicting mental QOL change by adherence group
@@ -3202,6 +4126,9 @@ model <- lm(AGG_MENT_CHANGE ~ ADH_HIGHVSLOW, data = data_wide_2)
 # Examine Summary
 summary(model)
 ```
+
+
+
 
 Great! `ADH_HIGHLOW` is a significant predictor of mental QOL change over 2 years (F~(1,530)~= 6.092). On average, those who had high adherence to the treatment regiment had an aggregate mental QOL score that was 4.79 points higher than those who had low adherence (p = 0.0139).
 
@@ -3215,6 +4142,9 @@ The only other variable that flagged as being associated with mental QOL was the
 
 Let's examine this relationship with a plot.
 
+
+
+
 ```{r}
 # Create a scatterplot of mental QOL change score by depression at 2 years
 ggplot(data_wide_2, aes(x = CESD_2, y = AGG_MENT_CHANGE, color = CESD_2)) + 
@@ -3226,7 +4156,13 @@ ggplot(data_wide_2, aes(x = CESD_2, y = AGG_MENT_CHANGE, color = CESD_2)) +
   scale_fill_brewer(palette = "Pastel2")
 ```
 
+
+
+
 There appears to be a negative linear relationship here. Let's run the regression and fit the model.
+
+
+
 
 ```{r}
 # Perform a linear regression predicting mental QOL change by depression at baseline
@@ -3248,6 +4184,9 @@ ggplot(data_wide_2, aes(x = CESD_2, y = AGG_MENT_CHANGE, color = CESD_2)) +
   scale_fill_brewer(palette = "Pastel2")
 ```
 
+
+
+
 Depression score is a significant predictor of mental QOL change over the first 2 years of treatment (F~(1, 536)~= 52.05). On average, a 1-point increase in depression score is associated with a 0.33 point decrease in mental QOL score (p < 0.0001).
 
 `CESD_0` will be included as a precision variable in the model predicting `AGG_MENT_CHANGE`
@@ -3262,6 +4201,9 @@ Let's assess.
 
 First we can plot depression by hard drug use group.
 
+
+
+
 ```{r}
 # Create a scatterplot of depression score at year 2 by hard drug use group
 ggplot(data_wide_2, aes(x = hard_drugs_grp, y = CESD_2, fill = hard_drugs_grp)) + 
@@ -3273,9 +4215,15 @@ ggplot(data_wide_2, aes(x = hard_drugs_grp, y = CESD_2, fill = hard_drugs_grp)) 
   scale_fill_brewer(palette = "Pastel2")
 ```
 
+
+
+
 It appears that current and previous drug users have higher depression scores than those who never used drugs.
 
 Let's run a regression to see if that relationship is statistically significant.
+
+
+
 
 ```{r}
 # Refactor to never users as reference group
@@ -3287,6 +4235,9 @@ model <- lm(CESD_2 ~ hard_drugs_grp, data = data_wide_2)
 # Examine model summary
 summary(model)
 ```
+
+
+
 
 Hard drug use is a significant predictor of depression score (F~(2, 542)~= 14.31). On average, current hard drug users had depression scores that were 5.23 points higher than never hard drug users (p < 0.0001), and previous hard drug users had depression scores that were 7.29 points higher than those who never used hard drugs (p < 0.0001).
 
@@ -3306,6 +4257,9 @@ If the ART has a strong adverse effect on QOL, then we can expect those with hig
 
 Let’s assess if physical QOL is related to the hard drug use categories by itself.
 
+
+
+
 ```{r}
 # Create boxplots of aggregate physical QOL by hard drug use group
 ggplot(data_wide_2, aes(x = hard_drugs_grp, y = AGG_PHYS_CHANGE, fill = hard_drugs_grp)) +
@@ -3318,9 +4272,15 @@ ggplot(data_wide_2, aes(x = hard_drugs_grp, y = AGG_PHYS_CHANGE, fill = hard_dru
   guides(fill = guide_legend(title = "Hard Drug Use Group"))
 ```
 
+
+
+
 It looks like current hard drug users have a lower physical QOL score than never hard drug users.
 
 Let's run a regression to see if that difference is statistically significant.
+
+
+
 
 ```{r}
 # Perform regression predicting physical QOL change by hard drug use group
@@ -3342,7 +4302,13 @@ p_comparison <- cbind(p_values, p_adjusted)
 pretty_print(p_comparison)
 ```
 
+
+
+
 Change the reference group to previous drug users and re-run the model.
+
+
+
 
 ```{r}
 # Relevel hard drug use to have the reference level as previous users
@@ -3365,6 +4331,9 @@ p_comparison <- cbind(p_values, p_adjusted)
 pretty_print(p_comparison)
 ```
 
+
+
+
 Yes it is. Hard drug use is a significant predictor of physical QOL change over 2 years (F~(2, 540)~= 9.019). On average, current drug users have a physical QOL score that is 4.90 points lower than never drug users (p-adjusted = 0.0000792), and 4.65 points lower than previous drug users (p-adjusted = 0.0147).
 
 `hard_drug_group` will be included as a predictor of `AGG_PHYS_CHANGE`.
@@ -3376,6 +4345,9 @@ Yes it is. Hard drug use is a significant predictor of physical QOL change over 
 If adverse reactions from the HAART treatment negatively impacted patients, then we would expect to see the higher adherence groups having a smaller increase, or even decrease, in physical QOL compared to those in the low adherence groups.
 
 Let’s first examine this by plotting the average mental QOL for each year by adherence group.
+
+
+
 
 ```{r}
 # Get means for each year
@@ -3397,9 +4369,15 @@ ggplot(summary_data, aes(x = years, y = Average_AGG_PHYS, color = ADH)) +
   scale_color_brewer(palette = "Pastel2")  # Nice color palette for groups
 ```
 
+
+
+
 Here we can see that the 2 highest adherence groups have the highest physical QOL scores, which tracks with what we would expect if the drugs were helping.
 
 For good measure, let's examine this relationship across the entire 8 years of the study.
+
+
+
 
 ```{r}
 # Get rid of that value of 1 for adherence at baseline for patient 426
@@ -3422,11 +4400,17 @@ ggplot(summary_data, aes(x = years, y = Average_AGG_PHYS, color = ADH)) +
   scale_color_brewer(palette = "Pastel2")  # Nice color palette for groups
 ```
 
+
+
+
 We see a similiar relationship looking at the full 8 years of the study. You can visualize how the two highest adherence groups would have a greater AUC than the two lowest adherence groups.
 
 Let’s examine these relationships with boxplots.
 
 First looking at adherence split into four categories.
+
+
+
 
 ```{r}
 # Change reference group
@@ -3443,7 +4427,13 @@ ggplot(data_wide_2, aes(x = ADH_2, y = AGG_PHYS_CHANGE, fill = ADH_2)) +
   guides(fill = guide_legend(title = "Adherence Group"))
 ```
 
+
+
+
 That doesn't look as informative as our high vs low comparison should be.
+
+
+
 
 ```{r}
 # Filter out NA values
@@ -3459,9 +4449,15 @@ ggplot(data_no_na, aes(x = ADH_HIGHVSLOW, y = AGG_PHYS_CHANGE, fill = ADH_HIGHVS
        y = "Physical QOL Change") +
   guides(fill = guide_legend(title = "Adherence Group"))
 ```
+
+
+
 It appears that the high adherence group has a higher increase in physical quality of life compared to the low adherence groups. 
 
 Let's run the regression to see if that difference is statistically significant.
+
+
+
 
 ```{r}
 # Perform regression predicting physical QOL change by adherence
@@ -3470,6 +4466,9 @@ model <- lm(AGG_PHYS_CHANGE ~ ADH_HIGHVSLOW, data = data_wide_2)
 # Examine Summary
 summary(model)
 ```
+
+
+
 
 The overall model is statistically significant (F~(1,530)~=12.7). On average, those with high adherence had a change in physical QOL score that was 4.81 points higher than those with low adherance. (p = 0.00399).
 
@@ -3482,6 +4481,9 @@ The overall model is statistically significant (F~(1,530)~=12.7). On average, th
 Frailty related phenotype was strongly correlated to pysical QOL change in the correlation matrix.
 
 Let’s assess that relationship.
+
+
+
 
 ```{r}
 # Filter out NA values
@@ -3498,9 +4500,15 @@ ggplot(data_no_na, aes(x = FRP_2, y = AGG_PHYS_CHANGE, fill = FRP_2)) +
   guides(fill = guide_legend(title = "Frailty Related Phenotype"))
 ```
 
+
+
+
 There is a very strong association here: those with frailty related phenotype have a large decrease in physical QOL over 2 years compared to those without a frailty related phenotype, who seem to have barely had any decrease in physical QOL at all.
 
 Let's assess this relationship with a regression.
+
+
+
 
 ```{r}
 # Perform regression predicting physical QOL change by Frailty Related Phenotype
@@ -3510,6 +4518,9 @@ model <- lm(AGG_PHYS_CHANGE ~ FRP_2, data = data_wide_2)
 summary(model)
 ```
 
+
+
+
 The overall model is statistically significant (F~(1,541)~ = 72.39. On average, those with a frailty related phenotype had a change in physical QOL that was 12.79 points lower than those without a frailty related phenotype (p < .0001).
 
 `FRP_2` will be included as a precision variable for the full model predicting  `AGG_PHYS_CHANGE`.
@@ -3517,6 +4528,9 @@ The overall model is statistically significant (F~(1,541)~ = 72.39. On average, 
 [Top of Tabset](#EDA)
 
 ## CESD Depression
+
+
+
 
 ```{r}
 # Perform regression predicting physical QOL change by depression
@@ -3526,11 +4540,17 @@ model <- lm(AGG_PHYS_CHANGE ~ CESD_2, data = data_wide_2)
 summary(model)
 ```
 
+
+
+
 Is sig. but teeny tiny amount, not really needed.
 
 [Top of Tabset](#EDA)
 
 ## CD4+ T Cell Count
+
+
+
 
 ```{r}
 # Perform regression predicting physical QOL change by CD4+ T Cell Count
@@ -3540,6 +4560,9 @@ model <- lm(AGG_PHYS_CHANGE ~ LEU3N_CHANGE, data = data_wide_2)
 summary(model)
 ```
 
+
+
+
 Is sig but that doesn't even make sense cause that's one of our outcome variables.
 
 Unless we're making this a complex model with multiple inputs.
@@ -3547,6 +4570,9 @@ Unless we're making this a complex model with multiple inputs.
 [Top of Tabset](#EDA)
 
 ## College Education
+
+
+
 
 ```{r}
 # Perform regression predicting physical QOL change by college education
@@ -3556,11 +4582,17 @@ model <- lm(AGG_PHYS_CHANGE ~ EDUC_COLLEGE, data = data_wide_2)
 summary(model)
 ```
 
+
+
+
 Not sig baby. Don't need to include.
 
 [Top of Tabset](#EDA)
 
 ## Age
+
+
+
 
 ```{r}
 # Perform regression predicting physical QOL change by age
@@ -3570,9 +4602,15 @@ model <- lm(AGG_PHYS_CHANGE ~ age_2, data = data_wide_2)
 summary(model)
 ```
 
+
+
+
 Not significant, `age` will not be included as a potential covariate for `AGG_PHYS_CHANGE`.
 
 ## BMI
+
+
+
 
 ```{r}
 # Perform regression predicting physical QOL change by BMI
@@ -3582,9 +4620,15 @@ model <- lm(AGG_PHYS_CHANGE ~ BMI_2, data = data_wide_2)
 summary(model)
 ```
 
+
+
+
 `BMI` is a significant predictor of `AGG_PHYS_CHANGE` and will be included as a potential covariate.
 
 ## DKGRP
+
+
+
 
 ```{r}
 # Perform regression predicting physical QOL change by drinking group
@@ -3593,6 +4637,9 @@ model <- lm(AGG_PHYS_CHANGE ~ DKGRP_2, data = data_wide_2)
 # Examine Summary
 summary(model)
 ```
+
+
+
 
 `DKGRP_2` has a p-value below the threshold we set of p = 0.10, and will be included as a potential covariate for `AGG_PHYS_CHANGE`.
 
@@ -3631,6 +4678,9 @@ Thus the full model is:
                                          
 Let's run the regression for the full model.
                                          
+
+
+
 ```{r}
 # Relevel reference group
 data_wide_2$hard_drugs_grp <- relevel(data_wide_2$hard_drugs_grp, ref = "Never User")
@@ -3655,6 +4705,9 @@ vif_values <- vif(model_VLOAD_full1)
 pretty_print(vif_values)
 ```
 
+
+
+
 The overall model is highly significant (p < 0.000001) and we're getting some interesting significant relationships. It looks like all of our main variables and interaction term are significant. Multicollinearity for this model is not a concern.
 
 For low adherence, previous and current drug users have a higher increase in log viral load change over 2 years compared to never hard drug users (p > 0.05).
@@ -3664,6 +4717,9 @@ For never drug users, there is no difference in log viral load over 2 years in t
 Let's keep going.
 
 Change the reference category to high adherence, to compare the impact of hard drug use groups for those with high adherence to the treatment regiment.
+
+
+
 
 ```{r}
 # Relevel reference group
@@ -3681,9 +4737,15 @@ summary(model_VLOAD_full2)
 model_results(model_VLOAD_full2)
 ```
 
+
+
+
 At the high adherence levels, there is no difference between previous and current hard drug users and never hard drug users on log viral load change (p > 0.05).
 
 Change the reference categories to previous users and low adherence to compare the impact of hard drug use groups for those with low adherence to the treatment regiment.
+
+
+
 
 ```{r}
 # Relevel reference group
@@ -3704,11 +4766,17 @@ summary(model_VLOAD_full3)
 model_results(model_VLOAD_full3)
 ```
 
+
+
+
 At low adherence, there is a significant difference between previous and current drug users, with current drug users having a higher increase in log viral load over 2 years (p < 0.0001).
 
 For previous drug users, those with high adherence had less of an increase in log viral load over 2 years compared to those with low adherence (p < 0.0001).
 
 Change the reference group to previous drug users and high adherence.
+
+
+
 
 ```{r}
 # Relevel reference group
@@ -3724,15 +4792,20 @@ model_VLOAD_full4 <- lm(VLOAD_log_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + hard
 summary(model_VLOAD_full4)
 ```
 
-
 ```{r}
 # Print useful model parameters
 model_results(model_VLOAD_full4)
 ```
 
+
+
+
 At the high adherence level, there is no difference in log viral load change between current and previous hard drug users (p > 0.05).
 
 Change the reference categories to current users and low adherence to compare the impact of hard drug use groups for those with low adherence to the treatment regiment.
+
+
+
 
 ```{r}
 # Relevel reference group
@@ -3748,6 +4821,9 @@ model_VLOAD_full5 <- lm(VLOAD_log_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + hard
 summary(model_VLOAD_full5)
 ```
 
+
+
+
 For current hard drug users, those with high adherence have a lower increase in log viral load over 2 years compared to those with low adherence (p = 0.011).
 
 [Top of Tabset](#Data_Analysis)
@@ -3757,6 +4833,9 @@ For current hard drug users, those with high adherence have a lower increase in 
 We can see that all variables, including `EDUC_COLLEGE`, are significant, and thus there is no need to compare the full model to reduced models; [this is our final model for `VLOAD_log_CHANGE`]{.underline}
 
 We can double check this with a partial F-test comparing the full model with the reduced model without the interaction term 
+
+
+
 
 ```{r}
 # Perform full model with interaction term
@@ -3768,6 +4847,9 @@ model_log_VLOAD_red <- lm(VLOAD_log_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + ED
 # Perform F-Test
 anova(model_log_VLOAD_red, model_log_VLOAD_full)
 ```
+
+
+
 
 The p-value is significant (p < 0.0001), indicating that the interaction term adds explanatory power to the model and should be included. Thus we move on with interpreting the interaction.
 
@@ -3823,6 +4905,9 @@ Education at baseline is a significant predictor for change in log viral load ov
 
 The interaction between hard drug use and adherence group on log viral load can be visualized in the graph below.
 
+
+
+
 ```{r}
 # Relevel reference group
 data_wide_2$hard_drugs_grp <- relevel(data_wide_2$hard_drugs_grp, ref = "Never User")
@@ -3832,8 +4917,6 @@ data_wide_2$ADH_HIGHVSLOW <- relevel(data_wide_2$ADH_HIGHVSLOW, ref = "Low Adher
 
 # Perform a regression of the full model predicting log viral load change
 model_VLOAD_full <- lm(VLOAD_log_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + hard_drugs_grp * ADH_HIGHVSLOW + EDUC_COLLEGE, data = data_wide_2)
-
-library(interactions)
 
 # Use interactions package to plot interaction
 cat_plot(
@@ -3847,6 +4930,9 @@ cat_plot(
 )
 ```
 
+
+
+
 This very clearly illustrates the relationships we saw in our model.
 
 We can see the relationship between adherence and change in log viral load based on hard drug use: for previous and current hard drug users, those with high adherence had a reduced viral load compared to those with low adherence.
@@ -3856,6 +4942,9 @@ Similarly, we can see the relationship between hard drug use and change in log v
 Interestingly, viral load did not seem to differ for never users based on adherence, **suggesting that the ART treatment is most important for those with current or previous hard drug use history**.
 
 Importantly however, this plot is not replicated exactly when I recreate it in ggplot2.
+
+
+
 
 ```{r}
 # Filter out NA values
@@ -3877,14 +4966,26 @@ ggplot(data_no_na, aes(x = hard_drugs_grp, y = VLOAD_log_CHANGE, fill = ADH_HIGH
    theme_minimal() 
 ```
 
+
+
+
 We can see that the boxplot for low adherence previous users (n = 4), and low adherence hard drug users (n = 6) are either really tiny or really large, respectively. This makes sense, because the sample size for both of those categories is so small.
+
+
+
 
 ```{r}
 # Create table of hard drugs group by adherence group
 pretty_print(table(data_wide_2$hard_drugs_grp, data_wide_2$ADH_HIGHVSLOW))
 ```
 
+
+
+
 And let's examine how close those 4 values all are to each other.
+
+
+
 
 ```{r}
 data_wide_2 %>%
@@ -3897,6 +4998,9 @@ data_wide_2 %>%
   filter(hard_drugs_grp == "Previous User" & ADH_HIGHVSLOW == "Low Adherence") %>%
   select(newid, VLOAD_log_CHANGE, hard_drugs_grp, ADH_HIGHVSLOW)
 ```
+
+
+
 
 The values for current users with low adherence have low variance, explaining the tiny boxplot, and the values for previous users with low adherence have high variance, explaining the larger boxplot.
 
@@ -3920,6 +5024,9 @@ While we see this interaction between hard drug use and adherence on the outcome
 ## Analysis
 
 Understanding the limitations of an interaction model with only n=4 or n=6 in some categories, we chose to also run the model without the interaction term to acquire the main effects of hard drug use group and adherence on log viral load change, while controlling for baseline education.
+
+
+
 
 ```{r}
 # Relevel reference group
@@ -3952,6 +5059,9 @@ summary(model_VLOAD_red2)
 # Print useful model parameters
 model_results(model_VLOAD_red2)
 ```
+
+
+
 
 The overall model is significant (F(~4, 515)~= 8.241, p < 0.0001).
 
@@ -3995,6 +5105,9 @@ We know that `ADH_HIGHVSLOW` is a predictor of `VLOAD_log_CHANGE`.
 
 To assess if `ADH_HIGHVSLOW` is associated with hard drug use group, we can run a Fisher's test
 
+
+
+
 ```{r}
 # Create a contingency table
 contingency_table <- table(data_wide_2$hard_drugs_grp, data_wide_2$ADH_HIGHVSLOW)
@@ -4005,7 +5118,6 @@ fisher_test <- fisher.test(contingency_table)
 fisher_test
 ```
 
-
 ```{r}
 # Create a contingency table
 contingency_table <- table(data_wide_2$hard_drugs_grp, data_wide_2$EDUC_COLLEGE)
@@ -4013,6 +5125,9 @@ contingency_table <- table(data_wide_2$hard_drugs_grp, data_wide_2$EDUC_COLLEGE)
 # We have to run Fisher's Exact test since we have fewer than 5 observations in some categories
 fisher_test <- fisher.test(contingency_table)
 ```
+
+
+
 
 
 They are not associated. 
@@ -4033,6 +5148,9 @@ Adherence to the treatment regiment is therefore a maverick variable!
 
 Here we will create some simple plots to help with visualizing the main effects of hard drug use and adherence on log viral load change.
 
+
+
+
 ```{r}
 # Create boxplots of log viral load change by hard drug use group
 ggplot(data_wide_2, aes(x = hard_drugs_grp, y = VLOAD_log_CHANGE, fill = hard_drugs_grp)) +
@@ -4045,7 +5163,13 @@ ggplot(data_wide_2, aes(x = hard_drugs_grp, y = VLOAD_log_CHANGE, fill = hard_dr
   guides(fill = guide_legend(title = "Hard Drug Use Group"))
 ```
 
+
+
+
 We can see that current and previous drug users had less of a decrease in log viral load over 2 years compared to never hard drug users.
+
+
+
 
 ```{r}
 # Create boxplots of log viral load change by adherence group
@@ -4058,6 +5182,9 @@ ggplot(data_no_na, aes(x = ADH_HIGHVSLOW, y = VLOAD_log_CHANGE, fill = ADH_HIGHV
        y = "Log Viral Load Change") +
   guides(fill = guide_legend(title = "Adherence Group"))
 ```
+
+
+
 And here we can see those with high adherence had a higher decrease in log viral load over 2 years compared to those with low adherence.
 :::
 :::
@@ -4080,6 +5207,9 @@ The researchers are interested in if differences in treatment response between t
 
 We begin by examining the full model with all these variables included.
 
+
+
+
 ```{r}
 # Relevel to change to the reference group to never user
 data_wide_2$hard_drugs_grp<- relevel(data_wide_2$hard_drugs_grp, ref = "Never User")
@@ -4093,9 +5223,15 @@ model_LEU3N_full1 <- lm(LEU3N_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + BMI_2 + 
 # Exmamine the summary
 summary(model_LEU3N_full1)
 ```
+
+
+
 We get an NA for the interaction term. This is likely because we dropped the n=6 patients that were previous hard drug users with low adherence, making the interaction impossible to make. Indeed we can see we only have 7, 453 degrees of freedom.
 
 BMI is significant, but has 10% missing values. Let's try running the regression without it so we can examine that interaction term, which is the main research question. (it's also correlated to college education, so we can kind of capture it with that variable).
+
+
+
 
 ```{r}
 # Relevel to change to the reference group to never user
@@ -4111,16 +5247,25 @@ model_LEU3N_red1 <- lm(LEU3N_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + FRP_2 + E
 summary(model_LEU3N_red1)
 ```
 
+
+
+
 ### Backwards Elimination
 
 We will perform model selection using backwards elimination and BIC to select the most parsimonious model.
 
 A delta BIC of >2 indicates a difference in model performance.
 
+
+
+
 ```{r}
 # Perform backward elimination regression selection based on BIC 
 ols_step_backward_sbc(model_LEU3N_red1, include = c("hard_drugs_grp", "ADH_HIGHVSLOW"))
 ```
+
+
+
 As predicted, the most parsimonious model is with `CESD_2` and `EDUC_COLLEGE` removed, and only including `FRP_2` as a precision variable.
 
 [Top of Tabset](#Data_Analysis)
@@ -4130,6 +5275,9 @@ As predicted, the most parsimonious model is with `CESD_2` and `EDUC_COLLEGE` re
 Let's investigate the key relationships in the final model for `LEU3N_CHANGE` as determined through backwards selection.
 
 First let's look at the impact of hard drug use on CD4+ T Cell change, at low adherence.
+
+
+
 
 ```{r}
 # Relevel to change to the reference group to never user
@@ -4150,6 +5298,9 @@ summary(model_LEU3N_final1)
 model_results(model_LEU3N_final1)
 ```
 
+
+
+
 The overall model is highly significant (F~(6,512)~= 8.42, p < 0.00001).
 
 At low adherence, previous hard drug users have a higher CD4+ T Cell count than never hard drug users (p-adjusted = 0.043), but current hard drugs users did not differ from never drug users (p-adjusted = 0.40).
@@ -4157,6 +5308,9 @@ At low adherence, previous hard drug users have a higher CD4+ T Cell count than 
 Additionally, for never hard drug users, those with high adherence have a higher CD4+ T Cell count than those with low adherence (p = 0.011895)
 
 Now let's compare hard drug usage for those with high adherence.
+
+
+
 
 ```{r}
 # Relevel to change to the reference group to never user
@@ -4172,15 +5326,20 @@ model_LEU3N_final2 <- lm(LEU3N_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + FRP_2 +
 summary(model_LEU3N_final2)
 ```
 
-
 ```{r}
 # Print useful model parameters
 model_results(model_LEU3N_final2)
 ```
 
+
+
+
 For those with high adherence, previous hard drug users had a lower CD4+ T Cell count (p-adjusted = 0.0032), and current hard drug users had a lower CD4+ T Cell (p-adjusted < 0.0001) count compared to never hard users.
 
 Now we make the same comparisons with previous hard drug users as the baseline.
+
+
+
 
 ```{r}
 # Relevel to change to the reference group to never user
@@ -4201,11 +5360,17 @@ summary(model_LEU3N_final2)
 model_results(model_LEU3N_final2)
 ```
 
+
+
+
 At low adherence, current hard drug users had a CD4+ T Cell count compared to previous hard drug users (p-adjusted = 0.011).
 
 Additionally, for previous hard drug users, those with high adherence had a greater decrease in CD4+ T Cell count compared to those with low adherence (p = 0.0073).
 
 Now let's change the reference level to compare high adherence previous vs current drug users.
+
+
+
 
 ```{r}
 # Relevel to change to the reference group to never user
@@ -4228,9 +5393,15 @@ model_results(model_LEU3N_final3)
 
 
 
+
+
+
 For those with high adherence, previous vs current hard drug users did not differ in CD4+ T Cell Count (p-adjusted= 1.00).
 
 Finally let's compare the impact of adherence for hard drug users.
+
+
+
 
 ```{r}
 # Relevel to change to the reference group to never user
@@ -4250,6 +5421,9 @@ summary(model_LEU3N_final4)
 # Print useful model parameters
 model_results(model_LEU3N_final4)
 ```
+
+
+
 
 For current hard drug users, those with high adherence did not differ significantly compared to those with low adherence (p = 0.22)
 
@@ -4305,6 +5479,9 @@ Frailty Related Phenotype was a significant predictor for change in CD4+ T Cell 
 
 The below plot is useful in interpreting the interaction
 
+
+
+
 ```{r}
 # Use interactions package to plot interaction
 cat_plot(
@@ -4330,6 +5507,9 @@ ggplot(data_no_na, aes(x = hard_drugs_grp, y = LEU3N_CHANGE, fill = ADH_HIGHVSLO
    theme_minimal() 
 ```
 
+
+
+
 Here we can see the key relationships in our model.
 
 For current hard drug users, those with high adherence did not differ from those with low adherence. This may be an artifact of the small number of current hard drug users with low adherence, however (n = 6). 
@@ -4354,6 +5534,9 @@ Understanding the limitations of an interaction model with only n=4 or n=6 in so
 
 ## Analysis
 
+
+
+
 ```{r}
 # Relevel to change to the reference group to never user
 data_wide_2$hard_drugs_grp<- relevel(data_wide_2$hard_drugs_grp, ref = "Never User")
@@ -4373,7 +5556,13 @@ summary(model_LEU3N_final_noX1)
 model_results(model_LEU3N_final_noX1)
 ```
 
+
+
+
 Change the reference level to previous users and re-run the model
+
+
+
 
 ```{r}
 # Relevel to change to the reference group to never user
@@ -4393,6 +5582,9 @@ summary(model_LEU3N_final_noX2)
 # Examine the summary
 model_results(model_LEU3N_final_noX2)
 ```
+
+
+
 
 ## Interpretation
 
@@ -4424,6 +5616,9 @@ Frailty related phenotype is a significant predictor for change in CD4+ T Cell c
 
 Here we will create some simple plots to help with visualizing the main effects of hard drug use and adherence on change in CD4+ T Cell count.
 
+
+
+
 ```{r}
 # Relevel to change the reference cateory to Never User
 data_wide_2$hard_drugs_grp <- relevel(data_wide_2$hard_drugs_grp, ref = "Never User")
@@ -4438,9 +5633,15 @@ ggplot(data_wide_2, aes(x = hard_drugs_grp, y = LEU3N_CHANGE, fill = hard_drugs_
        y = "CD4+ T Cell Count Change") +
   guides(fill = guide_legend(title = "Hard Drug Use Group"))
 ```
+
+
+
 Current hard drug users had less of an increase in CD4+ T Cells over 2 years compared to never hard drug users. All other between-group comparisons were not significant.
 
 ### Adherence
+
+
+
 
 ```{r}
 # Create boxplots of CD4+ T Cell count change by adherence group
@@ -4453,9 +5654,15 @@ ggplot(data_no_na, aes(x = ADH_HIGHVSLOW, y = LEU3N_CHANGE, fill = ADH_HIGHVSLOW
        y = "CD4+ T Cell Count Change") +
   guides(fill = guide_legend(title = "Adherence Group"))
 ```
+
+
+
 Change in CD4+ T Cell count did not differ based on adherence.
 
 ### Frailty Related Phenotype
+
+
+
 
 ```{r}
 # Filter out NA values
@@ -4471,6 +5678,9 @@ ggplot(data_no_na, aes(x = FRP_2, y = LEU3N_CHANGE, fill = FRP_2)) +
        y = "CD4+ T Cell Count Change") +
   guides(fill = guide_legend(title = "Frailty Related Phenotype"))
 ```
+
+
+
 Those with a Frailty Related Phenotype had less of an increase in CD4+ T Cell count compared to those without.
 
 :::
@@ -4490,6 +5700,9 @@ The candidate variables for mental QOL change as determined by interactive varia
 
 Let's begin by running the full model as determined by interactive model selection.
 
+
+
+
 ```{r}
 # Relevel to change to the reference group to never user
 data_wide_2$hard_drugs_grp<- relevel(data_wide_2$hard_drugs_grp, ref = "Never User")
@@ -4504,7 +5717,13 @@ model_MENT_full1 <- lm(AGG_MENT_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW +  CESD_
 summary(model_MENT_full1)
 ```
 
+
+
+
 Compare hard drug use groups at high adherence
+
+
+
 
 ```{r}
 # Relevel to change to the reference group to never user
@@ -4520,7 +5739,13 @@ model_MENT_full2 <- lm(AGG_MENT_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW +  CESD_
 summary(model_MENT_full2)
 ```
 
+
+
+
 Compare hard drug use groups at low adherence
+
+
+
 
 ```{r}
 # Relevel to change to the reference group to never user
@@ -4578,6 +5803,9 @@ model_MENT_full6 <- lm(AGG_MENT_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW +  CESD_
 summary(model_MENT_full6)
 ```
 
+
+
+
 Interestingly, we have lost a lot of the significant relationships we were seeing before with our main predictors of hard drug use and adherence.
 
 It seems that the main driver of this model, and best predictor of change in mental QOL score is depression score.
@@ -4589,6 +5817,9 @@ The only significant difference in mental QOL change is for previous drug users.
 Something fishy is going on here...
 
 Let's examine this in a simplified model with no interactions.
+
+
+
 
 ```{r}
 # Relevel to change to the reference group to never user
@@ -4603,6 +5834,9 @@ model_MENT_simple <- lm(AGG_MENT_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW +  CESD
 # Examine the summary
 summary(model_MENT_simple)
 ```
+
+
+
 
 Indeed, we can see that, when including depression in the model, hard drug use and adherence are no longer significant predictors of change in mental QOL!
 
@@ -4644,6 +5878,9 @@ I therefore feel justified in exploring depression as a confounder, and analyzin
 
 Let's run a new full model, with the included interaction term between hard drug use group and depression. In essence we are running a three way interaction. It will need to be emphasized in the discussion that this was exploratory data analysis.
 
+
+
+
 ```{r}
 # Relevel to change to the reference group
 data_wide_2$hard_drugs_grp<- relevel(data_wide_2$hard_drugs_grp, ref = "Current User")
@@ -4657,6 +5894,9 @@ model_MENT_newfull <- lm(AGG_MENT_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW +  CES
 # Examine the summary
 summary(model_MENT_newfull)
 ```
+
+
+
 We get a highly significant p-value for the interaction between hard drug use group and depression (p < 0.0001) 
 
 Our adjusted R-squared also shot up from 0.090 to 0.16. We're on to something here.
@@ -4666,6 +5906,9 @@ Let's run backwards model selection and examine the BIC to see if we need to inc
 ### Backwards Elimination
 
 We are going to force inclusion of our main variables of interest, `hard_drugs_grp` and `ADH_HIGHVSLOW`, and the interaction between them, since those were the main questions the researchers posed.
+
+
+
 
 ```{r}
 # Relevel to change to the reference group to never user
@@ -4680,6 +5923,9 @@ model_MENT_newfull <- lm(AGG_MENT_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW +  CES
 # Perform backward elimination regression selection based on BIC 
 ols_step_backward_sbc(model_MENT_newfull, include = c("hard_drugs_grp", "ADH_HIGHVSLOW", "hard_drugs_grp:ADH_HIGHVSLOW"))
 ```
+
+
+
 
 No variable was removed from the model, indicating that the interaction between hard drug use group and depression adds significant explanatory power and should be included in the model.
 
@@ -4710,6 +5956,9 @@ This addresses the main research question of how mental QOL is impacted by ART, 
 
 Let's run the regression as specified.
 
+
+
+
 ```{r}
 # Relevel to change to the reference group to never user
 data_wide_2$hard_drugs_grp<- relevel(data_wide_2$hard_drugs_grp, ref = "Never User")
@@ -4733,6 +5982,9 @@ vif_values <- vif(model_MENT_main1)
 pretty_print(vif_values)
 ```
 
+
+
+
 The overall model is significant (F~(5,526)~ = 4.78, p = 0.000278, and we are getting significant interactions.
 
 At the same time, this is a weaker model than when we included depression. Our R-adjusted is now 0.034, meaning we now only explain 3.4% of the variance in mental QOL (compared to 16% in the full model).
@@ -4742,6 +5994,9 @@ At low adherence, the previous group has a greater decrease in mental QOL compar
 For never users, there is no difference in mental QOL based on high or low adherence (t = 1.5744837, p-adjusted = 0.116, 95% CI: -0.85 to 7.72).
 
 Change the reference group to compare drug use group at high adherence
+
+
+
 
 ```{r}
 # Relevel to change to the reference group to never user
@@ -4763,9 +6018,15 @@ model_results(model_MENT_main2)
 ```
 
 
+
+
+
 At high adherence, there is no difference in mental QOL between previous and never hard drug users (t = 1.41,  p-adjusted = 0.48, 95% CI: -1.12 to 6.73), or between current and never hard drug users (t = -1.85, p-adjusted = 0.195, 95% CI: -6.55 to	0.20).
 
 Change reference level to compare previous hard drug users at low adherence.
+
+
+
 
 ```{r}
 # Relevel to change to the reference group to never user
@@ -4786,6 +6047,9 @@ summary(model_MENT_main3)
 model_results(model_MENT_main3)
 ```
 
+
+
+
 Here we can see that all our p-values are now very low (all have at least 2 decimal places). This gives me confidence that this is a meaningful and strong model. All the most important comparisons are with previous drug users at low adherence!
 
 At low adherence, current hard drug users have a higher mental QOL (p-adjusted = 0.00657), and never hard drug users have a higher mental QOL (p-adjusted = 0.00886) compared to previous hard drug users.
@@ -4793,6 +6057,9 @@ At low adherence, current hard drug users have a higher mental QOL (p-adjusted =
 Additionally, for previous hard drug users, those with high adherence had a higher increase in mental QOL compared to those with low adherence (p < 0.0001).
 
 Change reference category to compare high adherence previous hard drug users.
+
+
+
 
 ```{r}
 # Relevel to change to the reference group to never user
@@ -4813,9 +6080,15 @@ summary(model_MENT_main4)
 model_results(model_MENT_main4)
 ```
 
+
+
+
 At high adherence, there is a borderline significant difference between previous and current drug users (p-adjusted = 0.050). Considering the small sample size in both categories, this could become a non significant difference with a larger N.
 
 Change the reference level to compare current hard drug users
+
+
+
 
 ```{r}
 # Relevel to change to the reference group to never user
@@ -4835,6 +6108,9 @@ summary(model_MENT_main5)
 # Print useful model parameters
 model_results(model_MENT_main5)
 ```
+
+
+
 
 For current hard drug users, there was no difference in mental QOL based on adherence (t = -1.24, p = 0.227, 95% CI: -19.94 to	4.53).
 
@@ -4880,6 +6156,9 @@ For never hard drug users, there was no difference in change in mental QOL over 
 
 The below plot is useful in interpreting the interaction
 
+
+
+
 ```{r}
 # Relevel to change to the reference group to never user
 data_wide_2$hard_drugs_grp<- relevel(data_wide_2$hard_drugs_grp, ref = "Never User")
@@ -4897,6 +6176,9 @@ cat_plot(
   x.label = "Hard Drugs Group",
   y.label = "Predicted Mental QOL Change")
 ```
+
+
+
 Here we see the main interaction finding: for previous users, those with low adherence had a decrease in mental QOL over 2 years compared to those with high adherence who had an slight increase.
 
 Additionally, for those with low adherence, previous hard drug users had a decrease in mental QOL over 2 years compared to current hard drug users and never hard drug users.
@@ -4921,6 +6203,9 @@ This addresses the confounding of depression on the relationship between hard dr
 
 Compare slopes for never users.
 
+
+
+
 ```{r}
 # Relevel to change to the reference group to never user
 data_wide_2$hard_drugs_grp<- relevel(data_wide_2$hard_drugs_grp, ref = "Never User")
@@ -4941,6 +6226,9 @@ pretty_print(vif_values)
 model_results(model_MENT_sub1)
 ```
 
+
+
+
 The overall model is highly significant (F~(5, 532)~ = 19.84, p < 0.0001, adjusted R-squared = 0.149).
 
 For never hard drug users, there was a significant relationship between depression and mental QOL (t = -4.42, p < 0.0001). Specifically, for never hard drug users, a 1 point increase in depression score was associated with 0.23 point decrease in mental QOL (95% CI: -0.34 to -0.13).
@@ -4952,6 +6240,9 @@ The slope for depression on mental QOL did not differ between current and never 
 Previous hard drug users have an increase of approximately 16.98 units in mental QOL, holding all other variables constant. This difference is statistically significant, suggesting that prior hard drug use is associated with a considerably higher outcome measure in this model. (It's significant because we're not account for the interaction with this estimate.)
 
 Compare slopes for previous users.
+
+
+
 
 ```{r}
 # Relevel to change to the reference group to never user
@@ -4969,9 +6260,15 @@ summary(model_MENT_sub2)
 model_results(model_MENT_sub2)
 ```
 
+
+
+
 For previous hard drug users, there was a significant relationship between depression and mental QOL (t = -8.74, p < 0.0001). Specifically, for previous hard drug users, a 1 point increase in depression score was associated with a 1.04 point decrease in mental QOL (95% CI: -1.27 to -0.80). That is nearly 5 times more of a decrease compared to never users!
 
 Compare slopes for current users.
+
+
+
 
 ```{r}
 # Relevel to change to the reference group to never user
@@ -4988,6 +6285,9 @@ summary(model_MENT_sub3)
 # Print useful model parameters
 model_results(model_MENT_sub3)
 ```
+
+
+
 
 For current users, the relationship between depression and mental QOL is not significant (t = 0.88, p = 0.377, 95% CI: -0.40 to 0.15).               
 
@@ -5033,6 +6333,9 @@ The slope for depression on mental QOL did not differ between current and never 
 
 The plot below is helpful in interpreting the interaction between hard drug use and depression on mental QOL.
 
+
+
+
 ```{r}
 # Create a scatterplot of mental QOLchange by depression score, colored by hard drug use group.
 ggplot(data_wide_2, aes(x = CESD_2, y = AGG_MENT_CHANGE, color = hard_drugs_grp)) + 
@@ -5044,6 +6347,9 @@ ggplot(data_wide_2, aes(x = CESD_2, y = AGG_MENT_CHANGE, color = hard_drugs_grp)
        x = "Depression Score") + 
   scale_fill_brewer(palette = "Pastel2")
 ```
+
+
+
 
 Here we can see the key relationships found in the model.
 
@@ -5074,6 +6380,9 @@ This finding has great clinical relevance for the treatment of HIV in hard drug 
 
 Just for completion's sake, we can run a regression predicting depression score based on the interaction between hard drug use and adherence.
 
+
+
+
 ```{r}
 # Relevel to change to the reference group to never user
 data_wide_2$hard_drugs_grp<- relevel(data_wide_2$hard_drugs_grp, ref = "Never User")
@@ -5092,6 +6401,9 @@ summary(model_MENT_full1)
 # Use interactions package to plot interaction
 cat_plot(model_MENT_full1, pred = hard_drugs_grp, modx = ADH_HIGHVSLOW, geom = "line", colors = "Pastel2")
 ```
+
+
+
 The interaction is significant, and we can see that previous hard drug users with low adherence had higher depression scores at year 2, and that those with high adherance were buffered from this effect.
 
 The fact that depression and mental QOL both have this relationship, and are similar constructs, lends credence to the likelihood that this is a real relationship, and a strong one at that.
@@ -5116,6 +6428,9 @@ We will remove `BMI` based on the missing values issue identified in the mental 
 
 Let's run the full model including all those variables and the interaction between hard drug use group and adherence high vs low.
 
+
+
+
 ```{r}
 # Relevel to change to the reference group to never user
 data_wide_2$hard_drugs_grp<- relevel(data_wide_2$hard_drugs_grp, ref = "Never User")
@@ -5137,6 +6452,9 @@ vif_values <- vif(model_PHYS_full1)
 pretty_print(vif_values)
 ```
 
+
+
+
 The overall model is highly significant (F~(10,510)~ = 12.92, p < 0.0001, Adjusted R-squared = 0.187).
 
 We have some nice significant covariates, but it looks like `FRP_2` is the main driver for this model.
@@ -5149,6 +6467,9 @@ We might have another double interaction situation like we did for the mental QO
 We will perform model selection using backwards elimination and BIC to select the most parsimonious model.
 
 A delta BIC of >2 indicates a difference in model performance.
+
+
+
 
 ```{r}
 # Relevel to change to the reference group to never user
@@ -5163,7 +6484,13 @@ model_PHYS_full1 <- lm(AGG_PHYS_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + FRP_2 
 # Perform backward elimination regression selection based on BIC 
 ols_step_backward_sbc(model_PHYS_full1, include = c("hard_drugs_grp", "ADH_HIGHVSLOW", "hard_drugs_grp:ADH_HIGHVSLOW"))
 ```
+
+
+
 The final model selected for `AGG_PHYS_CHANGE` includes the PEVs of `hard_drugs_grp` and `ADH_HIGHVSLOW` and their interaction term, and `FRP_2` as a precision variable. Luckily we only have to interpret one interaction for this model!
+
+
+
 
 
 ```{r}
@@ -5180,6 +6507,7 @@ model_PHYS_full1 <- lm(AGG_PHYS_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + FRP_2 
 # Examine the model
 summary(model_PHYS_full1)
 ```
+
 ```{r}
 # Relevel to change to the reference group to never user
 data_wide_2$ADH_HIGHVSLOW <- relevel(data_wide_2$ADH_HIGHVSLOW, ref = "Low Adherence")
@@ -5194,6 +6522,9 @@ summary(model_PHYS_full)
 cat_plot(model_PHYS_full, pred = hard_drugs_grp, modx = ADH_HIGHVSLOW, geom = "line", colors = "Pastel2")
 ```
 
+
+
+
 [Top of Tabset](#Phys)
 
 ## Analysis
@@ -5201,6 +6532,9 @@ cat_plot(model_PHYS_full, pred = hard_drugs_grp, modx = ADH_HIGHVSLOW, geom = "l
 Let’s investigate the key relationships in the final model for `AGG_PHYS_CHANGE` as determined through backwards selection.
 
 First let’s look at the impact of hard drug use on physical QOL at low adherence.
+
+
+
 
 ```{r}
 # Relevel to change to the reference group to never user
@@ -5222,6 +6556,9 @@ model_results(model_PHYS_final1)
 ```
 
 
+
+
+
 The overall model is highly significant (F~(6, 525)~ = 20.67, p < 0.0001, adjusted R-squared = 0.1818).
 
 At low adherence, previous hard drug users had on average a 10.89 point decrease in physical QOL compared to never hard drug users (t = -3.16, p-adjusted = 0.00493, 95% CI: -17.66	to -4.13). Current hard drug users did not differ significantly from never hard drug users at low adherence (t = -2.35, p-adjusted =0.0574, 95% CI: -17.72 to -1.58), although with a larger sample size that could become significant. 
@@ -5229,6 +6566,9 @@ At low adherence, previous hard drug users had on average a 10.89 point decrease
 For never hard drug users, those with high adherence had a 3.19 point increase in physical QOL compared to those with low adherence (t = 2.27, p = 0.0239).
 
 Compare hard drug use groups at high adherence
+
+
+
 
 ```{r}
 
@@ -5250,9 +6590,15 @@ summary(model_PHYS_final2)
 model_results(model_PHYS_final2)
 ```
 
+
+
+
 At high adherence, current hard drug users had on average a 3.94 point decrease in physical QOL compared to never hard drug users (t = -3.545, p-adjusted = 0.00128, 95% CI: -6.12 to -1.75). Additionally, previous hard drug users did not differ significantly from never hard drug users at high adherence (t = 1.100, p-adjusted = 0.815, 95% CI: -1.11 to 3.94).
 
 Change reference level to compare previous users
+
+
+
 
 ```{r}
 
@@ -5274,11 +6620,17 @@ summary(model_PHYS_final3)
 model_results(model_PHYS_final3)
 ```
 
+
+
+
 At low adherence, previous hard drug users did not differ significantly on change in physical QOL compared to current hard drug users (t = 0.25, p-adjusted = 1.00, 95% CI: -8.59 to 11.08).
 
 For previous hard drug users, those with high adherence to the treatment regiment had on average a 15.49 point increase in physical QOL compared to those with low adherence (t = 4.56, p-adjusted < 0.0001, 95% CI: 8.82 to 22.17).
 
 Change the reference level to current hard drug users.
+
+
+
 
 ```{r}
 # Relevel to change to the reference group to never user
@@ -5294,15 +6646,20 @@ model_PHYS_final4 <- lm(AGG_PHYS_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + FRP_2
 summary(model_PHYS_final4)
 ```
 
-
 ```{r}
 # Print useful model parameters
 model_results(model_PHYS_final4)
 ```
 
+
+
+
 For current hard drug users, those with high adherence had on average an 8.90 point increase in physical QOL compared to those with low adherence (t = 2.22, p = 0.027, 95% CI: 1.00 to 16.79).
 
 Change reference level to high adherence to compare last group.
+
+
+
 
 ```{r}
 # Relevel to change to the reference group to never user
@@ -5318,11 +6675,13 @@ model_PHYS_final5 <- lm(AGG_PHYS_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW + FRP_2
 summary(model_PHYS_final5)
 ```
 
-
 ```{r}
 # Print useful model parameters
 model_results(model_PHYS_final5)
 ```
+
+
+
 
 At high adherence, current hard drug users had on average a change in physical QOL that was 5.35 points less than previous hard drug users (t = 3.33, p-adjusted = 0.00279, 95% CI: 2.19 to 8.51).
 
@@ -5374,6 +6733,9 @@ Frailty related phenotype was a significant predictor of change in physical QOL 
 The below plot is useful in interpreting the interaction.
 
 
+
+
+
 ```{r}
 # Use interactions package to plot interaction
 cat_plot(
@@ -5385,6 +6747,9 @@ cat_plot(
   x.label = "Hard Drugs Group",
   y.label = "Predicted Physical QOL Change")
 ```
+
+
+
 
 For those with low adherence, previous users had a greater decrease in physical QOL compared to never users. The difference between current and never hard drug users at low adherence is borderline significant, and may be so with a larger sample size.
 
@@ -5404,6 +6769,9 @@ Additionally, we have evidence that even at high adherence, current hard drug us
 # Evaluating Assumptions {#Assumptions}
 
 In order to evaluate the assumptions of our models, we will first gather the residuals for the final model predicting each outcome variable.
+
+
+
 
 ```{r}
 # Calculate the jackknife residuals of the model predicting VLOAD
@@ -5426,6 +6794,9 @@ jackknife_residuals_PHYS <- rstudent(model_PHYS_final1)
 
 ```
 
+
+
+
 ## Log Viral Load 
 
 ::: panel-tabset
@@ -5441,6 +6812,9 @@ Since the mains IVs are categorical, we do not need to evaluate linearity.
 Independence can be assessed in part by the study design and how the data was collected. Based on the information provided by the PI, I will assume subjects are independent from each other.
 
 Additionally, we can examine a scatter plot of the model’s residuals against any time point variable (such as ID).
+
+
+
 
 ```{r}
 
@@ -5463,6 +6837,9 @@ ggplot(data_VLOAD, aes(x = newid, y = jackknife_residuals_VLOAD)) +
        y = "Jackknife Residuals")
 ```
 
+
+
+
 We may have some non-independence as seen by the further spread above 0.
 
 [Top of Tabset](#Assumptions)
@@ -5470,6 +6847,9 @@ We may have some non-independence as seen by the further spread above 0.
 ## Normality
 
 Here we will asses that, for any fixed value of X, Y has a normal distribution. We will do this using Q-Q plots and histograms of the residuals.
+
+
+
 
 ```{r}
 # Make the Q-Q plots using the jackknife residuals
@@ -5484,11 +6864,20 @@ hist(jackknife_residuals_VLOAD, main = "Histogram of Jackknife Residuals",
      border = "black")
 ```
 
+
+
+
 We can also include the Shapiro-Wilk test of normality, which provides a p-value and allows us to numerically establish that the assumption of normality is met. If the p-value is < 0.05 you conclude that the assumption of normality is not met.
+
+
+
 
 ```{r}
 shapiro.test(jackknife_residuals_VLOAD)
 ```
+
+
+
 
 
 We have some non-normality as seen by the higher end of the Q-Q Plot.
@@ -5503,6 +6892,9 @@ We also fail Shapiro-Wilk's test, indicating non-normality.
 
 To assess homoscedasticity we examine the residual scatterplots by treatment group. The warning sign to look for here is if the variance differs greatly across groups.
 
+
+
+
 ```{r}
 # Make the residual scatterplot using the jackknife residuals
 ggplot(data_VLOAD, aes(x = hard_drugs_grp, y = jackknife_residuals_VLOAD)) +
@@ -5511,6 +6903,7 @@ ggplot(data_VLOAD, aes(x = hard_drugs_grp, y = jackknife_residuals_VLOAD)) +
        x = "Hard Drug Use Group",
        y = "JackKnife Residuals")
 ```
+
 ```{r}
 # Make the residual scatterplot using the jackknife residuals
 ggplot(data_VLOAD, aes(x = ADH_HIGHVSLOW, y = jackknife_residuals_VLOAD)) +
@@ -5520,14 +6913,23 @@ ggplot(data_VLOAD, aes(x = ADH_HIGHVSLOW, y = jackknife_residuals_VLOAD)) +
        y = "JackKnife Residuals")
 ```
 
+
+
+
 It appears that our hard drug use groups have unequal variances.
 
 Additionally, while it is not recommended to perform a statistical test to assess for equality of variances (because formal tests of equality of variance are not very powerful), we can still do this using Bartlett’s test. The null hypothesis of the Bartlett test is that the variances are equal. Thus failing to reject the null (p > 0.05) indicates that the data are consistent with the equal variance assumption.
+
+
+
 
 ```{r}
 # Perform Bartlett's test to check for homogeneity of variances
 bartlett.test(VLOAD_log_CHANGE ~ hard_drugs_grp, data = data_VLOAD)
 ```
+
+
+
 
 We also do not meet the assumption for equality of variances (p < 0.05). 
 
@@ -5538,6 +6940,9 @@ This is likely because our patients were not randomly assigned into these groups
 ## Residuals Centered Around Zero
 
 To start, we can simply check that the mean of our residuals is close to 0.
+
+
+
 ```{r}
 # Generate the mean of the jackknife residuals. Should be close to 0.
 mean(jackknife_residuals_VLOAD)
@@ -5549,6 +6954,9 @@ ggplot(data_VLOAD, aes(x = fitted_values_VLOAD, y = jackknife_residuals_VLOAD)) 
   geom_point() +
   geom_smooth(method = "lm")
 ```
+
+
+
 
 We definitely have outliers present.
 
@@ -5584,6 +6992,9 @@ Independence can be assessed in part by the study design and how the data was co
 
 Additionally, we can examine a scatter plot of the model’s residuals against any time point variable (such as ID).
 
+
+
+
 ```{r}
 # Filter to create same data set as in the final analysis
 data_LEU3N <- data_wide_2 %>%
@@ -5605,6 +7016,9 @@ ggplot(data_LEU3N, aes(x = newid, y = jackknife_residuals_LEU3N)) +
        y = "Jackknife Residuals")
 ```
 
+
+
+
 Looks like we have 4 outlier points beyound 3 residuals from 0, but otherwise looking good.
 
 
@@ -5613,6 +7027,9 @@ Looks like we have 4 outlier points beyound 3 residuals from 0, but otherwise lo
 ## Normality
 
 Here we will asses that, for any fixed value of X, Y has a normal distribution. We will do this using Q-Q plots and histograms of the residuals.
+
+
+
 
 ```{r}
 # Make the Q-Q plots using the jackknife residuals
@@ -5627,11 +7044,20 @@ hist(jackknife_residuals_LEU3N, main = "Histogram of Jackknife Residuals",
      border = "black")
 ```
 
+
+
+
 We look very normal here, sans some obvious outliers.
+
+
+
 
 ```{r}
 shapiro.test(jackknife_residuals_LEU3N)
 ```
+
+
+
 
 We have non-normality, but that is due to outliers.
 
@@ -5640,6 +7066,9 @@ We have non-normality, but that is due to outliers.
 ## Equal Variances (Homoscedasticity)
 
 To assess homoscedasticity we examine the residual scatterplots by treatment group. The warning sign to look for here is if the variance differs greatly across groups.
+
+
+
 
 ```{r}
 # Make the residual scatterplot using the jackknife residuals
@@ -5661,6 +7090,9 @@ ggplot(data_LEU3N, aes(x = ADH_HIGHVSLOW, y = jackknife_residuals_LEU3N)) +
 # Perform Bartlett's test to check for homogeneity of variances
 bartlett.test(LEU3N_CHANGE ~ hard_drugs_grp, data = data_LEU3N)
 ```
+
+
+
 We can actually conclude that we have equality of variances! This will look even better once we get rid of outliers.
 
 [Top of Tabset](#Assumptions)
@@ -5668,6 +7100,9 @@ We can actually conclude that we have equality of variances! This will look even
 ## Residuals Centered Around Zero
 
 to start, we can simply check that the mean of our residuals is close to 0.
+
+
+
 
 ```{r}
 # Generate the mean of the jackknife residuals. Should be close to 0.
@@ -5681,6 +7116,9 @@ ggplot(data_LEU3N, aes(x = fitted_values_LEU3N, y = jackknife_residuals_LEU3N)) 
   geom_smooth(method = "lm")
 
 ```
+
+
+
 
 The mean is close to 0. The residuals look centered around 0 excepting the outliers.
 
@@ -5711,6 +7149,9 @@ Independence can be assessed in part by the study design and how the data was co
 
 Additionally, we can examine a scatter plot of the model’s residuals against any time point variable (such as ID).
 
+
+
+
 ```{r}
 # Filter to create same data set as in the final analysis
 data_MENT_main <- data_wide_2 %>%
@@ -5731,6 +7172,9 @@ ggplot(data_MENT_main, aes(x = newid, y = jackknife_residuals_MENT_main)) +
        y = "Jackknife Residuals")
 ```
 
+
+
+
 No clear pattern, we meet the assumption of independence.
 
 [Top of Tabset](#Assumptions)
@@ -5738,6 +7182,9 @@ No clear pattern, we meet the assumption of independence.
 ## Normality
 
 Here we will asses that, for any fixed value of X, Y has a normal distribution. We will do this using Q-Q plots and histograms of the residuals.
+
+
+
 
 ```{r}
 # Make the Q-Q plots using the jackknife residuals
@@ -5751,9 +7198,13 @@ hist(jackknife_residuals_MENT_main, main = "Histogram of Jackknife Residuals",
      col = "lightblue",
      border = "black")
 ```
+
 ```{r}
 shapiro.test(jackknife_residuals_MENT_main)
 ```
+
+
+
 
 We have non-normality. It does not look like outliers are driving this.
 
@@ -5762,6 +7213,9 @@ We have non-normality. It does not look like outliers are driving this.
 ## Equal Variances (Homoscedasticity)
 
 To assess homoscedasticity we examine the residual scatterplots by treatment group. The warning sign to look for here is if the variance differs greatly across groups.
+
+
+
 
 ```{r}
 # Make the residual scatterplot using the jackknife residuals
@@ -5786,11 +7240,17 @@ ggplot(data_MENT_main, aes(x = ADH_HIGHVSLOW, y = jackknife_residuals_MENT_main)
 bartlett.test(AGG_MENT_CHANGE ~ hard_drugs_grp, data = data_MENT_main)
 ```
 
+
+
+
 The test is significant, and we conclude we do not have homogeneity of variances.
 
 [Top of Tabset](#Assumptions)
 
 ## Residuals Centered Around Zero
+
+
+
 
 ```{r}
 # Generate the mean of the jackknife residuals. Should be close to 0.
@@ -5803,6 +7263,9 @@ ggplot(data_MENT_main, aes(x = fitted_values_MENT_main, y = jackknife_residuals_
   geom_point() +
   geom_smooth(method = "lm")
 ```
+
+
+
 
 Our residuals look centered around 0, sans a few outlier points.
 
@@ -5833,6 +7296,9 @@ Independence can be assessed in part by the study design and how the data was co
 
 Additionally, we can examine a scatter plot of the model’s residuals against any time point variable (such as ID).
 
+
+
+
 ```{r}
 # Filter to create same data set as in the final analysis
 data_PHYS <- data_wide_2 %>%
@@ -5854,6 +7320,9 @@ ggplot(data_PHYS, aes(x = newid, y = jackknife_residuals_PHYS)) +
        y = "Jackknife Residuals")
 ```
 
+
+
+
 Independence looks pretty good.
 
 [Top of Tabset](#Assumptions)
@@ -5861,6 +7330,9 @@ Independence looks pretty good.
 ## Normality
 
 Here we will asses that, for any fixed value of X, Y has a normal distribution. We will do this using Q-Q plots and histograms of the residuals.
+
+
+
 
 ```{r}
 
@@ -5879,6 +7351,9 @@ shapiro.test(jackknife_residuals_PHYS)
 
 ```
 
+
+
+
 Physical QOL looks mostly normal. There may be 1 outier at the upper and lower bound.
 
 Shapiro Wilk's does say we fail normality however.
@@ -5888,6 +7363,9 @@ Shapiro Wilk's does say we fail normality however.
 ## Equal Variances (Homoscedasticity)
 
 To assess homoscedasticity we examine the residual scatterplots by treatment group. The warning sign to look for here is if the variance differs greatly across groups.
+
+
+
 
 ```{r}
 # Make the residual scatterplot using the jackknife residuals
@@ -5901,11 +7379,17 @@ ggplot(data_PHYS, aes(x = hard_drugs_grp, y = jackknife_residuals_PHYS)) +
 bartlett.test(AGG_PHYS_CHANGE ~ hard_drugs_grp, data = data_PHYS)
 ```
 
+
+
+
 We do have homogeneity of variances for physical QOL.
 
 [Top of Tabset](#Assumptions)
 
 ## Residuals Centered Around Zero
+
+
+
 
 ```{r}
 # Generate the mean of the jackknife residuals. Should be close to 0.
@@ -5920,6 +7404,9 @@ ggplot(data_PHYS, aes(x = fitted_values_PHYS, y = jackknife_residuals_PHYS)) +
 ```
 
 
+
+
+
 [Top of Tabset](#Assumptions)
 
 ## Summary
@@ -5929,6 +7416,9 @@ The assumptions for CD4+ T cell count are almost met. Likely once removing those
 [Top of Tabset](#Assumptions)
 
 To assess homoscedasticity we examine the residual scatterplots by treatment group. The warning sign to look for here is if the variance differs greatly across groups.
+
+
+
 
 ```{r}
 # Make the residual scatterplot using the jackknife residuals
@@ -5953,9 +7443,15 @@ ggplot(data_PHYS, aes(x = ADH_HIGHVSLOW, y = jackknife_residuals_PHYS)) +
 bartlett.test(AGG_PHYS_CHANGE ~ hard_drugs_grp, data = data_PHYS)
 ```
 
+
+
+
 We do have homogeneity of variances.
 
 ## Residuals Centered Around Zero
+
+
+
 
 ```{r}
 # Generate the mean of the jackknife residuals. Should be close to 0.
@@ -5968,6 +7464,9 @@ ggplot(data_PHYS, aes(x = fitted_values_PHYS, y = jackknife_residuals_PHYS)) +
   geom_point() +
   geom_smooth(method = "lm")
 ```
+
+
+
 
 The residuals appear centered around zero, for the most part.
 
@@ -5986,6 +7485,9 @@ Let’s generate a table so we can handily compare: ID, jackknife residual, leve
 ::: panel-tabset
 
 ## Log Viral Load
+
+
+
 
 ```{r}
 # Get leverage values (hat values)
@@ -6006,7 +7508,13 @@ diagnostics_VLOAD <- data.frame(id = data_VLOAD$newid, jackknife_residuals = jac
 pretty_print(head(diagnostics_VLOAD))
 ```
 
+
+
+
 Plot to assess influence and leverage.
+
+
+
 
 ```{r}
 # Influence plot
@@ -6018,7 +7526,13 @@ influencePlot(model_VLOAD_full1, main = "Influence Plot",
 infIndexPlot(model_VLOAD_full1)
 ```
 
+
+
+
 We have two immediately obvious values for participants 319 and 356. Let's examine them.
+
+
+
 
 ```{r}
 diagnostics_VLOAD %>%
@@ -6026,9 +7540,15 @@ diagnostics_VLOAD %>%
   head()
 ```
 
+
+
+
 The values for 319 and 356 are actually all comparable to 11 and 15, I think they are just so far off to the side like that because otherwise you wouldn't be able to see anything in all those overlapping circles.
 
 Let's remove them and replot, and I bet 11 and 15 will flag as outliers.
+
+
+
 
 ```{r}
 # Remove outlier patients
@@ -6049,9 +7569,15 @@ infIndexPlot(model_VLOAD_full1)
 ```
 
 
+
+
+
 Yup, 11 and 15 are now flagging as outliers, which makes sense because they had basically exactly the same values of who we just deleted.
 
 That looks as good as it gets without removing too many observations.
+
+
+
 ```{r}
 summary(model_VLOAD_full1)
 
@@ -6064,11 +7590,17 @@ diagnostics_VLOAD %>%
   head()
 ```
 
+
+
+
 At this point it appears that we have removed too many data points to be able to run our main interaction of interest.
 
 This will have to be noted as a limitation in this analysis!
 
 ## CD4 + T Cell Count
+
+
+
 
 ```{r}
 # Influence plot
@@ -6080,7 +7612,13 @@ influencePlot(model_LEU3N_final1, main = "Influence Plot",
 infIndexPlot(model_LEU3N_final1)
 ```
 
+
+
+
 Remove 63, 255, and 88, and 301 (residuals > +- 3)
+
+
+
 
 ```{r}
 # Remove outlier patients
@@ -6110,9 +7648,15 @@ qqnorm(jackknife_residuals_LEU3N, main = "Q-Q plots of Jackknife Residuals for L
 qqline(jackknife_residuals_LEU3N, col = "black")
 ```
 
+
+
+
 The final model for `LEU3N_CHANGE` now meets all assumptions! And it doesn't look like any of our p-values changed.
 
 ## Mental QOL Change
+
+
+
 
 ```{r}
 # Influence plot
@@ -6124,7 +7668,13 @@ influencePlot(model_MENT_main1, main = "Influence Plot",
 infIndexPlot(model_MENT_main1)
 ```
 
+
+
+
 11 and 15 are flagging as outliers again. Let's remove them.
+
+
+
 
 ```{r}
 # Remove outlier patients
@@ -6160,11 +7710,17 @@ hist(jackknife_residuals_MENT_main, main = "Histogram of Jackknife Residuals",
      border = "black")
 ```
 
+
+
+
 This doesn't appear to do much for our assumptions for this model however.
 
 It doesn't appear that outliers are driving this shape.
 
 ## Physical Quality of Life
+
+
+
 
 ```{r}
 # Influence plot
@@ -6175,7 +7731,13 @@ influencePlot(model_PHYS_final1, main = "Influence Plot",
 infIndexPlot(model_PHYS_final1)
 ```
 
+
+
+
 Same high leverage points we saw with mental QOL.
+
+
+
 
 ```{r}
 # Remove outlier patients
@@ -6228,6 +7790,9 @@ hist(jackknife_residuals_PHYS, main = "Histogram of Jackknife Residuals",
      border = "black")
 ```
 
+
+
+
 The data looks slightly more normally distributed
 
 :::
@@ -6240,11 +7805,17 @@ Here is where I will go back and add details for how many participants we remove
 
 This function is useful for tabulating missing data for each variable.
 
+
+
+
 ```{r}
 # Print number of missing data for each column 
 kable(colSums(is.na(data_2)), format = "html", col.names = "Missing") %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
 ```
+
+
+
 
 # To do
 
@@ -6252,17 +7823,26 @@ kable(colSums(is.na(data_2)), format = "html", col.names = "Missing") %>%
 
 Filtered table 1 based on likely variables for end models, dropping extraneous variables.
 
+
+
+
 ```{r}
 # Create Table 1 for the wideform data set,stratified by hard drug use group
 table1 <- table1(~RACE_WHITEYN + EDUC_COLLEGE + age_0 + FRP_2 + CESD_0 + ADH_HIGHVSLOW + AGG_MENT_CHANGE + AGG_PHYS_CHANGE + VLOAD_log_CHANGE + LEU3N_CHANGE| hard_drugs_grp, data = data_wide_2, caption = "Descriptive Statistics at Baseline", overall = c(left="Total"))
 table1
 ```
 
+
+
+
 # Bonus
 
 Out of curiosity I started look into the 8 year relationships we have in this data set, and found some interesting results.
 
 I think I have to do an analysis of aggregate QOL scores predict adherence or dropout...
+
+
+
 
 ```{r}
 p <- ggplot(data, aes(x = years, y = AGG_MENT, color = ADH)) +
@@ -6295,11 +7875,17 @@ p <- ggplot(summary_data, aes(x = years, y = Average_QOL, color = ADH)) +
 ggplotly(p)
 ```
 
+
+
+
 Success! This is very interesting. It appears that the 100% adherence group has the highest average mental QOL score across the 8 year study, followed by the 95-99% group, followed by the \<75% group and followed by (with some variation) the \<75% and 75-94% groups.
 
 I think we're on to something here. This could mean that better adherence was improving mental QOL and thus patients were continuing the regimen. OR it could mean that for patients whom the medication was affecting negatively mentally, they adhered less to the drug or lessened their dose to control for adverse psychological effects.
 
 Let's do the same thing but for `AGG_PHYS`.
+
+
+
 
 ```{r}
 # Get means for each year
@@ -6319,9 +7905,15 @@ ggplot(summary_data, aes(x = years, y = Average_QOL, color = ADH)) +
   scale_color_brewer(palette = "Pastel2")  # Nice color palette for groups
 ```
 
+
+
+
 We see a similiar relationship here, though there's more variation. For some reason that \<75% group likes to spike in their QOL at year 7. Interesting.
 
 What about for our other outcome variables while we're at it?
+
+
+
 
 ```{r}
 # Get means for each year
@@ -6367,7 +7959,6 @@ p <- ggplot(summary_data, aes(x = years, y = Average_VLOAD_log, color = ADH)) +
 ggplotly(p)
 ```
 
-
 ```{r}
 data$ADH_HIGHLOW <- ifelse(data$ADH == "<75%" | data$ADH == "75-94%", 0, 1)
 
@@ -6397,7 +7988,6 @@ p <- ggplot(summary_data, aes(x = years, y = Average_VLOAD_log, color = ADH_HIGH
 
 ggplotly(p)
 ```
-
 
 ```{r}
 data$perfADH <- ifelse(data$ADH == "100%", 1, 0)
@@ -6430,7 +8020,13 @@ ggplotly(p)
 ```
 
 
+
+
+
 doing same for leu3n
+
+
+
 
 ```{r}
 #### tRY WITH HIGH LOW ADH
@@ -6453,8 +8049,6 @@ p <- ggplot(summary_data, aes(x = years, y = Average_LEU3N, color = ADH_HIGHLOW)
 
 ggplotly(p)
 ```
-
-
 
 ```{r}
 data$ADH_HIGHLOW <- ifelse(data$ADH == "<75%" | data$ADH == "75-94%", 0, 1)
@@ -6487,6 +8081,9 @@ ggplotly(p)
 ```
 
 
+
+
+
 That's very interesting. The groups with the highest vload log had the least adherence. There is an inverse relationship here.
 
 This is strong evidence that the treatment is efficacious and the `ADH` should be considered as a confounder.
@@ -6494,6 +8091,9 @@ This is strong evidence that the treatment is efficacious and the `ADH` should b
 Ohhhhh, that's super cool. So there is an inverse relationship between `LEU3N` and `VLOAD_log`, such that spikes in one should be dips in the other. We can see that in this data set! It appears that for the adherence group of \<75%, they had viral load spikes at years 5 and 7, which correspond with leukocyte dips at years 5 and 7! They weren't adhering to the protocol, which resulted in them getting infected (?) more and having more of the virus present compared to the other groups.
 
 What about if we do this by hard drug use group?
+
+
+
 
 ```{r}
 # Get means for each year
@@ -6515,9 +8115,15 @@ p <- ggplot(summary_data, aes(x = years, y = Average_VLOAD_log, color = hard_dru
 ggplotly(p)
 ```
 
+
+
+
 This looks like those that use hard drugs have a lower log vload over the entire study. Is that because hard drug use is being confounded with adherence?
 
 dunno how to read that...
+
+
+
 
 ```{r}
 # Assuming your dataset is called data_long and has columns: ID, Year, and Outcome_Var
@@ -6612,7 +8218,13 @@ p <- ggplot(dropout_summary, aes(x = years, y = Dropout_Percent, color = ADH)) +
 ggplotly(p)
 ```
 
+
+
+
 [**does QOL predict adherence?**]{.underline}
+
+
+
 
 ```{r}
 model_test <- lm(AGG_MENT_CHANGE ~ ADH_2, data = data_wide_2)
@@ -6621,12 +8233,21 @@ summary(model_test)
 
 ```
 
+
+
+
 It does... that's not good I think.
+
+
+
 
 ```{r}
 model_test_phys <- lm(AGG_PHYS_CHANGE ~ ADH_2, data = data_wide_2)
 summary(model_test_phys)
 ```
+
+
+
 
 It also does for `AGG_PHYS`... weird.
 
@@ -6642,6 +8263,9 @@ If we plot it with depression at baseline, the relationship is positive, opposit
 
 If we plot it with depression at 2 years, the relationship is negative, as expected.
 
+
+
+
 ```{r}
 # Create a scatterplot of mental QOL change score by depression at baseline
 ggplot(data_wide_2, aes(x = CESD_0, y = AGG_MENT_CHANGE, color = CESD_0)) + 
@@ -6653,7 +8277,13 @@ ggplot(data_wide_2, aes(x = CESD_0, y = AGG_MENT_CHANGE, color = CESD_0)) +
   scale_fill_brewer(palette = "Pastel2")
 ```
 
+
+
+
 There appears to be a linear relationship here. Let's run the regression and fit the model.
+
+
+
 
 ```{r}
 # Perform a linear regression predicting mental QOL change by depression at baseline
@@ -6675,12 +8305,18 @@ ggplot(data_wide_2, aes(x = CESD_0, y = AGG_MENT_CHANGE, color = CESD_0)) +
   scale_fill_brewer(palette = "Pastel2")
 ```
 
+
+
+
 Depression score is a significant predictor of mental QOL change over the first 2 years of treatment (F~(1, 527)~= 92.64). On average, a 1-point increase in depression score is associated with a 0.41 point increase in mental QOL score (p < 0.0001).
 
 This is the complete opposite of what is expected. Those with more depression should have lower mental QOL. Is this due to confounding?
 
 
 If we plot it with depression at 2 years, the relationship is negative, as expected.
+
+
+
 
 ```{r}
 # Create a scatterplot of mental QOL change score by depression at baseline
@@ -6693,7 +8329,13 @@ ggplot(data_wide_2, aes(x = CESD_2, y = AGG_MENT_CHANGE, color = CESD_2)) +
   scale_fill_brewer(palette = "Pastel2")
 ```
 
+
+
+
 There appears to be a linear relationship here. Let's run the regression and fit the model.
+
+
+
 
 ```{r}
 # Perform a linear regression predicting mental QOL change by depression at baseline
@@ -6716,6 +8358,9 @@ ggplot(data_wide_2, aes(x = CESD_2, y = AGG_MENT_CHANGE, color = CESD_2)) +
 ```
 
 
+
+
+
 Should I calculate a depression change score???
 
 
@@ -6723,6 +8368,9 @@ For log viral load change of beta -5.72 , do you do exp(-5.72 ) or exp(5.72) and
 
 
 THis is another (and probably easier) way of doing between group comparisons. But I noticed that the estimates are slightly off and it makes me wonder at relying on a package.
+
+
+
 
 
 ```{r}
@@ -6740,6 +8388,9 @@ plot(emm, comparisons = TRUE)
 ```
 
 
+
+
+
 # Other literature
 
 https://pmc.ncbi.nlm.nih.gov/articles/PMC9234842/
@@ -6747,6 +8398,9 @@ https://pmc.ncbi.nlm.nih.gov/articles/PMC9234842/
 This one shows that poor adherence is related to anxiety and depression, leading credence to why I want to examine the impact of hard drugs and adherence while controlling for depression.
 
 # Crazy interaction with depression and hard drugs and mental qol
+
+
+
 ```{r}
 # Create a scatterplot of mental QOLchange by depression score, colored by hard drug use group.
 ggplot(data_wide_2, aes(x = CESD_2, y = AGG_MENT_CHANGE, color = hard_drugs_grp)) + 
@@ -6758,7 +8412,13 @@ ggplot(data_wide_2, aes(x = CESD_2, y = AGG_MENT_CHANGE, color = hard_drugs_grp)
        x = "Depression Score") + 
   scale_fill_brewer(palette = "Pastel2")
 ```
+
+
+
 If you were a previous hard drug user, increases in depression score was associated with decreases in mental QOL over 2 years.
+
+
+
 
 ```{r}
 # Create a scatterplot of mental QOLchange by depression score, colored by hard drug use group.
@@ -6771,6 +8431,9 @@ ggplot(data_wide_2, aes(x = AGG_MENT_CHANGE, y = CESD_2, color = hard_drugs_grp)
        x = "Mental QOL Change") + 
   scale_fill_brewer(palette = "Pastel2")
 ```
+
+
+
 If you were a previous hard drug user, increases in mental QOL predicted lower depression scores over 2 years.
 
 They are saying the same thing.
@@ -6778,6 +8441,9 @@ They are saying the same thing.
 Except this plot is showing that never drug users were less depressed compared to curent users, regardless of whether they increased or decreased in mental QOL.
 
 So mental QOL increase is protective for previous drug users in particular.
+
+
+
 
 ```{r}
 # Create a scatterplot of mental QOLchange by depression score, colored by hard drug use group.
@@ -6792,6 +8458,9 @@ ggplot(data_no_na, aes(x = CESD_2, y = AGG_MENT_CHANGE, color = ADH_HIGHVSLOW)) 
 
 ```
 
+
+
+
 It appears that high adherence is protective for those with high depression scores.
 
 I think there's a three way interaction going on here.
@@ -6800,6 +8469,9 @@ I think there's a three way interaction going on here.
 
 
 ## Depression and leu3n change are mediators for QOL score
+
+
+
 
 ```{r}
 # Relevel to change to the reference group to never user
@@ -6817,7 +8489,13 @@ summary(model_MENT_full1)
 
 
 
+
+
+
 ## 3 way interaction with depression, hard drug use, and adherence on mental QOL
+
+
+
 
 ```{r}
 # Relevel to change to the reference group to never user
@@ -6833,11 +8511,17 @@ model_MENT_full1 <- lm(AGG_MENT_CHANGE ~ hard_drugs_grp + ADH_HIGHVSLOW +  CESD_
 summary(model_MENT_full1)
 ```
 
+
+
+
 I do NOT want to interpret that, but that is the highest r squared i've seen by far for this data set.
 
 Also we definitely do not have the sample size to run this.
 
 ### More stuff on possible 3-way interaction 
+
+
+
 
 ```{r}
 # Relevel to change to the reference group to never user
@@ -6861,7 +8545,6 @@ model_MENT_full1 <- lm(AGG_MENT_CHANGE ~ ADH_HIGHVSLOW + CESD_2 + ADH_HIGHVSLOW*
 summary(model_MENT_full1)
 ```
 
-
 ```{r}
 # Create a scatterplot of mental QOLchange by depression score, colored by hard drug use group.
 ggplot(data_wide_2, aes(x = CESD_2, y = AGG_MENT_CHANGE, color = ADH_HIGHVSLOW)) + 
@@ -6874,9 +8557,15 @@ ggplot(data_wide_2, aes(x = CESD_2, y = AGG_MENT_CHANGE, color = ADH_HIGHVSLOW))
   scale_fill_brewer(palette = "Pastel2")
 ```
 
+
+
+
 I don't actually have to look at this because we're not too interesting in depression.
 
 ## Mediation Test
+
+
+
 
 ```{r}
 library(mediation)
@@ -6897,5 +8586,9 @@ mediation_result <- mediate(model_mediator, model_outcome, treat = "hard_drugs_g
 summary(mediation_result)
 
 ```
+
+
+
 Apparently this means that while indirect mediation is significant, the combined direct and indirect effects are not. So depression is NOT a mediate for the relationship between hard drugs and mental QOL.
+
 
