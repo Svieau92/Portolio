@@ -1,0 +1,316 @@
+---
+title: "Automated Treadmill Data Cleaning" 
+format: html
+editor: visual 
+author: Sean Vieau 
+date: October 10, 2024 
+output: html-document 
+toc: true
+bibliography: references.bib 
+jupyter: python3
+---
+
+# Introduction
+
+This was the final project for my BIOS 6644 Data Wrangling course.
+
+In this project, we create a program to automate the data cleaning of vital mouse treadmill data needed to validate Genetically Encoded Voltage Indicators for visualizing neuronal activity, exponentially saving experimenter time on manually cleaning data files and greatly expediting the data analysis process.
+
+# Background
+
+Genetically Encoded Voltage Indicators (GEVIs) are powerful tools in neuroscience that allow researchers to visualize neuronal activity with high spatial and temporal resolution.
+
+GEVIs are designed to be expressed in specific neurons, where they can report changes in membrane potential. They typically consist of a voltage-sensitive domain fused to a fluorescent protein. When the voltage across the neuron's membrane changes, the GEVI undergoes a conformational change that alters its fluorescence intensity, allowing researchers to track electrical activity in real-time ([1](https://bmcbiol.biomedcentral.com/articles/10.1186/s12915-019-0682-0?form=MG0AV3)).
+
+In brief, mice undergo a surgery in which the GEVI is injected into the target region of the brain (motor cortex in this case). After allowing time to heal, a highly specialized microscope is used to image these target neurons with a specific wavelength of light that allows us to visualize neuronal firing in real-time
+
+Additionally, GEVIs enable sub-millisecond fidelity recording of neuronal activity, capturing electrical signals with temporal resolution on the order of 1-2 milliseconds. This is significantly faster than traditional fluorescent imaging vectors like GFP, which typically offer temporal resolutions on the scale of 100 milliseconds ([1](https://bmcbiol.biomedcentral.com/articles/10.1186/s12915-019-0682-0?form=MG0AV3)).
+
+Thus, the promise of GEVI's is great, but this comes with a concomitant technological and engineering challenge!
+
+My lab aimed to create the first 1-photon miniature microscope that would allow for voltage recordings in freely moving mice. We had made great progress towards this goal.
+
+However, a big challenge arose!
+
+## The Motivator
+
+At this point, we had successfully expressed and captured neuronal activity in a single VIP+ neuron using a GEVI, which can be seen here.
+
+![Image and Plots made by Forest Speed](images/First_GEVI_Neuron.png){width="80%"}
+
+However, we now needed to validate these signals against a control. That is, we needed to prove that we were capturing real voltage signals.
+
+One approach to this problem was to perform voltage imaging with a GEVI in the motor cortex and correlate that activity to a physiological indicator of movement - mice walking on a treadmill. The idea is simple: If we were capturing true voltage signals, we would see spikes every time the mice walked.
+
+Thus, we created a paradigm where we could image mice while they walked on a treadmill. (This experimental set-up would also allow for further experiments down the road of particular interest to my lab, such as documenting the relationships between inhibitory interneurons during locomotion).
+
+This experimental set up can be seen here.
+
+::: {style="text-align: center;"}
+![](images/Mouse_on_Treadmill.png){width="65%"}
+:::
+
+## The Problem
+
+We had successfully created a paradigm where we could perform voltage imaging on freely moving mice. However, the data we were receiving would have to be cleaned before we could do anything with it!
+
+Specifically the recording on the treadmill was beginning before the recording on the camera. This resulted in treadmill files that were capturing data when the camera was turned off at both at the beginning and end of each treadmill file.
+
+This can be visualized here.
+
+::: {style="text-align: center;"}
+![](images/Treadmill_Data.png){width="65%"}
+:::
+
+Thus, the treadmill data would have to be cleaned in order for the treadmill and camera recordings to be synchronized with each other.
+
+# Planning The Code
+
+With the background and motivation for the program detailed, we can now move to the code itself.
+
+## Outline
+
+As can be seen in the previous image, the recording software for the camera was detecting the timepoint that the camera was turned on as a change from 0 to \~3 Volts. This is the timestamp that we will use to sychronize the treadmill data with the camera recordings.
+
+To do so, we need all of the treadmill recordings to have this timepoint where the camera switches from 0 to 3 Volts as timestamp 0.00 seconds.
+
+This will also have to be done en masse, to clean as many treadmill files as needed simultaneously.
+
+### Pseudo Code
+
+Thus, the pseudo code for the program is laid out as follows:
+
+1.  Iterate through all the treadmill.xlsx’s in a specified folder.
+
+2.  In each treadmill.xlsx:
+
+    1.  Delete every second row (since these are empty rows)
+
+    2.  Check the second column of the treadmill.xlsx (which detects when the Camera was turned on)
+
+    3.  Only consider rows where the camera was turned on (i.e. the "Camera On/Off" value \> 3)
+
+    4.  Consider the first row as time stamp 0.
+
+    5.  From that point on, all remaining time stamps will be shifted by x seconds, where x is the timestamp where the camera was turned on.
+
+    6.  Save the .xlsx in a new folder with the exact same file name but appended with the suffix “\_cleaned.xlsx”.
+
+This process can be visualized below.
+
+::: {style="text-align: center;"}
+![](images/Pseudo_Code_Visualized.png){width="120%"}
+:::
+
+# Developing the Program
+
+First we will define our import statements.
+
+```{python}
+# Import statements
+import pandas as pd
+import matplotlib.pyplot as plt
+import os
+```
+
+And then import an example treadmill.xlsx file
+
+```{python}
+# Define column names
+col_names = ["Treadmill Position (V)", "Camera On/Off", "Time (sec)"]
+
+# Import treadmill data as a pd df, set column names to col_names
+treadmill = pd.read_excel(r"C:\Users\sviea\Documents\Portfolio\Data_Wrangling\Treadmill_Data_Cleaning\Treadmill Files Uncleaned\121523_RC1_Pace_1.xlsx", names = col_names)
+
+# Examine the df
+treadmill
+```
+
+### Removing Empty Rows
+
+As mentioned previously, every other row of these files is blank. Let's drop those NaN values.
+
+```{python}
+# Drop NaN values
+treadmill = treadmill.dropna()
+treadmill
+```
+
+Looks good.
+
+### Filtering to When Camera was On
+
+Now let's filter down to only time points when the camera was turned on.
+
+```{python}
+# Slice the treadmill df so it only includes values where the camera was turned on (i.e. value > 3)
+treadmill = treadmill[treadmill["Camera On/Off"] > 3]
+treadmill
+```
+
+We can see that we now only have observations where the 2nd column contains values greater than 3 (i.e. the camera was turned ON).
+
+### Resetting First Time Point to Zero
+
+```{python}
+#| warning: false
+#| message: false
+
+# Set the first Time (sec) value to 0
+time_start = treadmill["Time (sec)"].iloc[0]
+
+# Delete all Time (sec) values by the starting time
+treadmill["Time (sec)"] = treadmill["Time (sec)"] - time_start
+treadmill
+```
+
+## Converting Treadmill Position from Volts to Degrees
+
+It might easier to deal with/conceptualize the treadmill position as degrees of a circle instead of volts in the future. That way we can calculate distance over time later using the radius of the circle.
+
+For reference, the magnetic encoder that the treadmill is attached to captures position in volts, which can be converted directly into degrees of a circle.
+
+![](images/Encoder_Rotation.png){fig-align="center" width="50%"}
+
+Let's make that conversion now instead of later.
+
+```{python}
+#| warning: false
+#| message: false
+#| 
+# The highest value for Treadmill Position (in Volts) gets designated as 360 degrees, or the end of the circle
+circle_360 = treadmill["Treadmill Position (V)"].max() # Set 360 as the max value for Treadmill Position (V) 
+one_volt = 360 / circle_360 # One volt is therefore (360 / the max value for Treadmill Position (V)) degrees (e.g., if the max was 5 volts, then 360 / 5 = 72 degrees, or 1 volt = 72 degrees)
+
+# Create a new column that is the Volts * how many degrees one volt is equal to
+treadmill["Treadmill Position (degree)"] = treadmill["Treadmill Position (V)"] * one_volt
+treadmill
+```
+
+Looks good. This treadmill file is now fully cleaned.
+
+## Saving the Cleaned Data
+
+We will want to save each treadmill file after it is cleaned.
+
+For thorough record keeping, let's create a subfolder within the folder that the treadmill.xlsx files are found within and store the cleaned files there.
+
+```{python}
+# Name the new folder "Cleaned Treadmill Files", and place it within the folder that the uncleaned treadmill files will all be kept in
+new_folder = r"C:\Users\sviea\Documents\Portfolio\Data_Wrangling\Treadmill_Data_Cleaning\Treadmill Files Uncleaned\Cleaned Treadmill Files"
+
+# Make the new folder
+os.makedirs(new_folder, exist_ok=True)
+
+# Save the cleaned file to this new folder as an excel file
+output_file = os.path.join(new_folder, "Cleaned 1.xlsx")
+treadmill.to_excel(output_file, index=False)
+```
+
+## Create a Function
+
+We just wrote code to import, clean, and save a single treadmill.xlsx file.
+
+For the final product, we need to make a program that walks through every uncleaned treadmill file in a folder and cleans it.
+
+To that end, we need to convert the file-cleaning-and-saving steps into a single function, that we can then apply to multiple files en masse.
+
+```{python}
+# Making a function to clean a single treadmill.xlsx file
+def treadmill_cleaner(file_path, save_location):
+    '''
+    This function cleans a single treadmill.xlsx file
+    And saves it in the save_location folder
+    '''
+    
+    #Import the File
+    col_names = ["Treadmill Position (V)", "Camera On/Off", "Time (sec)"] # Define column names
+    treadmill = pd.read_excel(file_path, names = col_names) # Import treadmill data as a pd df, set column names to col_names
+
+    # Clean the File
+    treadmill = treadmill.dropna() # Drop NaN values
+    treadmill = treadmill[treadmill["Camera On/Off"] > 3] # Slice the treadmill df so it only includes values where the camera was turned on (i.e. value > 3)
+    time_start = treadmill["Time (sec)"].iloc[0] # Set the first Time (sec) value to 0
+    treadmill["Time (sec)"] = treadmill["Time (sec)"] - time_start # Delete all Time (sec) values by the starting time
+    circle_360 = treadmill["Treadmill Position (V)"].max() # Set 360 as the max value for Treadmill Position (V) 
+    one_volt = 360 / circle_360 # One volt is therefore (360 / the max value for Treadmill Position (V)) degrees (e.g., if the max was 5 volts, then 360 / 5 = 72 degrees, or 1 volt = 72 degrees)
+    treadmill["Treadmill Position (degree)"] = treadmill["Treadmill Position (V)"] * one_volt
+    
+    # Save the Cleaned File
+    output_file = os.path.join(save_location, filename) # Generates the name of the output file (save location + file_name)
+    base_name, extension = os.path.splitext(output_file) # Separates the file name to be "file_name" and ".xlsx" (modified from ChatGPT)
+    cleaned_path = f"{base_name}_cleaned{extension}" # Creates a new file name that is "file_name_cleaned.xlsx" (modified from ChatGPT)
+    treadmill.to_excel(cleaned_path, index=False) # Saves the file and appends "_cleaned" to the end of it
+```
+
+# The Final Program
+
+Now that we have the file cleaning and saving steps embedded within a single function, we can apply this function to clean either:
+
+-   A single treadmill file
+-   An entire folder with as many treadmill files as need cleaning!
+
+## Clean a Single Treadmill File
+
+If we want to run the program to clean a single file, we can run the code below.
+
+```{python}
+# Change file paths as needed below
+filename = "121523_RC1_Pace_1.xlsx" # Change this to what you want the last part of the file name to be!
+file_path = r"C:\Users\sviea\Documents\Portfolio\Data_Wrangling\Treadmill_Data_Cleaning\Treadmill Files Uncleaned\121523_RC1_Pace_1.xlsx" # Change this to the file path of the treadmill file you want to clean
+save_location = r"C:\Users\sviea\Documents\Portfolio\Data_Wrangling\Treadmill_Data_Cleaning\Treadmill Files Uncleaned\Cleaned Treadmill Files" #Change this to the name of the folder you want to save in
+os.makedirs(save_location, exist_ok=True)  # Makes the save_location as a new folder, skips if it already exists
+
+# Run the program to clean a single treadmill file
+treadmill_cleaner(file_path, save_location)
+```
+
+## Clean an Entire Folder Containing Raw Treadmill Files
+
+If we want to clean a folder containing multiple treadmill files, we can run the chunk below.
+
+```{python}
+# This program walks through every file in a designated folder and applies the above treadmill_cleaner() function to each file, saving the cleaned file in the same subfolder
+
+#__________________Enter the file path to the folder containing treadmill files here!!!!!_________________________#
+directory = r"C:\Users\sviea\Documents\Portfolio\Data_Wrangling\Treadmill_Data_Cleaning\Treadmill Files Uncleaned" #__________ copy paste desired directory here!!!
+
+##### Create the save location as a new folder (if needed)
+save_location = f"{directory}" + "\Cleaned Treadmill Files" # Names the save location as the folder containing treadmill files + "\Cleaned Treadmill Files"
+os.makedirs(save_location, exist_ok=True)  # Makes the save_location as a new folder, skips if it already exists
+print("Save location is:", save_location)
+
+##### Walk through every file in the directory and apply the treadmill_cleaner() function
+try: # Made this a try statement so it does not apply to subfolders
+    for filename in os.listdir(directory):
+        print("File name is:", filename)
+        filepath = os.path.join(directory, filename)
+        print("File path is:", filepath)
+        treadmill_cleaner(filepath, save_location)
+except PermissionError:  # Skips subfolders (and anything else really, will throw an error if you have the .xlsx file open!)
+    print("File is a folder -  skipping")
+```
+
+**We just cleaned 6 files in a matter of seconds. That would have taken the better part of an hour to do by hand!**
+
+## Checking the Output
+
+For good measure, let's check the output of the first and last file we cleaned.
+
+```{python}
+# Check first file
+file_1 = pd.read_excel(r"C:\Users\sviea\Documents\Portfolio\Data_Wrangling\Treadmill_Data_Cleaning\Treadmill Files Uncleaned\Cleaned Treadmill Files\121523_RC1_Pace_1_cleaned.xlsx")
+file_1
+```
+
+```{python}
+# Check last file
+file_6 = pd.read_excel(r"C:\Users\sviea\Documents\Portfolio\Data_Wrangling\Treadmill_Data_Cleaning\Treadmill Files Uncleaned\Cleaned Treadmill Files\121523_RC1_Pace_6_cleaned.xlsx")
+file_6
+```
+
+Looks great!
+
+# References
+
+[@bando2019]

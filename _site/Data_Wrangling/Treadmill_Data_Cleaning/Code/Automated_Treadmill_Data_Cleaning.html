@@ -1,0 +1,1637 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.5.57">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Sean Vieau">
+<meta name="dcterms.date" content="2024-10-10">
+
+<title>Automated Treadmill Data Cleaning – Sean Vieau Portfolio</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+  margin-bottom: 0em;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script><script src="../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../">
+<script src="../../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" integrity="sha512-c3Nl8+7g4LMSTdrm621y7kf9v3SDPnhxLNhcjFJbKECVnmZHTdo+IRO05sNLTH/D3vA6u1X32ehoLC7WFVdheg==" crossorigin="anonymous"></script>
+
+
+
+<script type="application/javascript">define('jquery', [],function() {return window.jQuery;})</script>
+
+
+
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../../index.html">
+    <span class="navbar-title">Sean Vieau Portfolio</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../../index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-advanced-data-analyses" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Advanced Data Analyses</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-advanced-data-analyses">    
+        <li>
+    <a class="dropdown-item" href="../../../Project_1_Regression/Project_1_Regression_R/Project_1_Regression.html">
+ <span class="dropdown-text">Regression (R)</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../_site/Project_1_Regression/Project_1_Regression_SAS/Project_1_Regression_SAS.html">
+ <span class="dropdown-text">Regression (SAS)</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../Project_2/Project_2_R/Code/Project2.html">
+ <span class="dropdown-text">MLR With Confounding and Interaction (R)</span></a>
+  </li>  
+        <li class="dropdown-header">MLR With Confounding and Interaction (SAS)</li>
+    </ul>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link active" href="../../../Data_Wrangling/Treadmill_Data_Cleaning/Code/Automated_Treadmill_Data_Cleaning.html" aria-current="page"> 
+<span class="menu-text">Data Wrangling (Python)</span></a>
+  </li>  
+  <li class="nav-item">
+    <span class="nav-link">
+<span class="menu-text">Clinical Research Informatics</span>
+    </span>
+  </li>  
+  <li class="nav-item">
+    <span class="nav-link">
+<span class="menu-text">CV</span>
+    </span>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#introduction" id="toc-introduction" class="nav-link active" data-scroll-target="#introduction">Introduction</a></li>
+  <li><a href="#background" id="toc-background" class="nav-link" data-scroll-target="#background">Background</a>
+  <ul class="collapse">
+  <li><a href="#the-motivator" id="toc-the-motivator" class="nav-link" data-scroll-target="#the-motivator">The Motivator</a></li>
+  <li><a href="#the-problem" id="toc-the-problem" class="nav-link" data-scroll-target="#the-problem">The Problem</a></li>
+  </ul></li>
+  <li><a href="#planning-the-code" id="toc-planning-the-code" class="nav-link" data-scroll-target="#planning-the-code">Planning The Code</a>
+  <ul class="collapse">
+  <li><a href="#outline" id="toc-outline" class="nav-link" data-scroll-target="#outline">Outline</a>
+  <ul class="collapse">
+  <li><a href="#pseudo-code" id="toc-pseudo-code" class="nav-link" data-scroll-target="#pseudo-code">Pseudo Code</a></li>
+  </ul></li>
+  </ul></li>
+  <li><a href="#developing-the-program" id="toc-developing-the-program" class="nav-link" data-scroll-target="#developing-the-program">Developing the Program</a>
+  <ul class="collapse">
+  <li><a href="#removing-empty-rows" id="toc-removing-empty-rows" class="nav-link" data-scroll-target="#removing-empty-rows">Removing Empty Rows</a></li>
+  <li><a href="#filtering-to-when-camera-was-on" id="toc-filtering-to-when-camera-was-on" class="nav-link" data-scroll-target="#filtering-to-when-camera-was-on">Filtering to When Camera was On</a></li>
+  <li><a href="#resetting-first-time-point-to-zero" id="toc-resetting-first-time-point-to-zero" class="nav-link" data-scroll-target="#resetting-first-time-point-to-zero">Resetting First Time Point to Zero</a></li>
+  <li><a href="#converting-treadmill-position-from-volts-to-degrees" id="toc-converting-treadmill-position-from-volts-to-degrees" class="nav-link" data-scroll-target="#converting-treadmill-position-from-volts-to-degrees">Converting Treadmill Position from Volts to Degrees</a></li>
+  <li><a href="#saving-the-cleaned-data" id="toc-saving-the-cleaned-data" class="nav-link" data-scroll-target="#saving-the-cleaned-data">Saving the Cleaned Data</a></li>
+  <li><a href="#create-a-function" id="toc-create-a-function" class="nav-link" data-scroll-target="#create-a-function">Create a Function</a></li>
+  </ul></li>
+  <li><a href="#the-final-program" id="toc-the-final-program" class="nav-link" data-scroll-target="#the-final-program">The Final Program</a>
+  <ul class="collapse">
+  <li><a href="#clean-a-single-treadmill-file" id="toc-clean-a-single-treadmill-file" class="nav-link" data-scroll-target="#clean-a-single-treadmill-file">Clean a Single Treadmill File</a></li>
+  <li><a href="#clean-an-entire-folder-containing-raw-treadmill-files" id="toc-clean-an-entire-folder-containing-raw-treadmill-files" class="nav-link" data-scroll-target="#clean-an-entire-folder-containing-raw-treadmill-files">Clean an Entire Folder Containing Raw Treadmill Files</a></li>
+  <li><a href="#checking-the-output" id="toc-checking-the-output" class="nav-link" data-scroll-target="#checking-the-output">Checking the Output</a></li>
+  </ul></li>
+  <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references">References</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Automated Treadmill Data Cleaning</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Sean Vieau </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">October 10, 2024</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="introduction" class="level1">
+<h1>Introduction</h1>
+<p>This was the final project for my BIOS 6644 Data Wrangling course.</p>
+<p>In this project, we create a program to automate the data cleaning of vital mouse treadmill data needed to validate Genetically Encoded Voltage Indicators for visualizing neuronal activity, exponentially saving experimenter time on manually cleaning data files and greatly expediting the data analysis process.</p>
+</section>
+<section id="background" class="level1">
+<h1>Background</h1>
+<p>Genetically Encoded Voltage Indicators (GEVIs) are powerful tools in neuroscience that allow researchers to visualize neuronal activity with high spatial and temporal resolution.</p>
+<p>GEVIs are designed to be expressed in specific neurons, where they can report changes in membrane potential. They typically consist of a voltage-sensitive domain fused to a fluorescent protein. When the voltage across the neuron’s membrane changes, the GEVI undergoes a conformational change that alters its fluorescence intensity, allowing researchers to track electrical activity in real-time (<a href="https://bmcbiol.biomedcentral.com/articles/10.1186/s12915-019-0682-0?form=MG0AV3">1</a>).</p>
+<p>In brief, mice undergo a surgery in which the GEVI is injected into the target region of the brain (motor cortex in this case). After allowing time to heal, a highly specialized microscope is used to image these target neurons with a specific wavelength of light that allows us to visualize neuronal firing in real-time</p>
+<p>Additionally, GEVIs enable sub-millisecond fidelity recording of neuronal activity, capturing electrical signals with temporal resolution on the order of 1-2 milliseconds. This is significantly faster than traditional fluorescent imaging vectors like GFP, which typically offer temporal resolutions on the scale of 100 milliseconds (<a href="https://bmcbiol.biomedcentral.com/articles/10.1186/s12915-019-0682-0?form=MG0AV3">1</a>).</p>
+<p>Thus, the promise of GEVI’s is great, but this comes with a concomitant technological and engineering challenge!</p>
+<p>My lab aimed to create the first 1-photon miniature microscope that would allow for voltage recordings in freely moving mice. We had made great progress towards this goal.</p>
+<p>However, a big challenge arose!</p>
+<section id="the-motivator" class="level2">
+<h2 class="anchored" data-anchor-id="the-motivator">The Motivator</h2>
+<p>At this point, we had successfully expressed and captured neuronal activity in a single VIP+ neuron using a GEVI, which can be seen here.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/First_GEVI_Neuron.png" class="img-fluid figure-img" style="width:80.0%"></p>
+<figcaption>Image and Plots made by Forest Speed</figcaption>
+</figure>
+</div>
+<p>However, we now needed to validate these signals against a control. That is, we needed to prove that we were capturing real voltage signals.</p>
+<p>One approach to this problem was to perform voltage imaging with a GEVI in the motor cortex and correlate that activity to a physiological indicator of movement - mice walking on a treadmill. The idea is simple: If we were capturing true voltage signals, we would see spikes every time the mice walked.</p>
+<p>Thus, we created a paradigm where we could image mice while they walked on a treadmill. (This experimental set-up would also allow for further experiments down the road of particular interest to my lab, such as documenting the relationships between inhibitory interneurons during locomotion).</p>
+<p>This experimental set up can be seen here.</p>
+<div style="text-align: center;">
+<p><img src="images/Mouse_on_Treadmill.png" class="img-fluid" style="width:65.0%"></p>
+</div>
+</section>
+<section id="the-problem" class="level2">
+<h2 class="anchored" data-anchor-id="the-problem">The Problem</h2>
+<p>We had successfully created a paradigm where we could perform voltage imaging on freely moving mice. However, the data we were receiving would have to be cleaned before we could do anything with it!</p>
+<p>Specifically the recording on the treadmill was beginning before the recording on the camera. This resulted in treadmill files that were capturing data when the camera was turned off at both at the beginning and end of each treadmill file.</p>
+<p>This can be visualized here.</p>
+<div style="text-align: center;">
+<p><img src="images/Treadmill_Data.png" class="img-fluid" style="width:65.0%"></p>
+</div>
+<p>Thus, the treadmill data would have to be cleaned in order for the treadmill and camera recordings to be synchronized with each other.</p>
+</section>
+</section>
+<section id="planning-the-code" class="level1">
+<h1>Planning The Code</h1>
+<p>With the background and motivation for the program detailed, we can now move to the code itself.</p>
+<section id="outline" class="level2">
+<h2 class="anchored" data-anchor-id="outline">Outline</h2>
+<p>As can be seen in the previous image, the recording software for the camera was detecting the timepoint that the camera was turned on as a change from 0 to ~3 Volts. This is the timestamp that we will use to sychronize the treadmill data with the camera recordings.</p>
+<p>To do so, we need all of the treadmill recordings to have this timepoint where the camera switches from 0 to 3 Volts as timestamp 0.00 seconds.</p>
+<p>This will also have to be done en masse, to clean as many treadmill files as needed simultaneously.</p>
+<section id="pseudo-code" class="level3">
+<h3 class="anchored" data-anchor-id="pseudo-code">Pseudo Code</h3>
+<p>Thus, the pseudo code for the program is laid out as follows:</p>
+<ol type="1">
+<li><p>Iterate through all the treadmill.xlsx’s in a specified folder.</p></li>
+<li><p>In each treadmill.xlsx:</p>
+<ol type="1">
+<li><p>Delete every second row (since these are empty rows)</p></li>
+<li><p>Check the second column of the treadmill.xlsx (which detects when the Camera was turned on)</p></li>
+<li><p>Only consider rows where the camera was turned on (i.e.&nbsp;the “Camera On/Off” value &gt; 3)</p></li>
+<li><p>Consider the first row as time stamp 0.</p></li>
+<li><p>From that point on, all remaining time stamps will be shifted by x seconds, where x is the timestamp where the camera was turned on.</p></li>
+<li><p>Save the .xlsx in a new folder with the exact same file name but appended with the suffix “_cleaned.xlsx”.</p></li>
+</ol></li>
+</ol>
+<p>This process can be visualized below.</p>
+<div style="text-align: center;">
+<p><img src="images/Pseudo_Code_Visualized.png" class="img-fluid" style="width:120.0%"></p>
+</div>
+</section>
+</section>
+</section>
+<section id="developing-the-program" class="level1">
+<h1>Developing the Program</h1>
+<p>First we will define our import statements.</p>
+<div id="3af0ee51" class="cell" data-execution_count="1">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Import statements</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> os</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>And then import an example treadmill.xlsx file</p>
+<div id="e0ce837d" class="cell" data-execution_count="2">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Define column names</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>col_names <span class="op">=</span> [<span class="st">"Treadmill Position (V)"</span>, <span class="st">"Camera On/Off"</span>, <span class="st">"Time (sec)"</span>]</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Import treadmill data as a pd df, set column names to col_names</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>treadmill <span class="op">=</span> pd.read_excel(<span class="vs">r"C:\Users\sviea\Documents\Portfolio\Data_Wrangling\Treadmill_Data_Cleaning\Treadmill Files Uncleaned\121523_RC1_Pace_1.xlsx"</span>, names <span class="op">=</span> col_names)</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Examine the df</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>treadmill</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="61">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">Treadmill Position (V)</th>
+<th data-quarto-table-cell-role="th">Camera On/Off</th>
+<th data-quarto-table-cell-role="th">Time (sec)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1</td>
+<td>2.479051</td>
+<td>-0.000417</td>
+<td>0.075016</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">3</td>
+<td>2.474206</td>
+<td>0.000364</td>
+<td>0.087019</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">4</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">...</td>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">6657</td>
+<td>4.912201</td>
+<td>-0.000574</td>
+<td>40.457479</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">6658</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">6659</td>
+<td>4.916733</td>
+<td>0.000833</td>
+<td>40.469482</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">6660</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">6661</td>
+<td>4.923141</td>
+<td>-0.000105</td>
+<td>40.481484</td>
+</tr>
+</tbody>
+</table>
+
+<p>6662 rows × 3 columns</p>
+</div>
+</div>
+</div>
+<section id="removing-empty-rows" class="level3">
+<h3 class="anchored" data-anchor-id="removing-empty-rows">Removing Empty Rows</h3>
+<p>As mentioned previously, every other row of these files is blank. Let’s drop those NaN values.</p>
+<div id="a2dbb126" class="cell" data-execution_count="3">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Drop NaN values</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>treadmill <span class="op">=</span> treadmill.dropna()</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>treadmill</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="62">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">Treadmill Position (V)</th>
+<th data-quarto-table-cell-role="th">Camera On/Off</th>
+<th data-quarto-table-cell-role="th">Time (sec)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">1</td>
+<td>2.479051</td>
+<td>-0.000417</td>
+<td>0.075016</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">3</td>
+<td>2.474206</td>
+<td>0.000364</td>
+<td>0.087019</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">5</td>
+<td>2.462798</td>
+<td>-0.000261</td>
+<td>0.099022</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">7</td>
+<td>2.468580</td>
+<td>0.000208</td>
+<td>0.111025</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">9</td>
+<td>2.473425</td>
+<td>-0.000730</td>
+<td>0.123027</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">...</td>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">6653</td>
+<td>4.900325</td>
+<td>0.000051</td>
+<td>40.433474</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">6655</td>
+<td>4.910170</td>
+<td>0.000520</td>
+<td>40.445477</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">6657</td>
+<td>4.912201</td>
+<td>-0.000574</td>
+<td>40.457479</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">6659</td>
+<td>4.916733</td>
+<td>0.000833</td>
+<td>40.469482</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">6661</td>
+<td>4.923141</td>
+<td>-0.000105</td>
+<td>40.481484</td>
+</tr>
+</tbody>
+</table>
+
+<p>3331 rows × 3 columns</p>
+</div>
+</div>
+</div>
+<p>Looks good.</p>
+</section>
+<section id="filtering-to-when-camera-was-on" class="level3">
+<h3 class="anchored" data-anchor-id="filtering-to-when-camera-was-on">Filtering to When Camera was On</h3>
+<p>Now let’s filter down to only time points when the camera was turned on.</p>
+<div id="60adb756" class="cell" data-execution_count="4">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Slice the treadmill df so it only includes values where the camera was turned on (i.e. value &gt; 3)</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>treadmill <span class="op">=</span> treadmill[treadmill[<span class="st">"Camera On/Off"</span>] <span class="op">&gt;</span> <span class="dv">3</span>]</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>treadmill</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="63">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">Treadmill Position (V)</th>
+<th data-quarto-table-cell-role="th">Camera On/Off</th>
+<th data-quarto-table-cell-role="th">Time (sec)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">145</td>
+<td>2.474988</td>
+<td>3.324904</td>
+<td>0.939210</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">147</td>
+<td>2.461392</td>
+<td>3.327091</td>
+<td>0.951213</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">149</td>
+<td>2.472487</td>
+<td>3.317091</td>
+<td>0.963216</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">151</td>
+<td>2.479988</td>
+<td>3.322404</td>
+<td>0.975219</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">153</td>
+<td>2.476550</td>
+<td>3.325373</td>
+<td>0.987221</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">...</td>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">5071</td>
+<td>1.836623</td>
+<td>3.321466</td>
+<td>30.937171</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">5073</td>
+<td>1.834592</td>
+<td>3.323810</td>
+<td>30.949173</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">5075</td>
+<td>1.848500</td>
+<td>3.335060</td>
+<td>30.961176</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">5077</td>
+<td>1.839905</td>
+<td>3.326779</td>
+<td>30.973179</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">5079</td>
+<td>1.823340</td>
+<td>3.320216</td>
+<td>30.985182</td>
+</tr>
+</tbody>
+</table>
+
+<p>2468 rows × 3 columns</p>
+</div>
+</div>
+</div>
+<p>We can see that we now only have observations where the 2nd column contains values greater than 3 (i.e.&nbsp;the camera was turned ON).</p>
+</section>
+<section id="resetting-first-time-point-to-zero" class="level3">
+<h3 class="anchored" data-anchor-id="resetting-first-time-point-to-zero">Resetting First Time Point to Zero</h3>
+<div id="a6b94bbe" class="cell" data-message="false" data-execution_count="5">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Set the first Time (sec) value to 0</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>time_start <span class="op">=</span> treadmill[<span class="st">"Time (sec)"</span>].iloc[<span class="dv">0</span>]</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Delete all Time (sec) values by the starting time</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>treadmill[<span class="st">"Time (sec)"</span>] <span class="op">=</span> treadmill[<span class="st">"Time (sec)"</span>] <span class="op">-</span> time_start</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>treadmill</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="64">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">Treadmill Position (V)</th>
+<th data-quarto-table-cell-role="th">Camera On/Off</th>
+<th data-quarto-table-cell-role="th">Time (sec)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">145</td>
+<td>2.474988</td>
+<td>3.324904</td>
+<td>0.000000</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">147</td>
+<td>2.461392</td>
+<td>3.327091</td>
+<td>0.012003</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">149</td>
+<td>2.472487</td>
+<td>3.317091</td>
+<td>0.024006</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">151</td>
+<td>2.479988</td>
+<td>3.322404</td>
+<td>0.036008</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">153</td>
+<td>2.476550</td>
+<td>3.325373</td>
+<td>0.048010</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">...</td>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">5071</td>
+<td>1.836623</td>
+<td>3.321466</td>
+<td>29.997960</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">5073</td>
+<td>1.834592</td>
+<td>3.323810</td>
+<td>30.009963</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">5075</td>
+<td>1.848500</td>
+<td>3.335060</td>
+<td>30.021966</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">5077</td>
+<td>1.839905</td>
+<td>3.326779</td>
+<td>30.033968</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">5079</td>
+<td>1.823340</td>
+<td>3.320216</td>
+<td>30.045971</td>
+</tr>
+</tbody>
+</table>
+
+<p>2468 rows × 3 columns</p>
+</div>
+</div>
+</div>
+</section>
+<section id="converting-treadmill-position-from-volts-to-degrees" class="level2">
+<h2 class="anchored" data-anchor-id="converting-treadmill-position-from-volts-to-degrees">Converting Treadmill Position from Volts to Degrees</h2>
+<p>It might easier to deal with/conceptualize the treadmill position as degrees of a circle instead of volts in the future. That way we can calculate distance over time later using the radius of the circle.</p>
+<p>For reference, the magnetic encoder that the treadmill is attached to captures position in volts, which can be converted directly into degrees of a circle.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/Encoder_Rotation.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:50.0%"></p>
+</figure>
+</div>
+<p>Let’s make that conversion now instead of later.</p>
+<div id="00c4f557" class="cell" data-message="false" data-execution_count="6">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># The highest value for Treadmill Position (in Volts) gets designated as 360 degrees, or the end of the circle</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>circle_360 <span class="op">=</span> treadmill[<span class="st">"Treadmill Position (V)"</span>].<span class="bu">max</span>() <span class="co"># Set 360 as the max value for Treadmill Position (V) </span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>one_volt <span class="op">=</span> <span class="dv">360</span> <span class="op">/</span> circle_360 <span class="co"># One volt is therefore (360 / the max value for Treadmill Position (V)) degrees (e.g., if the max was 5 volts, then 360 / 5 = 72 degrees, or 1 volt = 72 degrees)</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a new column that is the Volts * how many degrees one volt is equal to</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>treadmill[<span class="st">"Treadmill Position (degree)"</span>] <span class="op">=</span> treadmill[<span class="st">"Treadmill Position (V)"</span>] <span class="op">*</span> one_volt</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>treadmill</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="65">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">Treadmill Position (V)</th>
+<th data-quarto-table-cell-role="th">Camera On/Off</th>
+<th data-quarto-table-cell-role="th">Time (sec)</th>
+<th data-quarto-table-cell-role="th">Treadmill Position (degree)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">145</td>
+<td>2.474988</td>
+<td>3.324904</td>
+<td>0.000000</td>
+<td>174.575180</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">147</td>
+<td>2.461392</td>
+<td>3.327091</td>
+<td>0.012003</td>
+<td>173.616208</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">149</td>
+<td>2.472487</td>
+<td>3.317091</td>
+<td>0.024006</td>
+<td>174.398817</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">151</td>
+<td>2.479988</td>
+<td>3.322404</td>
+<td>0.036008</td>
+<td>174.927905</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">153</td>
+<td>2.476550</td>
+<td>3.325373</td>
+<td>0.048010</td>
+<td>174.685407</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">...</td>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">5071</td>
+<td>1.836623</td>
+<td>3.321466</td>
+<td>29.997960</td>
+<td>129.547662</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">5073</td>
+<td>1.834592</td>
+<td>3.323810</td>
+<td>30.009963</td>
+<td>129.404368</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">5075</td>
+<td>1.848500</td>
+<td>3.335060</td>
+<td>30.021966</td>
+<td>130.385382</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">5077</td>
+<td>1.839905</td>
+<td>3.326779</td>
+<td>30.033968</td>
+<td>129.779137</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">5079</td>
+<td>1.823340</td>
+<td>3.320216</td>
+<td>30.045971</td>
+<td>128.610738</td>
+</tr>
+</tbody>
+</table>
+
+<p>2468 rows × 4 columns</p>
+</div>
+</div>
+</div>
+<p>Looks good. This treadmill file is now fully cleaned.</p>
+</section>
+<section id="saving-the-cleaned-data" class="level2">
+<h2 class="anchored" data-anchor-id="saving-the-cleaned-data">Saving the Cleaned Data</h2>
+<p>We will want to save each treadmill file after it is cleaned.</p>
+<p>For thorough record keeping, let’s create a subfolder within the folder that the treadmill.xlsx files are found within and store the cleaned files there.</p>
+<div id="3626b213" class="cell" data-execution_count="7">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Name the new folder "Cleaned Treadmill Files", and place it within the folder that the uncleaned treadmill files will all be kept in</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>new_folder <span class="op">=</span> <span class="vs">r"C:\Users\sviea\Documents\Portfolio\Data_Wrangling\Treadmill_Data_Cleaning\Treadmill Files Uncleaned\Cleaned Treadmill Files"</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Make the new folder</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>os.makedirs(new_folder, exist_ok<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Save the cleaned file to this new folder as an excel file</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>output_file <span class="op">=</span> os.path.join(new_folder, <span class="st">"Cleaned 1.xlsx"</span>)</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>treadmill.to_excel(output_file, index<span class="op">=</span><span class="va">False</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="create-a-function" class="level2">
+<h2 class="anchored" data-anchor-id="create-a-function">Create a Function</h2>
+<p>We just wrote code to import, clean, and save a single treadmill.xlsx file.</p>
+<p>For the final product, we need to make a program that walks through every uncleaned treadmill file in a folder and cleans it.</p>
+<p>To that end, we need to convert the file-cleaning-and-saving steps into a single function, that we can then apply to multiple files en masse.</p>
+<div id="c8b1fc03" class="cell" data-execution_count="8">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Making a function to clean a single treadmill.xlsx file</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> treadmill_cleaner(file_path, save_location):</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">'''</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="co">    This function cleans a single treadmill.xlsx file</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="co">    And saves it in the save_location folder</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="co">    '''</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>    <span class="co">#Import the File</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>    col_names <span class="op">=</span> [<span class="st">"Treadmill Position (V)"</span>, <span class="st">"Camera On/Off"</span>, <span class="st">"Time (sec)"</span>] <span class="co"># Define column names</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>    treadmill <span class="op">=</span> pd.read_excel(file_path, names <span class="op">=</span> col_names) <span class="co"># Import treadmill data as a pd df, set column names to col_names</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Clean the File</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>    treadmill <span class="op">=</span> treadmill.dropna() <span class="co"># Drop NaN values</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>    treadmill <span class="op">=</span> treadmill[treadmill[<span class="st">"Camera On/Off"</span>] <span class="op">&gt;</span> <span class="dv">3</span>] <span class="co"># Slice the treadmill df so it only includes values where the camera was turned on (i.e. value &gt; 3)</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>    time_start <span class="op">=</span> treadmill[<span class="st">"Time (sec)"</span>].iloc[<span class="dv">0</span>] <span class="co"># Set the first Time (sec) value to 0</span></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>    treadmill[<span class="st">"Time (sec)"</span>] <span class="op">=</span> treadmill[<span class="st">"Time (sec)"</span>] <span class="op">-</span> time_start <span class="co"># Delete all Time (sec) values by the starting time</span></span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>    circle_360 <span class="op">=</span> treadmill[<span class="st">"Treadmill Position (V)"</span>].<span class="bu">max</span>() <span class="co"># Set 360 as the max value for Treadmill Position (V) </span></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>    one_volt <span class="op">=</span> <span class="dv">360</span> <span class="op">/</span> circle_360 <span class="co"># One volt is therefore (360 / the max value for Treadmill Position (V)) degrees (e.g., if the max was 5 volts, then 360 / 5 = 72 degrees, or 1 volt = 72 degrees)</span></span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>    treadmill[<span class="st">"Treadmill Position (degree)"</span>] <span class="op">=</span> treadmill[<span class="st">"Treadmill Position (V)"</span>] <span class="op">*</span> one_volt</span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Save the Cleaned File</span></span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>    output_file <span class="op">=</span> os.path.join(save_location, filename) <span class="co"># Generates the name of the output file (save location + file_name)</span></span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a>    base_name, extension <span class="op">=</span> os.path.splitext(output_file) <span class="co"># Separates the file name to be "file_name" and ".xlsx" (modified from ChatGPT)</span></span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a>    cleaned_path <span class="op">=</span> <span class="ss">f"</span><span class="sc">{</span>base_name<span class="sc">}</span><span class="ss">_cleaned</span><span class="sc">{</span>extension<span class="sc">}</span><span class="ss">"</span> <span class="co"># Creates a new file name that is "file_name_cleaned.xlsx" (modified from ChatGPT)</span></span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a>    treadmill.to_excel(cleaned_path, index<span class="op">=</span><span class="va">False</span>) <span class="co"># Saves the file and appends "_cleaned" to the end of it</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+</section>
+<section id="the-final-program" class="level1">
+<h1>The Final Program</h1>
+<p>Now that we have the file cleaning and saving steps embedded within a single function, we can apply this function to clean either:</p>
+<ul>
+<li>A single treadmill file</li>
+<li>An entire folder with as many treadmill files as need cleaning!</li>
+</ul>
+<section id="clean-a-single-treadmill-file" class="level2">
+<h2 class="anchored" data-anchor-id="clean-a-single-treadmill-file">Clean a Single Treadmill File</h2>
+<p>If we want to run the program to clean a single file, we can run the code below.</p>
+<div id="d9ada8c5" class="cell" data-execution_count="9">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Change file paths as needed below</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>filename <span class="op">=</span> <span class="st">"121523_RC1_Pace_1.xlsx"</span> <span class="co"># Change this to what you want the last part of the file name to be!</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>file_path <span class="op">=</span> <span class="vs">r"C:\Users\sviea\Documents\Portfolio\Data_Wrangling\Treadmill_Data_Cleaning\Treadmill Files Uncleaned\121523_RC1_Pace_1.xlsx"</span> <span class="co"># Change this to the file path of the treadmill file you want to clean</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>save_location <span class="op">=</span> <span class="vs">r"C:\Users\sviea\Documents\Portfolio\Data_Wrangling\Treadmill_Data_Cleaning\Treadmill Files Uncleaned\Cleaned Treadmill Files"</span> <span class="co">#Change this to the name of the folder you want to save in</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>os.makedirs(save_location, exist_ok<span class="op">=</span><span class="va">True</span>)  <span class="co"># Makes the save_location as a new folder, skips if it already exists</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Run the program to clean a single treadmill file</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>treadmill_cleaner(file_path, save_location)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="clean-an-entire-folder-containing-raw-treadmill-files" class="level2">
+<h2 class="anchored" data-anchor-id="clean-an-entire-folder-containing-raw-treadmill-files">Clean an Entire Folder Containing Raw Treadmill Files</h2>
+<p>If we want to clean a folder containing multiple treadmill files, we can run the chunk below.</p>
+<div id="5ca8c65a" class="cell" data-execution_count="10">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># This program walks through every file in a designated folder and applies the above treadmill_cleaner() function to each file, saving the cleaned file in the same subfolder</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="co">#__________________Enter the file path to the folder containing treadmill files here!!!!!_________________________#</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>directory <span class="op">=</span> <span class="vs">r"C:\Users\sviea\Documents\Portfolio\Data_Wrangling\Treadmill_Data_Cleaning\Treadmill Files Uncleaned"</span> <span class="co">#__________ copy paste desired directory here!!!</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="co">##### Create the save location as a new folder (if needed)</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>save_location <span class="op">=</span> <span class="ss">f"</span><span class="sc">{</span>directory<span class="sc">}</span><span class="ss">"</span> <span class="op">+</span> <span class="st">"\Cleaned Treadmill Files"</span> <span class="co"># Names the save location as the folder containing treadmill files + "\Cleaned Treadmill Files"</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>os.makedirs(save_location, exist_ok<span class="op">=</span><span class="va">True</span>)  <span class="co"># Makes the save_location as a new folder, skips if it already exists</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Save location is:"</span>, save_location)</span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="co">##### Walk through every file in the directory and apply the treadmill_cleaner() function</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a><span class="cf">try</span>: <span class="co"># Made this a try statement so it does not apply to subfolders</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> filename <span class="kw">in</span> os.listdir(directory):</span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="st">"File name is:"</span>, filename)</span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>        filepath <span class="op">=</span> os.path.join(directory, filename)</span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="st">"File path is:"</span>, filepath)</span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>        treadmill_cleaner(filepath, save_location)</span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a><span class="cf">except</span> <span class="pp">PermissionError</span>:  <span class="co"># Skips subfolders (and anything else really, will throw an error if you have the .xlsx file open!)</span></span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"File is a folder -  skipping"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>&lt;&gt;:7: SyntaxWarning:
+
+invalid escape sequence '\C'
+
+&lt;&gt;:7: SyntaxWarning:
+
+invalid escape sequence '\C'
+
+C:\Users\sviea\AppData\Local\Temp\ipykernel_13228\284468460.py:7: SyntaxWarning:
+
+invalid escape sequence '\C'
+</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Save location is: C:\Users\sviea\Documents\Portfolio\Data_Wrangling\Treadmill_Data_Cleaning\Treadmill Files Uncleaned\Cleaned Treadmill Files
+File name is: 121523_RC1_Pace_1.xlsx
+File path is: C:\Users\sviea\Documents\Portfolio\Data_Wrangling\Treadmill_Data_Cleaning\Treadmill Files Uncleaned\121523_RC1_Pace_1.xlsx
+File name is: 121523_RC1_Pace_2.xlsx
+File path is: C:\Users\sviea\Documents\Portfolio\Data_Wrangling\Treadmill_Data_Cleaning\Treadmill Files Uncleaned\121523_RC1_Pace_2.xlsx
+File name is: 121523_RC1_Pace_3.xlsx
+File path is: C:\Users\sviea\Documents\Portfolio\Data_Wrangling\Treadmill_Data_Cleaning\Treadmill Files Uncleaned\121523_RC1_Pace_3.xlsx
+File name is: 121523_RC1_Pace_4.xlsx
+File path is: C:\Users\sviea\Documents\Portfolio\Data_Wrangling\Treadmill_Data_Cleaning\Treadmill Files Uncleaned\121523_RC1_Pace_4.xlsx
+File name is: 121523_RC1_Pace_5.xlsx
+File path is: C:\Users\sviea\Documents\Portfolio\Data_Wrangling\Treadmill_Data_Cleaning\Treadmill Files Uncleaned\121523_RC1_Pace_5.xlsx
+File name is: 121523_RC1_Pace_6.xlsx
+File path is: C:\Users\sviea\Documents\Portfolio\Data_Wrangling\Treadmill_Data_Cleaning\Treadmill Files Uncleaned\121523_RC1_Pace_6.xlsx
+File name is: Cleaned Treadmill Files
+File path is: C:\Users\sviea\Documents\Portfolio\Data_Wrangling\Treadmill_Data_Cleaning\Treadmill Files Uncleaned\Cleaned Treadmill Files
+File is a folder -  skipping</code></pre>
+</div>
+</div>
+<p><strong>We just cleaned 6 files in a matter of seconds. That would have taken the better part of an hour to do by hand!</strong></p>
+</section>
+<section id="checking-the-output" class="level2">
+<h2 class="anchored" data-anchor-id="checking-the-output">Checking the Output</h2>
+<p>For good measure, let’s check the output of the first and last file we cleaned.</p>
+<div id="a9308c86" class="cell" data-execution_count="11">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Check first file</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>file_1 <span class="op">=</span> pd.read_excel(<span class="vs">r"C:\Users\sviea\Documents\Portfolio\Data_Wrangling\Treadmill_Data_Cleaning\Treadmill Files Uncleaned\Cleaned Treadmill Files\121523_RC1_Pace_1_cleaned.xlsx"</span>)</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>file_1</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="70">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">Treadmill Position (V)</th>
+<th data-quarto-table-cell-role="th">Camera On/Off</th>
+<th data-quarto-table-cell-role="th">Time (sec)</th>
+<th data-quarto-table-cell-role="th">Treadmill Position (degree)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>2.474988</td>
+<td>3.324904</td>
+<td>0.000000</td>
+<td>174.575180</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1</td>
+<td>2.461392</td>
+<td>3.327091</td>
+<td>0.012003</td>
+<td>173.616208</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2</td>
+<td>2.472487</td>
+<td>3.317091</td>
+<td>0.024006</td>
+<td>174.398817</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">3</td>
+<td>2.479988</td>
+<td>3.322404</td>
+<td>0.036008</td>
+<td>174.927905</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">4</td>
+<td>2.476550</td>
+<td>3.325373</td>
+<td>0.048010</td>
+<td>174.685407</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">...</td>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2463</td>
+<td>1.836623</td>
+<td>3.321466</td>
+<td>29.997960</td>
+<td>129.547662</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">2464</td>
+<td>1.834592</td>
+<td>3.323810</td>
+<td>30.009963</td>
+<td>129.404368</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2465</td>
+<td>1.848500</td>
+<td>3.335060</td>
+<td>30.021966</td>
+<td>130.385382</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">2466</td>
+<td>1.839905</td>
+<td>3.326779</td>
+<td>30.033968</td>
+<td>129.779137</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2467</td>
+<td>1.823340</td>
+<td>3.320216</td>
+<td>30.045971</td>
+<td>128.610738</td>
+</tr>
+</tbody>
+</table>
+
+<p>2468 rows × 4 columns</p>
+</div>
+</div>
+</div>
+<div id="3406923a" class="cell" data-execution_count="12">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Check last file</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>file_6 <span class="op">=</span> pd.read_excel(<span class="vs">r"C:\Users\sviea\Documents\Portfolio\Data_Wrangling\Treadmill_Data_Cleaning\Treadmill Files Uncleaned\Cleaned Treadmill Files\121523_RC1_Pace_6_cleaned.xlsx"</span>)</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>file_6</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="71">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">Treadmill Position (V)</th>
+<th data-quarto-table-cell-role="th">Camera On/Off</th>
+<th data-quarto-table-cell-role="th">Time (sec)</th>
+<th data-quarto-table-cell-role="th">Treadmill Position (degree)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>1.552993</td>
+<td>3.318966</td>
+<td>0.000000</td>
+<td>109.813950</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1</td>
+<td>1.547993</td>
+<td>3.324123</td>
+<td>0.012003</td>
+<td>109.460349</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2</td>
+<td>1.550337</td>
+<td>3.318966</td>
+<td>0.024005</td>
+<td>109.626099</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">3</td>
+<td>1.543148</td>
+<td>3.312560</td>
+<td>0.036008</td>
+<td>109.117798</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">4</td>
+<td>1.544867</td>
+<td>3.318498</td>
+<td>0.048011</td>
+<td>109.239348</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">...</td>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">4966</td>
+<td>1.637379</td>
+<td>3.326779</td>
+<td>60.020822</td>
+<td>115.780965</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">4967</td>
+<td>1.615189</td>
+<td>3.315998</td>
+<td>60.032824</td>
+<td>114.211861</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">4968</td>
+<td>1.624409</td>
+<td>3.316935</td>
+<td>60.044827</td>
+<td>114.863812</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">4969</td>
+<td>1.625190</td>
+<td>3.327091</td>
+<td>60.056829</td>
+<td>114.919062</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">4970</td>
+<td>1.643161</td>
+<td>3.327248</td>
+<td>60.068832</td>
+<td>116.189816</td>
+</tr>
+</tbody>
+</table>
+
+<p>4971 rows × 4 columns</p>
+</div>
+</div>
+</div>
+<p>Looks great!</p>
+</section>
+</section>
+<section id="references" class="level1">
+<h1>References</h1>
+<p><span class="citation" data-cites="bando2019">(<a href="#ref-bando2019" role="doc-biblioref">Bando et al. 2019</a>)</span></p>
+
+
+
+</section>
+
+<div id="quarto-appendix" class="default"><section class="quarto-appendix-contents" role="doc-bibliography" id="quarto-bibliography"><h2 class="anchored quarto-appendix-heading">References</h2><div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list">
+<div id="ref-bando2019" class="csl-entry" role="listitem">
+Bando, Yuki, Christiane Grimm, Victor H Cornejo, and Rafael Yuste. 2019. <span>“Genetic Voltage Indicators.”</span> <em>BMC Biology</em> 17 (1). <a href="https://doi.org/10.1186/s12915-019-0682-0">https://doi.org/10.1186/s12915-019-0682-0</a>.
+</div>
+</div></section></div></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    // For code content inside modals, clipBoardJS needs to be initialized with a container option
+    // TODO: Check when it could be a function (https://github.com/zenorocha/clipboard.js/issues/860)
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

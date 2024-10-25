@@ -2208,8 +2208,3 @@ Options: Directly upload photos to online cloud and link to those Everytime you 
 alexkaizer.com/bios_6618 - can ask him how to turn my qmd into a website.
 
 look into Tableau for interactive graphs (she says its easy).
-
-```{r}
-table(data_wide_2$hard_drugs_grp, data_wide_2$ADH_HIGHVSLOW)
-```
-

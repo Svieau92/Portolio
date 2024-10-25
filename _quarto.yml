@@ -17,7 +17,8 @@ website:
           - text: MLR With Confounding and Interaction (R)
             href: Project_2/Project_2_R/Code/Project2.qmd
           - text: MLR With Confounding and Interaction (SAS)
-      - text: Data Wrangling
+      - text: Data Wrangling (Python)
+        href: Data_Wrangling\Treadmill_Data_Cleaning\Code\Automated_Treadmill_Data_Cleaning.qmd
       - text: Clinical Research Informatics
       - text: CV
       
