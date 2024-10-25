@@ -6258,11 +6258,13 @@ Additionally, only 7.8% of subjects fell into the category of low adherence, wit
 
 Another consideration should be physical and mental changes that occur during pathology but can not be explained by treatment. Access to a list of Adverse Events suffered by the subjects would be very helpful to better understand what is causing changes. Additionally, the slight deviation from normality with some of our outcome variables can be attributed to using change scores rather than each individual time point as a unique observation. This method effectively cut our N by two-thirds. We expect that longitudinal analyses allowing for an N closer to the original value of 1600 would alleviate these symptoms for normality.
 
-# Bonus - Plotting Outcome Variables Across Full 8 Years
+# Bonus
+
+## Plotting Outcome Variables Across Full 8 Years
 
 The below plots were used as justification and evidence for separating adherence from four levels to two levels, as this seemed to be whether the most meaninfgul and true split was.
 
-## Mental QOL
+### Mental QOL
 
 ```{r}
 
@@ -6290,7 +6292,7 @@ ggplotly(p)
 
 Success! This is very interesting. It appears that the 100% adherence group has the highest average mental QOL score across the 8 year study, followed by the 95-99% group, followed by the \<75% group and followed by (with some variation) the \<75% and 75-94% groups.
 
-## Physical QOL
+### Physical QOL
 
 Let's do the same thing but for `AGG_PHYS`.
 
@@ -6314,7 +6316,7 @@ ggplot(summary_data, aes(x = years, y = Average_QOL, color = ADH)) +
 
 We see a similiar relationship here, though there's more variation. For some reason that \<75% group likes to spike in their QOL at year 7. Interesting.
 
-## Log Viral Load
+### Log Viral Load
 
 ```{r}
 # Get means for each year
@@ -6337,7 +6339,7 @@ ggplotly(p)
 
 ```
 
-## CD4+ T Cell Count
+### CD4+ T Cell Count
 
 ```{r}
 # Create log vload variable for original 8 year data set.
@@ -6368,7 +6370,7 @@ This is strong evidence that the treatment is efficacious and the `ADH` should b
 
 Ohhhhh, that's super cool. So there is an inverse relationship between `LEU3N` and `VLOAD_log`, such that spikes in one should be dips in the other. We can see that in this data set! It appears that for the adherence group of \<75%, they had viral load spikes at years 5 and 7, which correspond with leukocyte dips at years 5 and 7! They weren't adhering to the protocol, which resulted in them getting infected (?) more and having more of the virus present compared to the other groups.
 
-## Comparing High Vs Low Adherence Groups
+### Comparing High Vs Low Adherence Groups
 
 ```{r}
 data$ADH_HIGHLOW <- ifelse(data$ADH == "<75%" | data$ADH == "75-94%", 0, 1)
@@ -6428,7 +6430,7 @@ ggplotly(p)
 
 High adherence users have higher CD4+ T Cells, for the most part.
 
-## Other literature
+### Other literature
 
 https://pmc.ncbi.nlm.nih.gov/articles/PMC9234842/
 

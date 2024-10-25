@@ -19,6 +19,7 @@ website:
           - text: MLR With Confounding and Interaction (SAS)
       - text: Data Wrangling (Python)
         href: Data_Wrangling\Treadmill_Data_Cleaning\Code\Automated_Treadmill_Data_Cleaning.qmd
+      - text: Data Management (SAS)
       - text: Clinical Research Informatics
       - text: CV
       
