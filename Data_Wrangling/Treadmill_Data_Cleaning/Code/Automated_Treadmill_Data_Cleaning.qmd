@@ -272,12 +272,15 @@ If we want to clean a folder containing multiple treadmill files, we can run the
 ```{python}
 # This program walks through every file in a designated folder and applies the above treadmill_cleaner() function to each file, saving the cleaned file in the same subfolder
 
-#__________________Enter the file path to the folder containing treadmill files here!!!!!_________________________#
-directory = r"C:\Users\sviea\Documents\Portfolio\Data_Wrangling\Treadmill_Data_Cleaning\Treadmill Files Uncleaned" #__________ copy paste desired directory here!!!
+#__Enter the file path to the folder containing treadmill files here!!!!!__
+directory = r"C:\Users\sviea\Documents\Portfolio\Data_Wrangling\Treadmill_Data_Cleaning\Treadmill Files Uncleaned" 
 
 ##### Create the save location as a new folder (if needed)
-save_location = f"{directory}" + "\Cleaned Treadmill Files" # Names the save location as the folder containing treadmill files + "\Cleaned Treadmill Files"
-os.makedirs(save_location, exist_ok=True)  # Makes the save_location as a new folder, skips if it already exists
+# Names the save location as the folder containing treadmill files 
+# + "\Cleaned Treadmill Files"
+save_location = f"{directory}" + "\Cleaned Treadmill Files" 
+# Makes the save_location as a new folder, skips if it already exists
+os.makedirs(save_location, exist_ok=True)  
 print("Save location is:", save_location)
 
 ##### Walk through every file in the directory and apply the treadmill_cleaner() function
