@@ -5,6 +5,11 @@ date: "September 9, 2024"
 output: html_document
 toc: true
 ---
+```css
+a:link {
+  color: white;
+}
+```
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)

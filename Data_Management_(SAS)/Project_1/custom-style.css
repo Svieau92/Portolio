@@ -1,0 +1,33 @@
+/* custom-style.css */
+body {
+    background-color: #f0f8ff; /* AliceBlue background */
+    color: #000080; /* Navy text color */
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1em 0;
+    color: #000080; /* Navy text color */
+    border: 1px solid #000080; /* Navy borders */
+}
+
+th {
+    background-color: #add8e6; /* LightBlue background for headers */
+    color: #000080; /* Navy text color */
+    border: 1px solid #000080; /* Navy borders */
+    padding: 8px;
+    text-align: center;
+}
+
+td {
+    background-color: #ffffff; /* White background for cells */
+    border: 1px solid #000080; /* Navy borders */
+    padding: 8px;
+    text-align: left;
+}
+
+/* Hover effect */
+tr:hover {
+    background-color: #e0ffff; /* LightCyan background for row on hover */
+}

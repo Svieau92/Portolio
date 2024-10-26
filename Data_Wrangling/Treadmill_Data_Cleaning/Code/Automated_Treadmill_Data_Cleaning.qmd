@@ -16,6 +16,8 @@ This was the final project for my BIOS 6644 Data Wrangling course.
 
 In this project, we create a program to automate the data cleaning of vital mouse treadmill data needed to validate Genetically Encoded Voltage Indicators for visualizing neuronal activity, exponentially saving experimenter time on manually cleaning data files and greatly expediting the data analysis process.
 
+The result is a program that takes **a few seconds to perform what would otherwise take 1-2 hours per recording session** to clean by hand!
+
 # Background
 
 Genetically Encoded Voltage Indicators (GEVIs) are powerful tools in neuroscience that allow researchers to visualize neuronal activity with high spatial and temporal resolution.

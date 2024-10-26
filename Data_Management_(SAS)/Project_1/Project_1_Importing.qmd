@@ -1,0 +1,621 @@
+---
+title: "Data Management Project 1 - Import Data Into SAS"
+author: Sean Vieau
+date: October 26, 2024
+format:
+  html:
+    css: custom-style.css
+toc: true
+---
+
+# Introduction
+
+This is the first part of the main project for BIOS 6680: Data Management Using SAS, in which we plan and carry out data management activities including data cleaning/quality assurance, data documentation, analytic data set creation, and a final analysis. A key goal of this project is to demonstrate reproducible research and reporting.
+
+In this part, we read in all the datasets and create a BRFSSImpt import library
+
+# Background
+
+The Behavioral Risk Factor Surveillance System (BRFSS) is a collaborative database of ongoing health related telephone surveys that collect data on risk behaviors, chronic health conditions, health care access, and use of preventive services from adults (\>= 18 years) in all 50 states in the U.S. and additional territories. The objective of the BRFSS is to collect uniform state-specific data on health-related outcomes and behaviors relating to the leading causes of death and disability in the US.
+
+This is real, patient level data.
+
+The datasets we will read in are separated into four "types":
+
+1.  Demographics
+
+2.  Risk
+
+3.  Outcomes
+
+4.  Reference Table
+
+# Step 0: Connect to SAS
+
+This document was created in RStudio with Quarto.
+
+To code in SAS we first need to connect RStudio to the SAS server.
+
+```{r}
+# This code connects to SAS On Demand
+library(configSAS)
+configSAS::set_sas_engine()
+
+#  This code allows you to run ```{sas}``` chunks
+sas = knitr::opts_chunk$get("sas")
+```
+
+# Step 1: Create Project Folders
+
+Now we create the necessary folders for the project.
+
+```{sas}
+#| results: "hide"
+#| message: false
+#| warning: false
+
+* Note: Code modified from the code from class to create BIOS 6680 Course Folder;
+
+* Set Courseroot;
+%LET CourseRoot = /home/u63376223/sasuser.v94/Data Management Using SAS;
+
+* Create Folders;
+OPTIONS DLCREATEDIR;
+
+LIBNAME Create "&CourseRoot/BRFSS";
+LIBNAME Create "&CourseRoot/BRFSS/Data";
+LIBNAME Create "&CourseRoot/BRFSS/Data/1_Source";
+LIBNAME Create "&CourseRoot/BRFSS/Data/2_Import";
+LIBNAME Create "&CourseRoot/BRFSS/Data/3_Tabulations";
+LIBNAME Create "&CourseRoot/BRFSS/Data/4_Analysis";
+LIBNAME Create "&CourseRoot/BRFSS/Data/5_Results";
+LIBNAME Create "&CourseRoot/BRFSS/Documents";
+LIBNAME Create "&CourseRoot/BRFSS/Programs";
+
+LIBNAME Create CLEAR;
+
+OPTIONS NODLCREATEDIR;
+
+RUN;
+```
+
+# Step 2: Create Libraries
+
+Then we will create the necessary libraries.
+
+```{sas}
+#| results: "hide"
+#| message: false
+#| warning: false
+
+* Create libraries needed;
+LIBNAME Source "&CourseRoot/BRFSS/Data/1_Source";
+LIBNAME Impt "&CourseRoot/BRFSS/Data/2_Import";
+```
+
+# Step 3: Read in Demographics Data
+
+Let's start with the first data type - demographics data.
+
+## Race and Ethnicity
+
+Read in the race and ethnicity data set.
+
+#### Import Statement
+
+This is a **.xlsx file** so we simply use PROC IMPORT with the DBMS as XLSX.
+
+```{sas}
+#| results: "hide"
+* Import race and ethnicity data;
+PROC IMPORT 
+		DATAFILE =  "&CourseRoot/BRFSS/Data/1_Source/race_eth.xlsx"
+		OUT 	= 	Impt.race_eth
+		DBMS 	= 	XLSX
+		REPLACE ;
+	RUN;
+```
+
+#### Print Statement
+
+Let's examine that data set to be sure of how it looks.
+
+```{sas}
+#| log: false
+* Print race and ethnicity file;
+TITLE "Race and Ethnicity";
+PROC PRINT DATA = Impt.race_eth (OBS = 6);
+	RUN;
+```
+
+Looks good.
+
+## General Demographics
+
+Read in the general demographics data set.
+
+#### Import Statement
+
+This is a **.csv file** **with the first row as the column names**, thus we use **MISSOVER DSD FIRSTOBS = 2** to denote a comma as the delimiter, and to start reading at the second row.
+
+```{sas}
+#| results: "hide"
+* Import general demographics data;
+DATA Impt.gen_dem;
+	INFILE "&CourseRoot/BRFSS/Data/1_Source/gen_dem.csv" MISSOVER DSD FIRSTOBS = 2;
+	INPUT 	marital			
+			trnsgndr
+			_sex
+			_age5year
+			id				:$13.		;
+	RUN;
+```
+
+#### Print Statement
+
+```{sas}
+* Print header to check data;
+TITLE "General Demographics";
+PROC PRINT DATA = Impt.gen_dem (OBS = 6);
+	RUN;
+```
+
+#### Data Quality Check
+
+I noticed that there were all missing values for `trnsgndr` in that output.
+
+Let's sort by that variable and double check to ensure we coded it correctly.
+
+```{sas}
+#| results: "hide"
+* Check that we successfully have trnsgender values imported. This was rarer in the data set so we will sort by it;
+PROC SORT DATA = Impt.gen_dem
+	OUT = sorted_data;
+	BY DESCENDING trnsgndr;
+	RUN;
+```
+
+```{sas}
+* Print sorted data to check for correct importing;
+PROC PRINT DATA = sorted_data (OBS = 6);
+	 RUN;
+```
+
+That looks good, we can move on.
+
+## Social and Economic Status
+
+Read in the social and economic status data set.
+
+#### Import Statement
+
+This is a .csv file with the first row as the column names, thus we use MISSOVER DSD FIRSTOBS = 2 to denote a comma as the delimiter, and to start reading at the second row.
+
+```{sas}
+#| results: "hide"
+* Read in socioeconomic data set;
+DATA Impt.socioec;
+	INFILE "&CourseRoot/BRFSS/Data/1_Source/socioec.csv" MISSOVER DSD FIRSTOBS = 2;
+	INPUT	educa		
+			employ1
+			income3
+			seqno		:$13.		;
+	RUN;
+```
+
+#### Print Statement
+
+```{sas}
+* Print header of data set;
+TITLE "Social and Economic Status";
+PROC PRINT DATA = Impt.socioec (OBS = 6);
+  RUN;
+```
+
+## Insurance
+
+Read in the insurance data set.
+
+#### Import Statement
+
+This is a **.txt file with spaces as the delimiter**. Let's address.
+
+```{sas}
+#| results: "hide"
+* Read in insurance data set;
+DATA Impt.insurance;
+	INFILE "&CourseRoot/BRFSS/Data/1_Source/insurance.txt" DELIMITER = " " MISSOVER DSD FIRSTOBS = 2;
+	INPUT 	priminisr		
+			persdoc3
+			medcost1
+			checkup1
+			seqno			;
+	RUN;
+```
+
+#### Print Statement
+
+```{sas}
+# Print header of data set;
+TITLE "Insurance";
+PROC PRINT DATA = Impt.insurance (OBS = 6);
+  RUN;
+```
+
+## Disabilities
+
+Read in the disabilities data set.
+
+#### Import Statement
+
+This is a **.txt file with a delimiter of `|`**. Let's handle that.
+
+```{sas}
+#| results: "hide"
+* Read in disability data set;
+DATA Impt.disability;
+	INFILE "&CourseRoot/BRFSS/Data/1_Source/disability.txt" DELIMITER = "|" MISSOVER DSD FIRSTOBS = 2;
+	INPUT 	deaf
+			blind
+			decide
+			diffwalk
+			diffdres
+			diffalon
+			id			:$13.	;
+	RUN;
+```
+
+#### Print Statement
+
+```{sas}
+* Print header of data set;
+TITLE "Disabilities";
+PROC PRINT DATA = Impt.disability (OBS = 6);
+  RUN;
+```
+
+# Step 4: Outcomes Data
+
+Now we move on to the second data type - outcomes data.
+
+## Chronic Health Conditions
+
+Read in the chronic health conditions data set.
+
+#### Import Statement
+
+This is a **.dat file with a delimiter of `::`**. Thus we handle with a DATA statement.
+
+```{sas}
+#| results: "hide"
+* Read in chronic health conditions data set;
+DATA 	Impt.chronic;
+	INFILE 	"&CourseRoot/BRFSS/Data/1_Source/chronic.dat" DLMSTR = "::" DSD;
+	INPUT 	seqno			
+			asthma3
+			asthnow
+			chccopd3
+			diabetes4
+			cvdcrhd4
+			cvdinfr4		@@ ;
+	RUN;
+```
+
+#### Print Statement
+
+```{sas}
+* Print header of data set;
+TITLE "Chronic Health Conditions";
+PROC PRINT DATA = Impt.chronic (OBS = 6);
+  RUN;
+```
+
+## Mental Health
+
+Read in the mental health data set.
+
+#### Import Statement
+
+This is just another .csv we've already handled before.
+
+```{sas}
+#| results: "hide"
+* Read in mental health data set;
+DATA 	Impt.mentalhealth;
+	INFILE 	"&CourseRoot/BRFSS/Data/1_Source/mentalhealth.csv" MISSOVER DSD FIRSTOBS=2;
+	INPUT 	addepev3			
+			lsatisfy
+			emtsuprt
+			sdhisoft
+			id				:$13.	;
+	RUN;
+```
+
+#### Print Statement
+
+```{sas}
+* Print header of data set;
+TITLE "Mental Health";
+PROC PRINT DATA = Impt.mentalhealth (OBS = 6);
+  RUN;
+```
+
+## Cancer
+
+Read in the cancer data set.
+
+#### Import Statement
+
+This is a **.xls file**, thus we use a PROC IMPORT statement with the DBMS as XLS.
+
+```{sas}
+#| results: "hide"
+* Read in cancer data set;
+PROC IMPORT
+		DATAFILE 	= "&CourseRoot/BRFSS/Data/1_Source/cancer.xls"
+		OUT 		= Impt.cancer
+		DBMS 		= XLS
+		REPLACE;
+	RUN;
+```
+
+#### Print Statement
+
+```{sas}
+* Print header of data set;
+TITLE "Cancer";
+PROC PRINT DATA = Impt.cancer (OBS = 6);
+  RUN;
+```
+
+#### Data Quality Check
+
+That's a lot of missing data points, but that makes sense for cancer data since instances of cancer must be rare.
+
+Let's sort that data and print it again to be sure.
+
+```{sas}
+* Sort the data;
+PROC SORT DATA = Impt.cancer
+	OUT = sorted_data;
+	BY DESCENDING CNCRDIFF;
+	RUN;
+	
+* Print the data;
+TITLE "Sorted Data - Quality Check";
+PROC PRINT DATA = sorted_data (OBS = 6);
+  RUN;
+```
+
+Looks good.
+
+## Obesity
+
+Read in the obesity data set.
+
+#### Import Statement
+
+This is a .txt file with a **delimiter of `*`**. Let's handle that.
+
+```{sas}
+#| results: "hide"
+* Read in the data set;
+DATA 	Impt.obesity;
+	INFILE 	"&CourseRoot/BRFSS/Data/1_Source/obesity.txt" DELIMITER = "*" MISSOVER DSD FIRSTOBS = 2;
+	INPUT 	seqno		:$13.			
+			weight		
+			height		;
+	RUN;
+```
+
+#### Print Statement
+
+```{sas}
+* Print header of data set;
+PROC PRINT DATA = Impt.obesity (OBS = 6);
+  RUN;
+```
+
+## Covid
+
+Read in the covid data set.
+
+#### Import Statement
+
+This is just another .xlsx file.
+
+```{sas}
+#| results: "hide"
+* Read in the covid data set;
+PROC IMPORT	
+		DATAFILE 	= "&CourseRoot/BRFSS/Data/1_Source/covid.xlsx"
+		OUT 		= Impt.covid
+		DBMS 		= XLSX
+		REPLACE;
+	RUN;
+```
+
+#### Print Statement
+
+```{sas}
+* Print header of data set;
+TITLE "Covid";
+PROC PRINT DATA = Impt.covid (OBS = 6);
+  RUN;
+```
+
+# Step 5: Risk Factors
+
+Now we can move to the third data type - risk factors data.
+
+## General Health
+
+Read in the general health data.
+
+#### Import Statement
+
+This is a .txt file.
+
+```{sas}
+#| results: "hide"
+* Read in in general health data;
+DATA Impt.gen_health;
+	INFILE 	"&CourseRoot/BRFSS/Data/1_Source/gen_health.txt";
+	INPUT 	seqno			$1-11
+			gnhlth			12-14
+			menthlth		15-17
+			physhlth		18-20
+			exerany2		21-23
+			sleptim1				;
+	RUN;
+```
+
+#### Print Statement
+
+```{sas}
+* Print header of data set;
+TITLE "General Health";
+PROC PRINT DATA = Impt.gen_health (OBS = 6);
+  RUN;
+```
+
+## Marijuana Use
+
+Read in the marijuana data set
+
+#### Import Statement
+
+This is a simple .xlsx file.
+
+```{sas}
+#| results: "hide"
+* Read in marijuana data set;
+PROC IMPORT
+	DATAFILE 	=  "&CourseRoot/BRFSS/Data/1_Source/marijuana.xlsx"
+	OUT 		= 	Impt.marijuana
+	DBMS 		= 	XLSX
+	REPLACE;
+RUN;
+
+```
+
+#### Print Statement
+
+```{sas}
+* Print header of data set;
+TITLE "Marijuana Use";
+PROC PRINT DATA = Impt.marijuana (OBS = 6);
+  RUN;
+```
+
+## Smoking Status
+
+Read in the smoking status data set.
+
+#### Import Statement
+
+This is a simple .xlsx file.
+
+```{sas}
+#| results: "hide"
+* Read in the smoking status data set;
+PROC IMPORT 
+	DATAFILE 	= "&CourseRoot/BRFSS/Data/1_Source/smoke.xlsx"
+	OUT			= Impt.smoke
+	DBMS		= XLSX
+	REPLACE;
+RUN;
+```
+
+#### Print Statement
+
+```{sas}
+* Print header of data set;
+TITLE "Smoking Status";
+PROC PRINT DATA = Impt.smoke (OBS = 6);
+  RUN;
+```
+
+## Alcohol Use
+
+Read in the alcohol use data set.
+
+#### Import Statement
+
+This is a simple .txt file.
+
+```{sas}
+#| results: "hide"
+* Read in the alcohol use data set;
+DATA Impt.alcohol;
+	INFILE 	"&CourseRoot/BRFSS/Data/1_Source/alcohol.txt" MISSOVER DSD FIRSTOBS = 2;
+	INPUT 	alcday4			
+			avedrnk3
+			drnk3ge5
+			drnkaby6
+			maxdrnks
+			id			:$13.	;
+	RUN;
+```
+
+#### Print Statement
+
+```{sas}
+* Print header of data set;
+TITLE "Alcohol Use";
+PROC PRINT DATA = Impt.alcohol (OBS = 6);
+  RUN;
+```
+
+## Covid Vaccination
+
+Read in the covid vaccination data set.
+
+#### Import Statement
+
+```{sas}
+#| results: "hide"
+* Read in covid vaccination data;
+DATA Impt.covid_vax;
+	INFILE 	"&CourseRoot/BRFSS/Data/1_Source/covid_vax.csv" MISSOVER DSD FIRSTOBS = 2;
+	INPUT 	covidva1
+			covidnu1
+			covidfs1
+			covidse1
+			seqno		;
+	RUN;
+```
+
+#### Print Statement
+
+```{sas}
+* Print header of data set;
+TITLE "Covid Vaccination";
+PROC PRINT DATA = Impt.covid_vax (OBS = 6);
+  RUN;
+```
+
+# Step 6: Reference Table
+
+Finally, let's read in the reference table as the last piece.
+
+```{sas}
+#| results: "hide"
+* Import the reference table and save it in import folder
+DATA Impt.ref_table;
+	SET "&CourseRoot/BRFSS/Documents/ref_table.sas7bdat";
+RUN;
+```
+
+This data is in long form. Let's go ahead and transpose it to wideform.
+
+```{sas}
+#| results: "hide"
+* Transpose the data out of wide format into long format (excludes the FORMER LABEL column); PROC TRANSPOSE DATA = Impt.ref_table 	OUT = Impt.ref_table_long; 	VAR COL1--COL29803; 	DROP _NAME_; 	RUN;  * Process the transposed data (drop out the _NAME_ coulumn); DATA Impt.ref_table_long; 	SET Impt.ref_table_long; 	DROP _NAME_; RUN;
+```
+
+And now let's examine it.
+
+```{sas}
+* Print header of data set; PROC PRINT DATA = Impt.ref_table_long (OBS = 6);   RUN;
+```

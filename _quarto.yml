@@ -8,18 +8,22 @@ website:
     left: 
       - href: index.qmd
         text: Home
-      - text: Advanced Data Analyses
+      - text: Advanced Data Analyses (R/SAS)
         menu:
           - text: Regression (R)
             href: Project_1_Regression/Project_1_Regression_R/Project_1_Regression.qmd
           - text: Regression (SAS)
-            href: _site/Project_1_Regression/Project_1_Regression_SAS/Project_1_Regression_SAS.html
           - text: MLR With Confounding and Interaction (R)
             href: Project_2/Project_2_R/Code/Project2.qmd
           - text: MLR With Confounding and Interaction (SAS)
       - text: Data Wrangling (Python)
-        href: Data_Wrangling\Treadmill_Data_Cleaning\Code\Automated_Treadmill_Data_Cleaning.qmd
+        href: Data_Wrangling/Treadmill_Data_Cleaning/Code/Automated_Treadmill_Data_Cleaning.qmd
       - text: Data Management (SAS)
+        menu:
+          - text: Project 1 - Importing
+            href: Data_Management_(SAS)\Project_1\Project_1_Importing.qmd
+          
+        
       - text: Clinical Research Informatics
       - text: CV
       

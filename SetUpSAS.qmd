@@ -1,0 +1,154 @@
+---
+title: "saspy test"
+format:
+    html:
+        code-fold: true
+jupyter: sas
+---
+
+# This is a test to get SAS up and running in Quarto
+
+I need to create two files:
+
+-   [sascfg_personal.py]{.underline} contains details on how to connect to a SAS instance
+
+-   [\_authinfo]{.underline} contains authentication details
+
+```{python}
+print("Hello World")
+```
+
+
+
+```{python}
+import saspy
+sas_session = saspy.SASsession(cfgfile="C:\\Users\\sviea\\anaconda3\\Lib\\site-packages\\saspy\\sascfg_personal.py")
+sas_session
+```
+
+```{r}
+install.packages("configSAS")
+```
+
+```{sas}
+#| capture: log
+proc candisc data=sashelp.iris out=outcan distance anova;
+   class Species;
+   var SepalLength SepalWidth PetalLength PetalWidth;
+run;
+```
+
+```{python}
+results = sas_session.submit("""
+data BPressure;
+    length PatientID $2;
+    input PatientID $ Systolic Diastolic @@;
+    datalines;
+CK 120 50  SS 96  60 FR 100 70
+CP 120 75  BL 140 90 ES 120 70
+CP 165 110 JI 110 40 MC 119 66
+FC 125 76  RW 133 60 KD 108 54
+DS 110 50  JW 130 80 BH 120 65
+JW 134 80  SB 118 76 NS 122 78
+GS 122 70  AB 122 78 EC 112 62
+HH 122 82
+;
+
+title 'Systolic and Diastolic Blood Pressure';
+ods select BasicMeasures Quantiles;
+proc univariate data=BPressure;
+   var Systolic Diastolic;
+run;
+""")
+```
+
+```{python}
+from IPython.display import display, HTML
+```
+
+
+```{python}
+def show(x):
+    display(HTML("<h6>Log</h6>"))
+    print(x['LOG'])
+    display(HTML("<h6>Output</h6>"))
+    display(HTML(x.get('LST', '')))
+```
+
+
+```{python}
+show(results)
+```
+
+```{python}
+import sas_kernel
+```
+
+
+```{python}
+ll = sas_session.submit("""
+libname work list;
+
+proc sql;
+   select type, count(*) as 'number of models'n, avg(MPG_city) as 'Avg(MPG_City)'n
+   from sashelp.cars
+   group by type
+   order by 3 desc;
+quit; 
+""")
+```
+
+```{python}
+ll.keys()
+```
+
+```{python}
+sas_session.HTML(ll['LST'])
+```
+
+```{python}
+ll = sas_session.submitLST("""
+libname work list;
+
+proc sql;
+   select type, count(*) as 'number of models'n, avg(MPG_city) as 'Avg(MPG_City)'n
+   from sashelp.cars
+   group by type
+   order by 3 desc;
+quit; 
+""")
+```
+
+```{python}
+result = sas_session.submit("proc print data=sashelp.class; run;")
+print(result['LOG'])
+```
+
+```{python}
+data_sas = sas_session.sasdata('cars', 'sashelp')
+data_sas.means()
+data_sas.bar('EngineSize')
+```
+
+
+```{python}
+from IPython.display import HTML, display
+import saspy
+
+# Start SAS session
+sas = saspy.SASsession(cfgname='oda')
+
+# Submit SAS code
+result = sas.submit("proc print data=sashelp.class; run;")
+
+# Display the output in the Quarto document
+display(HTML(result['LST']))
+```
+
+
+```{sas}
+proc candisc data=sashelp.iris out=outcan distance anova;
+   class Species;
+   var SepalLength SepalWidth PetalLength PetalWidth;
+run;
+```
