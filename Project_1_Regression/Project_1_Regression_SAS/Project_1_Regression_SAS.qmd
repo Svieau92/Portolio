@@ -14,8 +14,6 @@ The aim of the current study is to assess whether a new gel treatment for gum di
 
 The project description provided by the PI is available below:
 
-![](/Project_1_Regression/Project_1_Regression_R/Media/Project-1-Description.png)
-
 ## Load SAS
 
 This document was created in RStudio with Quarto.
@@ -57,6 +55,7 @@ PROC IMPORT
 	REPLACE;
 	RUN;
 ```
+
 #### Handle NA Values
 
 We have missing values in this data set as 'NA'. SAS will not be able to handle those. We need to convert them to missing values in SAS format ("" for characters and . for numeric);
@@ -337,7 +336,6 @@ PROC TABULATE DATA=Proj1.data;
 RUN;
 ```
 
-
 ## Preliminary Evaluation of Assumptions {#Preliminary}
 
 Before we begin digging into the data, let's take a closer look at the relationships between our variables.
@@ -360,8 +358,6 @@ PROC CORR DATA = Proj1.data PLOTS = MATRIX(HISTOGRAM);
 	RUN;
 ODS GRAPHICS OFF;
 ```
-
-
 
 Visually, we can see a cluster of high positive correlations between all of attachment loss and pocket depth at baseline and 1 year. This makes sense, as all measurements were taken from the same sites in the gums. This will be explored later <a href="#Exploratory">(See Exploratory Data Analysis - Dependent Variables)</a>
 
@@ -388,15 +384,13 @@ PROC UNIVARIATE DATA = Proj1.data;
 Both attachment loss and pocket depth change appear to be normally distributed and will not need to be transformed. Attachment loss change is slightly left-tailed but this could be due to outliers, or may just not impact the analysis.
 
 <a href="#Preliminary">Back to top of tabset</a>
-
 :::
-
 
 ## Exploratory Data Analysis {#Exploratory}
 
 Here I will plot the data and perform a number of simple linear regressions to examine relationships between variables in order to determine which covariates to include in the model.
 
-:::::: panel-tabset
+::::: panel-tabset
 ## Primary Explanatory Variable
 
 ::: panel-tabset
@@ -427,7 +421,6 @@ Visually, there does not appear to be a difference between the treatment group l
 Interestingly, the high concentration condition appears to have had a negative effect. Additionally, there seems to be a difference in the treatment groups compared to the no treatment control, but NOT when compared to the placebo. The exception is the low concentration condition compared to the placebo when looking at pocket depth change. Further analysis will reveal whether these differences are statistically significant or not.
 
 <a href="#Exploratory">Back to top of tabset</a>
-
 :::
 
 ## Covariates {#covariates}
@@ -459,7 +452,6 @@ PROC TTEST DATA = Proj1.data;
 	VAR pdchange;
 	RUN;
 ```
-
 
 There is a significant difference in attachment loss change score based on gender (t = 2.0502, p = 0.04299)
 
@@ -531,7 +523,6 @@ There does not seem to be much of a difference in attachment loss or pocket dept
 
 <a href="#Exploratory">Back to top of tabset</a>
 
-
 ## Smoking Status
 
 Whether the participant is a smoker or not likely has a dramatic effect on gum health. Let's assess
@@ -552,7 +543,6 @@ PROC SGPLOT DATA = Proj1.data;
 There does not appear to be any difference in attachment loss or pocket depth change based on smoking status. I will test a model with smoking status included, but it will likely be dropped in the final model.
 
 <a href="#Exploratory">Back to top of tabset</a>
-
 :::
 
 ## Summary
@@ -566,7 +556,7 @@ Gender is related to attachment loss and pocket depth change, and as such will b
 A model will be tested with all covariates to assess for possible suppressor / confound variables. But the other potential covariates of race, age, sites, and smoking status were not related to attachment loss or pocket depth change by themselves.
 
 <a href="#Exploratory">Back to top of tabset</a>
-::::::
+:::::
 
 # Data Analysis
 
@@ -621,7 +611,6 @@ RUN;
 PROC PRINT DATA = Proj1.data (OBS = 6);
 	RUN;
 ```
-
 
 ```{sas}
 * Run regression of attachment loss by treatment condition with control as reference;
@@ -687,6 +676,7 @@ PROC REG DATA = Proj1.data;
 A model including gender does not seem to help anything. What about with all covariates?
 
 #### Saturated Model
+
 ```{sas}
 TITLE "MLR of Pocket Depth Change by Treatment Condition and Gender";
 PROC REG DATA = Proj1.data;
@@ -702,7 +692,6 @@ The beauty of SAS is that the output to check all of the assumptions is included
 
 Thus we have seen that in each model so far, all of our assumptions have been met!
 :::
-
 
 # Results
 

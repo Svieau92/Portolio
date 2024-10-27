@@ -1,0 +1,355 @@
+---
+title: "Project 2 - MLR with Confounding and Interaction (SAS)"
+author: Sean Vieau
+date: October 27, 2024
+format:
+  html:
+    css: custom-style.css
+toc: true
+---
+
+# Introduction
+
+The aim of the current study is to assess how treatment response differs for HIV+ patients 2 years after initiating Highly Active Antiretroviral Therapy (HAART) based on hard drug usage (such as heroin or cocaine). This study is of particular scientific interest because it is unclear whether the use of hard drugs inhibits the immune system in humans; treatment strategies may differ based on these results. The researchers are interested in comparing subjects who never used hard drugs to current hard drug users (those that use hard drugs at year 2) or previous hard drug users (those who used drugs at year 0 or 1). Outcomes of interest are: viral load (HIV copies in a mL of blood), CD4+ T cell count (a measure of immunologic health), and aggregate physical and quality of life scores from the SF-36.
+
+The clinical hypothesis is that, if hard drugs inhibit the immune system in humans, subjects who currently or previously used hard drugs will have higher viral load and lower CD4+ T cell counts than those who never used hard drugs. Additionally, the researchers are interested in knowing if potential differences between the drug use groups can be explained by differences in adherence to the treatment regimen. The researchers are agnostic on how quality of life changes after treatment, since side effects of the treatment are significant.
+
+The project description provided by the PI is available below:
+
+![](/Project_2_MLR/Project_2_R/Media/Project2_description1.png)
+
+# Method
+
+**Study Design**
+
+This is a secondary data analysis of the Multicenter AIDS Cohort Study, an ongoing prospective cohort study investigating the natural and treated disease progression of HIV-1 in bisexual men in 4 major cities in the U.S. Measurements for all variables were taken once per year over an 8-year time period; however, the current analysis is only concerned with treatment outcomes after 2 years of HAART. Data was received as a longform .csv file containing 33 columns along with a data dictionary. The main outcomes of interest are viral load, CD4+ T cell count, and aggregate physical and quality of life scores. Adherence to treatment regiment will be investigated as a potential confounder.
+
+Potential covariates of interest include: marijuana usage since last visit and frequency of usage, income, BMI, high blood pressure, diabetes, liver disease stage 3 / 4, kidney disease, frailty related phenotype, total cholesterol, triglycerides, fasting LDL, dyslipidemia, depression score, smoking status, alcohol use since last visit, heroin or opiate use since last visit, intravenous drug use since last visit, race, education at baseline, age, if they took ART at the visit or if they have ever taken it before, and years since initiating ART.
+
+# Data Preparation
+
+## Connect to SAS
+
+This document was created in RStudio with Quarto.
+
+To code in SAS we must first connect RStudio to the SAS server.
+
+```{r}
+# This code connects to SAS On Demand
+library(configSAS)
+configSAS::set_sas_engine()
+
+#  This code allows you to run ```{sas}``` chunks
+sas = knitr::opts_chunk$get("sas")
+```
+
+#### Create Library
+
+We begin by making our library for the project.
+
+```{sas}
+#| results: "hide"
+* Create library;
+%LET CourseRoot = /home/u63376223/sasuser.v94/Advanced Data Analysis;
+LIBNAME Proj2 "&CourseRoot/Project 2 MLR";
+```
+
+#### Import Data Set
+
+```{sas}
+#| results: "hide"
+* Import the dataset;
+PROC IMPORT
+	DATAFILE = "&CourseRoot/Project 2 MLR/hiv_dataset.csv"
+	OUT = Proj2.raw_data
+	REPLACE;
+	RUN;
+```
+
+#### Inspect Data
+
+```{sas}
+* Check contents of data set;
+ODS SELECT Variables;
+PROC CONTENTS DATA = Proj2.raw_data;
+  RUN;
+```
+
+#### Fixing Data Types
+
+For some reason we randomly have some of those variables as characters when they should be numeric. Let's fix that.
+
+```{sas}
+* Fix character vars that should actually be numeric;
+DATA Proj2.raw_data;
+    SET Proj2.raw_data;
+      income_num = INPUT(income, BEST32.);
+      HASHF_num = INPUT(HASHF, BEST32.);
+      ADH_num = INPUT(ADH, BEST32.);
+    FORMAT income_num HASHF_num ADH_num BEST32.;
+    DROP income HASHF ADH;
+    RENAME income_num = income HASHF_num = HASHF ADH_num = ADH;
+RUN;
+
+* Check contents of data set;
+ODS SELECT Variables;
+PROC CONTENTS DATA = Proj2.raw_data;
+  RUN; 
+```
+
+Now everything appears properly imported.
+
+#### Handle NA Values
+
+We have missing values in this data set as ‘NA’. SAS will not be able to handle those. We need to convert them to missing values in SAS format (“” for characters and . for numeric);
+
+```{sas}
+#| results: "hide"
+/* Code from ChatGPT */
+/* Convert 'NA' to missing values and ensure numeric format for multiple variables */
+DATA Proj2.data;
+    SET Proj2.raw_data;
+
+    /* Define arrays for character variables */
+    array char_vars[*] $ _CHAR_;
+
+    /* Loop through character variables to handle 'NA' */
+    do i = 1 to dim(char_vars);
+        if char_vars[i] = 'NA' then char_vars[i] = ' ';
+    end;
+
+    /* Define arrays for numeric variables */
+    array num_vars[*] _NUM_;
+
+    /* Loop through numeric variables to ensure proper format */
+    do i = 1 to dim(num_vars);
+        /* Assuming 'NA' for numeric variables is represented as . (missing value) */
+        num_vars[i] = input(put(num_vars[i], best32.), best32.);
+    end;
+RUN;
+```
+
+#### Format Variables
+
+We will then create proper formats of the categorical variables.
+
+```{sas}
+#| results: "hide"
+* Create format;
+PROC FORMAT;
+    VALUE HASHVfmt
+        1 = 'No'
+        2 = 'Yes';
+    VALUE HASHFfmt
+        1 = "Never"
+        2 = "Daily"
+        3 = "Weekly"
+        4 = "Monthly"
+        5 = "Less Often";
+    VALUE incomefmt
+        1 = "Less than $10,000"
+        2 = "$10,000-$19,999"
+        3 = "$20,000-$29,999"
+        4 = "$30,000-$39,999"
+        5 = "$40,000-$49,999"
+        6 = "$50,000-$59,999"
+        7 = "$60,000 or more"
+        9 = "Do not wish to answer";
+    VALUE HBPfmt
+        1 = "No"
+        2 = "Yes"
+        3 = "No, based on data trajectory"
+        4 = "Yes, based on data trajectory"
+        9 = "Insufficient data, may include reported treatment without diagnosis"
+       -1 = "Improbable Value";
+    VALUE DIABfmt
+        1 = "No"
+        2 = "Yes"
+        3 = "No, based on data trajectory"
+        4 = "Yes, based on data trajectory"
+        9 = "Insufficient data";
+    VALUE LIV34fmt
+        1 = "No"
+        2 = "Yes"
+        9 = "Insufficient Data";
+    VALUE KIDfmt
+        1 = "No"
+        2 = "Yes"
+        3 = "No, based on data trajectory"
+        4 = "Yes, based on data trajectory"
+        9 = "Insufficient data";
+    VALUE FRPfmt
+        1 = "No"
+        2 = "Yes"
+        9 = "Insufficient Data";
+    VALUE FPfmt
+        1 = "No"
+        2 = "Yes"
+        9 = "Insufficient Data";
+    VALUE DYSLIPfmt
+        1 = "No"
+        2 = "Yes"
+        3 = "No, based on data trajectory"
+        4 = "Yes, based on data trajectory"
+        9 = "Insufficient data";
+    VALUE SMOKEfmt
+        1 = "Never Smoked"
+        2 = "Former Smoker"
+        3 = "Current Smoker";
+    VALUE DKGRPfmt
+        0 = "None"
+        1 = "1-3 drinks/week"
+        2 = "4-13 drinks/week"
+        3 = ">13 drinks/week";
+    VALUE HEROPIATEfmt
+        1 = "No"
+        2 = "Yes"
+       -9 = "Not Specified";
+    VALUE IDUfmt
+        1 = "No"
+        2 = "Yes";
+    VALUE ADHfmt
+        1 = "100%"
+        2 = "95-99%"
+        3 = "75-94%"
+        4 = "<75%";
+    VALUE RACEfmt
+        1 = "White, non-Hispanic"
+        2 = "White, Hispanic"
+        3 = "Black, non-Hispanic"
+        4 = "Black, Hispanic"
+        5 = "American Indian or Alaskan Native"
+        6 = "Asian or Pacific Islander"
+        7 = "Other Hispanic";
+    VALUE EDUCBASfmt
+        1 = "8th grade or less"
+        2 = "9,10, or 11th grade"
+        3 = "12th grade"
+        4 = "At least one year college but no degree"
+        5 = "Four years college or got degree"
+        6 = "Some graduate work"
+        7 = "Post-graduate degree";
+    VALUE hard_drugsfmt
+        0 = "No"
+        1 = "Yes";
+RUN;
+
+/* Apply formats to your dataset */
+DATA Proj2.data;
+    SET Proj2.raw_data;
+    FORMAT HASHV HASHVfmt. HASHF HASHFfmt. income2 incomefmt. HBP HBPfmt. DIAB DIABfmt. LIV34 LIV34fmt. KID KIDfmt. FRP FRPfmt. FP FPfmt. DYSLIP DYSLIPfmt. 
+           SMOKE SMOKEfmt. DKGRP DKGRPfmt. HEROPIATE HEROPIATEfmt. IDU IDUfmt. ADH ADHfmt. RACE RACEfmt. 
+           EDUCBAS EDUCBASfmt. hard_drugs hard_drugsfmt.;
+RUN;
+
+```
+#### Create Labels
+
+Let’s also change the labels of all variable names so they are capitalized and make our output look more professional.
+
+```{sas}
+#| results: "hide"
+* Change labels to capitalize variable names;
+DATA Proj2.data;
+    SET Proj2.raw_data;
+    LABEL 
+        newid = "ID"
+        AGG_MENT = "Aggregate Mental QOL Score"
+        AGG_PHYS = "Aggregate Physical QOL Score"
+        HASHF = "Hash/Marijuana Use Since Last Visit"
+        HASHV = "Frequency of Hash/Marijuana Use"
+        income = "Income"
+        HBP = "High Blood Pressure"
+        DIAB = "Diabetes"
+        LIV34 = "Liver Disease Stage 3/4"
+        KID = "Kidney Disease"
+        FRP = "Frailty Related Phenotype"
+        FP = "Frailty Phenotype"
+        BMI = "BMI"
+        TCHOL = "Total Cholesterol"
+        TRIG = "Triglycerides"
+        LDL = "LDL"
+        DYSLIP = "Dyslipidemia"
+        SMOKE = "Smoking Status"
+        CESD = "CESD Depression Score"
+        DKGRP = "Drinking Group"
+        HEROPIATE = "Heroin or Opiate Use Since Last Visit"
+        IDU = "Intravenous Drug Usage Since Last Visit"
+        LEU3N = "CD4+ T Cell Count"
+        VLOAD = "Viral Load
+```
+
+# Filtering Data Set
+
+Now let’s take a look at the header to get a good feeling for our data.
+
+```{sas}
+* Print head of data;
+PROC PRINT DATA = Proj2.raw_data (OBS = 10);
+  RUN;
+```
+
+Hmm, we have 8 years worth of data points, but the experimenters are only interested in the first 2 years.
+
+Out of curiosity, let's look at how many participants they had each year.
+
+```{sas}
+* Create a dataset to count the number of patients per year;
+PROC FREQ DATA=Proj2.data;
+    TABLES years / OUT=year_counts;
+RUN;
+
+* Plot the bar chart;
+PROC SGPLOT DATA=year_counts;
+    VBAR years / RESPONSE=COUNT;
+    XAXIS LABEL="Year of Study";
+    YAXIS LABEL="Number of Patients";
+    TITLE "Patient Drop-off Over 8 Years of Study";
+RUN;
+
+TITLE;
+```
+
+This is interesting, we don't seem to have as drastic a drop off as I expected. The researchers managed to retain all participants for the first 2 years, and 50% by the end of the 8-year study.
+
+Let's filter to only include values from the first 2 years, as this is the timeframe the researchers are interested in.
+
+```{sas}
+* Filter data set to only first 2 years;
+DATA Proj2.data2;
+  SET Proj2.data;
+  IF years <= 2;
+  RUN;
+
+* Get length of filtered data set;
+PROC SQL;
+  SELECT COUNT(*) AS num_rows
+  FROM Proj2.data2;
+QUIT;
+```
+
+We went from 3632 visits in the 8 year data set to 1650 in the 2 year filtered data set.
+
+## Transpose to Wideform
+
+We can also see that the provided data set is in longform. Let's convert that to wideform.
+
+```{sas}
+PROC SORT DATA = Proj2.data2;
+  BY years newid;
+  RUN;
+
+* Transpose the data out of wide format into long format;
+PROC TRANSPOSE DATA=Proj2.data2 OUT=Proj2.data_wide_2 PREFIX=Year;
+    BY years;
+    ID newid;
+    VAR _ALL_;
+RUN;
+
+PROC PRINT DATA = Proj2.data_wide_2 (OBS = 100);
+	  RUN;
+
+```
+
+
+
