@@ -91,18 +91,15 @@ ul.task-list li input[type="checkbox"] {
 <span class="menu-text">Home</span></a>
   </li>  
   <li class="nav-item dropdown ">
-    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-advanced-data-analyses" role="link" data-bs-toggle="dropdown" aria-expanded="false">
- <span class="menu-text">Advanced Data Analyses</span>
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-advanced-data-analyses-(rsas" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Advanced Data Analyses (R/SAS)</span>
     </a>
-    <ul class="dropdown-menu" aria-labelledby="nav-menu-advanced-data-analyses">    
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-advanced-data-analyses-(rsas">    
         <li>
     <a class="dropdown-item" href="./Project_1_Regression/Project_1_Regression_R/Project_1_Regression.html">
  <span class="dropdown-text">Regression (R)</span></a>
   </li>  
-        <li>
-    <a class="dropdown-item" href="./_site/Project_1_Regression/Project_1_Regression_SAS/Project_1_Regression_SAS.html">
- <span class="dropdown-text">Regression (SAS)</span></a>
-  </li>  
+        <li class="dropdown-header">Regression (SAS)</li>
         <li>
     <a class="dropdown-item" href="./Project_2/Project_2_R/Code/Project2.html">
  <span class="dropdown-text">MLR With Confounding and Interaction (R)</span></a>
@@ -114,11 +111,17 @@ ul.task-list li input[type="checkbox"] {
     <a class="nav-link" href="./Data_Wrangling/Treadmill_Data_Cleaning/Code/Automated_Treadmill_Data_Cleaning.html"> 
 <span class="menu-text">Data Wrangling (Python)</span></a>
   </li>  
-  <li class="nav-item">
-    <span class="nav-link">
-<span class="menu-text">Data Management (SAS)</span>
-    </span>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-data-management-(sas" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Data Management (SAS)</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-data-management-(sas">    
+        <li>
+    <a class="dropdown-item" href="./Data_Management_(SAS)/Project_1/Project_1_Importing.html">
+ <span class="dropdown-text">Project 1 - Importing</span></a>
   </li>  
+    </ul>
+  </li>
   <li class="nav-item">
     <span class="nav-link">
 <span class="menu-text">Clinical Research Informatics</span>
@@ -244,7 +247,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
   }
     var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
     var mailtoRegex = new RegExp(/^mailto:/);
-      var filterRegex = new RegExp('/' + window.location.host + '/');
+      var filterRegex = new RegExp("https:\/\/svieau\.quarto\.pub\/portfolio");
     var isInternal = (href) => {
         return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
     }

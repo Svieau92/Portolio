@@ -2,6 +2,7 @@
 body {
     background-color: #f0f8ff; /* AliceBlue background */
     color: #000080; /* Navy text color */
+    font-size: 26px;
 }
 
 table {

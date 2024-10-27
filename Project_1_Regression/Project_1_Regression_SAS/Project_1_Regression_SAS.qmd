@@ -1,0 +1,721 @@
+---
+title: "Project 1 - Regression (SAS)"
+author: Sean Vieau
+date: October 27, 2024
+format:
+  html:
+    css: custom-style.css
+toc: true
+---
+
+# Introduction
+
+The aim of the current study is to assess whether a new gel treatment for gum disease results in lower whole-mouth average pocket depth and attachment loss after one year. Average pocket depth and attachment loss were taken at baseline, and participants were assigned into one of five groups (1 = placebo, 2 = no treatment, 3 = low concentration, 4 = medium concentration, 5 = high concentration) and instructed to apply the gel to their gums twice a day. After 1-year, average pocket depth and attachment loss were recorded again. Data was received as a .csv file containing treatment level, average pocket depth and attachment loss at baseline and at one-year, demographic information, gender, age, number of sites measured, and smoking status. The clinical hypothesis is that average pocket depth and attachment loss in participants who applied the gel will be lower compared to participants who did not. Gender, age, ethnicity, and smoking status will be investigated as potential covariates.
+
+The project description provided by the PI is available below:
+
+![](/Project_1_Regression/Project_1_Regression_R/Media/Project-1-Description.png)
+
+## Load SAS
+
+This document was created in RStudio with Quarto.
+
+To code in SAS we must first connect RStudio to the SAS server.
+
+```{r}
+# This code connects to SAS On Demand
+library(configSAS)
+configSAS::set_sas_engine()
+
+#  This code allows you to run ```{sas}``` chunks
+sas = knitr::opts_chunk$get("sas")
+```
+
+## Data Preparation
+
+#### Create Library
+
+We begin by making our library for the project.
+
+```{sas}
+#| results: "hide"
+* Create library;
+%LET CourseRoot = /home/u63376223/sasuser.v94/Advanced Data Analysis;
+LIBNAME Proj1 "&CourseRoot/Project 1";
+```
+
+#### Import Dataset
+
+Then we will import the dataset
+
+```{sas}
+#| results: "hide"
+* Import the dataset;
+PROC IMPORT
+	DATAFILE = "&CourseRoot/Project 1/Project1_data.csv"
+	OUT = Proj1.raw_data
+	REPLACE;
+	RUN;
+```
+#### Handle NA Values
+
+We have missing values in this data set as 'NA'. SAS will not be able to handle those. We need to convert them to missing values in SAS format ("" for characters and . for numeric);
+
+```{sas}
+#| results: "hide"
+* Fix missing value format for attachment loss;
+DATA Proj1.data;
+	SET Proj1.raw_data;
+	if attach1year = "NA" then attach1year = "";
+	attach1year = INPUT(attach1year, best32.);
+	RUN;
+
+* Fix missing value format for pocket depth change;
+DATA Proj1.data;
+	SET Proj1.data;
+	if pd1year = "NA" then pd1year = "";
+	pd1year = INPUT(pd1year, best32.);
+	RUN;
+```
+
+```{sas}
+#| results: "hide"
+/* Convert 'NA' to missing values and ensure numeric format for multiple variables */
+/* Code from ChatGPT */
+DATA Proj1.data;
+    SET Proj1.data;
+    
+    /* Define arrays for character and numeric variables */
+    array char_vars[2] attach1year pd1year ; /* Add more variables as needed */
+    array num_vars[2] attach1year_num pd1year_num; /* Corresponding numeric variables */
+    
+    /* Loop through the arrays to handle 'NA' and convert to numeric */
+    do i = 1 to dim(char_vars);
+        if char_vars[i] = 'NA' then char_vars[i] = '';
+        num_vars[i] = input(char_vars[i], best32.);
+    end;
+    
+    /* Drop the original character variables and rename the numeric ones */
+    drop attach1year pd1year i; /* Add more variables as needed */
+    rename attach1year_num = attach1year pd1year_num = pd1year; /* Corresponding renaming */
+RUN;
+```
+
+#### Create Labels
+
+We will then create labels for the categorical variables.
+
+```{sas}
+#| results: "hide"
+* Create format;
+PROC FORMAT;
+	VALUE trtgroup_fmt
+		1 = "Placebo"
+		2 = "Control"
+		3 = "Low"
+		4 = "Medium"
+		5 = "High";
+	VALUE gender_fmt
+		1 = "Male"
+		2 = "Female";
+	VALUE race_fmt
+		1 = "Native American"
+		2 = "African American"
+		4 = "White"
+		5 = "Asian";
+	VALUE smoker_fmt
+		0 = "Non-Smoker"
+		1 = "Smoker";
+	RUN;
+
+* Apply format;
+DATA Proj1.data;
+	SET Proj1.data;
+	FORMAT 	trtgroup trtgroup_fmt.
+			gender gender_fmt.
+			race race_fmt.
+			smoker smoker_fmt.;
+	RUN;
+```
+
+Let's also change the labels of all variable names so they are capitalized and make our output look more professional.
+
+```{sas}
+#| results: "hide"
+* Change labels to capitalize variable names;
+DATA Proj1.data;
+	SET Proj1.data;
+	LABEL 
+		id = "ID"
+		trtgroup = "Treatment Group"
+		gender = "Gender"
+		race= "Race"
+		age = "Age"
+		smoker = "Smoking Status"
+		sites = "Sites"
+		attachbase = "Attachment Loss Baseline"
+		attach1year = "Attachment Loss One Year"
+		pdbase = "Pocket Depth Baseline"
+		pd1year = "Pocket Depth One Year"
+		;
+	RUN;
+```
+
+#### Visualize Data
+
+Finally let's visualize the data set.
+
+```{sas}
+* View Dataset;
+PROC PRINT DATA = Proj1.data (OBS = 10);
+	RUN;
+```
+
+Our data set is comprised of 130 observations, with 11 variables.
+
+### Variables
+
+The variables in the provided data set are as follows:
+
+-   [id:]{.underline} Patient ID
+-   [trtgroup]{.underline}: Treatment group (1 = placebo, 2 = no treatment control, 3 = low concentration, 4 = medium concentration, 5 = high concentration gel)
+-   [gender]{.underline}: Gender (1 = male, 2 = female)
+-   [race]{.underline}: Race, (1 = Native American, 2 = African American, 3 = Not used, 4 = Asian, 5 = White)
+-   [age]{.underline}: Age in years
+-   [smoker]{.underline}: Smoking status (0 = No, 1 = Yes)
+-   [sites]{.underline}: Number of sites gum measurements were averaged from
+-   [attachbase]{.underline}: Whole-mouth average attachment loss taken at base timepoint
+-   [attach1year]{.underline}: Whole-mouth average attachment loss after 1 year
+-   [pdbase]{.underline}: Whole-mouth average pocket loss at base timepoint
+-   [pd1year]{.underline}: Whole-mouth average pocket loss after 1 year
+
+::: callout-note
+## Note
+
+Pocket depth and attachment loss are both measurements of how far the gums have pulled away from the teeth, hence *smaller values are better*
+:::
+
+# Data Management and Variable Creation {#Data_Management}
+
+Here we will perform several assessments to ensure fidelity of the data
+
+:::: panel-tabset
+## Outliers
+
+First we will make a visual inspection for outliers using boxplots
+
+```{sas}
+* Step 2.1 Visualize Data Using Boxplots To Assess for Outliers;
+TITLE "Boxplot of Attachment Loss at Baseline";
+PROC SGPLOT DATA = Proj1.data;
+	VBOX attachbase;
+	RUN;
+	
+TITLE "Boxplot of Attachment Loss at 1 Year";
+PROC SGPLOT DATA = Proj1.data;
+	VBOX attach1year;
+	RUN;
+	
+TITLE "Boxplot of Pocket Depth at 1 Baseline";
+PROC SGPLOT DATA = Proj1.data;
+	VBOX pdbase;
+	RUN;
+	
+TITLE "Boxplot of Pocket Depth at 1 Year";
+PROC SGPLOT DATA = Proj1.data;
+	VBOX pd1year;
+	RUN;
+```
+
+Interestingly, there are 3 outliers for attachment loss at base, and only 1 after 1 year. Likewise, there are 4 outliers for pocket depth at base, but only 1 at 1 year. These outlier participants may have dropped out of the study or have missing values, or their values have returned to be within 3 SDs of the mean values. It will be important to assess this!
+
+Outliers will be assessed statistically later using the jackknife residuals. A value will be considered an outlier if the jackknife residual is outside of the range of +/- 3, and has high leverage and influence in the model.
+
+<a href="#Data_Management">Back to top of tabset</a>
+
+## Variable Creation
+
+Since we have two timepoints of both attachment loss and pocket depth loss, it will make the most sense to create a change score for each measurement and use those as the dependent variable. This will make the analysis significantly easier to perform and understand/explain, while still being an accurate analysis.
+
+::: callout-note
+## Note
+
+attachchange and pdchange are coded such that *higher scores signify a greater loss over time*
+:::
+
+For example, for subject 101:
+
+$$
+2.577(1 year)-2.43(base) = 0.14 5 (change in attachment loss)
+$$
+
+Negative values mean that attachment loss/ pocket depth *IMPROVED* for that participant (i.e., they gained gum attachment back)
+
+```{sas}
+#| results: "hide"
+* Here we will create change scores for attachment loss and pocket depth;
+DATA Proj1.data;
+	SET Proj1.data;
+	attachchange = attach1year - attachbase;
+	pdchange = pd1year - pdbase;
+	LABEL 
+	attachchange = "Attachment Loss Change"
+	pdchange = "Pocket Depth Change";
+	RUN;
+```
+
+And view the data set to make sure those change scores check out.
+
+```{sas}
+* View dataset;
+PROC PRINT DATA = Proj1.data (OBS = 10);
+  RUN;
+```
+
+<a href="#Data_Management">Back to top of tabset</a>
+
+## Missingness
+
+Here we will investigate the missingness of the dataset
+
+```{sas}
+* Examine Missingness;
+TITLE "Missingness";
+PROC MEANS DATA = Proj1.data n nmiss;
+	VAR _ALL_;
+	RUN;
+```
+
+There is 1 missing value for age and smoking status, and 27 missing values for the one year measurements of attachment loss and pocket depth.
+
+This is 27/130 = 20.77% of our sample size, quite large! We will still have 103 participants, which should be sufficient to run our analysis if there are 20-30 participants in each condition. Let's check
+
+```{sas}
+* Break missing data down by treatment group;
+TITLE "Missingness by Treatment Condition";
+PROC MEANS DATA = Proj1.data n nmiss;
+	CLASS trtgroup;
+	VAR attachchange;
+	RUN;
+```
+
+There are only 16 participants in the high concentrations (5) group.
+
+This could cause problems! We will either have to combine all the treatment conditions into one group, or perform some multiple imputations to handle the missing data. This will have to be noted in the discussion.
+
+Let's also examine if missinginess differs between genders.
+
+```{sas}
+* Break missing data down by gender;
+TITLE "Missingness by Gender";
+PROC MEANS DATA = Proj1.data n nmiss;
+	CLASS gender;
+	VAR attachchange;
+	RUN;
+```
+
+Males appear to have more missing values, so our data is Missing at Random (MAR).
+
+See <a href="#Multiple_imputation">Multiple Imputation section</a> for analysis with multiple imputation.
+
+<a href="#Data_Management">Back to top of tabset</a>
+::::
+
+## Descriptive Statistics {#Descriptives}
+
+Here we will acquire the descriptive statistics of our data set and create Table 1.
+
+```{sas}
+* Generate Table 1;
+TITLE "Table 1";
+PROC TABULATE DATA=Proj1.data;
+    CLASS trtgroup gender race smoker;
+    VAR age sites attachbase attach1year pdbase pd1year attachchange pdchange;
+    TABLE  
+        (gender race smoker)*(n) (age sites attachbase attach1year pdbase pd1year attachchange pdchange)*(n mean std min max), 
+        trtgroup ALL;
+RUN;
+```
+
+
+## Preliminary Evaluation of Assumptions {#Preliminary}
+
+Before we begin digging into the data, let's take a closer look at the relationships between our variables.
+
+We will first run a correlation matrix to assess the correlations between our IVs. Then we will explore any high correlations that which could affect our analysis.
+
+Finally we will make histograms of attachment loss and pocket depth change to gauge whether they will be normally distributed or if we need to run some transformations.
+
+::: panel-tabset
+## Correlation Matrix
+
+First we will begin by making a correlation matrix to assess whether any of our IVs are related to each other (multicollinearity). This will inform which variables to incorporate into the final model.
+
+```{sas}
+* Create and visualize the correlation matrix;
+TITLE "Correlation Matrix";
+ODS GRAPHICS ON;
+PROC CORR DATA = Proj1.data PLOTS = MATRIX(HISTOGRAM);
+	VAR age sites attachbase attach1year pdbase pd1year attachchange pdchange;
+	RUN;
+ODS GRAPHICS OFF;
+```
+
+
+
+Visually, we can see a cluster of high positive correlations between all of attachment loss and pocket depth at baseline and 1 year. This makes sense, as all measurements were taken from the same sites in the gums. This will be explored later <a href="#Exploratory">(See Exploratory Data Analysis - Dependent Variables)</a>
+
+<a href="#Preliminary">Back to top of tabset</a>
+
+## Normality of Dependent Variables
+
+Here we will simply plot the histograms of attachment loss and pocket depth changes scores, to assess if they appear normally distributed or if we will have to perform a transformation of some kind.
+
+```{sas}
+* Assess Normality of Dependent Variables (attachchange, pdchange);
+* Note: Here we would use the Kolmogorov-Smirnov test, since our sample size is > 50
+	if the sample size was < 50 you would use Shapiro Wilks test;
+TITLE "Normality Assesment";
+PROC UNIVARIATE DATA = Proj1.data;
+	VAR attachchange pdchange;
+	HISTOGRAM attachchange pdchange / NORMAL;
+	QQPLOT attachchange pdchange / NORMAL (MU=EST SIGMA = EST);
+	RUN;
+```
+
+#### Conclusion
+
+Both attachment loss and pocket depth change appear to be normally distributed and will not need to be transformed. Attachment loss change is slightly left-tailed but this could be due to outliers, or may just not impact the analysis.
+
+<a href="#Preliminary">Back to top of tabset</a>
+
+:::
+
+
+## Exploratory Data Analysis {#Exploratory}
+
+Here I will plot the data and perform a number of simple linear regressions to examine relationships between variables in order to determine which covariates to include in the model.
+
+:::::: panel-tabset
+## Primary Explanatory Variable
+
+::: panel-tabset
+## 5 Treatment Groups
+
+Let's examine if there appears to be a difference in the average attachment loss and pocket depth change according to treatment level
+
+```{sas}
+* Boxplot of attachchange vs treatment condition;
+TITLE "Primary Attachment Loss Change by Treatment Condition";
+PROC SGPLOT DATA = Proj1.data;
+	VBOX attachchange / CATEGORY = trtgroup;
+	RUN;
+
+* Boxplot of pdchange vs treatment condition;
+TITLE "Primary Pocket Depth Change by Treatment Condition";
+PROC SGPLOT DATA = Proj1.data;
+	VBOX pdchange / CATEGORY = trtgroup;
+	RUN;
+```
+
+#### Attachment Loss Change
+
+Visually, there does not appear to be a difference between the treatment group levels (low, medium, high concentration gel) compared to each other. Additionally, there does not seem to be a difference between the treatment groups and the placebo for attachment loss change.
+
+#### Pocket Depth Change
+
+Interestingly, the high concentration condition appears to have had a negative effect. Additionally, there seems to be a difference in the treatment groups compared to the no treatment control, but NOT when compared to the placebo. The exception is the low concentration condition compared to the placebo when looking at pocket depth change. Further analysis will reveal whether these differences are statistically significant or not.
+
+<a href="#Exploratory">Back to top of tabset</a>
+
+:::
+
+## Covariates {#covariates}
+
+Now we will exlore the relationships between our potential covariates and attachment loss and pocket depth change
+
+::: panel-tabset
+## Gender
+
+It is conceivable that there are sex differences in regards to gum health. Let’s examine if there is a difference in attachment loss or pocket depth change based on gender
+
+```{sas}
+* Create boxplot of gender vs attachmnent loss change;
+TITLE "Boxplot of Gender vs Attachment Loss Change";
+PROC SGPLOT DATA = Proj1.data;
+	VBOX attachchange / CATEGORY = gender;
+	RUN;
+	
+* Create boxplot of gender vs pocket depth change;
+TITLE "Boxplot of Gender vs Pocket Depth Change";
+PROC SGPLOT DATA = Proj1.data;
+	VBOX pdchange / CATEGORY = gender;
+	RUN;
+	
+* Note: Males may have more pocket depth change than females
+	Run a t-test to assess;
+PROC TTEST DATA = Proj1.data;
+	CLASS gender;
+	VAR pdchange;
+	RUN;
+```
+
+
+There is a significant difference in attachment loss change score based on gender (t = 2.0502, p = 0.04299)
+
+There is also a statistically significant difference in pocket depth change based on gender (t = 2.2626, p = 0.02641).
+
+**Therefore I will include gender as a covariate in the analysis!**
+
+<a href="#Exploratory">Back to top of tabset</a>
+
+## Age
+
+```{sas}
+* Create scatterplot of age vs attachment loss change;
+TITLE "Age vs Attachment Loss Change";
+PROC SGPLOT DATA = Proj1.data;
+	SCATTER X = age y = attachchange / GROUP = trtgroup;
+	RUN;
+	
+* Create scatterplot of sites vs pocket depth change;
+TITLE "Age vs Pocket Depth Change";
+PROC SGPLOT DATA = Proj1.data;
+	SCATTER X = age y = pdchange / GROUP = trtgroup;
+	RUN;
+```
+
+There does not appear to be any kind of linear relationship between age and attachment loss change or pocket depth change. I will run a model where I include age, but it will likely be removed in the final model.
+
+<a href="#Exploratory">Back to top of tabset</a>
+
+## Sites
+
+Is there any relationship between the number of sites measured from and attachment loss change or pocket depth change (e.g. a lower number of sites could lead to less accurate readings)? If so this could be something to include in our data analysis
+
+```{sas}
+* Create scatterplot of sites vs attachment loss change;
+TITLE "Sites vs Attachment Loss Change";
+PROC SGPLOT DATA = Proj1.data;
+	SCATTER X = sites y = attachchange / GROUP = trtgroup;
+	RUN;
+	
+* Create scatterplot of sites vs pocket depth change;
+TITLE "Sites vs Pocket Depth Change";
+PROC SGPLOT DATA = Proj1.data;
+	SCATTER X = sites y = pdchange / GROUP = trtgroup;
+	RUN;
+```
+
+There does not seem to be a dramatic difference in attachment loss or pocket depth change based on the number of sites measured from. It's a bit hard to tell with those two low site subjects, but the points are similar enough to the rest of the dataset that I do not think we have to worry about site number in our analysis.
+
+<a href="#Exploratory">Back to top of tabset</a>
+
+## Race
+
+```{sas}
+* Create boxplot of race vs attachment loss change;
+TITLE "Race vs Attachment Loss Change";
+PROC SGPLOT DATA = Proj1.data;
+	VBOX attachchange / CATEGORY = race;
+	RUN;
+	
+* Create boxplot of race vs pocket depth change;
+TITLE "Race vs Pocket Depth Change";
+PROC SGPLOT DATA = Proj1.data;
+	VBOX pdchange / CATEGORY = race;
+	RUN;
+```
+
+There does not seem to be much of a difference in attachment loss or pocket depth based on race. MAYBE African Americans (2) have more pocket depth loss compared to Asians(4), but the sample size was very small for both races (88.1% of the sample identified as White)
+
+<a href="#Exploratory">Back to top of tabset</a>
+
+
+## Smoking Status
+
+Whether the participant is a smoker or not likely has a dramatic effect on gum health. Let's assess
+
+```{sas}
+TITLE "Smoking Status vs Attachment Loss Change";
+PROC SGPLOT DATA = Proj1.data;
+	VBOX attachchange / CATEGORY = smoker;
+	RUN;
+
+* Create boxplot of smoking status vs pocket depth change;
+TITLE "Smoking Status vs Pocket Depth Change";
+PROC SGPLOT DATA = Proj1.data;
+	VBOX pdchange / CATEGORY = smoker;
+	RUN;
+```
+
+There does not appear to be any difference in attachment loss or pocket depth change based on smoking status. I will test a model with smoking status included, but it will likely be dropped in the final model.
+
+<a href="#Exploratory">Back to top of tabset</a>
+
+:::
+
+## Summary
+
+#### Gender
+
+Gender is related to attachment loss and pocket depth change, and as such will be included in the final model.
+
+#### Supressor / Counfound Variables
+
+A model will be tested with all covariates to assess for possible suppressor / confound variables. But the other potential covariates of race, age, sites, and smoking status were not related to attachment loss or pocket depth change by themselves.
+
+<a href="#Exploratory">Back to top of tabset</a>
+::::::
+
+# Data Analysis
+
+Now we can perform the actual analysis!
+
+The clinical hypothesis for this study is that average pocket depth and attachment loss in participants who applied the gel will be lower compared to participants who did not.
+
+The statistical hypotheses are:
+
+• [Null Hypothesis:]{.underline}
+
+$$
+H_0: μ_{placebo} = μ_{no treatment} = μ_{low} = μ_{medium} = μ_{high} 
+$$
+
+The average pocket depth and attachment loss for all conditions will be equal to each other.
+
+• [Alternative Hypothesis]{.underline}:
+
+$$
+H_A: μ_{placebo} \neq μ_{no treatment} \neq μ_{low} \neq μ_{medium} \neq μ_{high} 
+$$
+
+At least one of the groups will have different average pocket depth or attachment loss.
+
+## Running the Model {#Model_1}
+
+For ease of interpretation I will be performing this analysis as two separate linear regressions, one for each outcome variable of either attachment loss or pocket depth change. I will begin with a simple linear regression only including the PEV and either attachment loss change or pocket depth change.
+
+::: panel-tabset
+## Attachment Loss Change
+
+We start by constructing a model with attachment loss change as the dependent variable, and treatment group as the independent variable.
+
+First we need to create the dummy variables needed for these analyses.
+
+```{sas}
+* Create Dummy Variables;
+TITLE "Create Dummy Variables";
+DATA Proj1.data;
+    SET Proj1.data;
+    IF trtgroup ne . THEN DO;
+        placebo = (trtgroup = 1);
+        control = (trtgroup = 2);
+        low     = (trtgroup = 3);
+        medium  = (trtgroup = 4);
+        high    = (trtgroup = 5);
+	END;
+RUN;
+
+* Check Dummy Variables Created Correctly;
+PROC PRINT DATA = Proj1.data (OBS = 6);
+	RUN;
+```
+
+
+```{sas}
+* Run regression of attachment loss by treatment condition with control as reference;
+TITLE "SLR of Attachment Loss Change by Treatment Condition - Control as Reference";
+PROC REG DATA = Proj1.data;
+	MODEL attachchange = placebo low medium high;
+	RUN;
+```
+
+#### Interpretation
+
+The overall model is significant (F~(4,98)~ = 2.53, p = 0.0451). Looking at the individual t-statistics, we see that - following adjustment for multiple pairwise comparisons - the placebo group (p = 0.549), low concentration group (p = 0.0668), and high concentration group (p = 1.000) are not statistically different from the control group. The medium concentration group is approaching significance (p = 0.0503).
+
+#### Change Reference to Placebo Group
+
+That was with the no treatment control group as the reference. Let's see if any of our treatment conditions were different from the placebo group.
+
+```{sas}
+TITLE "SLR of Attachment Loss Change by Treatment Condition - Placebo as Reference";
+PROC REG DATA = Proj1.data;
+	MODEL attachchange = control low medium high;
+	RUN;
+```
+
+After applying a bonferroni correction, none of the groups are significantly different from the placebo group (p \> .05).
+
+#### Conclusion
+
+While the overall model was significant, the only groups that were statistically different from the no treatment control were the low and medium concentration gel groups (p \< 0.05). However, since this was a placebo-controlled RCT, and none of the treatment groups were significantly different from the placebo group, we can conclude that we ***fail to reject the null hypothesis*** that the average attachment loss over 1 year is the same between all groups.
+
+<a href="#Model_1">Back to top of tabset</a>
+
+## Pocket Depth Change
+
+Now we will create our model with pocket depth change as the dependent variable and treatment group as the independent variable.
+
+```{sas}
+* Simple Linear Regression Predicting Pocket Depth Change by Treatment Condition;
+TITLE "SLR of Pocket Depth Change by Treatment Condition - Control as Reference";
+PROC REG DATA = Proj1.data;
+	MODEL pdchange = placebo low medium high;
+	RUN;
+```
+
+The overall model is not statistically significant (F~(4,98)~= 2.074, p = 0.0899). Based on this model, it appears that the gel treatment has no effect on pocket depth change after 1 year.
+
+<a href="#Model_1">Back to top of tabset</a>
+
+## Post-Hoc Analysis
+
+We did not find a main effect based on treatment group. However I am still interested if including any of the covariates changes the results.
+
+#### Model Including Gender
+
+```{sas}
+* Try a model of attachment loss change by treatment condition, controlling for gender;
+TITLE "MLR of Attachment Loss Change by Treatment Condition and Gender";
+PROC REG DATA = Proj1.data;
+	MODEL attachchange = placebo low medium high gender;
+	RUN;
+```
+
+A model including gender does not seem to help anything. What about with all covariates?
+
+#### Saturated Model
+```{sas}
+TITLE "MLR of Pocket Depth Change by Treatment Condition and Gender";
+PROC REG DATA = Proj1.data;
+	MODEL pdchange = placebo low medium high gender;
+	RUN;
+```
+
+Nope. Interestingly the best predictor of attachment loss at 1 year is attachment loss at baseline. The results for pocket depth are likely the same.
+
+## Evaluating Assumptions {#Assumptions}
+
+The beauty of SAS is that the output to check all of the assumptions is included in the output of each model!
+
+Thus we have seen that in each model so far, all of our assumptions have been met!
+:::
+
+
+# Results
+
+The total population of the study was 130 participants. Of that total, 54 were male and 76 were female. Each treatment group was evenly divided with 26 subjects. The study team found no cause for alarm within patient demographics (See Table 1). Primary outcome data was only collected on 103 subjects as there were 27 patients that were lost-to-follow-up. These subjects were not included in the final analysis. Additionally, Box-and-Whisker Plots were created to assess outliers in the dataset (See Figure 1). No values were excluded for this analysis. The team ran a correlation matrix to determine if any of the covariates had preexisting relationships. Figures 2A and 2B reveal that there was not any strong correlation between covariates. However, there was a strong relationship between both baseline attachment loss and pocket depth and their subsequent 1-year follow up (r’s \> 0.80). Additionally, there was a slight association between gender and attachment loss (r = -.17) and pocket depth change (r = -0.21). A two-sample t-test revealed a significant difference between means for males and females (t = 2.20, p = .0303). As a result, we only included gender as a potential demographic covariate. Given the lack of correlations between the outcome variables and the remaining demographic covariates, the team felt assured to move into regression modeling while primarily focusing on treatment group and the primary outcome variables.
+
+To better determine the effect of randomization status on our primary outcome variables, the team created change-score variables to isolate the 1-year change in attachment loss and pocket depth from baseline. A series of linear regressions were conducted with attachment loss or pocket depth change score as the outcome variable and treatment group as the independent variable. Our first model to assess this question was a simple linear regression with treatment group as the independent variable and change in attachment loss as the dependent variable, using the control group as the reference category. A follow up regression with placebo group as the reference category allowed us to assess for any changes between the treatment groups and the placebo. Both of these models allow us to assess the effect of treatment status in comparison to the control or placebo group.
+
+The results of the analyses can be seen in Figures 3-5. For attachment loss change, the overall model is significant (F(4,98) = 2.53, p = 0.0451). Looking at the individual t-statistics, we see that - following adjustment for multiple pairwise comparisons - the placebo group (p = 0.549), low concentration group (p = 0.0668), and high concentration group (p = 1.000) are not statistically different from the control group. The medium concentration group is approaching significance (95% CI: \[0.052, 0.38\], p = 0.0503). After changing the reference group to the placebo group and applying a Bonferroni correction, none of the groups are significantly different from the placebo group (all p’s \> 0.05). When looking at pocket depth change, the overall model is not statistically significant (F(4,96)= 1.958, p = 0.107). Neither model changed in significance when adding gender as a covariate. Assumptions for a regression were assessed using Q-Q plots, histograms of the residuals, scale-location plots, and scatterplots of the residuals against the fitted-values. All assumptions were met, except for a slight violation of normality for the model examining attachment loss, which is potentially due to outliers in the data.
+
+# Discussion
+
+While the overall model for attachment loss change was significant, the only groups that were statistically different from each other were the no treatment control and low concentration gel groups . However, since this was a placebo-controlled RCT, and none of the treatment groups were significantly different from the placebo group, we can conclude that we fail to reject the null hypothesis that the average attachment loss over 1 year is the same between all groups. The model for pocket depth change was not significant and we can conclude that we fail to reject the null hypothesis that the average pocket depth change over 1 year is the same between all groups. Therefore based on the results of both regressions, our final conclusion is that the gel treatment did not reduce attachment loss or pocket depth change compared to a placebo. In fact, there may be evidence that those in the medium-dose treatment group possibly have worse health outcomes compared to the control group, as that comparison was trending towards significance (p = .0503).
+
+-   Note: Next paragraph written by classmate Dominick DeMarsico
+
+However, we must address the effect of missingness on our interpretation of the data. There were 27 subjects that were lost-to-follow-up and were unable to provide outcome data (19 of which were male). The lack of males in the final dataset may make this data less predictive of treatment outcomes in males. Additionally, there were more individuals lost-to-follow-up in the treatment groups than the control or placebo groups (11.5% in the placebo and control groups, 19.2% in the low-dose group, 23.1% in the medium-dose group, and 38.5% in the high-dose group), which could further support a potential adverse effect of the gel. Alternatively, there may have been another factor affecting the treatment group which increased the rate of subject attrition that the experimenters are better poised to identify.

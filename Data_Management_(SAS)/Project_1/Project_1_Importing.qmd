@@ -12,7 +12,7 @@ toc: true
 
 This is the first part of the main project for BIOS 6680: Data Management Using SAS, in which we plan and carry out data management activities including data cleaning/quality assurance, data documentation, analytic data set creation, and a final analysis. A key goal of this project is to demonstrate reproducible research and reporting.
 
-In this part, we read in all the datasets and create a BRFSSImpt import library
+In this part, we read in all the datasets consististing of multiple filetypes and delimiters, and create a BRFSSImpt import library
 
 # Background
 

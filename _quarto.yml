@@ -13,6 +13,7 @@ website:
           - text: Regression (R)
             href: Project_1_Regression/Project_1_Regression_R/Project_1_Regression.qmd
           - text: Regression (SAS)
+            href: Project_1_Regression/Project_1_Regression_SAS/Project_1_Regression_SAS.qmd
           - text: MLR With Confounding and Interaction (R)
             href: Project_2/Project_2_R/Code/Project2.qmd
           - text: MLR With Confounding and Interaction (SAS)
