@@ -1,0 +1,1581 @@
+---
+title: "Linear Mixed Model"
+subtitle: "Advanced Data Analysis - Project 2"
+author: "Sean Vieau"
+date: "October 27, 2024"
+output: html_document
+toc: true
+---
+
+```{r setup, include=FALSE}
+# Sets the default for all chunks as echo = TRUE (ensures they show unless specified not to)
+knitr::opts_chunk$set(echo = TRUE)
+
+# Create a function to pretty print our dataframes
+pretty_print <- function(x) {
+  kable(x, format = "html") |>
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+}
+
+# Create a function to pretty print useful parameters of a regression model
+model_results <- function(x) {
+  # Create a table of the coefficients of the model
+  coefficients_ <- summary(x)$coefficients[]
+  
+  # Perform Bonferroni correction 
+  p_values <- summary(x)$coefficients[,4] # This line selects the fourth column of the resulting coefficients      table from summary(model), which is the p-values
+  p_adjusted <- p.adjust(p_values, method = "bonferroni")
+  
+  # Get the 95% CIs
+  conf_intervals <- confint(x)
+  
+  # Compare adjusted p-values to unadjusted p-values, with 95% CI's
+  model_output <- cbind(coefficients_, p_adjusted, conf_intervals)
+  
+  # Pretty print results
+  pretty_print(model_output)
+}
+
+# Set options to avoid scientific notation
+options(scipen = 999)
+```
+
+# Introduction
+
+The objective of this project is to **gain experience in the application of Linear Mixed Models** for statistical analysis.
+
+This is the exact same data set as Project 2. Please see Project 2 - MLR with Confounding and Interaction for a detailed description of the data cleaning process.
+
+## Project Description
+
+The aim of the current study is to assess how treatment response differs for HIV+ patients 2 years after initiating Highly Active Antiretroviral Therapy (HAART) based on hard drug usage (such as heroin or cocaine). This study is of particular scientific interest because it is unclear whether the use of hard drugs inhibits the immune system in humans; treatment strategies may differ based on these results. The researchers are interested in comparing subjects who never used hard drugs to current hard drug users (those that use hard drugs at year 2) or previous hard drug users (those who used drugs at year 0 or 1). Outcomes of interest are: viral load (HIV copies in a mL of blood), CD4+ T cell count (a measure of immunologic health), and aggregate physical and quality of life scores from the SF-36.
+
+The clinical hypothesis is that, if hard drugs inhibit the immune system in humans, subjects who currently or previously used hard drugs will have higher viral load and lower CD4+ T cell counts than those who never used hard drugs. Additionally, the researchers are interested in knowing if potential differences between the drug use groups can be explained by differences in adherence to the treatment regimen. The researchers are agnostic on how quality of life changes after treatment, since side effects of the treatment are significant.
+
+The project description provided by the PI is available below:
+
+::: {style="text-align: center;"}
+<img src="/Project_2/Project_2_R/Media/Project2_description1.png" width="85%"/>
+:::
+
+# Linear Mixed Models
+
+Note: This information is taken from the class notes for BIOS 6612: Applied Biostatistics II (Week 15, Lecture 24 and 25).
+
+Linear Mixed Models are a powerful statistical tool to handle correlated data. That is, when the assumption of independence is not met, as in longitudinal data (all of the values for the same subject will be highly correlated), we can no longer run a simple regression. This is where LMM's come in.
+
+LMM's are the most flexible method for analyzing repeated measures/correlated/longitudinal data. This is because:
+
+-   They allow for continuous predictors for repeated measures.
+
+    -   That is, time can now be treated as a continuous variable (whereas in RM ANOVA, predictors must be categorical).
+
+-   Missing data are allowed in LMMs, because subjects are weighted according to their number of measurements over time.
+
+-   They allow for heteroskedasticity (if you use an unstructured covariance matrix).
+
+-   Finally, LMM's allow for random intercepts and random slopes.
+
+### Random Intercepts
+
+Random intercepts allow for each subject to have their own intercept, which arguably makes the model easier to interpret.
+
+Random intercepts can be visualized below.
+
+![](images/clipboard-1117189542.png){fig-align="center" width="70%"}
+
+However, random slopes alone assumes that the rate of change of the outcome over time is the same for all individuals, which can be restrictive. This is where random slopes come in.
+
+### Random Slopes
+
+Random slopes allow you to account for the fact that the slope for the outcome variable will differ for each individual subject.
+
+Including random intercepts and slopes can be visualized below.
+
+![](images/clipboard-1061285406.png){fig-align="center" width="70%"}
+
+Thus, including random intercepts and slopes allows for us to interpret the relationship between a predictor and an outcome, "with the addition of subject-specific means". Basically, they allow you to capture variability between subjects.
+
+![](images/clipboard-511855197.png){fig-align="center" width="100%"}
+
+# Data Preparation
+
+#### Load Libraries
+
+```{r, message = FALSE}
+library(dplyr)
+library(ggplot2)
+library(tidyverse)
+library(plotly) # Used for interactive plots
+library(kableExtra) # Used for pretty printing (kable_styling)
+library(lme4) # Used to perform the linear mixed model analysis
+library(lmerTest) # Used to acquire the p-values from the model summary
+library(nlme) # Used for unstructured covariance matrix in Linear Mixed Models
+library(ggridges) # Used for plotting distributions
+```
+
+### Read In Data
+
+We will load in the cleaned, long form data set from Project 2
+
+```{r}
+#| message: false
+
+# Read in the raw 8 year data set
+data <- read_csv("C:\\Users\\sviea\\Documents\\Portfolio\\Project_2\\Project_2_R\\RawData\\hiv_dataset.csv")
+
+# Read in cleaned data set from Project 2
+data_2 <- read_csv("C:\\Users\\sviea\\Documents\\Portfolio\\Project_2\\Project_2_R\\Code\\Proj2_data_2_cleaned")
+```
+
+We have 3632 visits across the complete 8 year data set, and 1650 visits once we filter down to the first 2 years.
+
+```{r}
+#| include: false
+# Filter out the extraneous variables we created during data exploration
+data_2 <- data_2[,1:22]
+```
+
+Let's examine the data set.
+
+```{r}
+# Print header of data set
+pretty_print(head(data_2))
+```
+
+# Variable Creation
+
+We will create the necessary variables for the analysis here.
+
+### Hard Drug Use Group
+
+We will create the categories for never, previous, and current drug user as before, but with the long form data set this time.
+
+ - Never User: Did not use hard drugs at any time point
+ - Previous User: Used hard drugs at time points 0 or 1, but not 2.
+ - Current User: Used hard drugs at time point 2.
+
+```{r}
+# Class participants into either never, previous, or current hard drug users
+data_2 <- data_2 |>
+  group_by(newid) |>
+  mutate(hard_drugs_grp = ifelse(any(hard_drugs == "Yes" & years == 2), "Current User",
+                                 ifelse(any(hard_drugs == "Yes" & (years == 0 | years == 1)) & any(hard_drugs == "No" & years == 2), "Previous User", "Never User"))) |> 
+  ungroup()
+
+# Get the exact number of vistits that were made by current, previous, and never users
+table(data_2$hard_drugs_grp)
+```
+
+### Adherence High vs Low
+
+Again based on previous relationships we discovered when we ran this analysis as an MLR with confounding and interaction, we will aggregate the two highest and the two lowest adherence groups.
+
+ - High Adherence: >=95% Adherence to protocol
+ - Low Adherence: < 95 Adherence to protocol
+
+```{r}
+# Create new groups based on high vs low adherence (based on adherence at 2 years)
+data_2 <- data_2 |>
+  group_by(newid) |>
+  mutate(
+    ADH_HIGHVSLOW = ifelse(is.na(ADH), NA,
+                           ifelse(any(years == 2 & (ADH == "100%" | ADH == "95-99%")), "High Adherence", "Low Adherence")),
+    ADH_HIGHVSLOW = ifelse(years == 0, first(ADH_HIGHVSLOW[years == 2]), ADH_HIGHVSLOW)
+  )
+
+# Repeat for 8 year dataset
+data <- data |> 
+  group_by(newid) |> 
+  mutate(ADH_HIGHVSLOW = ifelse(is.na(ADH), NA,
+                                ifelse(any(years == 2 & (ADH == "100%" | ADH == "95-99%")), "High Adherence", "Low Adherence")))
+```
+
+### College Education
+
+We will similarly code education as some college vs no college.
+
+```{r}
+data_2 <- data_2 |>
+  group_by(newid) |>
+  mutate(
+    EDUC_COLLEGE = ifelse(is.na(EDUCBAS), NA,
+                          ifelse(any(years == 2 & EDUCBAS %in% c("At least one year college but no degree",
+                                                                 "Four years college or got degree",
+                                                                 "Some graduate work",
+                                                                 "Post-graduate degree")), "College", "No College"))
+  )
+
+```
+
+# Data Visualization 
+
+Afterwards we wil plot the averages of each outcome variable by the primary explanatory variables `hard_drugs_grp` and `ADH`.
+
+## Spaghetti Plots {#Spaghetti}
+
+In order to get an initial feel for the data, we will create some spaghetti plots to visualize each outcome variable for all patients over 2 years.
+
+::: panel-tabset
+
+## Viral Load
+
+Let's examine log viral load since that is our main PEV.
+
+```{r}
+#| warning: false
+# Create log vload for 8 year dataset
+data <- data |> 
+  mutate(VLOAD_log = log(VLOAD))
+
+# Turn newid into a factor
+data <- data |> 
+  mutate(newid = factor(newid),
+         ADH = factor(ADH))
+  
+# Create spaghetti plot for log viral load
+ggplot(data, aes(y = VLOAD_log, x = years, group = newid)) +
+  geom_line(alpha = 0.1) +
+  theme_minimal() +
+  labs(title = "Spaghetti Plot of Log Viral Load",
+       x = "Year",
+       y = "Log Viral Load (copies/mL)")
+```
+
+
+That's interesting, we can see that for most patients, they had a decrease in log viral load over the course of the study.
+
+I wonder if those patients with higher viral loads tend to be those who are hard drug users. Let's explore.
+
+```{r}
+# Create spaghetti plot for log viral load
+ggplot(data, aes(y = VLOAD_log, x = years, group = newid, color = as.factor(hard_drugs))) +
+  geom_line(alpha = 0.2) +
+  theme_minimal() +
+  labs(title = "Spaghetti Plot of Log Viral Load",
+       x = "Year",
+       y = "Log Viral Load (copies/mL)")
+```
+
+Huh, that's interesting. There seem to really only be a few hard drug users in the sample. Additionally, if patients used hard drugs, they seem to have consistenly used them throughout the study and never quit.
+
+```{r}
+table(data$hard_drugs)
+```
+
+About 12.6% of visits were by patients who used hard drugs since the previous visit.
+
+These plots are interesting, but there are too many data points to extrapolate any more meaningful information from them.
+
+Let's move on to plotting the averages of each outcome variable based on hard drug use and protocol adherence.
+
+[Top of Tabset](#Spaghetti)
+
+## CD4+ T Cell Count
+
+Let's examine what happened to leukocyte count over the course of the study.
+
+```{r}
+#| warning: false
+# Create log vload for 8 year dataset
+data <- data |> 
+  mutate(VLOAD_log = log(VLOAD))
+
+# Turn newid into a factor
+data <- data |> 
+  mutate(newid = factor(newid),
+         ADH = factor(ADH))
+  
+# Create spaghetti plot for log viral load
+ggplot(data, aes(y = LEU3N, x = years, group = newid)) +
+  geom_line(alpha = 0.1) +
+  theme_minimal() +
+  labs(title = "Spaghetti Plot of CD4+ T Cell Count",
+       x = "Year",
+       y = "CD4+ T Cell Count")
+```
+
+For the most part it increasd, with a lot of variation for some patients.
+
+[Top of Tabset](#Spaghetti)
+
+## Mental QOL
+
+Now let's examine how mental QOL changed over time.
+
+```{r}
+#| warning: false
+# Create log vload for 8 year dataset
+data <- data |> 
+  mutate(VLOAD_log = log(VLOAD))
+
+# Turn newid into a factor
+data <- data |> 
+  mutate(newid = factor(newid),
+         ADH = factor(ADH))
+  
+# Create spaghetti plot for log viral load
+ggplot(data, aes(y = AGG_MENT, x = years, group = newid)) +
+  geom_line(alpha = 0.1) +
+  theme_minimal() +
+  labs(title = "Spaghetti Plot of Mental QOL",
+       x = "Year",
+       y = "Mental QOL")
+```
+
+It stayed high for the most part but with a LOT of variation for some patients.
+
+This looks like good evidnece to include random slopes into our model for mental QOL.
+
+[Top of Tabset](#Spaghetti)
+
+## Physical QOL
+
+Finally let's assess how physical QOL changed over time.
+
+```{r}
+#| message: false
+#| warning: false
+# Create log vload for 8 year data set
+data <- data |> 
+  mutate(VLOAD_log = log(VLOAD))
+
+# Turn newid into a factor
+data <- data |> 
+  mutate(newid = factor(newid),
+         ADH = factor(ADH))
+  
+# Create spaghetti plot for log viral load
+ggplot(data, aes(y = AGG_PHYS, x = years, group = newid)) +
+  geom_line(alpha = 0.1) +
+  theme_minimal() +
+  labs(title = "Spaghetti Plot of Physical QOL",
+       x = "Year",
+       y = "Physical QOL")
+```
+
+Just like mental QOL, it was high for the most part, but with a lot of variation within patients.
+
+This is good evidence for including random slopes into our model for physical QOL.
+
+[Top of Tabset](#Spaghetti)
+
+## Summary
+
+We saw over the 8 year course of the study an overall decrease in viral load and increase in CD4+ T Cell count.
+
+The mental and physical QOL scores appeared remain about the same overall, but with a lot of variation within patients. *We will include random slopes into these models to account for this variation*.
+
+:::
+
+## Bivariate Relationships {#Bivariate}
+
+Spaghetti plots were informative to see general trends in each outcome variable over the course of the study, but they don't give us a fine tuned look into the important bivariate relationships between the outcome variables and our two primary explanatory variables: `hard_drugs_grp` and `ADH_HIGHVSLOW`.
+
+To do that, we will plot the average of each outcome group by our PEVs.
+
+### Main Outcome Variables
+
+::: panel-tabset
+
+## Viral Load 
+
+### Viral Load by Hard Drugs Group
+
+```{r}
+#| message: false
+#| warning: false
+# calculate the average vload log at each year for each hard drugs use group
+summary_data <- data_2 |> 
+  group_by(hard_drugs_grp, years) |> 
+  summarize(avg_VLOAD_log = mean(VLOAD_log, na.rm = TRUE))
+
+# Plot
+ggplot(summary_data, aes(x=years, y= avg_VLOAD_log, color = hard_drugs_grp)) +
+  geom_line(size = 1) + 
+  scale_color_brewer(palette = "Pastel2") +
+  theme_minimal()
+```
+
+Interestingly, it appears that previous users have the lowest average log viral load over 2 years. This difference may not be statistically significant however.
+
+### Viral Load by Adherence
+
+```{r}
+#| message: false
+#| warning: false
+# calculate the average vload log at each year for each hard drugs use group
+summary_data <- data_2 |> 
+  group_by(ADH_HIGHVSLOW, years) |> 
+  summarize(avg_VLOAD_log = mean(VLOAD_log, na.rm = TRUE))
+
+# Plot
+ggplot(summary_data, aes(x=years, y= avg_VLOAD_log, color = ADH_HIGHVSLOW)) +
+  geom_line(size = 1) +
+  theme_minimal() +
+  scale_color_brewer(palette = "Pastel2")
+```
+
+This shows the expected result, that those with high adherence have lower viral load. Additionally, they have different slopes, so there's an interaction with time here.
+
+### Summary
+
+Those with low adherence have a higher average log viral load. Interestingly, previous users have a lower log viral load, but this may not be statistically significant in the full model.
+
+[Top of Tabset](#Bivariate)
+
+## CD4+ T Cell Count
+
+### CD4+ T Cell Count by Hard Drug Use
+
+```{r}
+#| message: false
+#| warning: false
+# Calculate the average CD4+ T Cell Count at each year for each hard drugs use group
+summary_data <- data_2 |> 
+  group_by(hard_drugs_grp, years) |> 
+  summarize(avg_LEU3N = mean(LEU3N, na.rm = TRUE))
+
+# Plot
+ggplot(summary_data, aes(x=years, y= avg_LEU3N, color = hard_drugs_grp)) +
+  geom_line(size = 1) +
+  theme_minimal() +
+  scale_color_brewer(palette = "Pastel2")
+```
+
+Here it appears that current drug users have the highest leukocyte count, and previous drug users have the lowest. This is not really as expected. Never users should have the highest white blood cell count since they are the healthiest.
+
+### CD4+ T Cell Count by Adherence
+
+```{r}
+#| message: false
+#| warning: false
+# Calculate the average CD4+ T Cell Count at each year by adherence
+summary_data <- data_2 |> 
+  group_by(ADH_HIGHVSLOW, years) |> 
+  summarize(avg_LEU3N = mean(LEU3N, na.rm = TRUE))
+
+# Plot
+ggplot(summary_data, aes(x=years, y= avg_LEU3N, color = ADH_HIGHVSLOW)) +
+  geom_line(size = 1) +
+  theme_minimal() +
+  scale_color_brewer(palette = "Pastel2")
+```
+
+Those with low adherence have lower leukocyte count. That's expected. The slope does not change by adherence group.
+
+### Summary
+
+Previous hard drug users and those with low adherence have lower white blood cell count.
+
+[Top of Tabset](#Bivariate)
+
+## Mental QOL
+
+### Mental QOL by Hard Drug Use
+
+```{r}
+#| message: false
+#| warning: false
+# Calculate the average mental QOL at each year for each hard drugs use group
+summary_data <- data_2 |> 
+  group_by(hard_drugs_grp, years) |> 
+  summarize(avg_AGG_MENT = mean(AGG_MENT, na.rm = TRUE))
+
+# Plot
+ggplot(summary_data, aes(x=years, y= avg_AGG_MENT, color = hard_drugs_grp)) +
+  geom_line(size = 1) +
+  theme_minimal() +
+  scale_color_brewer(palette = "Pastel2")
+```
+
+This shows that previous users have the lowest average mental QOL, and never users the highest. This is as expected, especially if we consider that previous users are likely dealing with the side effects of recently quitting hard drugs.
+
+### Mental QOL by Adherence
+
+```{r}
+#| message: false
+#| warning: false
+# Calculate the average mental QOL at each year by adherence
+summary_data <- data_2 |> 
+  group_by(ADH_HIGHVSLOW, years) |> 
+  summarize(avg_AGG_MENT = mean(AGG_MENT, na.rm = TRUE))
+
+# Plot
+ggplot(summary_data, aes(x=years, y= avg_AGG_MENT, color = ADH_HIGHVSLOW)) +
+  geom_line(size = 1) +
+  theme_minimal() +
+  scale_color_brewer(palette = "Pastel2")
+```
+
+Those with high adherence have a drastically higher mental QOL score. That's expected.
+
+### Summary
+
+Those with low adherence have worse mental QOL, and previous users have worse mental QOL.
+
+[Top of Tabset](#Bivariate)
+
+## Physical QOL
+
+### Physical QOL by Hard Drug Use
+
+```{r}
+#| message: false
+#| warning: false
+# Calculate the average physical QOL at each year for each hard drugs use group
+summary_data <- data_2 |> 
+  group_by(hard_drugs_grp, years) |> 
+  summarize(avg_AGG_PHYS = mean(AGG_PHYS, na.rm = TRUE))
+
+# Plot
+ggplot(summary_data, aes(x=years, y= avg_AGG_PHYS, color = hard_drugs_grp)) +
+  geom_line(size = 1) +
+  theme_minimal() +
+  scale_color_brewer(palette = "Pastel2")
+```
+
+Overall it appears that never users have higher physical QOL across the study. While initally high, the physical QOL for current users plummets after year 1. Additionally, previous users have the lowest physical QOL, which also makes sense with the understanding we've mentioned that previous users are dealing with the side effects of quitting and are lacking their coping mechanism.
+
+### Physical QOL by Adherence
+
+```{r}
+#| message: false
+#| warning: false
+# Calculate the average physical QOL at each year for each hard drugs use group
+summary_data <- data_2 |> 
+  group_by(ADH_HIGHVSLOW, years) |> 
+  summarize(avg_AGG_PHYS = mean(AGG_PHYS, na.rm = TRUE))
+
+# Plot
+ggplot(summary_data, aes(x=years, y= avg_AGG_PHYS, color = ADH_HIGHVSLOW)) +
+  geom_line(size = 1) +
+  theme_minimal() +
+  scale_color_brewer(palette = "Pastel2")
+```
+
+### Summary
+
+Those with low adherence have worse physical QOL, and previous users have worse physical QOL.
+
+[Top of Tabset](#Bivariate)
+
+## Summary
+
+For hard drug use group, previous users have:
+
+-   The lowest average log viral load
+-   The lowest leukocyte count, and highest mental and physical QOL.
+
+For adherence, those with low adherence have:
+
+-   The highest average log viral load
+-   The lowest leukocyte count, and lowest mental and physical QOL.
+
+[Top of Tabset](#Bivariate)
+
+:::
+
+### Covariates {#Covariates}
+
+::: panel-tabset
+
+## Depression
+
+Depression was a confounder in the model for mental QOL and must be accounted for.
+
+```{r}
+#| message: false
+# Calculate the average depression at each year for each hard drugs use group
+summary_data <- data_2 |> 
+  group_by(hard_drugs_grp, years) |> 
+  summarize(avg_CESD = mean(CESD, na.rm = TRUE))
+
+# Plot
+ggplot(summary_data, aes(x=years, y= avg_CESD, color = hard_drugs_grp)) +
+  geom_line(size = 1) +
+  theme_minimal() +
+  scale_color_brewer(palette = "Pastel2")
+```
+
+We see the expected result, previous drug users are more depressed.
+
+```{r}
+#| message: false
+#| warning: false
+# Calculate the average mental QOL at each year by adherence
+summary_data <- data_2 |> 
+  group_by(ADH_HIGHVSLOW, years) |> 
+  summarize(avg_CESD = mean(CESD, na.rm = TRUE))
+
+# Plot
+ggplot(summary_data, aes(x=years, y= avg_CESD, color = ADH_HIGHVSLOW)) +
+  geom_line(size = 1) +
+  theme_minimal() +
+  scale_color_brewer(palette = "Pastel2")
+```
+
+We see the expected result, those with low adherence were more depressed.
+
+[Top of Tabset](#Covariates)
+
+## Frailty Related Phenotype
+
+Frailty Related Phenotype is a precision variable for physical QOL, and was previously significant for CD4+ T Cell Count.
+
+```{r}
+#| message: false
+#| warning: false
+# Calculate the average CD4+ T Cell Count for FRP
+summary_data <- data_2 |> 
+  group_by(FRP, years) |> 
+  summarize(avg_LEU3N = mean(LEU3N, na.rm = TRUE))
+
+# Plot
+ggplot(summary_data, aes(x=years, y= avg_LEU3N, color = FRP)) +
+  geom_line(size = 1) +
+  theme_minimal() +
+  scale_color_brewer(palette = "Pastel2")
+```
+
+Those with a frailty related phenotype have lower average CD4+ T Cell Count.
+
+```{r}
+#| message: false
+#| warning: false
+# Calculate the average Physical QOL for FRP
+summary_data <- data_2 |> 
+  group_by(FRP, years) |> 
+  summarize(avg_AGG_PHYS = mean(AGG_PHYS, na.rm = TRUE))
+
+# Plot
+ggplot(summary_data, aes(x=years, y= avg_AGG_PHYS, color = FRP)) +
+  geom_line(size = 1) +
+  theme_minimal() +
+  scale_color_brewer(palette = "Pastel2")
+```
+
+They also have drastically lower physical QOL.
+
+[Top of Tabset](#Covariates)
+
+## College Education
+
+This was significant for the model with `VLOAD_log`. Let's assess.
+
+```{r}
+#| message: false
+#| warning: false
+# Calculate the average VLOAD log by college education
+summary_data <- data_2 |> 
+  group_by(EDUC_COLLEGE, years) |> 
+  summarize(avg_VLOAD_log = mean(VLOAD_log, na.rm = TRUE))
+
+# Plot
+ggplot(summary_data, aes(x=years, y= avg_VLOAD_log, color = EDUC_COLLEGE)) +
+  geom_line(size = 1) +
+  theme_minimal() +
+  scale_color_brewer(palette = "Pastel2")
+```
+
+Those with no college have slightly higher average log vload. This does not appear to be significantly different.
+
+```{r}
+#| message: false
+#| warning: false
+# Calculate the average LEU3N by college education
+summary_data <- data_2 |> 
+  group_by(EDUC_COLLEGE, years) |> 
+  summarize(avg_LEU3N = mean(LEU3N, na.rm = TRUE))
+
+# Plot
+ggplot(summary_data, aes(x=years, y= avg_LEU3N, color = EDUC_COLLEGE)) +
+  geom_line(size = 1) +
+  theme_minimal() +
+  scale_color_brewer(palette = "Pastel2")
+```
+
+Those with no college had lower white blood cell count.
+
+```{r}
+#| message: false
+#| warning: false
+# Calculate the average VLOAD log by college education
+summary_data <- data_2 |> 
+  group_by(EDUC_COLLEGE, years) |> 
+  summarize(avg_AGG_PHYS = mean(AGG_PHYS, na.rm = TRUE))
+
+# Plot
+ggplot(summary_data, aes(x=years, y= avg_AGG_PHYS, color = EDUC_COLLEGE)) +
+  geom_line(size = 1) +
+  theme_minimal() +
+  scale_color_brewer(palette = "Pastel2")
+```
+
+Those with no college have lower physical QOL.
+
+```{r}
+#| message: false
+#| warning: false
+# Calculate the mental QOL by college education
+summary_data <- data_2 |> 
+  group_by(EDUC_COLLEGE, years) |> 
+  summarize(avg_AGG_MENT = mean(AGG_MENT, na.rm = TRUE))
+
+# Plot
+ggplot(summary_data, aes(x=years, y= avg_AGG_MENT, color = EDUC_COLLEGE)) +
+  geom_line(size = 1) +
+  theme_minimal() +
+  scale_color_brewer(palette = "Pastel2")
+```
+
+Those with no college also appear to have lower mental QOL.
+
+Really it appears that now, since we are plotting and modelling data longitudinally instead of with change score, `EDUC_COLLEGE` should be included in every model as a precision variable.
+
+[Top of Tabset](#Covariates)
+
+:::
+
+# Data Analysis
+
+I will be following [this guide](https://ourcodingclub.github.io/tutorials/mixed-models/) on how to perform a linear mixed model in R, coupled with the notes from class.
+
+### Accounting for Repeated Measures
+
+We do not have independent measures in this data set, because it is longitudinal. Therefore, we are using a linear mixed model to account for the fact that observations from the same patient may be more similar to each other than to those from different patients.
+
+We account for this correlation by Including ID as a random effect, and fitting random intercepts and/or random slopes by `newid`.
+
+ - We fit random intercepts with `(1|variable_name)`.
+
+ - We fit random slopes and intercepts with `(fixed_effect | variable_name)`.
+ 
+Additionally, we know that the outcome variables are heteroskedastic, and thus we will use the unstructured covariance matrix to account for this.
+
+## Log Viral Load {#Viral}
+
+Based on the previous interactive model selection in Project 2, the final covariates for this model were `hard_drugs_grp`, and `ADH`, and `EDUC_COLLEGE`
+
+::: panel-tabset
+
+## Model Selection
+
+To answer the researcher's main question, we will run a model of `hard_drugs_grp`, `ADH_HIGHVSLOW`, `years`, and an interaction between `hard_drugs_grp`*`years` to see if the slopes differ based on hard drug usage.
+
+Note: An unstructured covariance matrix is not needed here since we are only using random intercepts.
+
+```{r}
+# Ensure 'hard_drugs_grp' is a factor
+data_2$hard_drugs_grp <- as.factor(data_2$hard_drugs_grp)
+
+# Relevel the factor, setting "Never User" as the reference level
+data_2$hard_drugs_grp <- relevel(data_2$hard_drugs_grp, ref = "Never User")
+
+# Create LMM
+model_VLOAD1 <- lmer(VLOAD_log ~ hard_drugs_grp + ADH_HIGHVSLOW + years + hard_drugs_grp*years + (1|newid), data = data_2)
+
+# Get model summary
+summary(model_VLOAD1)
+```
+Change reference level
+
+```{r}
+# Ensure 'hard_drugs_grp' is a factor
+data_2$hard_drugs_grp <- as.factor(data_2$hard_drugs_grp)
+
+# Relevel the factor, setting "Never User" as the reference level
+data_2$hard_drugs_grp <- relevel(data_2$hard_drugs_grp, ref = "Previous User")
+
+# Create LMM
+model_VLOAD1 <- lmer(VLOAD_log ~ hard_drugs_grp + ADH_HIGHVSLOW + years + hard_drugs_grp*years + (1|newid), data = data_2)
+
+# Get model summary
+summary(model_VLOAD1)
+```
+The interaction is not significant. Let's run the model with out it.
+
+```{r}
+# Relevel the factor, setting "Never User" as the reference level
+data_2$hard_drugs_grp <- relevel(data_2$hard_drugs_grp, ref = "Never User")
+
+# Create LMM
+model_VLOAD2 <- lmer(VLOAD_log ~ hard_drugs_grp + ADH_HIGHVSLOW + years + (1|newid), data = data_2)
+
+# Get model summary
+summary(model_VLOAD2)
+```
+That looks pretty good, however, we did see that high adherence vs low adherence had differing slopes when we plotted them. Let's include an interaction term for adherence.
+
+```{r}
+# Relevel the factor, setting "Never User" as the reference level
+data_2$hard_drugs_grp <- relevel(data_2$hard_drugs_grp, ref = "Never User")
+
+# Create LMM
+model_VLOAD3 <- lmer(VLOAD_log ~ hard_drugs_grp + ADH_HIGHVSLOW + years + ADH_HIGHVSLOW*years + (1|newid), data = data_2)
+
+# Get model summary
+summary(model_VLOAD3)
+```
+We have a significant interaciton. Let's perform model selection based on AIC and BIC.
+
+```{r}
+# Model selection with AIC and BIC
+AIC(model_VLOAD1, model_VLOAD2, model_VLOAD3)
+BIC(model_VLOAD1, model_VLOAD2, model_VLOAD3)
+```
+
+AIC and BIC both prefer model 3, with the `ADH_HIGHVSLOW`*`years` interaction. Thus that is our final model.
+
+
+[Top of Tabset]{#Viral}
+
+## Analysis
+
+Based on model selection, the final model for log viral load includes `hard_drugs_grp`, `ADH_HIGHVSLOW`, `years`, and an interaction between `ADH_HIGHVSLOW`*`years`.
+
+```{r}
+# Relevel the factor, setting "Never User" as the reference level
+data_2$hard_drugs_grp <- relevel(data_2$hard_drugs_grp, ref = "Never User")
+
+# Create LMM
+model_VLOAD1 <- lmer(VLOAD_log ~ hard_drugs_grp + ADH_HIGHVSLOW + years + ADH_HIGHVSLOW*years + (1|newid), data = data_2)
+
+# Get model summary
+summary(model_VLOAD1)
+pretty_print(confint(model_VLOAD1))
+```
+
+After controlling for adherence and between subject means (intercepts), there was no difference in average log viral load for current (p = 0.93, 95% CI: -0.62, 0.56) and previous (p = 0.54, 95% CI: -0.88, 0.46) hard drug users compared to never users.
+
+After controlling for hard drug use and between subject means, those with low adherence did not differ significantly in average log viral load compared to those with high adherence (p = 0.16, 95% CI: -1.32, 0.22).
+
+There was a significant decrease in log viral load over time while controlling for subject-specific means, hard drug use, and adherence, with an average decrease of 3.15 log copies/mL per year (p < 0.0001, 95% CI: -3.30, -3.00).
+
+Subject ID contributes greatly to log viral load, as it accounts for `2.882 / (2.882 + 5.816) = 0.331` or 33.1% of the variance in log viral load.
+
+The slope for viral load over time differed significantly between those with low and high adherence. Those with low adherence had on average a 0.99 increase in log viral load each year compared to those with high adherence (p < 0.0001, 95% CI: 0.51, 1.47).
+
+#### Change Reference Group
+
+```{r}
+# Relevel the factor, setting "Never User" as the reference level
+data_2$hard_drugs_grp <- relevel(data_2$hard_drugs_grp, ref = "Previous User")
+
+# Create LMM
+model_VLOAD1 <- lmer(VLOAD_log ~ hard_drugs_grp + ADH_HIGHVSLOW + years + ADH_HIGHVSLOW*years + (1|newid), data = data_2)
+
+# Get model summary
+summary(model_VLOAD1)
+pretty_print(confint(model_VLOAD1))
+```
+
+Previous hard drug users did not differ significantly in average log viral load compared to current users (p = 0.67, 95% CI: -0.66, 1.03).
+
+[Top of Tabset](#Viral)
+
+## Interpretation
+
+### Hard Drug Use Group
+
+After controlling for adherence and between subject means (intercepts), there was no difference in average log viral load for current (p = 0.93, 95% CI: -0.62, 0.56) and previous (p = 0.54, 95% CI: -0.88, 0.46) hard drug users compared to never users. Previous hard drug users did not differ significantly in average log viral load compared to current users (p = 0.67, 95% CI: -0.66, 1.03).
+
+### Adherence
+
+After controlling for hard drug use and between subject means, those with low adherence did not differ significantly in average log viral load compared to those with high adherence (p = 0.16, 95% CI: -1.32, 0.22).
+
+### Time
+
+There was a significant decrease in log viral load over time while controlling for subject-specific means, hard drug use, and adherence, with an average decrease of 3.15 log copies/mL per year (p < 0.0001, 95% CI: -3.30, -3.00).
+
+### Viral Load over Time by Adherence
+
+The slope for viral load over time differed significantly between those with low and high adherence. Those with low adherence had on average a 0.99 increase in log viral load each year compared to those with high adherence (p < 0.0001, 95% CI: 0.51, 1.47). The other in group comparisons were not significant (p > 0.05).
+
+### Within Subject Means
+
+Subject ID contributes greatly to log viral load, as it accounts for `2.882 / (2.882 + 5.816) = 0.331` or 33.1% of the variance in log viral load.
+
+[Top of Tabset](#Viral)
+
+## Visualization
+
+We can plot the predicted values of our model in order to visualize the interaction and understand it better.
+
+```{r}
+# Ungroup data_2
+data_2 <- data_2 |> 
+  ungroup()
+
+# Prepare data for plotting
+data_2_VLOAD <- data_2 |>
+  select(newid, VLOAD_log, ADH_HIGHVSLOW, hard_drugs_grp, years) %>%
+  filter(complete.cases(.)) |> 
+  mutate(fitted = predict(model_VLOAD3)) |> 
+  group_by(newid)
+
+# Plot the interaction
+ggplot(data_2_VLOAD, aes(x = years, y = fitted, color = ADH_HIGHVSLOW)) +
+  geom_smooth(method = "lm", se = FALSE) + 
+  labs(title = "Predicted Log Viral Load over Years with Interaction by Adherence",
+       x = "Year",
+       y = "Predicted Log Viral Load") +
+  theme_minimal() +
+  scale_color_brewer(palette = "Pastel2")
+```
+
+Here we can see that those with high adherence had a greater decrease in log viral load over time compared to those who had high adherence.
+
+We can also see that the slopes over time were not different based on hard drug use.
+
+```{r}
+# Plot the interaction
+ggplot(data_2_VLOAD, aes(x = years, y = fitted, color = hard_drugs_grp)) +
+  geom_smooth(method = "lm", se = FALSE) + 
+  labs(title = "Predicted Log Viral Load over Years by Hard Drug Use",
+       x = "Year",
+       y = "Predicted Log Viral Load") +
+  theme_minimal() +
+  scale_color_brewer(palette = "Pastel2")
+```
+
+[Top of Tabset](#Viral)
+:::
+
+## CD4+ T Cell Count {#CD4}
+
+::: panel-tabset
+
+## Model Selection
+
+First let us fit the full model of interest using a structured covariance matrix, and `hard_drugs_grp`, `ADH_HIGHVSLOW`, `years`, and the `hard_drugs_grp`*`years` interaction term.
+
+```{r}
+# Filter data set
+data_LEU3N <- data_2 |> 
+  select(newid, years, hard_drugs_grp, ADH_HIGHVSLOW, LEU3N) %>% 
+  filter(complete.cases(.))
+
+# Create LMM
+model_LEU3N1 <- lme(LEU3N ~ hard_drugs_grp + ADH_HIGHVSLOW + years + hard_drugs_grp*years, 
+                   random = list(newid = pdSymm(~ 1)), 
+                   data = data_LEU3N)
+
+# Get model summary
+summary(model_LEU3N1)
+```
+
+Then let us run the same model but with an unstructured covariance matrix.
+
+```{r}
+# Create LMM
+model_LEU3N2 <- lme(LEU3N ~ hard_drugs_grp + ADH_HIGHVSLOW + years + hard_drugs_grp*years, 
+                   random = list(newid = pdSymm(~ years)), 
+                   data = data_LEU3N)
+
+# Get model summary
+summary(model_LEU3N2)
+```
+AIC, BIC, and -log likelihood all prefer the unstructured covariance matrix is better, and thus we select it as our final model.
+
+[Top of Tabset](#CD4)
+
+## Analysis
+
+Here we perform the analysis with the final selected model, using an unstructured covariance matrix.
+
+```{r}
+# Create LMM
+model_LEU3N2 <- lme(LEU3N ~ hard_drugs_grp + ADH_HIGHVSLOW + years + hard_drugs_grp*years, 
+                   random = list(newid = pdSymm(~ years)), 
+                   data = data_LEU3N)
+
+# Get model summary
+summary(model_LEU3N2)
+
+# Get 95% CIs
+intervals(model_LEU3N2, level = 0.95)
+
+```
+
+
+After controlling for adherence and between subject means (intercepts), there was no difference in average CD4+ T Cell count for previous users compared to never hard drug users (p = 0.13, 95% CI: -109.54, 14.08). However, current users had on average a 116.91 cell higher CD4+ T Cell count compared to never users (p < 0.0001, 95% CI: 61.97, 171.85). 
+
+After controlling for hard drug use and between subject means, those with low adherence did not differ significantly in average CD4+ T Cell count compared to those with high adherence (p = 0.51, 95% CI: -75.92, 37.59).
+
+There was a significant increase in CD4+ T Cell count over time while controlling for subject-specific means, hard drug use, and adherence, with an average increase of 89.30 log copies/mL per year (p < 0.0001, 95% CI: -3.30, -3.00).
+
+The slope for CD4+ T Cell count over time differed significantly based on hard drug use. On average, previous hard drug users had a 32.15 decrease in CD4+ T Cell count per year compared to never drug users (p = 0.025, 95% CI: -60.24, -4.06), and current users had a 59.15 decrease in CD4+ T Cell count each year compared to never hard drug users (p < 0.0001, 95% CI: -84.11, -34.20).
+
+#### Change the Reference Group
+
+```{r}
+# Change reference level
+data_LEU3N$hard_drugs_grp <- relevel(data_LEU3N$hard_drugs_grp, ref = "Previous User")
+
+# Create LMM
+model_LEU3N2 <- lme(LEU3N ~ hard_drugs_grp + ADH_HIGHVSLOW + years + hard_drugs_grp*years, 
+                   random = list(newid = pdSymm(~ years)), 
+                   data = data_LEU3N)
+
+# Get model summary
+summary(model_LEU3N2)
+
+# Get 95% CIs
+intervals(model_LEU3N2, level = 0.95)
+```
+Previous hard drug users had on average a 164.66 lower CD4+ T Cell count compared to current users (p < 0.0001, 95% CI: 86.44, 242.87).
+
+The slope for CD4+ T Cell count over time did not differ between previous and current hard drug users (p = 0.14, 95% CI: -62.49, 8.49).
+
+[Top of Tabset](#CD4)
+
+## Interpretation
+
+### Hard Drug Use
+
+After controlling for adherence and between subject means (intercepts), there was no difference in average CD4+ T Cell count for previous users compared to never hard drug users (p = 0.13, 95% CI: -109.54, 14.08). However, current users had on average a 116.91 cell higher CD4+ T Cell count compared to never users (p < 0.0001, 95% CI: 61.97, 171.85). Previous hard drug users had on average a 164.66 higher CD4+ T Cell count compared to current users (p < 0.0001, 95% CI: 86.44, 242.87).
+
+### Adherence
+
+After controlling for hard drug use and between subject means, those with low adherence did not differ significantly in average CD4+ T Cell count compared to those with high adherence (p = 0.51, 95% CI: -75.92, 37.59).
+
+### CD4+ T Cell Count by Hard Drug Use
+
+The slope for CD4+ T Cell count over time differed significantly based on hard drug use. On average, previous hard drug users had a 32.15 decrease in CD4+ T Cell count per year compared to never drug users (p = 0.025, 95% CI: -60.24, -4.06), and current users had a 59.15 decrease in CD4+ T Cell count each year compared to never hard drug users (p < 0.0001, 95% CI: -84.11, -34.20). The slope for CD4+ T Cell count over time did not differ between previous and current hard drug users (p = 0.14, 95% CI: -62.49, 8.49).
+
+### Time
+
+There was a significant increase in CD4+ T Cell count over time while controlling for subject-specific means, hard drug use, and adherence, with an average increase of 89.30 log copies/mL per year (p < 0.0001, 95% CI: -3.30, -3.00).
+
+
+[Top of Tabset](#CD4)
+
+## Visualization
+
+```{r}
+# Prepare data for plotting
+data_LEU3N <- data_LEU3N |>
+  mutate(fitted = predict(model_LEU3N1))
+
+# Plot the interaction
+ggplot(data_LEU3N, aes(x = years, y = fitted, color = hard_drugs_grp)) +
+  geom_smooth(method = "lm", se = FALSE) + 
+  labs(title = "Predicted CD4+ T Cell Coount over Years by Hard Drug Use",
+       x = "Year",
+       y = "Predicted CD4+ T Cell Count") +
+  theme_minimal() +
+  scale_color_brewer(palette = "Pastel2")
+```
+Here we see the interaction base on hard drug use. Never drug users had a higher increase in CD4+ T Cell count each year compared to previous and current hard drug users.
+
+```{r}
+# Prepare data for plotting
+data_LEU3N <- data_LEU3N |>
+  mutate(fitted = predict(model_LEU3N1))
+
+# Plot the interaction
+ggplot(data_LEU3N, aes(x = years, y = fitted, color = ADH_HIGHVSLOW)) +
+  geom_smooth(method = "lm", se = FALSE) + 
+  labs(title = "Predicted CD4+ T Cell Coount over Years by Hard Drug Use",
+       x = "Year",
+       y = "Predicted CD4+ T Cell Count") +
+  theme_minimal() +
+  scale_color_brewer(palette = "Pastel2")
+```
+Likewise, here we see that thosewith low adherence had lower CD4+ T Cell count compared to those with high adherence, but the differences over time did not differ.
+
+[Top of Tabset](#CD4)
+
+:::
+
+## Mental QOL {#Ment}
+
+We will be fitting the full model with `hard_drugs_grp`, `ADH_HIGHVSLOW`, `years`, `CESD`, and the `hard_drugs_grp`*`years` interaction.
+
+We will also use an unstructured covariance matrix to account for unequal variances.
+
+This can be visualized here.
+
+```{r}
+#| warning: false
+ggplot(data_2, aes(x = AGG_MENT, y = ADH_HIGHVSLOW, fill = ADH_HIGHVSLOW)) +
+  geom_density_ridges(alpha = 0.7, scale = 1) +
+  theme_ridges() +
+  scale_color_brewer(palette = "Pastel2") +
+  labs(title = "Ridge Plot of Mental QOL by Hard Drug Use",
+       x = "Mental QOL",
+       y = "Hard Drug Use") +
+  theme(legend.position = "none")
+```
+
+::: panel-tabset
+
+## Model Selection
+
+Fit the model.
+
+```{r}
+#| warning: false
+# Create the data set for mental QOL
+data_MENT <- data_2 |> 
+  select(newid, AGG_MENT, hard_drugs_grp, ADH_HIGHVSLOW, years, CESD) %>%
+  filter(complete.cases(.))
+
+# Change reference level
+data_MENT$hard_drugs_grp <- relevel(data_MENT$hard_drugs_grp, ref = "Never User")
+
+# Create LMM
+model_MENT1 <- lme(AGG_MENT ~ hard_drugs_grp + years + ADH_HIGHVSLOW + hard_drugs_grp*years + CESD,
+                   random = list(newid = pdSymm(~ years)), 
+                   data = data_MENT)
+
+# Get model summary
+summary(model_MENT1)
+```
+
+We have a significant interaction betwee hard drug use and time.
+
+Let's see use BIC and AIC to determine if we need that interaction term.
+
+```{r}
+#| warning: false
+# Create the data set for mental QOL
+data_MENT <- data_2 |> 
+  select(newid, AGG_MENT, hard_drugs_grp, ADH_HIGHVSLOW, years, CESD) %>%
+  filter(complete.cases(.))
+
+# Change reference level
+data_MENT$hard_drugs_grp <- relevel(data_MENT$hard_drugs_grp, ref = "Never User")
+
+# Create LMM
+model_MENT1 <- lme(AGG_MENT ~ hard_drugs_grp + years + ADH_HIGHVSLOW,
+                   random = list(newid = pdSymm(~ years)), 
+                   data = data_MENT)
+
+# Get model summary
+summary(model_MENT1)
+```
+AIC, BIC, and logLikelihood all prefer the most simplified model without the interaction term. Under this model hard drug use and adherence are not significant predictors of mental QOL. This is because depression is a confounder.
+
+I will therefore include the model with depression and the interaction term, so we can still investigate the main research question.
+
+Therefore `model_MENT1` is the final model.
+
+[Top of Tabset](#Ment)
+
+## Analysis
+
+```{r}
+#| warning: false
+# Create the data set for mental QOL
+data_MENT <- data_2 |> 
+  select(newid, AGG_MENT, hard_drugs_grp, ADH_HIGHVSLOW, years, CESD) %>%
+  filter(complete.cases(.))
+
+# Change reference level
+data_MENT$hard_drugs_grp <- relevel(data_MENT$hard_drugs_grp, ref = "Never User")
+
+# Create LMM
+model_MENT1 <- lme(AGG_MENT ~ hard_drugs_grp + years + ADH_HIGHVSLOW + hard_drugs_grp*years + CESD,
+                   random = list(newid = pdSymm(~ years)), 
+                   data = data_MENT)
+
+# Get model summary
+summary(model_MENT1)
+
+# Get 95% CI's
+intervals(model_MENT1, which = "fixed")
+```
+
+After controlling for adherence and between subject means (intercepts), there was no difference in average mental QOL between previous and current hard drug users (p = 0.47, 95% CI: -1.36, 2.94). On average, current hard drug users had a mental QOL score that was 2.28 points lower than never drug users (p = 0.023, 95% CI: -4.24, -0.32).
+
+After controlling for hard drug use and between subject means, those with low adherence did not differ significantly in average mental QOL compared to those with high adherence (p = 0.26, 95% CI: -0.64, 2.35).
+
+There was a significant no change in mental QOL over time while controlling for subject-specific means, hard drug use, and adherence, with an average increase of 0.31 points per year (p 0.14, 95% CI: -0.099, 0.71). 
+
+The slope for mental QOL over time differed significantly based on hard drug use. On average, current hard drug users had a 1.69 point increase in physical QOL per year compared to never drug users (p = 0.056, 95% CI: 0.50, 2.89). The slope for physical QOL over time did not differ between never and previous users (p = 0.58, 95% CI: -1.67, 0.94).
+
+Controlling for adherence, hard drug use, and time, depression was a significant predictor of mental QOL. On average, mental QOL score decreased by 0.91 points for every 1 point increase in depression score (p < 0.0001, 95% CI: -0.95, -0.88).
+
+#### Change the Reference Level
+
+```{r}
+#| warning: false
+# Create the data set for mental QOL
+data_MENT <- data_2 |> 
+  select(newid, AGG_MENT, hard_drugs_grp, ADH_HIGHVSLOW, years, CESD) %>%
+  filter(complete.cases(.))
+
+# Change reference level
+data_MENT$hard_drugs_grp <- relevel(data_MENT$hard_drugs_grp, ref = "Previous User")
+
+# Create LMM
+model_MENT1 <- lme(AGG_MENT ~ hard_drugs_grp + years + ADH_HIGHVSLOW + hard_drugs_grp*years + CESD,
+                   random = list(newid = pdSymm(~ years)), 
+                   data = data_MENT)
+
+# Get model summary
+summary(model_MENT1)
+
+# Get 95% CI's
+intervals(model_MENT1, which = "fixed")
+```
+
+Current users had on average a 3.07 point lower mental QOL score compared to previous users (p = 0.03, 95% CI: 5.82, -0.31).
+
+The slope for mental QOL over time also differed by hard drug use group. On average, current hard drug users had a 2.06 point increase in mental QOL compared to previous users (p = 0.016, 95% CI: 0.38, 3.73).
+
+[Top of Tabset](#Ment)
+
+## Interpretation
+
+### Hard Drug Use
+
+After controlling for adherence and between subject means (intercepts), there was no difference in average mental QOL between never and previous hard drug users (p = 0.47, 95% CI: -1.36, 2.94). On average, current hard drug users had a mental QOL score that was 2.28 points lower than never drug users (p = 0.023, 95% CI: -4.24, -0.32) and 3.07 point lower mental QOL score compared to previous users (p = 0.03, 95% CI: 5.82, -0.31).
+
+### Adherence
+
+After controlling for hard drug use and between subject means, those with low adherence did not differ significantly in average mental QOL compared to those with high adherence (p = 0.26, 95% CI: -0.64, 2.35)
+
+### Physical Quality of life by Hard Drug Use over Time
+
+The slope for mental QOL over time differed significantly based on hard drug use. On average, current hard drug users had a 1.69 point increase in physical QOL per year compared to never drug users (p = 0.056, 95% CI: 0.50, 2.89). The slope for physical QOL over time did not differ between never and previous users (p = 0.58, 95% CI: -1.67, 0.94). On average, current hard drug users had a 2.06 point increase in mental QOL compared to previous users (p = 0.016, 95% CI: 0.38, 3.73).
+
+### Time
+
+There was a significant no change in mental QOL over time while controlling for subject-specific means, hard drug use, and adherence, with an average increase of 0.31 points per year (p 0.14, 95% CI: -0.099, 0.71). 
+
+### Depression
+
+Controlling for adherence, hard drug use, and time, depression was a significant predictor of mental QOL. On average, mental QOL score decreased by 0.91 points for every 1 point increase in depression score (p < 0.0001, 95% CI: -0.95, -0.88).
+
+[Top of Tabset](#Ment)
+
+## Visualization
+
+Let's examine the main interaction for physical QOL by hard drug use group over time.
+
+```{r}
+# Get fitted values for plotting
+data_MENT <- data_MENT %>%
+  mutate(fitted = predict(model_MENT1))
+
+# Plot the interaction
+ggplot(data_MENT, aes(x = years, y = fitted, color = hard_drugs_grp)) +
+  geom_smooth(method = "lm", se = FALSE) + 
+  labs(title = "Predicted Mental QOL over Years by Hard Drug Use",
+       x = "Year",
+       y = "Predicted Mental QOL") +
+  theme_minimal() +
+  scale_color_brewer(palette = "Pastel2")
+```
+
+Here we see the main effect that current users had lower mental QOL compared to previous and never users. The slopes were significantly different between current and previous users, but this was likely not significant following correction for pairwise comparisons.
+
+:::
+
+## Physical QOL{#Phys}
+
+::: panel-tabset
+
+## Model Selection
+
+We will begin by fitting the full model predicting physical QOL, including as covariates: `hard_drugs_grp`, `ADH_HIGHVSLOW`, `FRP`, `years`, and the `hard_drugs_grp`*`years` interaction term.
+
+We know that we do not meet the assumption of equality of variances (as pictured below), so we will employ an unstructured covariance matrix to account for this.
+
+```{r}
+
+ggplot(data_2, aes(x = AGG_PHYS, y = hard_drugs_grp, fill = hard_drugs_grp)) +
+  geom_density_ridges(alpha = 0.7, scale = 1) +
+  theme_ridges() +
+  scale_color_brewer(palette = "Pastel2") +
+  labs(title = "Ridge Plot of AGG_PHYS by hard_drugs_grp",
+       x = "AGG_PHYS",
+       y = "hard_drugs_grp") +
+  theme(legend.position = "none")
+```
+
+Let's fit the model.
+
+```{r}
+# Filter data set
+data_PHYS <- data_2 |> 
+  select(newid, years, hard_drugs_grp, ADH_HIGHVSLOW, AGG_PHYS, FRP) %>%
+  filter(complete.cases(.))
+
+# Fit LMM
+model_PHYS1 <- lme(AGG_PHYS ~ hard_drugs_grp + ADH_HIGHVSLOW + years + hard_drugs_grp*years + FRP,
+                   random = list(newid = pdSymm(~ years)), 
+                   data = data_PHYS)
+
+# Examine summary
+summary(model_PHYS1)
+```
+
+Let's also check if that adherence by years interaction is significant.
+
+```{r}
+# Fit LMM
+model_PHYS2 <- lme(AGG_PHYS ~ hard_drugs_grp + ADH_HIGHVSLOW + years + hard_drugs_grp*years + FRP + ADH_HIGHVSLOW*years,
+                   random = list(newid = pdSymm(~ years)), 
+                   data = data_PHYS)
+
+# Examine summary
+summary(model_PHYS2)
+```
+
+AIC, BIC, and logLik all prefer the model with both interactions. This will be our final model.
+
+[Top of Tabset](#Phys)
+
+## Analysis
+
+```{r}
+# Change reference level
+data_PHYS$hard_drugs_grp <- relevel(data_PHYS$hard_drugs_grp, ref = "Never User")
+
+# Fit LMM
+model_PHYS2 <- lme(AGG_PHYS ~ hard_drugs_grp + ADH_HIGHVSLOW + years + hard_drugs_grp*years + FRP + ADH_HIGHVSLOW*years,
+                   random = list(newid = pdSymm(~ years)), 
+                   data = data_PHYS)
+
+# Examine summary
+summary(model_PHYS2)
+
+# Get 95% CI's
+intervals(model_PHYS2, which = "fixed")
+```
+After controlling for adherence and between subject means (intercepts), there was no difference in average physical QOL between never hard drug users and previous users (p = 0.95, 95% CI: -4.48, 0.36) and current users (p = 0.30, 95% CI: -1.02, 3.27).
+
+After controlling for hard drug use and between subject means, those with low adherence did not differ significantly in average physical QOL compared to those with high adherence (p = 0.93, 95% CI: -2.32, 2.12).
+
+There was a significant decrease in physical QOL over time while controlling for subject-specific means, hard drug use, and adherence, with an average decrease of 0.38 points per year (p < 0.05, 95% CI: -0.75, -0.002). However this value was borderline significant and may not be a true relationshi, especially following correction for multiple pairwise comparisons.
+
+The slope for physical QOL over time differed significantly based on hard drug use. On average, current hard drug users had a 1.89 point decrease in physical QOL per year compared to never drug users (p = 0.0004, 95% CI: -2.93, -0.85). The slope for physical QOL over time did not differ between never and previous users (p = 0.2116, 95% CI: -1.916, 0.42).
+
+The slope for physical QOL over time also differed significantly based on adherence. On average, those with low adherence had a 2.02 point decrease in physical QOL per year compared to those with high adherence (p = 0.0002, 95% CI: -3.10, -0.94).
+
+After controlling for hard drug user, adherence, and their interactions over time, and between subject means, those with a frailty related phenotype had on average a physical QOL score that was 14.01 points lower than those without a frailty related phenotype (p < 0.0001, 95% CI: -15.49, -12.53).
+
+#### Change Reference Level
+
+```{r}
+# Change reference level
+data_PHYS$hard_drugs_grp <- relevel(data_PHYS$hard_drugs_grp, ref = "Previous User")
+
+# Fit LMM
+model_PHYS2 <- lme(AGG_PHYS ~ hard_drugs_grp + ADH_HIGHVSLOW + years + hard_drugs_grp*years + FRP + ADH_HIGHVSLOW*years,
+                   random = list(newid = pdSymm(~ years)), 
+                   data = data_PHYS)
+
+# Examine summary
+summary(model_PHYS2)
+
+# Get 95% CI's
+intervals(model_PHYS2, which = "fixed")
+```
+Current hard drug users had on average a physical QOL score that was 3.19 points higher than previous users (p = 0.042, 95% CI: 0.12, 6.26).
+
+The slope for physical QOL over time did not differ between current and previous hard drug users (p = 	0.13, 95% CI: -2.63, 0.34).
+
+[Top of Tabest](#Phys)
+
+## Interpretation
+
+### Hard Drug Use
+
+After controlling for adherence and between subject means (intercepts), there was no difference in average physical QOL between never hard drug users and previous users (p = 0.95, 95% CI: -4.48, 0.36) and current users (p = 0.30, 95% CI: -1.02, 3.27). Current hard drug users had on average a physical QOL score that was 3.19 points higher than previous users (p = 0.042, 95% CI: 0.12, 6.26).
+
+### Adherence
+
+After controlling for hard drug use and between subject means, those with low adherence did not differ significantly in average physical QOL compared to those with high adherence (p = 0.93, 95% CI: -2.32, 2.12).
+
+### Physical QOL by Hard Drug Use over Time
+
+The slope for physical QOL over time differed significantly based on hard drug use. On average, current hard drug users had a 1.89 point decrease in physical QOL per year compared to never drug users (p = 0.0004, 95% CI: -2.93, -0.85). The slope for physical QOL over time did not differ between never and previous users (p = 0.2116, 95% CI: -1.916, 0.42). The slope for physical QOL over time did not differ between current and previous hard drug users (p = 	0.13, 95% CI: -2.63, 0.34).
+
+### Physical QOL by Adherence over Time
+
+The slope for physical QOL over time also differed significantly based on adherence. On average, those with low adherence had a 2.02 point decrease in physical QOL per year compared to those with high adherence (p = 0.0002, 95% CI: -3.10, -0.94).
+
+### Time
+
+There was a significant decrease in physical QOL over time while controlling for subject-specific means, hard drug use, and adherence, with an average decrease of 0.38 points per year (p < 0.05, 95% CI: -0.75, -0.002). However this value was borderline significant and may not be a true relationshi, especially following correction for multiple pairwise comparisons.
+
+### Frailty Related Phenotype
+
+After controlling for hard drug user, adherence, and their interactions over time, and between subject means, those with a frailty related phenotype had on average a physical QOL score that was 14.01 points lower than those without a frailty related phenotype (p < 0.0001, 95% CI: -15.49, -12.53).
+
+[Top of Tabset](#Phys)
+
+## Visualization
+
+[Top of Tabset](#Phys)
+
+First we examine the interaction between hard drug use and time for physical QOL.
+
+```{r}
+# Get fitted values for plotting
+data_PHYS <- data_PHYS |>
+  mutate(fitted = predict(model_PHYS2))
+
+# Plot the interaction
+ggplot(data_PHYS, aes(x = years, y = fitted, color = hard_drugs_grp)) +
+  geom_smooth(method = "lm", se = FALSE) + 
+  labs(title = "Predicted Physical QOL over Years by Hard Drug Use",
+       x = "Year",
+       y = "Predicted Physical QOL") +
+  theme_minimal() +
+  scale_color_brewer(palette = "Pastel2")
+```
+
+From this plot, we can see the main interaction that current hard drug users had a steeper negative slope compared to never users. This difference was not statistically significant between current and previous users, although it looks like it should be. 
+
+That is, current drug users had more of a decline in physical QOL over time compared to previous and current drug users.
+
+Let's then examine the interaction for adherence over time.
+
+```{r}
+# Plot the interaction
+ggplot(data_PHYS, aes(x = years, y = fitted, color = ADH_HIGHVSLOW)) +
+  geom_smooth(method = "lm", se = FALSE) + 
+  labs(title = "Predicted Physical QOL over Years by Adherence",
+       x = "Year",
+       y = "Predicted Physical QOL") +
+  theme_minimal() +
+  scale_color_brewer(palette = "Pastel2")
+```
+Likewise, we can see the main interaction here: those with low adherence had a steeper slope compared to those with high adherence. That is, if a patient had low adherence, they had more of a decline in physical QOL compared to those with high adherence.
+:::
+
+# Results
+
+This was a self-study on how to perform a linear mixed model.
+
+In this analysis, the main findings for each outcome variable were:
+
+### Log Viral Load
+
+We found an interaction for log viral load, such that those with high adherence had a steeper decrease in log viral load over time compared to those with low adherence (p < 0.0001, 95% CI: 0.51, 1.47). The slopes for log viral load over time did not differ based on hard drug use (p > 0.05). 
+
+```{r}
+#| echo: false
+#| message: false
+# Ungroup data_2
+data_2 <- data_2 |> 
+  ungroup()
+
+# Prepare data for plotting
+data_2_VLOAD <- data_2 |>
+  select(newid, VLOAD_log, ADH_HIGHVSLOW, hard_drugs_grp, years) %>%
+  filter(complete.cases(.)) |> 
+  mutate(fitted = predict(model_VLOAD3)) |> 
+  group_by(newid)
+
+# Plot the interaction
+ggplot(data_2_VLOAD, aes(x = years, y = fitted, color = ADH_HIGHVSLOW)) +
+  geom_smooth(method = "lm", se = TRUE) + 
+  labs(title = "Predicted Log Viral Load over Years with Interaction by Adherence",
+       x = "Year",
+       y = "Predicted Log Viral Load") +
+  theme_minimal() +
+  scale_color_brewer(palette = "Pastel2")
+```
+
+
+### CD4+ T Cell Count
+
+We found an interaction for CD4+ T Cell count over time by hard drug use group, such that never users had a steeper recovery in CD4+ T cell count compared to previous users (p = 0.025, 95% CI: -60.24, -4.06) and current users.
+
+```{r}
+#| echo: false
+#| message: false
+# Prepare data for plotting
+data_LEU3N <- data_LEU3N |>
+  mutate(fitted = predict(model_LEU3N1))
+
+# Plot the interaction
+ggplot(data_LEU3N, aes(x = years, y = fitted, color = hard_drugs_grp)) +
+  geom_smooth(method = "lm", se = TRUE) + 
+  labs(title = "Predicted CD4+ T Cell Coount over Years by Hard Drug Use",
+       x = "Year",
+       y = "Predicted CD4+ T Cell Count") +
+  theme_minimal() +
+  scale_color_brewer(palette = "Pastel2")
+```
+
+
+### Mental QOL
+
+The interaction between hard drug use and mental QOL over time was weak. The main finding was that current hard drug users had worse mental QOL compared to  previous users (p = 0.03, 95% CI: 5.82, -0.31).and never hard drug users (p = 0.023, 95% CI: -4.24, -0.32). Depression was the main driver in this relationship, and was a confounder for the relationship between hard drug use and mental QOL over time.
+
+```{r}
+#| echo: false
+#| message: false
+# Get fitted values for plotting
+data_MENT <- data_MENT %>%
+  mutate(fitted = predict(model_MENT1))
+
+# Plot the interaction
+ggplot(data_MENT, aes(x = years, y = fitted, color = hard_drugs_grp)) +
+  geom_smooth(method = "lm", se = TRUE) + 
+  labs(title = "Predicted Mental QOL over Years by Hard Drug Use",
+       x = "Year",
+       y = "Predicted Mental QOL") +
+  theme_minimal() +
+  scale_color_brewer(palette = "Pastel2")
+```
+
+
+### Physical QOL
+
+We found a significant interaction for physical QOL over time by hard drug use, where current users had a steeper decrease in physical QOL over time compared to never users (p = 0.0004, 95% CI: -2.93). The other between group comparisons were not significant (p > 0.05).
+
+```{r}
+#| echo: false
+#| message: false
+# Get fitted values for plotting
+data_PHYS <- data_PHYS |>
+  mutate(fitted = predict(model_PHYS2))
+
+# Plot the interaction
+ggplot(data_PHYS, aes(x = years, y = fitted, color = hard_drugs_grp)) +
+  geom_smooth(method = "lm", se = TRUE) + 
+  labs(title = "Predicted Physical QOL over Years by Hard Drug Use",
+       x = "Year",
+       y = "Predicted Physical QOL") +
+  theme_minimal() +
+  scale_color_brewer(palette = "Pastel2")
+```
+
+# Discussion
+
+The researchers' main question was whether the outcome variables differed based on hard drug use, while controlling for adherence.
+
+We found that both adherence and hard drug are significant predictors for the outcome variables over time. Specifically:
+
+#### Log Viral Load
+
+Those with high adherence had improved recovery seen as decreased log viral load over time.
+
+#### CD4+ T Cell Count
+
+Never hard drug users had a faster recovery over time compared to previous and current hard drug users. 
+
+#### Mental QOL
+
+Current hard drugs users had worse mental health compared previous and never hard drug users.
+
+#### Physical QOL
+
+Current hard drug users had a steeper decrease in physical QOL over time compared to never hard drug users.
+
+### Conclusion
+
+Thus, we have evidence that **high adherence improves outcomes from HIV, and those who never used hard drugs have improved recovery rate**. Additionally, current drug users in particular have worse outcomes in physical and mental QOL. This is important for the investigators to know and answers their main question of whether they need different different approaches based on hard drug use (they do).
+
+## Linear Mixed Model vs Multiple Linear Regression
+
+Finally, we learned how much better suited a linear mixed model is to handling repeated measures than a multiple linear regression with change scores!
