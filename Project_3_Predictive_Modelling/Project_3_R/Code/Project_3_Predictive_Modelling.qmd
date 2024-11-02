@@ -1,0 +1,568 @@
+---
+title: "Predictive Modelling"
+subtitle: "Advanced Data Analysis - Project 3"
+author: "Sean Vieau"
+date: October 30, 2024
+format: html
+editor: visual
+toc: true
+bibliography: references.bib
+---
+
+```{r setup, include=FALSE}
+# Sets the default for all chunks as echo = TRUE (ensures they show unless specified not to)
+knitr::opts_chunk$set(echo = TRUE)
+
+# Create a function to pretty print our dataframes
+pretty_print <- function(x) {
+  kable(x, format = "html") |>
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+}
+
+# Create a function to pretty print useful parameters of a regression model
+model_results <- function(x) {
+  # Create a table of the coefficients of the model
+  coefficients_ <- summary(x)$coefficients[]
+  
+  # Perform Bonferroni correction 
+  p_values <- summary(x)$coefficients[,4] # This line selects the fourth column of the resulting coefficients      table from summary(model), which is the p-values
+  p_adjusted <- p.adjust(p_values, method = "bonferroni")
+  
+  # Get the 95% CIs
+  conf_intervals <- confint(x)
+  
+  # Compare adjusted p-values to unadjusted p-values, with 95% CI's
+  model_output <- cbind(coefficients_, p_adjusted, conf_intervals)
+  
+  # Pretty print results
+  pretty_print(model_output)
+}
+
+# Set options to avoid scientific notation
+options(scipen = 999)
+```
+
+# Introduction
+
+The aim of the current study is to investigate whether MRI image features extracted from baseline kidney images can enhance the prediction of disease progression in young Autosomal Dominant Polycystic Kidney Disease (ADPKD) patients. This study is important because recent literature has demonstrated the inclusion of MRI image features improves the prognostic accuracy of models in adults, but this has not yet been demonstrated in children. Improving prediction models could greatly assist in diagnosing and predicting kidney disease outcomes in children, which is more challenging than in adults and could lead to improved treatment.
+
+::: {style="text-align: center;"}
+<img src="/Project_3_Predictive_Modelling/Project_3_R/Media/Project_Description.png" style="width:80%;"/>
+:::
+
+#### Task One
+
+![](/Project_3_Predictive_Modelling/Project_3_R/Media/Task_One.png){fig-align="center" width="80%"}
+
+#### Task Two
+
+![](/Project_3_Predictive_Modelling/Project_3_R/Media/Task_Two.png){fig-align="center" width="80%"}
+
+### Clinical Hypotheses
+
+The two clinical hypotheses for this study are that including MRI image features will improve model performance compared to using baseline kidney volume alone in models predicting
+
+1.  Percentage change of total kidney volume growth
+
+2.  Classification of a patient as having fast or slow progression of the disease.
+
+# Background
+
+Here we will review background information on the methodology and variables provided in this data set.
+
+## Gabor Transform
+
+#### What is it
+
+The Gabor Transform, named after Dennis Gabor, is a powerful technique for analyzing the [**texture**]{.underline} of MRI images. By convolving the image with a Gabor filter, it becomes possible to discriminate between features based on intensity differences. This allows the target region and background to be differentiated if they possess distinct features, as they will exhibit different intensity levels. Moreover, the Gabor Transform has tunable parameters, such as the frequency of the sinusoidal wave, which can be adjusted to extract specific textures from the images. Higher frequencies are ideal for capturing fine textures, while lower frequencies are better suited for coarse textures.
+
+#### How it Works
+
+The Gabor Filter first applies a Gaussian Envelope to focus on a small region of the image. It then applies a sinusoidal wave that oscillates at a specific frequency and captures the variation in intensities at that frequency and orientation within that region.
+
+#### Example of Gabor Transform
+
+![Example of applying a Gaussian, then Gabor, and Laplacian Filter (GGL) for differentiation between two different textures (+'s vs L's) ([2](https://link.springer.com/article/10.1007/BF00204594)).](images/clipboard-573562689.png){fig-align="center"}
+
+#### Image Features Provided by the Gabor Transform
+
+In general, Gabor functions can easily extract features of:
+
+-   Spatial Frequency (e.g. how often pixel intensity changes in a given area)
+
+-   Density (e.g. concentration of features within a certain area)
+
+-   Orientation (e.g. Textures or edges at 0°, 45°, 90°, 135°)
+
+-   Phase (e.g. alignment/distance of features)
+
+-   Energy (e.g. overall intensity)
+
+Sources: [1](https://link.springer.com/article/10.1007/s11042-020-09635-6), [2](https://link.springer.com/article/10.1007/BF00204594)
+
+## Gray Level Co-Occurrence Matrix
+
+#### What is it
+
+The Gray Level Co-Occurrence Matrix (GLCM) is another powerful tool for extracting **texture** features from an MRI image. GLCM works under the assumption that the textural information in an image is contained in the "average" spatial relationship that the gray tones in the image have to each other. For example, when a small patch of the picture has little variation of features, the dominant property is tone; When a small patch of a picture has high variation, the dominant property is texture ([3](https://ieeexplore.ieee.org/document/4309314)).
+
+#### How it Works
+
+GLCM examines the spatial relationship between pairs of pixels in an image and calculates how often pairs of pixel values occur at a specified distance and orientation. It does this by computing a set of gray-tone spacial-dependence matrices for various angular relationships and distances between neighboring resolution cell pairs on the image ([3](https://ieeexplore.ieee.org/document/4309314)).
+
+#### Example of GLCM
+
+![Example of textural features extracted from two different land-use category images ([3](https://ieeexplore.ieee.org/document/4309314)).](images/clipboard-759848695.png){width="80%"}
+
+#### Image Features Provided by GLCM
+
+In general, GLCM provides information on the following features:
+
+-   Homogeneity
+
+-   Linear Structure
+
+-   Contrast
+
+-   Number and Nature of Boundaries
+
+-   Complexity of the Image
+
+## Local Binary Pattern
+
+#### What is it
+
+The Local Binary Pattern (LBP) is a third powerful method for extracting [**texture**]{.underline} features from an image. An important and fundamental property of texture is how uniform the patterns are, and LBP captures this by detecting these uniform patterns in circular neighborhoods at any rotation and spatial resolution. LBP is rotation invariant, meaning it does not matter what rotation the image is at; it will always extract very similar features) ([4](https://ieeexplore.ieee.org/document/1017623)).
+
+#### How it Works
+
+LBP works by comparing the intensity of a central pixel with its neighboring pixels and encoding this relationship into a binary pattern. For each neighbor, if it's intensity is greater or equal to the central pixel, it gets assigned a 1 (otherwise a 0). The binary values of all neighbors are then concatenated to form a binary number, and this number is converted into a decimal that represent the LBP for the central pixel ([4](https://ieeexplore.ieee.org/document/1017623)).
+
+#### Example of LBP
+
+![Example of the 36 unique comparisons that can be made between neighboring pixels ([4](https://ieeexplore.ieee.org/document/1017623)).](images/clipboard-3679699747.png){fig-align="center"}
+
+#### Code Information
+
+![](/Project_3_Predictive_Modelling/Project_3_R/Media/Code_Information.png){fig-align="center" width="80%"}
+
+
+#### Image Features Provided by the LBP
+
+In general, the LBP provides image features on:
+
+-   Uniformity
+
+-   Local Contrast
+
+-   Texture Description
+
+-   Spatial Patterns
+
+-   Gray Level Distribution
+
+# Method
+
+## Study Design
+
+The investigators recruited 71 young patients with ADPKD and collected MRI data at baseline and after 3 years. Additionally, the height corrected kidney volume for each patient was collected at baseline and 3 years by a physician, and the percentage change calculated. Patients were classified as having slow or fast progression of the disease based on this percentage change. Image features were extracted from the baseline MRI images including 2 image features on kidney geometric information, 5 features based on Gabor transform, 2 features based on gray level co-occurrence matrix, 5 features based on image textures, and 5 features based on local binary pattern.
+
+### Statistical Hypotheses
+
+1.  A **linear regression model** predicting **percentage change of total kidney volume growth** including MRI image features and baseline kidney volume will have better performance than a model with baseline kidney volume alone, as determined by specificity, sensitivity, PPV,  NPV,  accuracy, and AUC.
+
+2.  A **logistic regression model** predicting **classification of disease progression as slow or fast** including MRI image features and baseline kidney volume will have better performance than a model with baseline kidney volume alone, as determined by specificity, sensitivity, PPV,  NPV,  accuracy, and AUC.
+
+# Data Preparation
+
+#### Load Packages
+
+```{r, message = FALSE}
+library(dplyr)
+library(ggplot2)
+library(tidyverse)
+library(plotly) # Used for interactive plots
+library(kableExtra) # Used for pretty printing (kable_styling)
+library(ggridges) # Used for plotting distributions
+library(naniar) # Used to visualize missingness
+library(patchwork) # Used to chain ggplots together
+```
+
+#### Read .CSV
+
+```{r}
+# Read in data
+data <- read_csv("C:/Users/sviea/Documents/Portfolio/Project_3_Predictive_Modelling/Project_3_R/Raw_Data/Project3_data.csv")
+```
+
+#### Examine Data Set
+
+```{r}
+# Examine data
+pretty_print(head(data))
+
+# Check data types
+glimpse(data)
+```
+
+#### Create Factors
+
+Everything is appropriately coded as a double. 
+
+Let's just convert `progression` into a factor that contains the levels for "slow" or "fast and we're good to go. We will also rename some variables for convenience.
+
+```{r}
+# Convert progression into a factor
+data <- data |> 
+  mutate(progression = factor(progression,
+         levels = c(0,1),
+         labels = c("Slow", "Fast")))
+
+# Rename Subject ID and kidney volume variables so they are easier to access
+data <- data |> 
+  rename(Subject_ID = `Subject ID`,
+         kidvol_base = tkvht_base,
+         kidvol_visit2 = tkvht_visit2,
+         kidvol_change = tkvht_change) 
+
+# Rename kidney volume variables to be easier to access
+
+# Double check data types
+glimpse(data)
+```
+
+#### Summary
+
+ - 71 patients 
+ - 19 MRI image features 
+ - 4 kidney volume variables
+
+# Missingness
+
+```{r}
+# Examine missingness
+gg_miss_var(data)
+
+# Examine missingness percents
+vis_miss(data)
+```
+
+We have 0 missing values!
+
+# Data Examination
+
+Here I will perform the intial examination of the distribution of our variables.
+
+## Univariate Distributions
+
+### Dependent Variables
+
+#### Baseline Kidney Volume
+
+```{r}
+# Visualize baseline kidney volume
+ggplot(data, aes(x = kidvol_base)) +
+  geom_histogram() + 
+  theme_minimal()
+```
+Kidney volume at baseline appears to not be normally distributed.
+
+However, I learned in the last project that taking the change score (or percent) will make the outcome normally distributed, as it is a way of counting for between subject variance.
+
+#### Percent Change in Kidney Volume
+
+```{r}
+# Create histogram
+ggplot(data, aes(x = kidvol_change)) +
+  geom_histogram(fill = "paleturquoise", binwidth = 4.5) +
+  theme_minimal() +
+  labs(title = "Histogram of Kidney Volume Change",
+       y = "Kidney Volume Change (%)",
+       x = "Subject ID")
+
+# Create qqplot
+ggplot(data, aes(sample = kidvol_change)) +
+  geom_qq() +
+  geom_qq_line() +
+  theme_minimal() +
+  labs(title = "QQ Plot of Kidney Volume Chage",)
+
+# Calculate IQR and identify outliers
+IQR_val <- IQR(data$kidvol_change)
+Q1 <- quantile(data$kidvol_change, 0.25)
+Q3 <- quantile(data$kidvol_change, 0.75)
+lower_bound <- Q1 - (1.5*IQR_val)
+upper_bound <- Q3 + (1.5*IQR_val)
+
+# Create boxplot and flag outliers
+ggplot(data, aes(x = "", y = kidvol_change)) +
+  geom_boxplot(fill = "paleturquoise", alpha = 0.8) +
+  geom_text(aes(label = ifelse(kidvol_change < lower_bound | kidvol_change > upper_bound, Subject_ID, "")), hjust = -0.5, color = "red") +
+  theme_minimal() +
+  labs(title = "Boxplot of Kidney Volume Change",
+       x = "",
+       y = "Kidney Volume Change")
+```
+The percent change in total kidney volume appears almost normally distributed, though there may be some outliers.
+
+Patients 37 and 51 are flagging as potential outliers. Let's examine them.
+
+```{r}
+# Examine outlier patients
+data |> 
+  arrange(desc(kidvol_change)) |> 
+  head() |> 
+  pretty_print()
+```
+Interesting, it looks like these patients also have high values for certain MRI image features, such as GLCM 1 and 2. Additionally, they do not have the highest visit 2 kidney volumes, they simply increases in size the most.
+
+#### Summary
+
+While patients 37 and 51 are potential outliers on `kidvol_change`, these are NOT erroneous values. On the contrary, they are backed up by similar high values on other measurements such as `glcm2`, but are not universally high on all MRI image features. In other words, these appear to be very realistic values.
+
+In summary, all values are derived from authentic biological data and we are motivated to retain them in the analysis.
+
+
+# Bivariate Comparisons
+
+```{r}
+data |> 
+  arrange(desc(lbp5))
+```
+
+
+####
+
+```{r}
+#| warning: false
+
+# Initialize empty list
+plots <- list()
+
+# Get column names of MRI features
+features_gabor <- c("gabor1", "gabor2", "gabor3", "gabor4", "gabor5")
+features_geom <- c("geom1", "geom2")
+features_glcm <- c("glcm1", "glcm2")
+features_txti <- c("txti1", "txti2", "txti3", "txti4", "txti5")
+features_lbp <- c("lbp1", "lbp2", "lbp3", "lbp4", "lbp5")
+  
+# Plot scatterplots of each MRI feature against kidney volume change
+plot_features_against_outcome <- function(features) {
+for (feature in features) {
+  p <- ggplot(data, aes_string(x = feature, y = "kidvol_change")) +
+    geom_point() +
+    theme_minimal() +
+    labs(title = paste(feature),
+                       x = feature,
+                       y = "Kidney Volume Change (%)")
+    plots[[feature]] <- p
+}
+
+# Combine all plots into a grid
+combined_plot <- wrap_plots(plots, ncol = 3)
+combined_plot
+}
+```
+
+### Gabor Transform
+
+```{r}
+#| fig-width: 8
+#| fig-height: 6
+# Plot features against total change in kidney volume
+plot_features_against_outcome(features_gabor)
+```
+
+It looks like `gabor4` and `gabor5` are exponential. We will get the square of those.
+
+
+### Geom
+
+```{r}
+#| fig-width: 8
+#| fig-height: 2.5
+# Plot features against total change in kidney volume
+plot_features_against_outcome(features_geom)
+```
+
+Geom 2 looks quadratic.
+
+### Txti
+
+```{r}
+#| fig-width: 8
+#| fig-height: 6
+# Plot features against total change in kidney volume
+plot_features_against_outcome(features_txti)
+```
+
+`txti4` and `txti5` look quadratic.
+
+### LBP
+
+```{r}
+#| fig-width: 8
+#| fig-height: 6
+# Plot features against total change in kidney volume
+plot_features_against_outcome(features_lbp)
+```
+
+These are either logarithmic, or that one participant is an incredible outlier.
+
+Let's try removing them and see what the plots look like.
+
+```{r}
+# Sort by lbp5
+data |> 
+  arrange(desc(lbp5))
+
+# Plot scatterplots of each MRI feature against kidney volume change
+plot_features_against_outcome <- function(features) {
+for (feature in features) {
+  p <- ggplot(data, aes_string(x = feature, y = "kidvol_change")) +
+    geom_point() +
+    theme_minimal() +
+    labs(title = paste(feature),
+                       x = feature,
+                       y = "Kidney Volume Change (%)")
+    plots[[feature]] <- p
+}
+
+# Combine all plots into a grid
+combined_plot <- wrap_plots(plots, ncol = 3)
+combined_plot
+}
+```
+Particpant 48 is almost 9 times higher than the next closest patient on `lbp5`.
+
+```{r}
+# Filter out patient 48
+data_filter <- data |> 
+  filter(!Subject_ID == 48)
+
+# Plot scatterplots of each MRI feature against kidney volume change
+plot_features_against_outcome <- function(features) {
+for (feature in features) {
+  p <- ggplot(data_filter, aes_string(x = feature, y = "kidvol_change")) +
+    geom_point() +
+    theme_minimal() +
+    labs(title = paste(feature),
+                       x = feature,
+                       y = "Kidney Volume Change (%)")
+    plots[[feature]] <- p
+}
+
+# Combine all plots into a grid
+combined_plot <- wrap_plots(plots, ncol = 3)
+combined_plot
+}
+
+plot_features_against_outcome(features_lbp)
+
+```
+
+Okay, we assumed they were the same patient but their not.
+
+
+```{r}
+data_filter |> 
+  arrange(desc(lbp3))
+
+# Filter out patients
+data_filter <- data_filter |> 
+  filter(!Subject_ID == 52)
+
+# Plot scatterplots of each MRI feature against kidney volume change
+plot_features_against_outcome <- function(features) {
+for (feature in features) {
+  p <- ggplot(data_filter, aes_string(x = feature, y = "kidvol_change")) +
+    geom_point() +
+    geom_smooth(method = "lm") +
+    theme_minimal() +
+    labs(title = paste(feature),
+                       x = feature,
+                       y = "Kidney Volume Change (%)")
+    plots[[feature]] <- p
+}
+
+# Combine all plots into a grid
+combined_plot <- wrap_plots(plots, ncol = 3)
+combined_plot
+}
+
+plot_features_against_outcome(features_lbp)
+
+```
+
+Still looks logarithmic. I
+
+```{r}
+hist(data_filter$lbp5)
+hist(data_filter$lbp3)
+boxplot(data_filter$lbp3)
+hist(data$geom2)
+```
+That's gotta be an outlier.
+
+
+
+<!-- ```{r} -->
+<!-- # Create a function that plots all features against one outcome variable. Code modified from ChatGPT -->
+
+<!-- # Define the custom function -->
+<!-- plot_features_against_outcome <- function(data, outcome, features, ncol = 5) { -->
+<!--   # Combine data into a long format within the function -->
+<!--   long_data <- data %>% -->
+<!--     select(all_of(c(outcome, features))) %>% -->
+<!--     pivot_longer(cols = -all_of(outcome), names_to = "feature", values_to = "value") -->
+
+<!--   # Create the scatterplot matrix -->
+<!--   p <- ggplot(long_data, aes(x = value, y = !!sym(outcome))) + -->
+<!--     geom_point(alpha = 0.6, color = "blue") + -->
+<!--     facet_wrap(~ feature, ncol = ncol, scales = "free") + -->
+<!--     labs( -->
+<!--       title = paste("Scatterplot Matrix of Features vs Change in Kidney Volume"), -->
+<!--       x = "Feature Value", -->
+<!--       y = "Change in Kidney Volume (%)" -->
+<!--     ) + -->
+<!--     theme_minimal() + -->
+<!--     theme( -->
+<!--       plot.title = element_text(hjust = 0.5, size = 16, face = "bold"), -->
+<!--       strip.text = element_text(size = 10, face = "bold"), -->
+<!--       axis.text.x = element_text(angle = 45, hjust = 1), -->
+<!--       panel.spacing = unit(0.5, "lines") -->
+<!--     ) -->
+
+<!--   return(p) -->
+<!-- } -->
+
+<!-- # List of features to plot against the outcome -->
+<!-- features <- colnames(data)[colnames(data) != "outcome"] -->
+
+<!-- # Plot using the custom function -->
+<!-- plot_features_against_outcome(data, "kidvol_change", MRI_features, ncol = 5) -->
+
+<!-- # Plot using the custom function -->
+<!-- plot_features_against_outcome(data_gabor, "kidvol_change", MRI_features, ncol = 5) -->
+
+<!-- ``` -->
+
+# TO do
+
+Start over and examine all univariate distributions first for all covariates (and also which potentiall need deleting).
+
+This will show you which ones need to be transformed and which don't
+
+Then transform them.
+
+THEN plot them all against outcome variable (with lm I guess...
+
+Then correlation matrix.
+
+then 
+
+
+
+# References
+
+[@fogel1989] [@kumar2020][@haralick1973] [@ojala2002]
