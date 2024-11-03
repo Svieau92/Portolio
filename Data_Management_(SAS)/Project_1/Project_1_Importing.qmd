@@ -1,5 +1,6 @@
 ---
-title: "Data Management Project 1 - Import Data Into SAS"
+title: "Project 1 - Import Data Into SAS"
+subtitle: "Data Management Using SAS"
 author: Sean Vieau
 date: October 26, 2024
 format:

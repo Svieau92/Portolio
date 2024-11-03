@@ -17,16 +17,18 @@ website:
           - text: MLR With Confounding and Interaction (R)
             href: Project_2/Project_2_R/Code/Project2.qmd
           - text: MLR With Confounding and Interaction (SAS)
+          - text: Linear Mixed Model (R)
+            href: Project_2/Project_2_R/Code/Project2LMM.qmd
       - text: Data Wrangling (Python)
         href: Data_Wrangling/Treadmill_Data_Cleaning/Code/Automated_Treadmill_Data_Cleaning.qmd
       - text: Data Management (SAS)
         menu:
           - text: Project 1 - Importing
-            href: Data_Management_(SAS)\Project_1\Project_1_Importing.qmd
-          
-        
-      - text: Clinical Research Informatics
-      - text: CV
+            href: Data_Management_(SAS)/Project_1/Project_1_Importing.qmd
+          - text: Project 3 - Data Set Creation
+            href: Data_Management_(SAS)/Project_3/Project3.qmd
+      - text: Publications/Presentations
+        href: Resume/Publications_and_Presentations.qmd
       
 theme: minty
 

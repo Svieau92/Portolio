@@ -1,0 +1,1868 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.5.57">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Sean Vieau">
+<meta name="dcterms.date" content="2024-10-30">
+
+<title>Predictive Modelling – Sean Vieau Portfolio</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+  margin-bottom: 0em;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../">
+<script src="../../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<script src="../../../site_libs/kePrint-0.0.1/kePrint.js"></script>
+
+<link href="../../../site_libs/lightable-0.0.1/lightable.css" rel="stylesheet">
+
+
+
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../../index.html">
+    <span class="navbar-title">Sean Vieau Portfolio</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../../index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-advanced-data-analyses-(rsas" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Advanced Data Analyses (R/SAS)</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-advanced-data-analyses-(rsas">    
+        <li>
+    <a class="dropdown-item" href="../../../Project_1_Regression/Project_1_Regression_R/Project_1_Regression.html">
+ <span class="dropdown-text">Regression (R)</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../Project_1_Regression/Project_1_Regression_SAS/Project_1_Regression_SAS.html">
+ <span class="dropdown-text">Regression (SAS)</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../Project_2/Project_2_R/Code/Project2.html">
+ <span class="dropdown-text">MLR With Confounding and Interaction (R)</span></a>
+  </li>  
+        <li class="dropdown-header">MLR With Confounding and Interaction (SAS)</li>
+        <li>
+    <a class="dropdown-item" href="../../../Project_2/Project_2_R/Code/Project2LMM.html">
+ <span class="dropdown-text">Linear Mixed Model (R)</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" href="../../../Data_Wrangling/Treadmill_Data_Cleaning/Code/Automated_Treadmill_Data_Cleaning.html"> 
+<span class="menu-text">Data Wrangling (Python)</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-data-management-(sas" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Data Management (SAS)</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-data-management-(sas">    
+        <li>
+    <a class="dropdown-item" href="../../../Data_Management_(SAS)/Project_1/Project_1_Importing.html">
+ <span class="dropdown-text">Project 1 - Importing</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../Data_Management_(SAS)/Project_3/Project3.html">
+ <span class="dropdown-text">Project 3 - Data Set Creation</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item">
+    <span class="nav-link">
+<span class="menu-text">Publications/Presentations</span>
+    </span>
+  </li>  
+  <li class="nav-item">
+    <span class="nav-link">
+<span class="menu-text">CV</span>
+    </span>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#introduction" id="toc-introduction" class="nav-link active" data-scroll-target="#introduction">Introduction</a>
+  <ul class="collapse">
+  <li><a href="#clinical-hypotheses" id="toc-clinical-hypotheses" class="nav-link" data-scroll-target="#clinical-hypotheses">Clinical Hypotheses</a></li>
+  </ul></li>
+  <li><a href="#background" id="toc-background" class="nav-link" data-scroll-target="#background">Background</a>
+  <ul class="collapse">
+  <li><a href="#gabor-transform" id="toc-gabor-transform" class="nav-link" data-scroll-target="#gabor-transform">Gabor Transform</a></li>
+  <li><a href="#gray-level-co-occurrence-matrix" id="toc-gray-level-co-occurrence-matrix" class="nav-link" data-scroll-target="#gray-level-co-occurrence-matrix">Gray Level Co-Occurrence Matrix</a></li>
+  <li><a href="#local-binary-pattern" id="toc-local-binary-pattern" class="nav-link" data-scroll-target="#local-binary-pattern">Local Binary Pattern</a></li>
+  </ul></li>
+  <li><a href="#method" id="toc-method" class="nav-link" data-scroll-target="#method">Method</a>
+  <ul class="collapse">
+  <li><a href="#study-design" id="toc-study-design" class="nav-link" data-scroll-target="#study-design">Study Design</a>
+  <ul class="collapse">
+  <li><a href="#statistical-hypotheses" id="toc-statistical-hypotheses" class="nav-link" data-scroll-target="#statistical-hypotheses">Statistical Hypotheses</a></li>
+  </ul></li>
+  </ul></li>
+  <li><a href="#data-preparation" id="toc-data-preparation" class="nav-link" data-scroll-target="#data-preparation">Data Preparation</a></li>
+  <li><a href="#missingness" id="toc-missingness" class="nav-link" data-scroll-target="#missingness">Missingness</a></li>
+  <li><a href="#data-examination" id="toc-data-examination" class="nav-link" data-scroll-target="#data-examination">Data Examination</a>
+  <ul class="collapse">
+  <li><a href="#univariate-distributions" id="toc-univariate-distributions" class="nav-link" data-scroll-target="#univariate-distributions">Univariate Distributions</a>
+  <ul class="collapse">
+  <li><a href="#dependent-variables" id="toc-dependent-variables" class="nav-link" data-scroll-target="#dependent-variables">Dependent Variables</a></li>
+  </ul></li>
+  </ul></li>
+  <li><a href="#bivariate-comparisons" id="toc-bivariate-comparisons" class="nav-link" data-scroll-target="#bivariate-comparisons">Bivariate Comparisons</a>
+  <ul class="collapse">
+  <li><a href="#gabor-transform-1" id="toc-gabor-transform-1" class="nav-link" data-scroll-target="#gabor-transform-1">Gabor Transform</a></li>
+  <li><a href="#geom" id="toc-geom" class="nav-link" data-scroll-target="#geom">Geom</a></li>
+  <li><a href="#txti" id="toc-txti" class="nav-link" data-scroll-target="#txti">Txti</a></li>
+  <li><a href="#lbp" id="toc-lbp" class="nav-link" data-scroll-target="#lbp">LBP</a></li>
+  </ul></li>
+  <li><a href="#to-do" id="toc-to-do" class="nav-link" data-scroll-target="#to-do">TO do</a></li>
+  <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references">References</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Predictive Modelling</h1>
+<p class="subtitle lead">Advanced Data Analysis - Project 3</p>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Sean Vieau </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">October 30, 2024</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="introduction" class="level1">
+<h1>Introduction</h1>
+<p>The aim of the current study is to investigate whether MRI image features extracted from baseline kidney images can enhance the prediction of disease progression in young Autosomal Dominant Polycystic Kidney Disease (ADPKD) patients. This study is important because recent literature has demonstrated the inclusion of MRI image features improves the prognostic accuracy of models in adults, but this has not yet been demonstrated in children. Improving prediction models could greatly assist in diagnosing and predicting kidney disease outcomes in children, which is more challenging than in adults and could lead to improved treatment.</p>
+<div style="text-align: center;">
+<p><img src="../../../Project_3_Predictive_Modelling/Project_3_R/Media/Project_Description.png" style="width:80%;"></p>
+</div>
+<section id="task-one" class="level4">
+<h4 class="anchored" data-anchor-id="task-one">Task One</h4>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../../..\Project_3_Predictive_Modelling/Project_3_R/Media/Task_One.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:80.0%"></p>
+</figure>
+</div>
+</section>
+<section id="task-two" class="level4">
+<h4 class="anchored" data-anchor-id="task-two">Task Two</h4>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../../..\Project_3_Predictive_Modelling/Project_3_R/Media/Task_Two.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:80.0%"></p>
+</figure>
+</div>
+</section>
+<section id="clinical-hypotheses" class="level3">
+<h3 class="anchored" data-anchor-id="clinical-hypotheses">Clinical Hypotheses</h3>
+<p>The two clinical hypotheses for this study are that including MRI image features will improve model performance compared to using baseline kidney volume alone in models predicting</p>
+<ol type="1">
+<li><p>Percentage change of total kidney volume growth</p></li>
+<li><p>Classification of a patient as having fast or slow progression of the disease.</p></li>
+</ol>
+</section>
+</section>
+<section id="background" class="level1">
+<h1>Background</h1>
+<p>Here we will review background information on the methodology and variables provided in this data set.</p>
+<section id="gabor-transform" class="level2">
+<h2 class="anchored" data-anchor-id="gabor-transform">Gabor Transform</h2>
+<section id="what-is-it" class="level4">
+<h4 class="anchored" data-anchor-id="what-is-it">What is it</h4>
+<p>The Gabor Transform, named after Dennis Gabor, is a powerful technique for analyzing the <u><strong>texture</strong></u> of MRI images. By convolving the image with a Gabor filter, it becomes possible to discriminate between features based on intensity differences. This allows the target region and background to be differentiated if they possess distinct features, as they will exhibit different intensity levels. Moreover, the Gabor Transform has tunable parameters, such as the frequency of the sinusoidal wave, which can be adjusted to extract specific textures from the images. Higher frequencies are ideal for capturing fine textures, while lower frequencies are better suited for coarse textures.</p>
+</section>
+<section id="how-it-works" class="level4">
+<h4 class="anchored" data-anchor-id="how-it-works">How it Works</h4>
+<p>The Gabor Filter first applies a Gaussian Envelope to focus on a small region of the image. It then applies a sinusoidal wave that oscillates at a specific frequency and captures the variation in intensities at that frequency and orientation within that region.</p>
+</section>
+<section id="example-of-gabor-transform" class="level4">
+<h4 class="anchored" data-anchor-id="example-of-gabor-transform">Example of Gabor Transform</h4>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/clipboard-573562689.png" class="img-fluid figure-img"></p>
+<figcaption>Example of applying a Gaussian, then Gabor, and Laplacian Filter (GGL) for differentiation between two different textures (+’s vs L’s) (<a href="https://link.springer.com/article/10.1007/BF00204594">2</a>).</figcaption>
+</figure>
+</div>
+</section>
+<section id="image-features-provided-by-the-gabor-transform" class="level4">
+<h4 class="anchored" data-anchor-id="image-features-provided-by-the-gabor-transform">Image Features Provided by the Gabor Transform</h4>
+<p>In general, Gabor functions can easily extract features of:</p>
+<ul>
+<li><p>Spatial Frequency (e.g.&nbsp;how often pixel intensity changes in a given area)</p></li>
+<li><p>Density (e.g.&nbsp;concentration of features within a certain area)</p></li>
+<li><p>Orientation (e.g.&nbsp;Textures or edges at 0°, 45°, 90°, 135°)</p></li>
+<li><p>Phase (e.g.&nbsp;alignment/distance of features)</p></li>
+<li><p>Energy (e.g.&nbsp;overall intensity)</p></li>
+</ul>
+<p>Sources: <a href="https://link.springer.com/article/10.1007/s11042-020-09635-6">1</a>, <a href="https://link.springer.com/article/10.1007/BF00204594">2</a></p>
+</section>
+</section>
+<section id="gray-level-co-occurrence-matrix" class="level2">
+<h2 class="anchored" data-anchor-id="gray-level-co-occurrence-matrix">Gray Level Co-Occurrence Matrix</h2>
+<section id="what-is-it-1" class="level4">
+<h4 class="anchored" data-anchor-id="what-is-it-1">What is it</h4>
+<p>The Gray Level Co-Occurrence Matrix (GLCM) is another powerful tool for extracting <strong>texture</strong> features from an MRI image. GLCM works under the assumption that the textural information in an image is contained in the “average” spatial relationship that the gray tones in the image have to each other. For example, when a small patch of the picture has little variation of features, the dominant property is tone; When a small patch of a picture has high variation, the dominant property is texture (<a href="https://ieeexplore.ieee.org/document/4309314">3</a>).</p>
+</section>
+<section id="how-it-works-1" class="level4">
+<h4 class="anchored" data-anchor-id="how-it-works-1">How it Works</h4>
+<p>GLCM examines the spatial relationship between pairs of pixels in an image and calculates how often pairs of pixel values occur at a specified distance and orientation. It does this by computing a set of gray-tone spacial-dependence matrices for various angular relationships and distances between neighboring resolution cell pairs on the image (<a href="https://ieeexplore.ieee.org/document/4309314">3</a>).</p>
+</section>
+<section id="example-of-glcm" class="level4">
+<h4 class="anchored" data-anchor-id="example-of-glcm">Example of GLCM</h4>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/clipboard-759848695.png" class="img-fluid figure-img" style="width:80.0%"></p>
+<figcaption>Example of textural features extracted from two different land-use category images (<a href="https://ieeexplore.ieee.org/document/4309314">3</a>).</figcaption>
+</figure>
+</div>
+</section>
+<section id="image-features-provided-by-glcm" class="level4">
+<h4 class="anchored" data-anchor-id="image-features-provided-by-glcm">Image Features Provided by GLCM</h4>
+<p>In general, GLCM provides information on the following features:</p>
+<ul>
+<li><p>Homogeneity</p></li>
+<li><p>Linear Structure</p></li>
+<li><p>Contrast</p></li>
+<li><p>Number and Nature of Boundaries</p></li>
+<li><p>Complexity of the Image</p></li>
+</ul>
+</section>
+</section>
+<section id="local-binary-pattern" class="level2">
+<h2 class="anchored" data-anchor-id="local-binary-pattern">Local Binary Pattern</h2>
+<section id="what-is-it-2" class="level4">
+<h4 class="anchored" data-anchor-id="what-is-it-2">What is it</h4>
+<p>The Local Binary Pattern (LBP) is a third powerful method for extracting <u><strong>texture</strong></u> features from an image. An important and fundamental property of texture is how uniform the patterns are, and LBP captures this by detecting these uniform patterns in circular neighborhoods at any rotation and spatial resolution. LBP is rotation invariant, meaning it does not matter what rotation the image is at; it will always extract very similar features) (<a href="https://ieeexplore.ieee.org/document/1017623">4</a>).</p>
+</section>
+<section id="how-it-works-2" class="level4">
+<h4 class="anchored" data-anchor-id="how-it-works-2">How it Works</h4>
+<p>LBP works by comparing the intensity of a central pixel with its neighboring pixels and encoding this relationship into a binary pattern. For each neighbor, if it’s intensity is greater or equal to the central pixel, it gets assigned a 1 (otherwise a 0). The binary values of all neighbors are then concatenated to form a binary number, and this number is converted into a decimal that represent the LBP for the central pixel (<a href="https://ieeexplore.ieee.org/document/1017623">4</a>).</p>
+</section>
+<section id="example-of-lbp" class="level4">
+<h4 class="anchored" data-anchor-id="example-of-lbp">Example of LBP</h4>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/clipboard-3679699747.png" class="img-fluid figure-img"></p>
+<figcaption>Example of the 36 unique comparisons that can be made between neighboring pixels (<a href="https://ieeexplore.ieee.org/document/1017623">4</a>).</figcaption>
+</figure>
+</div>
+</section>
+<section id="code-information" class="level4">
+<h4 class="anchored" data-anchor-id="code-information">Code Information</h4>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../../..\Project_3_Predictive_Modelling/Project_3_R/Media/Code_Information.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:80.0%"></p>
+</figure>
+</div>
+</section>
+<section id="image-features-provided-by-the-lbp" class="level4">
+<h4 class="anchored" data-anchor-id="image-features-provided-by-the-lbp">Image Features Provided by the LBP</h4>
+<p>In general, the LBP provides image features on:</p>
+<ul>
+<li><p>Uniformity</p></li>
+<li><p>Local Contrast</p></li>
+<li><p>Texture Description</p></li>
+<li><p>Spatial Patterns</p></li>
+<li><p>Gray Level Distribution</p></li>
+</ul>
+</section>
+</section>
+</section>
+<section id="method" class="level1">
+<h1>Method</h1>
+<section id="study-design" class="level2">
+<h2 class="anchored" data-anchor-id="study-design">Study Design</h2>
+<p>The investigators recruited 71 young patients with ADPKD and collected MRI data at baseline and after 3 years. Additionally, the height corrected kidney volume for each patient was collected at baseline and 3 years by a physician, and the percentage change calculated. Patients were classified as having slow or fast progression of the disease based on this percentage change. Image features were extracted from the baseline MRI images including 2 image features on kidney geometric information, 5 features based on Gabor transform, 2 features based on gray level co-occurrence matrix, 5 features based on image textures, and 5 features based on local binary pattern.</p>
+<section id="statistical-hypotheses" class="level3">
+<h3 class="anchored" data-anchor-id="statistical-hypotheses">Statistical Hypotheses</h3>
+<ol type="1">
+<li><p>A <strong>linear regression model</strong> predicting <strong>percentage change of total kidney volume growth</strong> including MRI image features and baseline kidney volume will have better performance than a model with baseline kidney volume alone, as determined by specificity, sensitivity, PPV, &nbsp;NPV, &nbsp;accuracy, and AUC.</p></li>
+<li><p>A <strong>logistic regression model</strong> predicting <strong>classification of disease progression as slow or fast</strong> including MRI image features and baseline kidney volume will have better performance than a model with baseline kidney volume alone, as determined by specificity, sensitivity, PPV, &nbsp;NPV, &nbsp;accuracy, and AUC.</p></li>
+</ol>
+</section>
+</section>
+</section>
+<section id="data-preparation" class="level1">
+<h1>Data Preparation</h1>
+<section id="load-packages" class="level4">
+<h4 class="anchored" data-anchor-id="load-packages">Load Packages</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(plotly) <span class="co"># Used for interactive plots</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(kableExtra) <span class="co"># Used for pretty printing (kable_styling)</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggridges) <span class="co"># Used for plotting distributions</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(naniar) <span class="co"># Used to visualize missingness</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(patchwork) <span class="co"># Used to chain ggplots together</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="read-.csv" class="level4">
+<h4 class="anchored" data-anchor-id="read-.csv">Read .CSV</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Read in data</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>data <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"C:/Users/sviea/Documents/Portfolio/Project_3_Predictive_Modelling/Project_3_R/Raw_Data/Project3_data.csv"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Rows: 71 Columns: 24
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: ","
+dbl (24): Subject ID, geom1, geom2, gabor1, gabor2, gabor3, gabor4, gabor5, ...
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
+</div>
+</div>
+</section>
+<section id="examine-data-set" class="level4">
+<h4 class="anchored" data-anchor-id="examine-data-set">Examine Data Set</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Examine data</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">pretty_print</span>(<span class="fu">head</span>(data))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<table class="table table-striped table-hover table-condensed caption-top table-sm small" data-quarto-postprocess="true">
+<thead>
+<tr class="header">
+<th style="text-align: right;" data-quarto-table-cell-role="th">Subject ID</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">geom1</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">geom2</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">gabor1</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">gabor2</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">gabor3</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">gabor4</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">gabor5</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">glcm1</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">glcm2</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">txti1</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">txti2</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">txti3</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">txti4</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">txti5</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">lbp1</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">lbp2</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">lbp3</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">lbp4</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">lbp5</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">tkvht_base</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">tkvht_visit2</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">progression</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">tkvht_change</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.071923</td>
+<td style="text-align: right;">1.149019</td>
+<td style="text-align: right;">-0.0292053</td>
+<td style="text-align: right;">-0.0798071</td>
+<td style="text-align: right;">0.0023308</td>
+<td style="text-align: right;">0.0008529</td>
+<td style="text-align: right;">0.0063692</td>
+<td style="text-align: right;">405.57142</td>
+<td style="text-align: right;">164488.179</td>
+<td style="text-align: right;">-4.401442</td>
+<td style="text-align: right;">-12.085150</td>
+<td style="text-align: right;">53.192089</td>
+<td style="text-align: right;">19.372693</td>
+<td style="text-align: right;">146.050849</td>
+<td style="text-align: right;">-0.5211817</td>
+<td style="text-align: right;">0.0812259</td>
+<td style="text-align: right;">-0.0423335</td>
+<td style="text-align: right;">0.2716304</td>
+<td style="text-align: right;">0.0065977</td>
+<td style="text-align: right;">435</td>
+<td style="text-align: right;">585</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">11.44</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">54.031476</td>
+<td style="text-align: right;">2919.400411</td>
+<td style="text-align: right;">-0.0499853</td>
+<td style="text-align: right;">-0.1266310</td>
+<td style="text-align: right;">0.0063297</td>
+<td style="text-align: right;">0.0024985</td>
+<td style="text-align: right;">0.0160354</td>
+<td style="text-align: right;">-580.93865</td>
+<td style="text-align: right;">337489.719</td>
+<td style="text-align: right;">3.595325</td>
+<td style="text-align: right;">-1.991768</td>
+<td style="text-align: right;">-7.161054</td>
+<td style="text-align: right;">12.926362</td>
+<td style="text-align: right;">3.967141</td>
+<td style="text-align: right;">-0.5572404</td>
+<td style="text-align: right;">-0.4665611</td>
+<td style="text-align: right;">0.2599867</td>
+<td style="text-align: right;">0.3105169</td>
+<td style="text-align: right;">0.2176792</td>
+<td style="text-align: right;">555</td>
+<td style="text-align: right;">595</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">2.42</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">-32.024389</td>
+<td style="text-align: right;">1025.561486</td>
+<td style="text-align: right;">-0.0152715</td>
+<td style="text-align: right;">0.0424398</td>
+<td style="text-align: right;">-0.0006481</td>
+<td style="text-align: right;">0.0002332</td>
+<td style="text-align: right;">0.0018011</td>
+<td style="text-align: right;">-1037.25839</td>
+<td style="text-align: right;">1075904.968</td>
+<td style="text-align: right;">25.367336</td>
+<td style="text-align: right;">-5.308749</td>
+<td style="text-align: right;">-134.668822</td>
+<td style="text-align: right;">643.501717</td>
+<td style="text-align: right;">28.182818</td>
+<td style="text-align: right;">-0.2515471</td>
+<td style="text-align: right;">0.6778935</td>
+<td style="text-align: right;">-0.1705221</td>
+<td style="text-align: right;">0.0632760</td>
+<td style="text-align: right;">0.4595395</td>
+<td style="text-align: right;">191</td>
+<td style="text-align: right;">249</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">10.08</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">-42.832485</td>
+<td style="text-align: right;">1834.621814</td>
+<td style="text-align: right;">-0.0153948</td>
+<td style="text-align: right;">0.0435459</td>
+<td style="text-align: right;">-0.0006704</td>
+<td style="text-align: right;">0.0002370</td>
+<td style="text-align: right;">0.0018962</td>
+<td style="text-align: right;">-1018.07892</td>
+<td style="text-align: right;">1036484.679</td>
+<td style="text-align: right;">25.518531</td>
+<td style="text-align: right;">-5.561043</td>
+<td style="text-align: right;">-141.909649</td>
+<td style="text-align: right;">651.195432</td>
+<td style="text-align: right;">30.925199</td>
+<td style="text-align: right;">-0.2463696</td>
+<td style="text-align: right;">0.6684585</td>
+<td style="text-align: right;">-0.1646879</td>
+<td style="text-align: right;">0.0606980</td>
+<td style="text-align: right;">0.4468368</td>
+<td style="text-align: right;">334</td>
+<td style="text-align: right;">498</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">16.47</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">-10.637344</td>
+<td style="text-align: right;">113.153096</td>
+<td style="text-align: right;">0.1630437</td>
+<td style="text-align: right;">0.0797533</td>
+<td style="text-align: right;">0.0130033</td>
+<td style="text-align: right;">0.0265832</td>
+<td style="text-align: right;">0.0063606</td>
+<td style="text-align: right;">64.64083</td>
+<td style="text-align: right;">4178.437</td>
+<td style="text-align: right;">2.446875</td>
+<td style="text-align: right;">-6.297954</td>
+<td style="text-align: right;">-15.410304</td>
+<td style="text-align: right;">5.987195</td>
+<td style="text-align: right;">39.664227</td>
+<td style="text-align: right;">-0.5663138</td>
+<td style="text-align: right;">0.2676994</td>
+<td style="text-align: right;">-0.1516019</td>
+<td style="text-align: right;">0.3207114</td>
+<td style="text-align: right;">0.0716630</td>
+<td style="text-align: right;">263</td>
+<td style="text-align: right;">311</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">6.14</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">71.079477</td>
+<td style="text-align: right;">5052.292049</td>
+<td style="text-align: right;">-0.0824492</td>
+<td style="text-align: right;">-0.1101542</td>
+<td style="text-align: right;">0.0090821</td>
+<td style="text-align: right;">0.0067979</td>
+<td style="text-align: right;">0.0121340</td>
+<td style="text-align: right;">-1459.90430</td>
+<td style="text-align: right;">2131320.550</td>
+<td style="text-align: right;">2.432428</td>
+<td style="text-align: right;">-6.506258</td>
+<td style="text-align: right;">-15.826002</td>
+<td style="text-align: right;">5.916703</td>
+<td style="text-align: right;">42.331398</td>
+<td style="text-align: right;">-1.1999136</td>
+<td style="text-align: right;">-0.1108972</td>
+<td style="text-align: right;">0.1330671</td>
+<td style="text-align: right;">1.4397927</td>
+<td style="text-align: right;">0.0122982</td>
+<td style="text-align: right;">609</td>
+<td style="text-align: right;">793</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">10.09</td>
+</tr>
+</tbody>
+</table>
+
+
+</div>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Check data types</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(data)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Rows: 71
+Columns: 24
+$ `Subject ID` &lt;dbl&gt; 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17…
+$ geom1        &lt;dbl&gt; 1.071923, 54.031476, -32.024389, -42.832485, -10.637344, …
+$ geom2        &lt;dbl&gt; 1.149019, 2919.400411, 1025.561486, 1834.621814, 113.1530…
+$ gabor1       &lt;dbl&gt; -0.029205293, -0.049985252, -0.015271484, -0.015394838, 0…
+$ gabor2       &lt;dbl&gt; -0.079807149, -0.126631032, 0.042439800, 0.043545875, 0.0…
+$ gabor3       &lt;dbl&gt; 0.002330791, 0.006329684, -0.000648119, -0.000670382, 0.0…
+$ gabor4       &lt;dbl&gt; 0.000852949, 0.002498525, 0.000233218, 0.000237001, 0.026…
+$ gabor5       &lt;dbl&gt; 0.006369181, 0.016035418, 0.001801137, 0.001896243, 0.006…
+$ glcm1        &lt;dbl&gt; 405.57142, -580.93865, -1037.25839, -1018.07892, 64.64083…
+$ glcm2        &lt;dbl&gt; 164488.179, 337489.719, 1075904.968, 1036484.679, 4178.43…
+$ txti1        &lt;dbl&gt; -4.4014422, 3.5953250, 25.3673356, 25.5185311, 2.4468746,…
+$ txti2        &lt;dbl&gt; -12.0851499, -1.9917682, -5.3087492, -5.5610430, -6.29795…
+$ txti3        &lt;dbl&gt; 53.192089, -7.161054, -134.668822, -141.909649, -15.41030…
+$ txti4        &lt;dbl&gt; 19.3726934, 12.9263620, 643.5017174, 651.1954318, 5.98719…
+$ txti5        &lt;dbl&gt; 146.0508494, 3.9671407, 28.1828179, 30.9251993, 39.664226…
+$ lbp1         &lt;dbl&gt; -0.52118174, -0.55724044, -0.25154711, -0.24636960, -0.56…
+$ lbp2         &lt;dbl&gt; 0.08122595, -0.46656106, 0.67789345, 0.66845853, 0.267699…
+$ lbp3         &lt;dbl&gt; -0.042333481, 0.259986692, -0.170522142, -0.164687860, -0…
+$ lbp4         &lt;dbl&gt; 0.271630410, 0.310516908, 0.063275951, 0.060697979, 0.320…
+$ lbp5         &lt;dbl&gt; 0.006597654, 0.217679225, 0.459539531, 0.446836807, 0.071…
+$ tkvht_base   &lt;dbl&gt; 435, 555, 191, 334, 263, 609, 149, 580, 338, 288, 281, 57…
+$ tkvht_visit2 &lt;dbl&gt; 585, 595, 249, 498, 311, 793, 198, 657, 362, 306, 266, 95…
+$ progression  &lt;dbl&gt; 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 0, 1, …
+$ tkvht_change &lt;dbl&gt; 11.44, 2.42, 10.08, 16.47, 6.14, 10.09, 10.91, 4.40, 2.30…</code></pre>
+</div>
+</div>
+</section>
+<section id="create-factors" class="level4">
+<h4 class="anchored" data-anchor-id="create-factors">Create Factors</h4>
+<p>Everything is appropriately coded as a double.</p>
+<p>Let’s just convert <code>progression</code> into a factor that contains the levels for “slow” or “fast and we’re good to go. We will also rename some variables for convenience.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Convert progression into a factor</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>data <span class="ot">&lt;-</span> data <span class="sc">|&gt;</span> </span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">progression =</span> <span class="fu">factor</span>(progression,</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>         <span class="at">levels =</span> <span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">1</span>),</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>         <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"Slow"</span>, <span class="st">"Fast"</span>)))</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Rename Subject ID and kidney volume variables so they are easier to access</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>data <span class="ot">&lt;-</span> data <span class="sc">|&gt;</span> </span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">Subject_ID =</span> <span class="st">`</span><span class="at">Subject ID</span><span class="st">`</span>,</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>         <span class="at">kidvol_base =</span> tkvht_base,</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>         <span class="at">kidvol_visit2 =</span> tkvht_visit2,</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>         <span class="at">kidvol_change =</span> tkvht_change) </span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Rename kidney volume variables to be easier to access</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Double check data types</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(data)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Rows: 71
+Columns: 24
+$ Subject_ID    &lt;dbl&gt; 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 1…
+$ geom1         &lt;dbl&gt; 1.071923, 54.031476, -32.024389, -42.832485, -10.637344,…
+$ geom2         &lt;dbl&gt; 1.149019, 2919.400411, 1025.561486, 1834.621814, 113.153…
+$ gabor1        &lt;dbl&gt; -0.029205293, -0.049985252, -0.015271484, -0.015394838, …
+$ gabor2        &lt;dbl&gt; -0.079807149, -0.126631032, 0.042439800, 0.043545875, 0.…
+$ gabor3        &lt;dbl&gt; 0.002330791, 0.006329684, -0.000648119, -0.000670382, 0.…
+$ gabor4        &lt;dbl&gt; 0.000852949, 0.002498525, 0.000233218, 0.000237001, 0.02…
+$ gabor5        &lt;dbl&gt; 0.006369181, 0.016035418, 0.001801137, 0.001896243, 0.00…
+$ glcm1         &lt;dbl&gt; 405.57142, -580.93865, -1037.25839, -1018.07892, 64.6408…
+$ glcm2         &lt;dbl&gt; 164488.179, 337489.719, 1075904.968, 1036484.679, 4178.4…
+$ txti1         &lt;dbl&gt; -4.4014422, 3.5953250, 25.3673356, 25.5185311, 2.4468746…
+$ txti2         &lt;dbl&gt; -12.0851499, -1.9917682, -5.3087492, -5.5610430, -6.2979…
+$ txti3         &lt;dbl&gt; 53.192089, -7.161054, -134.668822, -141.909649, -15.4103…
+$ txti4         &lt;dbl&gt; 19.3726934, 12.9263620, 643.5017174, 651.1954318, 5.9871…
+$ txti5         &lt;dbl&gt; 146.0508494, 3.9671407, 28.1828179, 30.9251993, 39.66422…
+$ lbp1          &lt;dbl&gt; -0.52118174, -0.55724044, -0.25154711, -0.24636960, -0.5…
+$ lbp2          &lt;dbl&gt; 0.08122595, -0.46656106, 0.67789345, 0.66845853, 0.26769…
+$ lbp3          &lt;dbl&gt; -0.042333481, 0.259986692, -0.170522142, -0.164687860, -…
+$ lbp4          &lt;dbl&gt; 0.271630410, 0.310516908, 0.063275951, 0.060697979, 0.32…
+$ lbp5          &lt;dbl&gt; 0.006597654, 0.217679225, 0.459539531, 0.446836807, 0.07…
+$ kidvol_base   &lt;dbl&gt; 435, 555, 191, 334, 263, 609, 149, 580, 338, 288, 281, 5…
+$ kidvol_visit2 &lt;dbl&gt; 585, 595, 249, 498, 311, 793, 198, 657, 362, 306, 266, 9…
+$ progression   &lt;fct&gt; Fast, Slow, Fast, Fast, Slow, Fast, Fast, Slow, Slow, Sl…
+$ kidvol_change &lt;dbl&gt; 11.44, 2.42, 10.08, 16.47, 6.14, 10.09, 10.91, 4.40, 2.3…</code></pre>
+</div>
+</div>
+</section>
+<section id="summary" class="level4">
+<h4 class="anchored" data-anchor-id="summary">Summary</h4>
+<ul>
+<li>71 patients</li>
+<li>19 MRI image features</li>
+<li>4 kidney volume variables</li>
+</ul>
+</section>
+</section>
+<section id="missingness" class="level1">
+<h1>Missingness</h1>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Examine missingness</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">gg_miss_var</span>(data)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Project_3_Predictive_Modelling_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Examine missingness percents</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="fu">vis_miss</span>(data)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Project_3_Predictive_Modelling_files/figure-html/unnamed-chunk-5-2.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>We have 0 missing values!</p>
+</section>
+<section id="data-examination" class="level1">
+<h1>Data Examination</h1>
+<p>Here I will perform the intial examination of the distribution of our variables.</p>
+<section id="univariate-distributions" class="level2">
+<h2 class="anchored" data-anchor-id="univariate-distributions">Univariate Distributions</h2>
+<section id="dependent-variables" class="level3">
+<h3 class="anchored" data-anchor-id="dependent-variables">Dependent Variables</h3>
+<section id="baseline-kidney-volume" class="level4">
+<h4 class="anchored" data-anchor-id="baseline-kidney-volume">Baseline Kidney Volume</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Visualize baseline kidney volume</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(data, <span class="fu">aes</span>(<span class="at">x =</span> kidvol_base)) <span class="sc">+</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>() <span class="sc">+</span> </span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>`stat_bin()` using `bins = 30`. Pick better value with `binwidth`.</code></pre>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Project_3_Predictive_Modelling_files/figure-html/unnamed-chunk-6-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Kidney volume at baseline appears to not be normally distributed.</p>
+<p>However, I learned in the last project that taking the change score (or percent) will make the outcome normally distributed, as it is a way of counting for between subject variance.</p>
+</section>
+<section id="percent-change-in-kidney-volume" class="level4">
+<h4 class="anchored" data-anchor-id="percent-change-in-kidney-volume">Percent Change in Kidney Volume</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create histogram</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(data, <span class="fu">aes</span>(<span class="at">x =</span> kidvol_change)) <span class="sc">+</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>(<span class="at">fill =</span> <span class="st">"paleturquoise"</span>, <span class="at">binwidth =</span> <span class="fl">4.5</span>) <span class="sc">+</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Histogram of Kidney Volume Change"</span>,</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">"Kidney Volume Change (%)"</span>,</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="st">"Subject ID"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Project_3_Predictive_Modelling_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create qqplot</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(data, <span class="fu">aes</span>(<span class="at">sample =</span> kidvol_change)) <span class="sc">+</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_qq</span>() <span class="sc">+</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_qq_line</span>() <span class="sc">+</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"QQ Plot of Kidney Volume Chage"</span>,)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Project_3_Predictive_Modelling_files/figure-html/unnamed-chunk-7-2.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate IQR and identify outliers</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>IQR_val <span class="ot">&lt;-</span> <span class="fu">IQR</span>(data<span class="sc">$</span>kidvol_change)</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>Q1 <span class="ot">&lt;-</span> <span class="fu">quantile</span>(data<span class="sc">$</span>kidvol_change, <span class="fl">0.25</span>)</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>Q3 <span class="ot">&lt;-</span> <span class="fu">quantile</span>(data<span class="sc">$</span>kidvol_change, <span class="fl">0.75</span>)</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>lower_bound <span class="ot">&lt;-</span> Q1 <span class="sc">-</span> (<span class="fl">1.5</span><span class="sc">*</span>IQR_val)</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>upper_bound <span class="ot">&lt;-</span> Q3 <span class="sc">+</span> (<span class="fl">1.5</span><span class="sc">*</span>IQR_val)</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Create boxplot and flag outliers</span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(data, <span class="fu">aes</span>(<span class="at">x =</span> <span class="st">""</span>, <span class="at">y =</span> kidvol_change)) <span class="sc">+</span></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>(<span class="at">fill =</span> <span class="st">"paleturquoise"</span>, <span class="at">alpha =</span> <span class="fl">0.8</span>) <span class="sc">+</span></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_text</span>(<span class="fu">aes</span>(<span class="at">label =</span> <span class="fu">ifelse</span>(kidvol_change <span class="sc">&lt;</span> lower_bound <span class="sc">|</span> kidvol_change <span class="sc">&gt;</span> upper_bound, Subject_ID, <span class="st">""</span>)), <span class="at">hjust =</span> <span class="sc">-</span><span class="fl">0.5</span>, <span class="at">color =</span> <span class="st">"red"</span>) <span class="sc">+</span></span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Boxplot of Kidney Volume Change"</span>,</span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="st">""</span>,</span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">"Kidney Volume Change"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Project_3_Predictive_Modelling_files/figure-html/unnamed-chunk-7-3.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>The percent change in total kidney volume appears almost normally distributed, though there may be some outliers.</p>
+<p>Patients 37 and 51 are flagging as potential outliers. Let’s examine them.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Examine outlier patients</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>data <span class="sc">|&gt;</span> </span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(kidvol_change)) <span class="sc">|&gt;</span> </span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">head</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pretty_print</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<table class="table table-striped table-hover table-condensed caption-top table-sm small" data-quarto-postprocess="true">
+<thead>
+<tr class="header">
+<th style="text-align: right;" data-quarto-table-cell-role="th">Subject_ID</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">geom1</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">geom2</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">gabor1</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">gabor2</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">gabor3</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">gabor4</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">gabor5</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">glcm1</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">glcm2</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">txti1</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">txti2</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">txti3</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">txti4</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">txti5</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">lbp1</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">lbp2</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">lbp3</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">lbp4</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">lbp5</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">kidvol_base</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">kidvol_visit2</th>
+<th style="text-align: left;" data-quarto-table-cell-role="th">progression</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">kidvol_change</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">37</td>
+<td style="text-align: right;">-3.860771</td>
+<td style="text-align: right;">14.90555</td>
+<td style="text-align: right;">0.2621932</td>
+<td style="text-align: right;">-0.1983384</td>
+<td style="text-align: right;">-0.0520030</td>
+<td style="text-align: right;">0.0687453</td>
+<td style="text-align: right;">0.0393381</td>
+<td style="text-align: right;">871.6238</td>
+<td style="text-align: right;">759728.00</td>
+<td style="text-align: right;">-14.72259</td>
+<td style="text-align: right;">-1.9694239</td>
+<td style="text-align: right;">28.995016</td>
+<td style="text-align: right;">216.7546</td>
+<td style="text-align: right;">3.8786306</td>
+<td style="text-align: right;">-0.0557547</td>
+<td style="text-align: right;">0.0722141</td>
+<td style="text-align: right;">-0.0040263</td>
+<td style="text-align: right;">0.0031086</td>
+<td style="text-align: right;">0.0052149</td>
+<td style="text-align: right;">173</td>
+<td style="text-align: right;">372</td>
+<td style="text-align: left;">Fast</td>
+<td style="text-align: right;">38.19</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">51</td>
+<td style="text-align: right;">-43.393038</td>
+<td style="text-align: right;">1882.95573</td>
+<td style="text-align: right;">0.0047377</td>
+<td style="text-align: right;">0.0544573</td>
+<td style="text-align: right;">0.0002580</td>
+<td style="text-align: right;">0.0000224</td>
+<td style="text-align: right;">0.0029656</td>
+<td style="text-align: right;">2454.8065</td>
+<td style="text-align: right;">6026075.10</td>
+<td style="text-align: right;">-14.67151</td>
+<td style="text-align: right;">-9.3555748</td>
+<td style="text-align: right;">137.260393</td>
+<td style="text-align: right;">215.2532</td>
+<td style="text-align: right;">87.5267799</td>
+<td style="text-align: right;">0.1577583</td>
+<td style="text-align: right;">0.1676594</td>
+<td style="text-align: right;">0.0264497</td>
+<td style="text-align: right;">0.0248877</td>
+<td style="text-align: right;">0.0281097</td>
+<td style="text-align: right;">185</td>
+<td style="text-align: right;">387</td>
+<td style="text-align: left;">Fast</td>
+<td style="text-align: right;">36.28</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">52</td>
+<td style="text-align: right;">77.054904</td>
+<td style="text-align: right;">5937.45816</td>
+<td style="text-align: right;">0.4598489</td>
+<td style="text-align: right;">0.1556082</td>
+<td style="text-align: right;">0.0715563</td>
+<td style="text-align: right;">0.2114611</td>
+<td style="text-align: right;">0.0242139</td>
+<td style="text-align: right;">-638.4451</td>
+<td style="text-align: right;">407612.16</td>
+<td style="text-align: right;">20.26785</td>
+<td style="text-align: right;">9.6868879</td>
+<td style="text-align: right;">196.332342</td>
+<td style="text-align: right;">410.7855</td>
+<td style="text-align: right;">93.8357967</td>
+<td style="text-align: right;">9.7525713</td>
+<td style="text-align: right;">1.1625327</td>
+<td style="text-align: right;">11.3376835</td>
+<td style="text-align: right;">95.1126464</td>
+<td style="text-align: right;">1.3514824</td>
+<td style="text-align: right;">358</td>
+<td style="text-align: right;">640</td>
+<td style="text-align: left;">Fast</td>
+<td style="text-align: right;">26.18</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">16</td>
+<td style="text-align: right;">-53.668735</td>
+<td style="text-align: right;">2880.33311</td>
+<td style="text-align: right;">0.0179566</td>
+<td style="text-align: right;">0.0169461</td>
+<td style="text-align: right;">0.0003043</td>
+<td style="text-align: right;">0.0003224</td>
+<td style="text-align: right;">0.0002872</td>
+<td style="text-align: right;">-1045.7503</td>
+<td style="text-align: right;">1093593.77</td>
+<td style="text-align: right;">22.59997</td>
+<td style="text-align: right;">6.9449272</td>
+<td style="text-align: right;">156.955173</td>
+<td style="text-align: right;">510.7588</td>
+<td style="text-align: right;">48.2320141</td>
+<td style="text-align: right;">1.2350248</td>
+<td style="text-align: right;">-0.0196489</td>
+<td style="text-align: right;">-0.0242669</td>
+<td style="text-align: right;">1.5252862</td>
+<td style="text-align: right;">0.0003861</td>
+<td style="text-align: right;">124</td>
+<td style="text-align: right;">218</td>
+<td style="text-align: left;">Fast</td>
+<td style="text-align: right;">25.19</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">33.361504</td>
+<td style="text-align: right;">1112.98996</td>
+<td style="text-align: right;">-0.1270457</td>
+<td style="text-align: right;">-0.0812793</td>
+<td style="text-align: right;">0.0103262</td>
+<td style="text-align: right;">0.0161406</td>
+<td style="text-align: right;">0.0066063</td>
+<td style="text-align: right;">1063.3743</td>
+<td style="text-align: right;">1130764.98</td>
+<td style="text-align: right;">-26.04777</td>
+<td style="text-align: right;">0.2502787</td>
+<td style="text-align: right;">-6.519202</td>
+<td style="text-align: right;">678.4864</td>
+<td style="text-align: right;">0.0626394</td>
+<td style="text-align: right;">0.5581614</td>
+<td style="text-align: right;">-1.1616502</td>
+<td style="text-align: right;">-0.6483883</td>
+<td style="text-align: right;">0.3115442</td>
+<td style="text-align: right;">1.3494312</td>
+<td style="text-align: right;">334</td>
+<td style="text-align: right;">583</td>
+<td style="text-align: left;">Fast</td>
+<td style="text-align: right;">24.77</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">60</td>
+<td style="text-align: right;">-37.454576</td>
+<td style="text-align: right;">1402.84529</td>
+<td style="text-align: right;">0.0584093</td>
+<td style="text-align: right;">0.0359878</td>
+<td style="text-align: right;">0.0021020</td>
+<td style="text-align: right;">0.0034116</td>
+<td style="text-align: right;">0.0012951</td>
+<td style="text-align: right;">-243.9828</td>
+<td style="text-align: right;">59527.61</td>
+<td style="text-align: right;">12.34253</td>
+<td style="text-align: right;">-2.8642032</td>
+<td style="text-align: right;">-35.351520</td>
+<td style="text-align: right;">152.3381</td>
+<td style="text-align: right;">8.2036599</td>
+<td style="text-align: right;">0.6218992</td>
+<td style="text-align: right;">-0.0617567</td>
+<td style="text-align: right;">-0.0384065</td>
+<td style="text-align: right;">0.3867586</td>
+<td style="text-align: right;">0.0038139</td>
+<td style="text-align: right;">188</td>
+<td style="text-align: right;">322</td>
+<td style="text-align: left;">Fast</td>
+<td style="text-align: right;">23.84</td>
+</tr>
+</tbody>
+</table>
+
+
+</div>
+</div>
+<p>Interesting, it looks like these patients also have high values for certain MRI image features, such as GLCM 1 and 2. Additionally, they do not have the highest visit 2 kidney volumes, they simply increases in size the most.</p>
+</section>
+<section id="summary-1" class="level4">
+<h4 class="anchored" data-anchor-id="summary-1">Summary</h4>
+<p>While patients 37 and 51 are potential outliers on <code>kidvol_change</code>, these are NOT erroneous values. On the contrary, they are backed up by similar high values on other measurements such as <code>glcm2</code>, but are not universally high on all MRI image features. In other words, these appear to be very realistic values.</p>
+<p>In summary, all values are derived from authentic biological data and we are motivated to retain them in the analysis.</p>
+</section>
+</section>
+</section>
+</section>
+<section id="bivariate-comparisons" class="level1">
+<h1>Bivariate Comparisons</h1>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>data <span class="sc">|&gt;</span> </span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(lbp5))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 71 × 24
+   Subject_ID  geom1  geom2   gabor1   gabor2     gabor3   gabor4  gabor5  glcm1
+        &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;      &lt;dbl&gt;    &lt;dbl&gt;   &lt;dbl&gt;  &lt;dbl&gt;
+ 1         48 -124.  15442. -0.163    0.00177 -0.000288   2.66e-2 3.12e-6 2545. 
+ 2         29   99.0  9804. -0.0967  -0.135    0.0130     9.36e-3 1.82e-2 -836. 
+ 3         49  -27.1   734.  0.00606 -0.00916 -0.0000555  3.67e-5 8.39e-5   20.0
+ 4         52   77.1  5937.  0.460    0.156    0.0716     2.11e-1 2.42e-2 -638. 
+ 5         50   33.4  1113. -0.127   -0.0813   0.0103     1.61e-2 6.61e-3 1063. 
+ 6          9  -24.2   586. -0.0844  -0.0581   0.00490    7.12e-3 3.38e-3 -693. 
+ 7          8   41.8  1744. -0.434    0.00612 -0.00266    1.88e-1 3.75e-5 -416. 
+ 8         30  -33.0  1090.  0.0263   0.0911   0.00240    6.94e-4 8.31e-3  511. 
+ 9         66  -53.2  2833.  0.0763   0.152    0.0116     5.83e-3 2.32e-2 -996. 
+10         46  -39.6  1571.  0.0571   0.162    0.00925    3.26e-3 2.62e-2 -192. 
+# ℹ 61 more rows
+# ℹ 15 more variables: glcm2 &lt;dbl&gt;, txti1 &lt;dbl&gt;, txti2 &lt;dbl&gt;, txti3 &lt;dbl&gt;,
+#   txti4 &lt;dbl&gt;, txti5 &lt;dbl&gt;, lbp1 &lt;dbl&gt;, lbp2 &lt;dbl&gt;, lbp3 &lt;dbl&gt;, lbp4 &lt;dbl&gt;,
+#   lbp5 &lt;dbl&gt;, kidvol_base &lt;dbl&gt;, kidvol_visit2 &lt;dbl&gt;, progression &lt;fct&gt;,
+#   kidvol_change &lt;dbl&gt;</code></pre>
+</div>
+</div>
+<section id="section" class="level4">
+<h4 class="anchored" data-anchor-id="section"></h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Initialize empty list</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>plots <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Get column names of MRI features</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>features_gabor <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"gabor1"</span>, <span class="st">"gabor2"</span>, <span class="st">"gabor3"</span>, <span class="st">"gabor4"</span>, <span class="st">"gabor5"</span>)</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>features_geom <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"geom1"</span>, <span class="st">"geom2"</span>)</span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>features_glcm <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"glcm1"</span>, <span class="st">"glcm2"</span>)</span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>features_txti <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"txti1"</span>, <span class="st">"txti2"</span>, <span class="st">"txti3"</span>, <span class="st">"txti4"</span>, <span class="st">"txti5"</span>)</span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>features_lbp <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"lbp1"</span>, <span class="st">"lbp2"</span>, <span class="st">"lbp3"</span>, <span class="st">"lbp4"</span>, <span class="st">"lbp5"</span>)</span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot scatterplots of each MRI feature against kidney volume change</span></span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>plot_features_against_outcome <span class="ot">&lt;-</span> <span class="cf">function</span>(features) {</span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (feature <span class="cf">in</span> features) {</span>
+<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a>  p <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(data, <span class="fu">aes_string</span>(<span class="at">x =</span> feature, <span class="at">y =</span> <span class="st">"kidvol_change"</span>)) <span class="sc">+</span></span>
+<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_point</span>() <span class="sc">+</span></span>
+<span id="cb19-16"><a href="#cb19-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb19-17"><a href="#cb19-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">labs</span>(<span class="at">title =</span> <span class="fu">paste</span>(feature),</span>
+<span id="cb19-18"><a href="#cb19-18" aria-hidden="true" tabindex="-1"></a>                       <span class="at">x =</span> feature,</span>
+<span id="cb19-19"><a href="#cb19-19" aria-hidden="true" tabindex="-1"></a>                       <span class="at">y =</span> <span class="st">"Kidney Volume Change (%)"</span>)</span>
+<span id="cb19-20"><a href="#cb19-20" aria-hidden="true" tabindex="-1"></a>    plots[[feature]] <span class="ot">&lt;-</span> p</span>
+<span id="cb19-21"><a href="#cb19-21" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb19-22"><a href="#cb19-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-23"><a href="#cb19-23" aria-hidden="true" tabindex="-1"></a><span class="co"># Combine all plots into a grid</span></span>
+<span id="cb19-24"><a href="#cb19-24" aria-hidden="true" tabindex="-1"></a>combined_plot <span class="ot">&lt;-</span> <span class="fu">wrap_plots</span>(plots, <span class="at">ncol =</span> <span class="dv">3</span>)</span>
+<span id="cb19-25"><a href="#cb19-25" aria-hidden="true" tabindex="-1"></a>combined_plot</span>
+<span id="cb19-26"><a href="#cb19-26" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="gabor-transform-1" class="level3">
+<h3 class="anchored" data-anchor-id="gabor-transform-1">Gabor Transform</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot features against total change in kidney volume</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_features_against_outcome</span>(features_gabor)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: `aes_string()` was deprecated in ggplot2 3.0.0.
+ℹ Please use tidy evaluation idioms with `aes()`.
+ℹ See also `vignette("ggplot2-in-packages")` for more information.</code></pre>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Project_3_Predictive_Modelling_files/figure-html/unnamed-chunk-11-1.png" class="img-fluid figure-img" width="768"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>It looks like <code>gabor4</code> and <code>gabor5</code> are exponential. We will get the square of those.</p>
+</section>
+<section id="geom" class="level3">
+<h3 class="anchored" data-anchor-id="geom">Geom</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot features against total change in kidney volume</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_features_against_outcome</span>(features_geom)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Project_3_Predictive_Modelling_files/figure-html/unnamed-chunk-12-1.png" class="img-fluid figure-img" width="768"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Geom 2 looks quadratic.</p>
+</section>
+<section id="txti" class="level3">
+<h3 class="anchored" data-anchor-id="txti">Txti</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot features against total change in kidney volume</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_features_against_outcome</span>(features_txti)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Project_3_Predictive_Modelling_files/figure-html/unnamed-chunk-13-1.png" class="img-fluid figure-img" width="768"></p>
+</figure>
+</div>
+</div>
+</div>
+<p><code>txti4</code> and <code>txti5</code> look quadratic.</p>
+</section>
+<section id="lbp" class="level3">
+<h3 class="anchored" data-anchor-id="lbp">LBP</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot features against total change in kidney volume</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_features_against_outcome</span>(features_lbp)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Project_3_Predictive_Modelling_files/figure-html/unnamed-chunk-14-1.png" class="img-fluid figure-img" width="768"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>These are either logarithmic, or that one participant is an incredible outlier.</p>
+<p>Let’s try removing them and see what the plots look like.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Sort by lbp5</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>data <span class="sc">|&gt;</span> </span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(lbp5))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 71 × 24
+   Subject_ID  geom1  geom2   gabor1   gabor2     gabor3   gabor4  gabor5  glcm1
+        &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;      &lt;dbl&gt;    &lt;dbl&gt;   &lt;dbl&gt;  &lt;dbl&gt;
+ 1         48 -124.  15442. -0.163    0.00177 -0.000288   2.66e-2 3.12e-6 2545. 
+ 2         29   99.0  9804. -0.0967  -0.135    0.0130     9.36e-3 1.82e-2 -836. 
+ 3         49  -27.1   734.  0.00606 -0.00916 -0.0000555  3.67e-5 8.39e-5   20.0
+ 4         52   77.1  5937.  0.460    0.156    0.0716     2.11e-1 2.42e-2 -638. 
+ 5         50   33.4  1113. -0.127   -0.0813   0.0103     1.61e-2 6.61e-3 1063. 
+ 6          9  -24.2   586. -0.0844  -0.0581   0.00490    7.12e-3 3.38e-3 -693. 
+ 7          8   41.8  1744. -0.434    0.00612 -0.00266    1.88e-1 3.75e-5 -416. 
+ 8         30  -33.0  1090.  0.0263   0.0911   0.00240    6.94e-4 8.31e-3  511. 
+ 9         66  -53.2  2833.  0.0763   0.152    0.0116     5.83e-3 2.32e-2 -996. 
+10         46  -39.6  1571.  0.0571   0.162    0.00925    3.26e-3 2.62e-2 -192. 
+# ℹ 61 more rows
+# ℹ 15 more variables: glcm2 &lt;dbl&gt;, txti1 &lt;dbl&gt;, txti2 &lt;dbl&gt;, txti3 &lt;dbl&gt;,
+#   txti4 &lt;dbl&gt;, txti5 &lt;dbl&gt;, lbp1 &lt;dbl&gt;, lbp2 &lt;dbl&gt;, lbp3 &lt;dbl&gt;, lbp4 &lt;dbl&gt;,
+#   lbp5 &lt;dbl&gt;, kidvol_base &lt;dbl&gt;, kidvol_visit2 &lt;dbl&gt;, progression &lt;fct&gt;,
+#   kidvol_change &lt;dbl&gt;</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot scatterplots of each MRI feature against kidney volume change</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>plot_features_against_outcome <span class="ot">&lt;-</span> <span class="cf">function</span>(features) {</span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (feature <span class="cf">in</span> features) {</span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>  p <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(data, <span class="fu">aes_string</span>(<span class="at">x =</span> feature, <span class="at">y =</span> <span class="st">"kidvol_change"</span>)) <span class="sc">+</span></span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_point</span>() <span class="sc">+</span></span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">labs</span>(<span class="at">title =</span> <span class="fu">paste</span>(feature),</span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>                       <span class="at">x =</span> feature,</span>
+<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a>                       <span class="at">y =</span> <span class="st">"Kidney Volume Change (%)"</span>)</span>
+<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a>    plots[[feature]] <span class="ot">&lt;-</span> p</span>
+<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-13"><a href="#cb27-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Combine all plots into a grid</span></span>
+<span id="cb27-14"><a href="#cb27-14" aria-hidden="true" tabindex="-1"></a>combined_plot <span class="ot">&lt;-</span> <span class="fu">wrap_plots</span>(plots, <span class="at">ncol =</span> <span class="dv">3</span>)</span>
+<span id="cb27-15"><a href="#cb27-15" aria-hidden="true" tabindex="-1"></a>combined_plot</span>
+<span id="cb27-16"><a href="#cb27-16" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Particpant 48 is almost 9 times higher than the next closest patient on <code>lbp5</code>.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Filter out patient 48</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>data_filter <span class="ot">&lt;-</span> data <span class="sc">|&gt;</span> </span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span>Subject_ID <span class="sc">==</span> <span class="dv">48</span>)</span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot scatterplots of each MRI feature against kidney volume change</span></span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>plot_features_against_outcome <span class="ot">&lt;-</span> <span class="cf">function</span>(features) {</span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (feature <span class="cf">in</span> features) {</span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a>  p <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(data_filter, <span class="fu">aes_string</span>(<span class="at">x =</span> feature, <span class="at">y =</span> <span class="st">"kidvol_change"</span>)) <span class="sc">+</span></span>
+<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_point</span>() <span class="sc">+</span></span>
+<span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb28-11"><a href="#cb28-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">labs</span>(<span class="at">title =</span> <span class="fu">paste</span>(feature),</span>
+<span id="cb28-12"><a href="#cb28-12" aria-hidden="true" tabindex="-1"></a>                       <span class="at">x =</span> feature,</span>
+<span id="cb28-13"><a href="#cb28-13" aria-hidden="true" tabindex="-1"></a>                       <span class="at">y =</span> <span class="st">"Kidney Volume Change (%)"</span>)</span>
+<span id="cb28-14"><a href="#cb28-14" aria-hidden="true" tabindex="-1"></a>    plots[[feature]] <span class="ot">&lt;-</span> p</span>
+<span id="cb28-15"><a href="#cb28-15" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb28-16"><a href="#cb28-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-17"><a href="#cb28-17" aria-hidden="true" tabindex="-1"></a><span class="co"># Combine all plots into a grid</span></span>
+<span id="cb28-18"><a href="#cb28-18" aria-hidden="true" tabindex="-1"></a>combined_plot <span class="ot">&lt;-</span> <span class="fu">wrap_plots</span>(plots, <span class="at">ncol =</span> <span class="dv">3</span>)</span>
+<span id="cb28-19"><a href="#cb28-19" aria-hidden="true" tabindex="-1"></a>combined_plot</span>
+<span id="cb28-20"><a href="#cb28-20" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb28-21"><a href="#cb28-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-22"><a href="#cb28-22" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_features_against_outcome</span>(features_lbp)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Project_3_Predictive_Modelling_files/figure-html/unnamed-chunk-16-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Okay, we assumed they were the same patient but their not.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>data_filter <span class="sc">|&gt;</span> </span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(lbp3))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 70 × 24
+   Subject_ID geom1  geom2   gabor1 gabor2   gabor3  gabor4 gabor5  glcm1  glcm2
+        &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt;    &lt;dbl&gt;  &lt;dbl&gt;    &lt;dbl&gt;   &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;
+ 1         52  77.1  5937.  0.460    0.156  7.16e-2 2.11e-1 0.0242  -638. 4.08e5
+ 2         14 173.  29933. -0.0462  -0.175  8.10e-3 2.13e-3 0.0307   534. 2.85e5
+ 3         61 181.  32687. -0.0243  -0.167  4.07e-3 5.92e-4 0.0279   858. 7.36e5
+ 4         28 115.  13289.  0.118   -0.162 -1.91e-2 1.39e-2 0.0261   928. 8.62e5
+ 5         40  85.1  7244. -0.0852  -0.166  1.42e-2 7.26e-3 0.0276  1792. 3.21e6
+ 6          7 -59.5  3540.  0.103    0.177  1.82e-2 1.05e-2 0.0313 -1361. 1.85e6
+ 7          2  54.0  2919. -0.0500  -0.127  6.33e-3 2.50e-3 0.0160  -581. 3.37e5
+ 8         24  37.8  1426.  0.132   -0.206 -2.73e-2 1.75e-2 0.0424   328. 1.08e5
+ 9         29  99.0  9804. -0.0967  -0.135  1.30e-2 9.36e-3 0.0182  -836. 6.99e5
+10         33  32.5  1058. -0.00752 -0.106  7.96e-4 5.66e-5 0.0112   783. 6.13e5
+# ℹ 60 more rows
+# ℹ 14 more variables: txti1 &lt;dbl&gt;, txti2 &lt;dbl&gt;, txti3 &lt;dbl&gt;, txti4 &lt;dbl&gt;,
+#   txti5 &lt;dbl&gt;, lbp1 &lt;dbl&gt;, lbp2 &lt;dbl&gt;, lbp3 &lt;dbl&gt;, lbp4 &lt;dbl&gt;, lbp5 &lt;dbl&gt;,
+#   kidvol_base &lt;dbl&gt;, kidvol_visit2 &lt;dbl&gt;, progression &lt;fct&gt;,
+#   kidvol_change &lt;dbl&gt;</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Filter out patients</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>data_filter <span class="ot">&lt;-</span> data_filter <span class="sc">|&gt;</span> </span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span>Subject_ID <span class="sc">==</span> <span class="dv">52</span>)</span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot scatterplots of each MRI feature against kidney volume change</span></span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>plot_features_against_outcome <span class="ot">&lt;-</span> <span class="cf">function</span>(features) {</span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (feature <span class="cf">in</span> features) {</span>
+<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a>  p <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(data_filter, <span class="fu">aes_string</span>(<span class="at">x =</span> feature, <span class="at">y =</span> <span class="st">"kidvol_change"</span>)) <span class="sc">+</span></span>
+<span id="cb31-9"><a href="#cb31-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_point</span>() <span class="sc">+</span></span>
+<span id="cb31-10"><a href="#cb31-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_smooth</span>(<span class="at">method =</span> <span class="st">"lm"</span>) <span class="sc">+</span></span>
+<span id="cb31-11"><a href="#cb31-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb31-12"><a href="#cb31-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">labs</span>(<span class="at">title =</span> <span class="fu">paste</span>(feature),</span>
+<span id="cb31-13"><a href="#cb31-13" aria-hidden="true" tabindex="-1"></a>                       <span class="at">x =</span> feature,</span>
+<span id="cb31-14"><a href="#cb31-14" aria-hidden="true" tabindex="-1"></a>                       <span class="at">y =</span> <span class="st">"Kidney Volume Change (%)"</span>)</span>
+<span id="cb31-15"><a href="#cb31-15" aria-hidden="true" tabindex="-1"></a>    plots[[feature]] <span class="ot">&lt;-</span> p</span>
+<span id="cb31-16"><a href="#cb31-16" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb31-17"><a href="#cb31-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-18"><a href="#cb31-18" aria-hidden="true" tabindex="-1"></a><span class="co"># Combine all plots into a grid</span></span>
+<span id="cb31-19"><a href="#cb31-19" aria-hidden="true" tabindex="-1"></a>combined_plot <span class="ot">&lt;-</span> <span class="fu">wrap_plots</span>(plots, <span class="at">ncol =</span> <span class="dv">3</span>)</span>
+<span id="cb31-20"><a href="#cb31-20" aria-hidden="true" tabindex="-1"></a>combined_plot</span>
+<span id="cb31-21"><a href="#cb31-21" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb31-22"><a href="#cb31-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-23"><a href="#cb31-23" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_features_against_outcome</span>(features_lbp)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'</code></pre>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Project_3_Predictive_Modelling_files/figure-html/unnamed-chunk-17-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Still looks logarithmic. I</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(data_filter<span class="sc">$</span>lbp5)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Project_3_Predictive_Modelling_files/figure-html/unnamed-chunk-18-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(data_filter<span class="sc">$</span>lbp3)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Project_3_Predictive_Modelling_files/figure-html/unnamed-chunk-18-2.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="fu">boxplot</span>(data_filter<span class="sc">$</span>lbp3)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Project_3_Predictive_Modelling_files/figure-html/unnamed-chunk-18-3.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(data<span class="sc">$</span>geom2)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Project_3_Predictive_Modelling_files/figure-html/unnamed-chunk-18-4.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>That’s gotta be an outlier.</p>
+<!-- ```{r} -->
+<!-- # Create a function that plots all features against one outcome variable. Code modified from ChatGPT -->
+<!-- # Define the custom function -->
+<!-- plot_features_against_outcome <- function(data, outcome, features, ncol = 5) { -->
+<!--   # Combine data into a long format within the function -->
+<!--   long_data <- data %>% -->
+<!--     select(all_of(c(outcome, features))) %>% -->
+<!--     pivot_longer(cols = -all_of(outcome), names_to = "feature", values_to = "value") -->
+<!--   # Create the scatterplot matrix -->
+<!--   p <- ggplot(long_data, aes(x = value, y = !!sym(outcome))) + -->
+<!--     geom_point(alpha = 0.6, color = "blue") + -->
+<!--     facet_wrap(~ feature, ncol = ncol, scales = "free") + -->
+<!--     labs( -->
+<!--       title = paste("Scatterplot Matrix of Features vs Change in Kidney Volume"), -->
+<!--       x = "Feature Value", -->
+<!--       y = "Change in Kidney Volume (%)" -->
+<!--     ) + -->
+<!--     theme_minimal() + -->
+<!--     theme( -->
+<!--       plot.title = element_text(hjust = 0.5, size = 16, face = "bold"), -->
+<!--       strip.text = element_text(size = 10, face = "bold"), -->
+<!--       axis.text.x = element_text(angle = 45, hjust = 1), -->
+<!--       panel.spacing = unit(0.5, "lines") -->
+<!--     ) -->
+<!--   return(p) -->
+<!-- } -->
+<!-- # List of features to plot against the outcome -->
+<!-- features <- colnames(data)[colnames(data) != "outcome"] -->
+<!-- # Plot using the custom function -->
+<!-- plot_features_against_outcome(data, "kidvol_change", MRI_features, ncol = 5) -->
+<!-- # Plot using the custom function -->
+<!-- plot_features_against_outcome(data_gabor, "kidvol_change", MRI_features, ncol = 5) -->
+<!-- ``` -->
+</section>
+</section>
+<section id="to-do" class="level1">
+<h1>TO do</h1>
+<p>Start over and examine all univariate distributions first for all covariates (and also which potentiall need deleting).</p>
+<p>This will show you which ones need to be transformed and which don’t</p>
+<p>Then transform them.</p>
+<p>THEN plot them all against outcome variable (with lm I guess…</p>
+<p>Then correlation matrix.</p>
+<p>then</p>
+</section>
+<section id="references" class="level1">
+<h1>References</h1>
+<p><span class="citation" data-cites="fogel1989">(<a href="#ref-fogel1989" role="doc-biblioref">Fogel and Sagi 1989</a>)</span> [<span class="citation" data-cites="kumar2020">Kumar, Satyanarayana, and Prasad (<a href="#ref-kumar2020" role="doc-biblioref">2020</a>)</span>]<span class="citation" data-cites="haralick1973">(<a href="#ref-haralick1973" role="doc-biblioref">Haralick, Shanmugam, and Dinstein 1973</a>)</span> <span class="citation" data-cites="ojala2002">(<a href="#ref-ojala2002" role="doc-biblioref">Ojala, Pietikainen, and Maenpaa 2002</a>)</span></p>
+
+
+
+</section>
+
+<div id="quarto-appendix" class="default"><section class="quarto-appendix-contents" role="doc-bibliography" id="quarto-bibliography"><h2 class="anchored quarto-appendix-heading">References</h2><div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list">
+<div id="ref-fogel1989" class="csl-entry" role="listitem">
+Fogel, I., and D. Sagi. 1989. <span>“Gabor Filters as Texture Discriminator.”</span> <em>Biological Cybernetics</em> 61 (2): 103–13. <a href="https://doi.org/10.1007/bf00204594">https://doi.org/10.1007/bf00204594</a>.
+</div>
+<div id="ref-haralick1973" class="csl-entry" role="listitem">
+Haralick, Robert M., K. Shanmugam, and Its’Hak Dinstein. 1973. <span>“Textural Features for Image Classification.”</span> <em>IEEE Transactions on Systems, Man, and Cybernetics</em> SMC-3 (6): 610–21. <a href="https://doi.org/10.1109/tsmc.1973.4309314">https://doi.org/10.1109/tsmc.1973.4309314</a>.
+</div>
+<div id="ref-kumar2020" class="csl-entry" role="listitem">
+Kumar, D. Maruthi, D. Satyanarayana, and M. N. Giri Prasad. 2020. <span>“An Improved Gabor Wavelet Transform and Rough K-Means Clustering Algorithm for MRI Brain Tumor Image Segmentation.”</span> <em>Multimedia Tools and Applications</em> 80 (5): 6939–57. <a href="https://doi.org/10.1007/s11042-020-09635-6">https://doi.org/10.1007/s11042-020-09635-6</a>.
+</div>
+<div id="ref-ojala2002" class="csl-entry" role="listitem">
+Ojala, T., M. Pietikainen, and T. Maenpaa. 2002. <span>“Multiresolution Gray-Scale and Rotation Invariant Texture Classification with Local Binary Patterns.”</span> <em>IEEE Transactions on Pattern Analysis and Machine Intelligence</em> 24 (7): 971–87. <a href="https://doi.org/10.1109/tpami.2002.1017623">https://doi.org/10.1109/tpami.2002.1017623</a>.
+</div>
+</div></section></div></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    // For code content inside modals, clipBoardJS needs to be initialized with a container option
+    // TODO: Check when it could be a function (https://github.com/zenorocha/clipboard.js/issues/860)
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/svieau\.quarto\.pub\/portfolio");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

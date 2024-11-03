@@ -1,0 +1,57 @@
+---
+title: "Publications and Presentations"
+author: Sean Vieau
+date: November 2, 2024
+format: html
+editor: visual
+toc: true
+bibliography: references.bib
+---
+
+# Publications
+
+Speed, F., Saladrigas, C., Teel, A., Vieau, S., Bright, V., Gopinath, J., Welle, C., Restrepo, D., Gibson, E. (2024). High*-Speed in Vivo Calcium Recording Using Structured Illumination with Self-Supervised Denoising.*” *Optics Continuum*3 (11): 2044. <https://doi.org/10.1364/optcon.532996>.
+
+# Professional Presentations
+
+Speed, F., Kumar, V., Saladrigas, C., Vieau, S., Bright, V., Restrepo, D., Welle, C., Gopinath, J., Kymissis, I., Gibson, E. (2023). *Illumination methods for voltage imaging with a microLED array*. Poster presented at the Society for Neuroscience
+
+Pavlova, M. , Castillo-Flores, J., Vieau, S., Velumurgan, B., McGrath, P. S., Bush, K., Hopkin, A., Bruckner, A., Kogut, I., Roop, D., Bilousova, G. (2022). *A novel preclinical model for translating an induced pluripotent stem cell therapy for the treatment of skin diseases.* A poster presented at the International Society for Stem Cell Research 2022.
+
+Speed, F., Vieau, S., Parra, A., Kumar, V., Suckow, R., Supekar, D., Peng, X., Sias, A., Hansen, S., Martinez, G., Peet, G., Bright, V., Hughes, E., Gopinath, J., Kymissis, J., Restrepo, D., Welle, C., Gibson, E. (2022). *Development of the 3DFAST-GEVI Optical Neural Interface.* Poster presented at the Neuroscience Society Retreat.
+
+Vieau, S., Badanes, L. (2019). *Acceptance, Reappraisal, and Inhibition: Potential Buffers Against Heightened Cortisol Reactivity Associated with Early Life Stress.* A poster presented at the 31st Association for Psychological Science Annual Convention, Washington, D.C.
+
+Vieau, S., Mahalingam, R. (2018). *Using CRISPR-Cas9 to deactivate latent varicella zoster virus.* A poster presented at the 2018 Impact and Innovation Showcase, Denver, Colorado.
+
+# Undergraduate Presentations
+
+**(\*faculty advisor) (\*\*regional award winner of outstanding empirical research, RMPA)**
+
+Alvarez, L., Maxwell, I. A., Slagle, D. R., Howell, K. S., Hickman, H. A., & Vieau, S. (2016). *Neuroticism and mindfulness as predictors of depression and mindfulness as a moderator for depression and neuroticism.* A paper symposium presented at the annual conference of the Rocky Mountain Psychological Association, Denver, Colorado.  
+
+Howell, K., Snyders, J., Vieau, S., Davis, K., Martinez, T., Malek, J., & Gale, B. (2016). *Musical preferences as predictors of creativity*. A paper symposium presented at the annual Undergraduate Research Conference: A Symposium of Scholarly Work and Creative Projects, Denver, Colorado.
+
+Lee, A., Vieau, S., & Stem, D. (2018). *Meditation: Effects on working memory in trauma and non-trauma individuals.* A paper symposium presented at the annual conference of the Rocky Mountain Psychological Association, Denver, Colorado.
+
+Maxwell, I. A., Vieau, S., Haider, A., Malek, J., & Wiggins, A. (2016). *The role of gender, stress, and cognitive function.* A paper symposium presented at the annual conference of the Rocky Mountain Psychological Association, Denver, Colorado.
+
+Mortensen, C. R\*., Cialdini, R. B., Jaeger, C. M., Jacobson, R. P., Maxwell, I. A., Vieau, S., & Neel, R. (2016). *Preventing backfire effects with trend information when using social norms for water conservation.* A poster presented at the annual conference of the Rocky Mountain Psychological Association, Denver, Colorado.
+
+Richmond, A. S\*., Gale, B., Murphy, P., & Vieau, S. (2016). *The validity and reliability of the learner-centered syllabus scale.* A poster presented at the annual conference of the Rocky Mountain Psychological Association, Denver, Colorado.
+
+Schneider, D. G., Stem, D., Vieau, S., & Garofalo, A. M. (2018). *Recommended physical activity and mental health.* A paper symposium presented at the annual conference of the Rocky Mountain Psychological Association, Denver, Colorado.
+
+Schneider, D. G., Vieau, S., Kusick, M., & Hanson, T. (2017). *5-minute mindfulness meditation provides relief from state anxiety for experienced and novice meditators.* a paper symposium presented at the annual conference of the Rocky Mountain Psychological Association, Salt Lake City, Utah.
+
+Snyders, J., Vieau, S., Hanson, T., & Rowland, A. (2017). *Mindfulness meditation: Threshold of an adverse effect.* A paper symposium presented at the annual conference of the Rocky Mountain Psychological Association, Salt Lake City, Utah.
+
+Stem, D., Lee, A., Eccles, R. D., McDonald, E., Vieau, S., & Schneider, D. (2018). *The effects of anxiety prime, state anxiety, and trauma.* A paper symposium presented at the annual conference of the Rocky Mountain Psychological Association, Denver, Colorado.
+
+Stem, D., Ricciardelli, L., & Vieau, S. (2018). *Life satisfaction, meaning in life, and quality of life as predictors of depression in college students.* A poster presented at the annual conference of the Rocky Mountain Psychological Association, Denver, Colorado.
+
+**\*\***Vieau, S., Maxwell, I. A., Moore, M., Stem, D., & Davis, K. N. (2017). *The effect of synchrony and mindfulness on prosocial attitudes.* a paper symposium presented at the annual conference of the Rocky Mountain Psychological Association, Salt Lake City, Utah.
+
+Vieau, S., Noel, S. M., & Kusick, M. (2017). *The experience of synchrony leads to harmonization of velocity.* A paper symposium presented at the annual conference of the Rocky Mountain Psychological Association, Salt Lake City, Utah.
+
+**\*\***White, M., Pletcher, J., Vieau, S., Garofalo, A. M., Eccles, R. D., & Stem, D. (2018). *Does mindfulness moderate sexual assault and PTSD symptoms?.* A paper symposium presented at the annual conference of the Rocky Mountain Psychological Association, Denver, Colorado.

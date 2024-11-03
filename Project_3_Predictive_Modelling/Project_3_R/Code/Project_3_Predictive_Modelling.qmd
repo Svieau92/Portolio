@@ -7,6 +7,7 @@ format: html
 editor: visual
 toc: true
 bibliography: references.bib
+theme: cerulean
 ---
 
 ```{r setup, include=FALSE}
