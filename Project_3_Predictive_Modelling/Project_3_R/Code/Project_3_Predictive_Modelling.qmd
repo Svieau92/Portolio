@@ -41,6 +41,27 @@ model_results <- function(x) {
 
 # Set options to avoid scientific notation
 options(scipen = 999)
+
+# Make a function for quick plotting histograms and qq plot
+distr_plots <- function(data, variable, bins_choose = 30) {
+  
+hist_plot <- ggplot(data, aes_string(x = variable)) +
+  geom_histogram(bins = bins_choose) +
+  theme_minimal() +
+  labs(title = paste("Histogram of", variable),
+       x = variable,
+       y = "Count")
+
+# Create qqplot
+qq_plot <- ggplot(data, aes_string(sample = variable)) +
+  geom_qq() +
+  geom_qq_line() +
+  theme_minimal() +
+  labs(title = paste("QQ Plot of", variable))
+
+# Plot side by side
+grid.arrange(hist_plot, qq_plot, ncol = 2)
+}
 ```
 
 # Introduction
@@ -187,6 +208,8 @@ library(kableExtra) # Used for pretty printing (kable_styling)
 library(ggridges) # Used for plotting distributions
 library(naniar) # Used to visualize missingness
 library(patchwork) # Used to chain ggplots together
+library(gridExtra) # Used to plot ggplots side by side
+library(corrplot) # Used for correlation matrix
 ```
 
 #### Read .CSV
@@ -226,13 +249,13 @@ data <- data |>
          kidvol_visit2 = tkvht_visit2,
          kidvol_change = tkvht_change) 
 
-# Rename kidney volume variables to be easier to access
-
 # Double check data types
 glimpse(data)
 ```
 
 #### Summary
+
+Our data set consists of:
 
  - 71 patients 
  - 19 MRI image features 
@@ -254,9 +277,13 @@ We have 0 missing values!
 
 Here I will perform the intial examination of the distribution of our variables.
 
-## Univariate Distributions
+## Univariate Distributions 
 
-### Dependent Variables
+### Outcome Variables {#Outcomes_Uni}
+
+::: panel-tabset
+
+## Kidney Volume
 
 #### Baseline Kidney Volume
 
@@ -264,30 +291,44 @@ Here I will perform the intial examination of the distribution of our variables.
 # Visualize baseline kidney volume
 ggplot(data, aes(x = kidvol_base)) +
   geom_histogram() + 
-  theme_minimal()
+  theme_minimal() + 
+  labs(title = "Histogram for Baseline Kidney Volume",
+       x = "Baseline Kidney Volume",
+       y = "Count")
 ```
 Kidney volume at baseline appears to not be normally distributed.
 
-However, I learned in the last project that taking the change score (or percent) will make the outcome normally distributed, as it is a way of counting for between subject variance.
+However, I learned in the last project that taking the change score (or percent) will make the outcome normally distributed, as it is a way of accounting for between subject variance. Let's check that that's the case this time.
 
 #### Percent Change in Kidney Volume
 
 ```{r}
+#| fig-height: 3.5
+#| fig-width: 8
 # Create histogram
-ggplot(data, aes(x = kidvol_change)) +
-  geom_histogram(fill = "paleturquoise", binwidth = 4.5) +
+hist_plot <- ggplot(data, aes(x = kidvol_change)) +
+  geom_histogram(binwidth = 4.5) +
   theme_minimal() +
   labs(title = "Histogram of Kidney Volume Change",
-       y = "Kidney Volume Change (%)",
-       x = "Subject ID")
+       y = "Count",
+       x = "Kidney Volume Change (%)")
 
 # Create qqplot
-ggplot(data, aes(sample = kidvol_change)) +
+qq_plot <- ggplot(data, aes(sample = kidvol_change)) +
   geom_qq() +
   geom_qq_line() +
   theme_minimal() +
-  labs(title = "QQ Plot of Kidney Volume Chage",)
+  labs(title = "QQ Plot of Kidney Volume Chage")
 
+# Plot side by side
+grid.arrange(hist_plot, qq_plot, ncol = 2)
+```
+
+`kidvol_change` is approximately normally distributed.
+
+It also appears that we have two outlier values. Let's assess using boxplots.
+
+```{r}
 # Calculate IQR and identify outliers
 IQR_val <- IQR(data$kidvol_change)
 Q1 <- quantile(data$kidvol_change, 0.25)
@@ -297,14 +338,13 @@ upper_bound <- Q3 + (1.5*IQR_val)
 
 # Create boxplot and flag outliers
 ggplot(data, aes(x = "", y = kidvol_change)) +
-  geom_boxplot(fill = "paleturquoise", alpha = 0.8) +
+  geom_boxplot(alpha = 0.8) +
   geom_text(aes(label = ifelse(kidvol_change < lower_bound | kidvol_change > upper_bound, Subject_ID, "")), hjust = -0.5, color = "red") +
   theme_minimal() +
   labs(title = "Boxplot of Kidney Volume Change",
        x = "",
        y = "Kidney Volume Change")
 ```
-The percent change in total kidney volume appears almost normally distributed, though there may be some outliers.
 
 Patients 37 and 51 are flagging as potential outliers. Let's examine them.
 
@@ -321,18 +361,762 @@ Interesting, it looks like these patients also have high values for certain MRI 
 
 While patients 37 and 51 are potential outliers on `kidvol_change`, these are NOT erroneous values. On the contrary, they are backed up by similar high values on other measurements such as `glcm2`, but are not universally high on all MRI image features. In other words, these appear to be very realistic values.
 
-In summary, all values are derived from authentic biological data and we are motivated to retain them in the analysis.
+In summary, all values are derived from authentic biological data. They will be examined using the jackknife residuals to assess for leverage and influence, but we are motivated to retain them in the analysis.
 
+[Top of Tabset](#Outcomes_Uni)
+
+## Disease Progression
+
+####
+
+```{r}
+# Create bar plot
+ggplot(data, aes(x = progression, fill = progression)) +
+  geom_bar() +
+  theme_minimal() +
+  scale_fill_brewer(palette = "Pastel2") +
+  ylim(0, 45) +
+  labs(title = "Count of Slow vs Fast Disease Progression",
+       x = "Disease Progression",
+       y = "Count",
+       fill = "Progression")
+
+# Create Table
+table(data$progression) 
+```
+
+We have an almost equal amount of patients that had slow vs fast disease progression.
+
+[Top of Tabset](#Outcomes_Uni)
+
+## Summary
+
+#### Kidney Volume Change
+
+`kidvol_change` is approximately normally distributed, with 2 potential outliers we will keep an eye on.
+
+#### Slow vs Fast Disease Progression
+
+We have an approximately even count between patients who had slow vs fast disease progression.
+
+[Top of Tabset](#Outcomes_Uni)
+
+:::
+
+# Feature Engineering {#Features_Uni}
+
+Here, we will examine the distribution of our variables and create quadratic terms for any variables that appear logarithmic.
+
+::: panel-tabset
+
+## Geometry
+
+::: panel-tabset
+
+## Geom1
+
+```{r}
+#| fig-height: 3.5
+#| fig-width: 8
+# Create histogram
+hist_plot <- ggplot(data, aes(x = geom1)) +
+  geom_histogram(binwidth = 30) +
+  theme_minimal() +
+  labs(title = "Histogram of Geom1",
+       x = "Geom1",
+       y = "Count")
+
+# Create qqplot
+qq_plot <- ggplot(data, aes(sample = geom1)) +
+  geom_qq() +
+  geom_qq_line() +
+  theme_minimal() +
+  labs(title = "QQ Plot of Geom1")
+
+# Plot side by side
+grid.arrange(hist_plot, qq_plot, ncol = 2)
+```
+
+There is 1 patient with a drastically lower value than everyone else. Let's examine.
+
+```{r}
+# Filter to most negative geom1 value
+data |> 
+  arrange(geom1)
+```
+
+Patient 48 appears to be an outlier on `geom1`.
+
+#### Summary
+
+`geom1` appears almost approximately normally distributed. There is potentially one outlier on the negative side, and the same two patients on the high end.
+
+We do not need to consider `geom1**2`.
+
+[Top of Tabset](#Features_Uni)
+
+## Geom2
+
+```{r}
+#| fig-height: 3.5
+#| fig-width: 8
+# Create histogram
+hist_plot <- ggplot(data, aes(x = geom2)) +
+  geom_histogram(binwidth = 300) +
+  theme_minimal() +
+  labs(title = "Histogram of Geom2",
+       x = "Geom2",
+       y = "Count")
+
+# Create qqplot
+qq_plot <- ggplot(data, aes(sample = geom2)) +
+  geom_qq() +
+  geom_qq_line() +
+  theme_minimal() +
+  labs(title = "QQ Plot of Geom2")
+
+# Plot side by side
+grid.arrange(hist_plot, qq_plot, ncol = 2)
+```
+`geom2` appears to be logarithmic. Let's adjust.
+
+```{r}
+#| fig-height: 3.5
+#| fig-width: 8
+# Create new variable
+data <- data |> 
+ mutate(geom2_sqrt = sqrt(geom2),
+        geom2_log = log(geom2)) 
+
+# Create histogram
+hist_plot <- ggplot(data, aes(x = geom2_sqrt)) +
+  geom_histogram(binwidth = 20) +
+  theme_minimal() +
+  labs(title = "Histogram of Geom2_sqrt",
+       x = "Geom2_sqrt",
+       y = "Count")
+
+# Create qqplot
+qq_plot <- ggplot(data, aes(sample = geom2_sqrt)) +
+  geom_qq() +
+  geom_qq_line() +
+  theme_minimal() +
+  labs(title = "QQ Plot of Geom2_sqrt")
+
+# Plot side by side
+grid.arrange(hist_plot, qq_plot, ncol = 2)
+```
+Sqrt kind of makes it better, still not a normall distribution, not that it has to be...
+
+Experimented with normalizing here.
+```{r}
+data |> 
+  arrange(geom2_log)
+
+ggplot(data, aes(x = geom2_log, y = kidvol_change)) +
+  geom_point()
+
+ggplot(data, aes(x = geom2, y = kidvol_change)) +
+  geom_point()
+
+# Create histogram
+hist_plot <- ggplot(data, aes(x = geom2_norm)) +
+  geom_histogram(binwidth = 0.2) +
+  theme_minimal() +
+  labs(title = "Histogram of Geom2_norm",
+       x = "Geom2_norm",
+       y = "Count")
+
+```
+
+We have an extremely low `geom2` value for patient 68...
+
+[Top of Tabset](#Features_Uni)
+
+:::
+
+## Gabor
+
+::: panel-tabset
+
+## Gabor1
+
+```{r}
+#| fig-height: 3.5
+#| fig-width: 8
+# Create histogram
+hist_plot <- ggplot(data, aes(x = gabor1)) +
+  geom_histogram(binwidth = 0.2) +
+  theme_minimal() +
+  labs(title = "Histogram of Gabor1",
+       x = "Gabor2",
+       y = "Count")
+
+# Create qqplot
+qq_plot <- ggplot(data, aes(sample = gabor1)) +
+  geom_qq() +
+  geom_qq_line() +
+  theme_minimal() +
+  labs(title = "QQ Plot of Gabor1")
+
+# Plot side by side
+grid.arrange(hist_plot, qq_plot, ncol = 2)
+```
+`gabor1` is normally distributed.
+
+[Top of Tabset](#Features_Uni)
+
+## Gabor2
+
+```{r}
+#| fig-height: 3.5
+#| fig-width: 8
+# Make plots
+distr_plots(data, "gabor2", 12)
+```
+`gabor2` appears approximately normally distributed.
+
+[Top of Tabset](#Features_Uni)
+
+### Gabor3
+
+```{r}
+#| fig-height: 3.5
+#| fig-width: 8
+# Make plots
+distr_plots(data, "gabor3", 30)
+```
+
+[Top of Tabset](#Features_Uni)
+
+`gabor3` appears approximately normally distributed, with some potential outliers.
+
+## Gabor4
+
+```{r}
+#| fig-height: 3.5
+#| fig-width: 8
+# Make plots
+distr_plots(data, "gabor4", 30)
+```
+`gabor4` may be exponential.
+
+```{r}
+#| fig-height: 3.5
+#| fig-width: 8
+data <- data |> 
+  mutate(gabor4_log = log(gabor4))
+
+distr_plots(data, "gabor4_log", 12)
+```
+`gabor4_log` appears to be normally distributed.
+
+## Gabor5
+
+```{r}
+#| fig-height: 3.5
+#| fig-width: 8
+# Make plots
+distr_plots(data, "gabor5", 30)
+```
+
+`gabor5` may be logarithmic?
+
+```{r}
+#| fig-height: 3.5
+#| fig-width: 8
+data <- data |> 
+  mutate(gabor5_log = log(gabor5))
+
+distr_plots(data, "gabor5_log", 30)
+```
+
+That's kind of better, don't really know what to do with that.
+
+```{r}
+# Calculate IQR and identify outliers
+IQR_val <- IQR(data$gabor5_log)
+Q1 <- quantile(data$gabor5_log, 0.25)
+Q3 <- quantile(data$gabor5_log, 0.75)
+lower_bound <- Q1 - (1.5*IQR_val)
+upper_bound <- Q3 + (1.5*IQR_val)
+
+# Create boxplot and flag outliers
+ggplot(data, aes(x = "", y = gabor5_log)) +
+  geom_boxplot(alpha = 0.8) +
+  geom_text(aes(label = ifelse(gabor5_log < lower_bound | gabor5_log > upper_bound, Subject_ID, "")), hjust = -0.5, color = "red") +
+  theme_minimal() +
+  labs(title = "Boxplot of Gabor5",
+       x = "",
+       y = "Gabor5")
+```
+
+
+[Top of Tabset](#Features_Uni)
+
+:::
+
+## GLCM
+
+::: panel_tabset 
+
+## GLCM1
+
+```{r}
+#| fig-height: 3.5
+#| fig-width: 8
+# Make plots
+distr_plots(data, "glcm1", 10)
+```
+
+`glcm1` is approximately normally distributed.
+
+[Top of Tabset](#Features_Uni)
+
+## GLCM2
+
+```{r}
+#| fig-height: 3.5
+#| fig-width: 8
+# Make plots
+distr_plots(data, "glcm2", 10)
+```
+
+`glcm2` may be logarithmic.
+
+```{r}
+# Create log variable
+data <- data |> 
+  mutate(glcm2_log = log(glcm2))
+
+#| fig-height: 3.5
+#| fig-width: 8
+# Make plots
+distr_plots(data, "glcm2_log", 10)
+```
+
+That's better, with perhaps a negative outlier.
+
+[Top of Tabset](#Features_Uni)
+
+:::
+
+## TXTI
+
+::: panel-tabset
+
+## TXT1
+
+```{r}
+#| fig-height: 3.5
+#| fig-width: 8
+# Make plots
+distr_plots(data, "txti1", 10)
+```
+`txti1` appears normally distributed
+
+[Top of Tabset](#Features_Uni)
+
+## TXTI2
+
+```{r}
+#| fig-height: 3.5
+#| fig-width: 8
+# Make plots
+distr_plots(data, "txti2", 10)
+```
+
+`txti2` appears normally distributed.
+
+[Top of Tabset](#Features_Uni)
+
+## TXTI3
+
+```{r}
+#| fig-height: 3.5
+#| fig-width: 8
+# Make plots
+distr_plots(data, "txti3", 10)
+```
+
+`txti3` appears normally distributed.
+
+[Top of Tabset](#Features_Uni)
+
+## TXTI4
+
+```{r}
+#| fig-height: 3.5
+#| fig-width: 8
+# Make plots
+distr_plots(data, "txti4", 10)
+```
+
+`txti4` may be logarithmic.
+
+```{r}
+#| fig-height: 3.5
+#| fig-width: 8
+data <- data |> 
+  mutate(txti4_log = log(txti4))
+
+# Make plots
+distr_plots(data, "txti4_log", 10)
+```
+
+That's better?
+
+[Top of Tabset](#Features_Uni)
+
+## TXTI5
+
+```{r}
+#| fig-height: 3.5
+#| fig-width: 8
+#| # Make plots
+distr_plots(data, "txti5", 10)
+```
+
+May be logarithmic?
+
+```{r}
+#| fig-height: 3.5
+#| fig-width: 8
+data <- data |> 
+  mutate(txti5_log = log(txti5))
+
+#| # Make plots
+distr_plots(data, "txti5_log", 10)
+```
+
+That looks better. Mostly.
+
+[Top of Tabset](#Features_Uni)
+
+:::
+
+## LBP
+
+::: panel-tabset
+
+## LBP1
+
+```{r}
+#| fig-height: 3.5
+#| fig-width: 8
+#| # Make plots
+distr_plots(data, "lbp1", 20)
+```
+
+Looks normally distributed with 1 outlier.
+
+#### Remove Outlier
+
+```{r}
+data |> 
+  arrange(desc(lbp3)) |> 
+  head() |> 
+  pretty_print()
+```
+
+Patient 52 is a CLEAR outlier (lbp3 = 11, no othe patients have an lbp3 over 1).
+
+We remove them.
+
+```{r}
+# Remove outlier patient
+data <- data |> 
+  filter(!Subject_ID == 52)
+```
+
+#### Remake Plots
+
+```{r}
+#| fig-height: 3.5
+#| fig-width: 8
+#| # Make plots
+distr_plots(data, "lbp1", 20)
+```
+
+`lbp1` is normally distributed.
+
+[Top of Tabset](#Features_Uni)
+
+## LBP2
+
+```{r}
+#| fig-height: 3.5
+#| fig-width: 8
+#| # Make plots
+distr_plots(data, "lbp2", 20)
+```
+
+We appear to have a different outlier for `lbp2`.
+
+```{r}
+# Examine outlier
+data |> 
+  arrange(desc(lbp2)) |> 
+  head() |> 
+  pretty_print()
+```
+Patient 48 is an outlier on `lbp2` (lbp2 = 3, all other patients are essentially below 1).
+
+We remove them
+
+```{r}
+# Remove outlier
+data <- data |> 
+  filter(!Subject_ID == 48)
+```
+
+#### Remake Plots
+
+```{r}
+#| fig-height: 3.5
+#| fig-width: 8
+#| # Make plots
+distr_plots(data, "lbp2", 20)
+```
+
+`lbp2` is normally distributed
+
+
+[Top of Tabset](#Features_Uni)
+
+## LBP3
+
+```{r}
+#| fig-height: 3.5
+#| fig-width: 8
+#| # Make plots
+distr_plots(data, "lbp3", 20)
+```
+
+Approximately normalish.
+
+[Top of Tabset](#Features_Uni)
+
+## LBP4
+
+```{r}
+#| fig-height: 3.5
+#| fig-width: 8
+#| # Make plots
+distr_plots(data, "lbp4", 20)
+```
+
+`lbp4` appears logarithmic.
+
+```{r}
+#| fig-height: 3.5
+#| fig-width: 8
+# Create log variable
+data <- data |> 
+  mutate(lbp4_log = log(lbp4))
+
+#| # Make plots
+distr_plots(data, "lbp4_log", 20)
+```
+
+Looks better.
+
+[Top of Tabset](#Features_Uni)
+
+## LBP5
+
+```{r}
+#| fig-height: 3.5
+#| fig-width: 8
+#| # Make plots
+distr_plots(data, "lbp5", 20)
+```
+
+`lbp5` looks logarithmic.
+
+```{r}
+#| fig-height: 3.5
+#| fig-width: 8
+# Create log variable
+data <- data |> 
+  mutate(lbp5_log = log(lbp5))
+
+#| # Make plots
+distr_plots(data, "lbp5_log", 20)
+```
+
+Looks better, maybe 1 outlier.
+
+```{r}
+data |> 
+  arrange(lbp5_log) |> 
+  head()
+```
+
+[Top of Tabset](#Features_Uni)
+
+:::
+
+## Summary
+
+We determined that the following variables were logarithmic:
+
+ - `geom2`
+ - `gabor4`
+ - `gabor5`?
+ - `glcm2`
+ - `txti4`
+ - `txti5`
+ - `lbp4`
+ - `lbp5`
+
+We also eliminated 2 outlier patients, `48` and `52`.
+
+[Top of Tabset](#Features_Uni)
+
+:::
+
+# Correlation Matrices
+
+#### This is a matrix for Raw Data Set
+
+```{r}
+# Clean the output by making a trimmed dataset excluding extaneous variables
+data_for_matrix <- data |> 
+  select(kidvol_base, kidvol_visit2, kidvol_change, progression, everything(), -Subject_ID)
+
+# We factored our variables at the start. To make a correlation matrix we must reconvert those back to numeric
+data_for_matrix <- data.frame(lapply(data_for_matrix, function(x) if (is.factor(x)) as.numeric(x) else x))
+
+# Make a correlation matrix with all variables of the trimmed data set
+correlation_matrix <- cor(data_for_matrix, use = "complete.obs")
+
+# Plot correlation matrix
+corrplot(correlation_matrix, method = "circle")
+```
+
+```{r}
+model <- lm(kidvol_change ~ txti4_log, data = data)
+summary(model)
+```
+
+```{r}
+model <- lm(kidvol_change ~ txti4_log, data = data)
+summary(model)
+```
+
+
+
+#### This is a matrix for Feature Engineered Data Set
+```{r}
+# # Function to square specified columns and rename the new variables
+# square_selected_variables <- function(df, columns) {
+#   df %>%
+#     mutate(across(all_of(columns), ~ .^2, .names = "{.col}_square"))
+# }
+# 
+# columns <- data |> 
+#   select(-Subject_ID, -progression, - kidvol_base, -kidvol_visit2, -kidvol_change) |> 
+#   colnames()
+# 
+# data_test <- square_selected_variables(data, columns)
+# 
+# 
+# # Clean the output by making a trimmed dataset excluding extaneous variables
+# data_for_matrix <- data_test |> 
+#   select(kidvol_base, kidvol_visit2, kidvol_change, everything(), -Subject_ID, -progression)
+# 
+# # We factored our variables at the start. To make a correlation matrix we must reconvert those back to numeric
+# data_for_matrix <- data.frame(lapply(data_for_matrix, function(x) if (is.factor(x)) as.numeric(x) else x))
+# 
+# # Make a correlation matrix with all variables of the trimmed data set
+# correlation_matrix <- cor(data_for_matrix, use = "complete.obs")
+# 
+# # Plot correlation matrix
+# corrplot(correlation_matrix, method = "circle")
+
+```
+```{r}
+ggplot(data, aes(x = gabor3, y = kidvol_change)) +
+  geom_point() +
+  geom_smooth(method = "lm")
+
+model <- lm(kidvol_change ~ gabor3, data = data)
+summary(model)
+```
+
+```{r}
+ggplot(data, aes(x = gabor1, y = kidvol_change)) +
+  geom_point() +
+  geom_smooth(method = "lm")
+
+model <- lm(kidvol_change ~ gabor1, data = data)
+summary(model)
+```
+
+```{r}
+ggplot(data, aes(x = kidvol_base, y = kidvol_change)) +
+  geom_point() +
+  geom_smooth(method = "lm")
+
+model <- lm(kidvol_change ~kidvol_base, data = data)
+summary(model)
+
+ggplot(data, aes(x = kidvol_base, y = kidvol_change, size = geom1, color = geom1)) +
+  geom_point() +
+  geom_smooth(method = "lm")
+
+model <- lm(kidvol_change ~ kidvol_base + geom1 , data = data)
+
+summary(model)
+
+library(car)
+
+vif(model)
+```
+
+
+
+
+```{r}
+ggplot(data, aes(x = sqrt(geom2), y = kidvol_visit2)) +
+  geom_point() +
+  geom_smooth(method = "lm")
+```
+
+```{r}
+ggplot(data, aes(x = txti2, y = kidvol_change)) +
+  geom_point() +
+  geom_smooth(method = "lm")
+```
+
+```{r}
+data |> 
+  arrange(desc(lbp3))
+
+data_filtered <- data |> 
+  filter(!Subject_ID %in% c(52, 48, 37, 51))
+
+ggplot(data_filtered, aes(x = gabor2, y = kidvol_change)) +
+  geom_point() +
+  geom_smooth(method = "lm")
+```
+
+:::
 
 # Bivariate Comparisons
 
 ```{r}
 data |> 
-  arrange(desc(lbp5))
+  arrange(desc(lbp5)) |> 
+  head() |> 
+  pretty_print()
 ```
 
 
-####
+#### Scatterplots
+
+Let's make a function here that will make the scatterplots with the layout that we prefer.
 
 ```{r}
 #| warning: false
@@ -408,159 +1192,54 @@ plot_features_against_outcome(features_txti)
 plot_features_against_outcome(features_lbp)
 ```
 
-These are either logarithmic, or that one participant is an incredible outlier.
+# Feature Scaling
 
-Let's try removing them and see what the plots look like.
-
-```{r}
-# Sort by lbp5
-data |> 
-  arrange(desc(lbp5))
-
-# Plot scatterplots of each MRI feature against kidney volume change
-plot_features_against_outcome <- function(features) {
-for (feature in features) {
-  p <- ggplot(data, aes_string(x = feature, y = "kidvol_change")) +
-    geom_point() +
-    theme_minimal() +
-    labs(title = paste(feature),
-                       x = feature,
-                       y = "Kidney Volume Change (%)")
-    plots[[feature]] <- p
-}
-
-# Combine all plots into a grid
-combined_plot <- wrap_plots(plots, ncol = 3)
-combined_plot
-}
-```
-Particpant 48 is almost 9 times higher than the next closest patient on `lbp5`.
+Here we will perform the scaling as necessary to place all variables on the same scale.
 
 ```{r}
-# Filter out patient 48
-data_filter <- data |> 
-  filter(!Subject_ID == 48)
-
-# Plot scatterplots of each MRI feature against kidney volume change
-plot_features_against_outcome <- function(features) {
-for (feature in features) {
-  p <- ggplot(data_filter, aes_string(x = feature, y = "kidvol_change")) +
-    geom_point() +
-    theme_minimal() +
-    labs(title = paste(feature),
-                       x = feature,
-                       y = "Kidney Volume Change (%)")
-    plots[[feature]] <- p
+# Min-max normalization function
+min_max_norm <- function(x) {
+  (x - min(x)) / (max(x) - min(x))
 }
 
-# Combine all plots into a grid
-combined_plot <- wrap_plots(plots, ncol = 3)
-combined_plot
-}
+#############I was trying to features scale ecerything at once here.
+test <- scale(data$geom1)
+testly <- z_norm(data$geom1)
 
-plot_features_against_outcome(features_lbp)
+data_scale <- data |> 
+  select()
+
+for (var in colnames(data)) {
+  datascale(var)
+}
 
 ```
 
-Okay, we assumed they were the same patient but their not.
+
+# To do
+
+Split Data Set - technically was supposed to do this right at start... How does k-cross fold come into play though.
+
+Plot against outcome variable with transformed features as necessary (try with method - "lm", se = F)
+
+Feature Scaling the training set
+
+Then feature scale the test set based on the training set values (mean and SD)
+
+Run the models
+1a
+1b
+1c
+
+2a
+2b
+2c
+
+???
+
+Profit
 
 
-```{r}
-data_filter |> 
-  arrange(desc(lbp3))
-
-# Filter out patients
-data_filter <- data_filter |> 
-  filter(!Subject_ID == 52)
-
-# Plot scatterplots of each MRI feature against kidney volume change
-plot_features_against_outcome <- function(features) {
-for (feature in features) {
-  p <- ggplot(data_filter, aes_string(x = feature, y = "kidvol_change")) +
-    geom_point() +
-    geom_smooth(method = "lm") +
-    theme_minimal() +
-    labs(title = paste(feature),
-                       x = feature,
-                       y = "Kidney Volume Change (%)")
-    plots[[feature]] <- p
-}
-
-# Combine all plots into a grid
-combined_plot <- wrap_plots(plots, ncol = 3)
-combined_plot
-}
-
-plot_features_against_outcome(features_lbp)
-
-```
-
-Still looks logarithmic. I
-
-```{r}
-hist(data_filter$lbp5)
-hist(data_filter$lbp3)
-boxplot(data_filter$lbp3)
-hist(data$geom2)
-```
-That's gotta be an outlier.
-
-
-
-<!-- ```{r} -->
-<!-- # Create a function that plots all features against one outcome variable. Code modified from ChatGPT -->
-
-<!-- # Define the custom function -->
-<!-- plot_features_against_outcome <- function(data, outcome, features, ncol = 5) { -->
-<!--   # Combine data into a long format within the function -->
-<!--   long_data <- data %>% -->
-<!--     select(all_of(c(outcome, features))) %>% -->
-<!--     pivot_longer(cols = -all_of(outcome), names_to = "feature", values_to = "value") -->
-
-<!--   # Create the scatterplot matrix -->
-<!--   p <- ggplot(long_data, aes(x = value, y = !!sym(outcome))) + -->
-<!--     geom_point(alpha = 0.6, color = "blue") + -->
-<!--     facet_wrap(~ feature, ncol = ncol, scales = "free") + -->
-<!--     labs( -->
-<!--       title = paste("Scatterplot Matrix of Features vs Change in Kidney Volume"), -->
-<!--       x = "Feature Value", -->
-<!--       y = "Change in Kidney Volume (%)" -->
-<!--     ) + -->
-<!--     theme_minimal() + -->
-<!--     theme( -->
-<!--       plot.title = element_text(hjust = 0.5, size = 16, face = "bold"), -->
-<!--       strip.text = element_text(size = 10, face = "bold"), -->
-<!--       axis.text.x = element_text(angle = 45, hjust = 1), -->
-<!--       panel.spacing = unit(0.5, "lines") -->
-<!--     ) -->
-
-<!--   return(p) -->
-<!-- } -->
-
-<!-- # List of features to plot against the outcome -->
-<!-- features <- colnames(data)[colnames(data) != "outcome"] -->
-
-<!-- # Plot using the custom function -->
-<!-- plot_features_against_outcome(data, "kidvol_change", MRI_features, ncol = 5) -->
-
-<!-- # Plot using the custom function -->
-<!-- plot_features_against_outcome(data_gabor, "kidvol_change", MRI_features, ncol = 5) -->
-
-<!-- ``` -->
-
-# TO do
-
-Start over and examine all univariate distributions first for all covariates (and also which potentiall need deleting).
-
-This will show you which ones need to be transformed and which don't
-
-Then transform them.
-
-THEN plot them all against outcome variable (with lm I guess...
-
-Then correlation matrix.
-
-then 
 
 
 
