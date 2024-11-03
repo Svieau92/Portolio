@@ -1,0 +1,1428 @@
+---
+title: "Project 3 - Date Set Creation"
+subtitle: "Data Management Using SAS"
+format: html
+editor: visual
+author: Sean Vieau
+date: October 28, 2024
+toc: true
+output: html-document
+---
+
+# Introduction
+
+This is part three of the main project for BIOS 6680: Data Management Using SAS, in which we plan and carry out data management activities including data cleaning/quality assurance, data documentation, analytic data set creation, and a final analysis. A key goal of this project is to demonstrate reproducible research and reporting.
+
+**The purpose of this project is to write a SAS program to create a combined analysis data set.**
+
+In this project we use:
+
+-   An array
+-   DO loops
+-   IF/THEN statements
+-   PROC TRANSPOSE
+-   The following functions:
+    -   SUM()
+    -   TRIM()
+    -   PUT()
+    -   INPUT()
+    -   SUBSTR(), MDY()
+    -   INTCK()
+    -   COMPRESS()
+
+# Background
+
+The Behavioral Risk Factor Surveillance System (BRFSS) is a collaborative database of ongoing health related telephone surveys that collect data on risk behaviors, chronic health conditions, health care access, and use of preventive services from adults (\>= 18 years) in all 50 states in the U.S. and additional territories. The objective of the BRFSS is to collect uniform state-specific data on health-related outcomes and behaviors relating to the leading causes of death and disability in the US. This is real, patient level data.
+
+## Email from Investigator
+
+![](images/clipboard-312165149.png){fig-align="center" width="85%"}
+
+#### Main Research Question
+
+The researcher's main question is whether there is a significant difference in BMI between California and North Carolina.
+
+#### Desired Data Set
+
+They are only interested in including the following states: California, Colorado, Connecticut, Delaware, New Mexico, North Carolina, and West Virginia.
+
+The investigator has asked us to create and merge the following data sets:
+
+![](images/clipboard-3895198399.png){fig-align="center" width="70%"}
+
+![](images/clipboard-3927233926.png){fig-align="center" width="70%"}
+
+![](images/clipboard-2794684053.png){fig-align="center" width="70%"}
+
+![](images/clipboard-2166764461.png){fig-align="center" width="70%"}
+
+# Step 0: Connect to SAS
+
+This document was created in RStudio with Quarto.
+
+To code in SAS we first need to connect RStudio to the SAS server.
+
+```{r}
+# This code connects to SAS On Demand
+library(configSAS)
+configSAS::set_sas_engine()
+
+#  This code allows you to run ```{sas}``` chunks
+sas = knitr::opts_chunk$get("sas")
+```
+
+# Step 1: Create Libraries
+
+Then we will create the necessary libraries.
+
+```{sas, results = "hide"}
+
+* Set Courseroot;
+%LET CourseRoot = /home/u63376223/sasuser.v94/Data Management Using SAS;
+
+* Create libraries;
+LIBNAME Source "&CourseRoot/BRFSS/Data/1_Source";
+LIBNAME Impt "&CourseRoot/BRFSS/Data/2_Import";
+```
+
+# Step 2: Read In Data {#Read}
+
+Here we will import the data sets.
+
+::: panel-tabset
+## Reference Table
+
+#### Import and Transpose Data
+
+```{sas}
+#| results: "hide"
+* Import the reference table;
+TITLE "Reference Table";
+DATA Impt.ref_table;
+    SET "&CourseRoot/BRFSS/Data/1_Source/ref_table (1).sas7bdat";
+RUN;
+
+* Transpose it to wideform;
+PROC TRANSPOSE DATA = Impt.ref_table
+	OUT = Impt.ref_table_long;  
+	VAR COL1--COL29803;     
+	RUN;  
+	
+* Process the transposed data (drop out the _NAME_ coulumn); 
+DATA Impt.ref_table_long;    
+	SET Impt.ref_table_long;    
+	DROP _NAME_; 
+	RUN;
+```
+
+#### View Data
+
+```{sas}
+
+* Check contents to ensure correct data types;
+ODS SELECT VARIABLES;
+PROC CONTENTS DATA = Impt.ref_table_long;
+	RUN;
+	
+* Visualize data set;
+PROC PRINT DATA = Impt.ref_table_long (OBS = 10);
+	RUN;
+```
+
+Dispcode should be numeric, but all values are also missing. I believe this is intentional so we do not need to address. All other variables look correct.
+
+The reference table looks good and has been transposed correctly.
+
+[Top of Tabset](#Read)
+
+## Demographics
+
+#### Import Data
+
+```{sas}
+#| results: "hide"
+
+* Import demographics data set;
+TITLE "Demographics";
+PROC IMPORT 
+        DATAFILE =  "&CourseRoot/BRFSS/Data/1_Source/demographics (2).xlsx"
+        OUT     =   Impt.Demographics
+        DBMS    =   XLSX
+        REPLACE;
+RUN;
+```
+
+#### View Data
+
+```{sas}
+* Check contents to ensure correct data types;
+ODS SELECT VARIABLES;
+PROC CONTENTS DATA = Impt.DEMOGRAPHICS;
+	RUN;
+	
+* Visualize data set;
+PROC PRINT DATA = Impt.Demographics (OBS = 10);
+	RUN;
+```
+
+All Demographics variables are the correct length and type.
+
+[Top of Tabset](#Read)
+
+## Outcomes {#outcomes}
+
+#### Import Data
+
+```{sas}
+#| results: "hide"
+* Import the dataset;
+TITLE "Outcomes";
+PROC IMPORT DATAFILE="&CourseRoot/BRFSS/Data/1_Source/outcomes (1).csv"
+            OUT=Impt.Outcomes
+            DBMS=CSV
+            REPLACE;
+     GETNAMES=YES;
+     GUESSINGROWS=MAX; /* Ensures that SAS scans more rows to determine the correct data types */
+     RUN;
+```
+
+#### View Data
+
+```{sas}
+* Check contents to ensure correct data types;
+ODS SELECT VARIABLES;
+PROC CONTENTS DATA = Impt.Outcomes;
+	RUN;
+            
+* Examine data;
+PROC PRINT DATA = Impt.Outcomes (OBS = 10);
+  RUN;
+```
+
+All Outcomes variables are the correct length and type.
+
+[Top of Tabset](#Read)
+
+## Risk Factors
+
+#### Import Data
+
+```{sas}
+#| results: "hide"
+* Import risk factors;
+TITLE "Risk Factors";
+PROC IMPORT 
+        DATAFILE =  "&CourseRoot/BRFSS/Data/1_Source/riskfactors (1).xlsx"
+        OUT     =   Impt.Risk
+        DBMS    =   XLSX
+        REPLACE ;
+    RUN;
+```
+
+#### View Data
+
+```{sas}
+* Check contents to ensure correct data types;
+ODS SELECT VARIABLES;
+PROC CONTENTS DATA = Impt.Risk;
+	RUN;
+
+* Visualize data set;
+PROC PRINT DATA = Impt.Risk (OBS = 10);
+	RUN;
+```
+
+All Risk Factors variables are the correct length and type.
+
+[Top of Tabset](#Read)
+:::
+
+# Step 3: Create Demographics Data Set {#Demo}
+
+::: panel-tabset
+## Race
+
+#### Create Format
+
+```{sas}
+#| results: "hide"
+* Create FORMAT for race;
+TITLE "Demographics: Race";
+PROC FORMAT;
+	VALUE RaceCd
+			1 = "Non-Hispanic White"
+			2 = "Non-Hispanic Black"
+			3 = "Non-Hispanic American Indian or Alaskan Native"
+			4 = "Hispanic"
+			5 = "Other";
+	RUN;
+```
+
+#### Create Variable
+
+```{sas}
+#| results: "hide"
+* Use boolean logic to create RaceCd variable per PI specifications;
+DATA Impt.Demographics;
+	SET Impt.Demographics;
+		IF _PRACE2 = . 						 THEN RaceCd = .;
+		ELSE IF _PRACE2 = 1 AND _HISPANC = 2 THEN RaceCd = 1;
+		ELSE IF _PRACE2 = 2 AND _HISPANC = 2 THEN RaceCd = 2;
+		ELSE IF _PRACE2 = 3 AND _HISPANC = 2 THEN RaceCd = 3;
+		ELSE IF				    _HISPANC = 1 THEN RaceCd = 4;
+		ELSE 									  RaceCd = 5;
+	ATTRIB RaceCd LABEL = "Race" FORMAT = RaceCd.;
+	RUN;
+```
+
+#### Double Check for Correct Assignment
+
+```{sas}
+* Double check for correct assignment;
+PROC PRINT DATA = Impt.Demographics (OBS = 10);
+	VAR _PRACE2 _HISPANC RaceCd;
+	FORMAT RaceCd RaceCd.;
+	RUN;
+```
+
+All correct.
+
+[Top of Tabset](#Demo)
+
+## Insurance
+
+#### Create Format
+
+```{sas}
+#| results: "hide"
+* Create FORMAT for insurance;
+TITLE "Demographics: Insurance";
+PROC FORMAT;
+	VALUE InsuranceCd
+			1 = "Private/commercial/Medicare/Medigap"
+			2 = "Medicaid/CHIP"
+			3 = "Tricare"
+			4 = "Indian Health Services"
+			5 = "Other"
+			6 = "None/Uninsured/Unknown";
+	RUN;
+```
+
+#### Create Variable
+
+```{sas}
+#| results: "hide"
+* Create Insurance variable per PI specifications;
+DATA Impt.Demographics;
+	SET Impt.Demographics;
+		IF 		PRIMINSR in (1, 2, 3, 4) THEN InsuranceCd = 1;
+		ELSE IF PRIMINSR in (5,6)		 THEN InsuranceCd = 2;
+		ELSE IF PRIMINSR = 7 			 THEN InsuranceCd = 3;
+		ELSE IF PRIMINSR = 8			 THEN InsuranceCd = 4;
+		ELSE IF PRIMINSR in (9,10)		 THEN InsuranceCd = 5;
+		ELSE 								  InsuranceCd = 6;
+	ATTRIB InsuranceCd LABEL = "Insurance" FORMAT = InsuranceCd.;
+	RUN;
+```
+
+#### Double Check for Correct Assignment
+
+```{sas}
+* Double check for correct assignment;
+PROC PRINT DATA = Impt.Demographics (OBS = 10);
+	VAR PRIMINSR InsuranceCd;
+	FORMAT InsuranceCd InsuranceCd.;
+	RUN;
+```
+
+All correct.
+
+[Top of Tabset](#Demo)
+
+## Education
+
+#### Create Format
+
+```{sas}
+#| results: "hide"
+* Create FORMAT for Education;
+TITLE "Demographics: Education";
+PROC FORMAT;
+	VALUE EducationCd
+			1 = "<High School"
+			2 = "Graduated High School"
+			3 = "Some College"
+			4 = "4+ Year College Degree";
+	RUN;
+```
+
+#### Create Variable
+
+```{sas}
+#| results: "hide"
+* Create Education variable per PI specifications;
+DATA Impt.Demographics;
+	SET Impt.Demographics;
+		IF 		EDUCA IN(.,9) 	THEN EducationCd = .;
+		ELSE IF EDUCA IN(1,2,3) THEN EducationCd = 1;
+		ELSE IF EDUCA = 4		THEN EducationCd = 2;
+		ELSE IF EDUCA = 5		THEN EducationCd = 3;
+		ELSE 						 EducationCd = 4;
+	ATTRIB EducationCd LABEL = "Education" FORMAT = EducationCd.;
+	RUN;
+```
+
+#### Double Check for Correct Assignment
+
+```{sas}
+* Double check for correct assignment;
+PROC PRINT DATA = Impt.Demographics (OBS = 10);
+	VAR EDUCA EducationCd;
+	FORMAT InsuranceCd InsuranceCd.;
+	RUN;	
+```
+
+All correct.
+
+[Top of Tabset](#Demo)
+
+## Age
+
+#### Create Format
+
+```{sas}
+#| results: "hide"
+* Create FORMAT for age;
+TITLE "Demographics: Age";
+PROC FORMAT;
+	VALUE AgeCd
+		1 = "18-44"
+		2 = "45-64"
+		3 = "65+";
+	RUN;
+```
+
+#### Create Variable
+
+```{sas}
+#| results: "hide"
+* Create Age variable per PI specifications;	
+DATA Impt.Demographics;
+	SET Impt.Demographics;
+		IF 		_AGEG5YR IN(.,14)	   THEN AgeCd = .;
+		ELSE IF _AGEG5YR IN(1,2,3,4,5) THEN AgeCd = 1;
+		ELSE IF _AGEG5YR IN(6,7,8,9)	   THEN AgeCd = 2;
+		ELSE 								AgeCd = 3;
+	ATTRIB AgeCd LABEL = "Age" FORMAT = AgeCd.;
+	RUN;
+```
+
+#### Double Check for Correct Assignment
+
+```{sas}
+* Double check for correct assignment;
+PROC PRINT DATA = Impt.Demographics (OBS = 10);
+	VAR _AGEG5YR AgeCd;
+	FORMAT AgeCd AgeCd.;
+	RUN;	
+```
+
+[Top of Tabset](#Demo)
+
+## Income
+
+#### Create Format
+
+```{sas}
+#| results: "hide"
+* Create format for Income;
+TITLE "Demographics: Income";
+PROC FORMAT;
+	VALUE IncomeCd
+		1 = "<15k"
+		2 = "15-<35k"
+		3 = "35-<50K"
+		4 = "50k-<100k"
+		5 = "100k-<200k"
+		6 = "200K+";
+	RUN;
+```
+
+#### Create Variable
+
+```{sas}
+#| results: "hide"
+* Create Income variable per PI specifications;
+DATA Impt.Demographics;
+	SET Impt.Demographics;
+		IF 		INCOME3 IN(., 77, 99) THEN IncomeCd = .;
+		ELSE IF	INCOME3 IN(1,2)		  THEN IncomeCd = 1;
+		ELSE IF INCOME3 IN(3,4)		  THEN IncomeCd = 2;
+		ELSE IF INCOME3 IN(5,6)		  THEN IncomeCd = 3;
+		ELSE IF INCOME3 IN(7,8) 	  THEN IncomeCd = 4;
+		ELSE IF INCOME3 IN(9,10)	  THEN IncomeCd = 5;
+		ELSE						  	   IncomeCd = 6;
+	ATTRIB IncomeCd LABEL = "Income" FORMAT = IncomeCd.;
+	RUN;
+```
+
+#### Double Check for Correct Assignment
+
+```{sas}
+* Double check for correct assignment;
+PROC PRINT DATA = Impt.Demographics (OBS = 10);
+	VAR INCOME3 IncomeCd;
+	FORMAT IncomeCd IncomeCd.;
+	RUN;	
+```
+
+[Top of Tabset](#Demo)
+
+## Number of Disabilities
+
+#### Create Variable
+
+```{sas}
+#| results: "hide"
+* Create Disabilities variable per PI specifications;
+TITLE "Demographics: Disabilities";
+DATA Impt.Demographics;
+	SET Impt.Demographics;
+	Disabilities = SUM((DEAF = 1), (BLIND = 1), (DECIDE = 1), (DIFFWALK = 1), (DIFFDRES = 1), (DIFFALON = 1));
+	ATTRIB Disabilities LABEL = "Total Number of Disabilities" FORMAT = BEST.;
+	RUN;
+```
+
+#### Double Check for Correct Assignment
+
+```{sas}
+* Double check for correct assignment;
+PROC PRINT DATA = Impt.Demographics (OBS = 10);
+	VAR DEAF BLIND DECIDE DIFFWALK DIFFDRES DIFFALON Disabilities;
+	RUN;	
+```
+
+[Top of Tabset](#Demo)
+:::
+
+## Consolidate Demogrpahics Data Set
+
+Here we will collect only the variables we created which the investigator asked for, and the variables needed for the final merge;
+
+#### Collect Variables
+
+```{sas}
+#| results: "hide"
+TITLE "Demographics Cleaned";
+DATA Impt.Demographics_Final;
+	SET Impt.Demographics;
+	KEEP seqno RaceCd InsuranceCd EducationCd AgeCd IncomeCd Disabilities;
+	RENAME  RaceCd = Race 
+			InsuranceCd = Insurance
+			EducationCd = Education
+			AgeCd = Age
+			IncomeCd = Income;
+  RUN;
+```
+
+#### View Data
+
+```{sas}
+* Examine data set;
+PROC PRINT DATA = Impt.DEMOGRAPHICS_FINAL (OBS = 10);
+	RUN;
+```
+
+#### Double Check for Correct Formats and Labels
+
+```{sas}
+* Double check for format;
+ODS SELECT VARIABLES;
+PROC CONTENTS DATA = Impt.Demographics_Final;
+	RUN;
+```
+
+# Step 4: Create Outcomes Data Set {#Outcomes}
+
+::: panel-tabset
+## CHD/Heart Attack
+
+#### Create Format
+
+```{sas}
+#| results: "hide"
+* Create format for ever had a CHD or heart attack;
+TITLE "Outcomes: CHD or Heart Attack";
+PROC FORMAT;
+	VALUE CHDattackCd
+		1 = "Yes"
+		2 = "No"
+		3 = "Not Asked or Missing";
+	RUN;
+```
+
+#### Create Variable
+
+```{sas}
+#| results: "hide"
+* Create CHDattack variable per PI specifications;
+DATA Impt.Outcomes;
+	SET Impt.Outcomes; 
+	IF 		CVDCRHD4 = 1 OR CVDINFR4 = 1 THEN CHDattackCd = 1;
+	ELSE IF CVDCRHD4 = 2 AND CVDINFR4 = 2 THEN CHDattackCd = 2;
+	ELSE 										CHDattackCd = 3;
+	ATTRIB CHDattackCd LABEL = "CHD or Heart Attack" FORMAT = CHDattackCd.;
+	RUN;
+```
+
+#### Double Check for Correct Assignment
+
+```{sas}
+* Double check for correct assignment;
+PROC PRINT DATA = Impt.Outcomes (OBS = 10);
+	VAR CVDCRHD4 CVDINFR4 CHDattackCd;
+	RUN;	
+```
+
+[Top of Tabset](#Outcomes)
+
+## Asthma
+
+#### Create Format
+
+```{sas}
+#| results: "hide"
+* Create format for asthma status;
+TITLE "Outcomes: Asthma";
+PROC FORMAT;
+	VALUE AsthmaCd
+		1 = "Current" 
+		2 = "Former"
+		3 = "Never"
+		4 = "Don’t Know/Not Sure";
+	RUN;
+```
+
+#### Create Variable
+
+```{sas}
+#| results: "hide"
+* Create Disabilities variable per PI specifications;
+DATA Impt.Outcomes;
+	SET Impt.Outcomes;
+		IF		 ASTHMA3 = 1 AND ASTHNOW = 1 THEN AsthmaCd = 1;
+		ELSE IF  ASTHMA3 = 1 AND ASTHNOW = 2 THEN AsthmaCd = 2;
+		ELSE IF  ASTHMA3 = 2				 THEN AsthmaCd = 3;
+		ELSE									  AsthmaCd = 4;
+		ATTRIB AsthmaCd LABEL = "Asthma Status" FORMAT = AsthmaCd.;
+	RUN;
+```
+
+#### Double Check for Correct Assignment
+
+```{sas}
+* Double check for correct assignment;
+PROC PRINT DATA = Impt.Outcomes (OBS = 10);
+	VAR ASTHMA3 ASTHNOW AsthmaCd;
+	RUN;	
+```
+
+[Top of Tabset](#Outcomes)
+
+## BMI
+
+BMI took particular care to code correctly.
+
+In the data base, metric units begin with 9, and missing or refused variables are coded as 777 or 999.
+
+Thus it took some careful work to manipulate strings to filter the variable as desired!
+
+#### Create Variable
+
+```{sas}
+#| results: "hide"
+* Create BMI variable per PI specifications;
+
+* Some weights are in lbs and some are in kg, we will have to address;
+* Convert all weights in kg into lbs;
+TITLE "Outcomes: BMI";
+DATA Impt.Outcomes;
+	SET Impt.Outcomes;
+		WEIGHT2_char = TRIM(PUT(WEIGHT2, 4.));  *convert HEIGHT2 into a string so I can find if it starts with 9 (i.e. is in metric);
+		IF WEIGHT2_char ^= "9999" AND SUBSTR(WEIGHT2_char,1,1) = "9"
+		 THEN DO WEIGHT2 = INPUT(SUBSTR(WEIGHT2_char,2), BEST12.)*2.20462; *Select the weight in kg and convert to lbs;
+			END;
+		DROP WEIGHT2_char;
+	RUN;
+	
+* Convert all heights in cm to feet and inches;
+DATA Impt.Outcomes;
+	SET Impt.Outcomes;
+		IF HEIGHT3 ^= 7777 AND HEIGHT3 ^= 9999
+			THEN DO 
+				HEIGHT3_char = TRIM(PUT(HEIGHT3, 3.)); 
+				feet = INPUT(SUBSTR(HEIGHT3_char, 1, 1), 8.); *Select the first digit as the number of feet;
+	  			inches = INPUT(SUBSTR(HEIGHT3_char, 2, 2), 8.); * Select digits 2 and 3 as the number of inches;
+	  			HEIGHT_inches = (feet*12) + inches; * Convert feet and inches into just inches;
+
+  				END;
+  		ELSE IF HEIGHT3 ^= 7777 AND HEIGHT3 ^= 9999
+  			THEN DO 
+  				HEIGHT3_char = TRIM(PUT(HEIGHT3, 4.)); *convert HEIGHT3 into a string so I can find if it starts with 9 (i.e. is in metric);
+  				HEIGHT_inches = INPUT(SUBSTR(WEIGHT2_char,2), BEST12.)*0.393701; * convert centimeters into inches;
+  				END;
+  		DROP feet inches HEIGHT3_char;
+  	RUN;
+  	
+* Calculate BMI;
+DATA Impt.Outcomes;
+	SET Impt.Outcomes;
+	IF 		WEIGHT2 IN(7777,9999) OR HEIGHT3 IN(7777,9999) THEN BMI = .;
+	ELSE 														BMI = (WEIGHT2 / (HEIGHT_inches**2)) * 730;
+	ATTRIB BMI LABEL = "Patient BMI";
+RUN;
+```
+
+#### Double Check for Correct Assignment
+
+```{sas}
+* Double check for correct assignment;
+PROC PRINT DATA = Impt.Outcomes (OBS = 10);
+	VAR WEIGHT2 HEIGHT3 BMI;
+	RUN;	
+```
+
+For good measure, lets plot a histogram which should be normally distributed if we did that all correctly
+
+```{sas}
+PROC SGPLOT DATA = Impt.Outcomes;
+	HISTOGRAM BMI;
+	RUN;
+```
+
+BMI is correct.
+
+[Top of Tabset](#Outcomes)
+
+## BMI Category
+
+#### Create Format
+
+```{sas}
+#| results: "hide"
+* Create format for BMI category;
+TITLE "Outcomes: BMI Category";
+PROC FORMAT;
+	VALUE BMIcat
+		1= "Underweight"
+		2 = "Normal Weight"
+		3 = "Overweight"
+		4 = "Obese";
+	RUN;
+```
+
+#### Create Variable
+
+```{sas}
+#| results: "hide"
+* Create BMIcat per PI specifications;
+DATA Impt.Outcomes;
+	SET Impt.Outcomes;
+		IF BMI = . 		   THEN BMIcat = .; 		
+		ELSE IF BMI < 18.5 THEN BMIcat = 1;
+		ELSE IF	18.5 <= BMI < 25.0 THEN BMIcat = 2;
+		ELSE IF 25.0 <= BMI < 30.0 THEN BMIcat = 3;
+		ELSE 							BMIcat = 4;
+	ATTRIB BMICat LABEL = "BMI Category" FORMAT = BMIcat.;
+	RUN;
+```
+
+#### Double Check for Correct Assignment
+
+```{sas}
+* Double check for correct assignment;
+PROC PRINT DATA = Impt.Outcomes (OBS = 10);
+	VAR BMI BMIcat;
+	RUN;	
+```
+
+[Top of Tabset](#Outcomes)
+
+## Covid
+
+#### Create Format
+
+```{sas}
+#| results: "hide"
+* Create format for covid status;
+PROC FORMAT;
+	VALUE CovidCd
+		1 = "Yes"
+		2 = "No"
+		3 = "Unknown/Refused/Missing";
+	RUN;
+```
+
+#### Create Variable
+
+```{sas}
+#| results: "hide"
+* Create Covid status per PI specifications;
+DATA Impt.Outcomes;
+	SET Impt.Outcomes;
+		IF 		COVIDPOS IN(1,3) THEN CovidCd = 1;
+		ELSE IF COVIDPOS = 2 THEN CovidCd = 2;
+		ELSE					  CovidCd = 3;
+	ATTRIB CovidCd LABEL = "Ever had Covid" FORMAT = CovidCd.;
+	RUN;
+```
+
+#### Double Check for Correct Assignment
+
+```{sas}
+* Double check for correct assignment;
+PROC PRINT DATA = Impt.Outcomes (OBS = 10);
+	VAR COVIDPOS CovidCd;
+	RUN;	
+```
+
+[Top of Tabset](#Outcomes)
+
+## Cancer
+
+#### Create Format
+
+```{sas}
+#| results: "hide"
+* Create format for cancer status;
+PROC FORMAT;
+	VALUE CancerCd
+		1 = "Yes"
+		2 = "No";
+	RUN;
+```
+
+#### Create Variable
+
+```{sas}
+#| results: "hide"
+* Create BMIcat per PI specifications;	
+DATA Impt.Outcomes;
+	SET Impt.Outcomes;
+		IF 		CNCRDIFF = . THEN CancerCd = 2;
+		ELSE IF CNCRDIFF IN(1,2,3,7) THEN CancerCd = 1;
+	ATTRIB CancerCd LABEL = "Ever had Cancer" FORMAT = Cancercd.;
+	RUN;
+```
+
+#### Double Check for Correct Assignment
+
+```{sas}
+* Double check for correct assignment;
+PROC PRINT DATA = Impt.Outcomes (OBS = 10);
+	VAR CNCRDIFF Cancercd;
+	RUN;	
+```
+
+[Top of Tabset](#Outcomes)
+
+## Age at First Cancer
+
+#### Create Format
+
+```{sas}
+#| results: "hide"
+* Create format for cancer age;
+TITLE "Outcomes: Cancer Age";
+PROC FORMAT;
+	VALUE CancerAge
+		1 = "0-<15"
+		2 = "15-<18"
+		3 = "18-<39"
+		4 = "40+";
+	RUN;
+```
+
+#### Create Variable
+
+```{sas}
+#| results: "hide"
+* Create cancer age per PI specifications;	
+DATA Impt.Outcomes;
+	SET Impt.Outcomes;
+		IF		CNCRAGE IN(., 98, 99) THEN CancerAge = .;
+		ELSE IF 0 < CNCRAGE < 15 THEN CancerAge = 1;
+		ELSE IF 15 <= CNCRAGE < 18 THEN CancerAge = 2;
+		ELSE IF 18 <= CNCRAGE < 39 THEN CancerAge = 3;
+		ELSE							CancerAge = 4;
+	ATTRIB CancerAge LABEL = "Age at first cancer diagnosis" FORMAT = CancerAge.;
+	RUN;
+```
+
+#### Double Check for Correct Assignment
+
+```{sas}
+* Double check for correct assignment;
+PROC SORT DATA = Impt.Outcomes OUT = Impt.Sorted_Data;
+	BY DESCENDING CancerAge;
+	RUN;
+	
+PROC PRINT DATA = Impt.Sorted_Data (OBS = 10);
+	VAR CNCRAGE CancerAge;
+	RUN;	
+```
+
+[Top of Tabset](#Outcomes)
+:::
+
+## Consolidate Outcomes Data Set
+
+Here we will collect only the variables we created which the investigator asked for, and the variables needed for the final merge.
+
+#### Collect Variables
+
+```{sas}
+#| results: "hide"
+TITLE "Outcomes: Final Data Set";
+DATA Impt.Outcomes_Final;
+	SET Impt.Outcomes;
+	KEEP SEQNO CHDattackCd AsthmaCd BMI BMIcat CovidCd CancerCd CancerAge;
+	RENAME  CHDattackCd = CHDattack
+		 	AsthmaCd = Asthma
+		 	CovidCd = Covid
+		 	CancerCd = Cancer;
+	RUN;
+```
+
+#### View Data
+
+```{sas}
+* Print head;
+PROC PRINT DATA = Impt.Outcomes_Final (OBS = 10);
+	RUN;
+	
+* Double check formats;
+ODS SELECT VARIABLES;
+PROC CONTENTS DATA = Impt.Outcomes_Final;
+	RUN;
+```
+
+# Step 5: Create Risk Factors Data Set {#Risk}
+
+::: panel-tabset
+## Physical Health
+
+#### Create Variable
+
+```{sas}
+#| results: "hide"
+* Create physical health variable per PI specifications;
+TITLE "Risk Factors: Physical Health Not Good";
+DATA Impt.Risk;
+	SET Impt.Risk;
+	IF 		PHYSHLTH IN(.,77,99) THEN PhysHealth = .;
+	ELSE IF PHYSHLTH = 88 		 THEN PhysHealth  = 0;
+	ELSE 				       		  PhysHealth = (PHYSHLTH /30) * 100;
+	LABEL PhysHealth = "Percent of 30 days with physical health not good";
+	RUN;
+```
+
+#### Double Check for Correct Assignment
+
+```{sas}
+* Double check for correct assignment;
+PROC PRINT DATA = Impt.Risk (OBS = 10);
+	VAR PHYSHLTH PhysHealth;
+	RUN;
+```
+
+[Top of Tabset](#Risk)
+
+## Mental Health
+
+#### Create Variable
+
+```{sas}
+#| results: "hide"
+* Create mental health variable per PI specifications;
+TITLE "Risk Factors: Mental Health Not Good";
+DATA Impt.Risk;
+	SET Impt.Risk;
+	IF 		MENTHLTH IN(.,77,99) THEN MentHealth = .;
+	ELSE IF MENTHLTH = 88 		 THEN MentHealth  = 0;
+	ELSE 				       		  MentHealth = (MENTHLTH /30) * 100;
+	LABEL MentHealth = "Percent of 30 days with mental health not good";
+	RUN;
+```
+
+#### Double Check for Correct Assignent
+
+```{sas}
+* Double check for correct assignment;
+PROC PRINT DATA = Impt.Risk (OBS = 10);
+	VAR MENTHLTH MentHealth;
+	RUN;
+```
+
+[Top of Tabset](#Risk)
+
+## Smoking Status
+
+#### Create Format
+
+```{sas}
+#| results: "hide"
+* Create format for smoking status;
+TITLE "Risk Factors: Smoking Status";
+PROC FORMAT;
+	VALUE SmokeStat
+		1 = "Current Smoker"
+		2 = "Former Smoker"
+		3 = "Never Smoker"
+		4 = "Don't Know/Refused/Missing";
+	RUN;
+```
+
+#### Create Variable
+
+```{sas}
+#| results: "hide"
+* Create smoking status variable per PI specifications;
+DATA Impt.Risk;
+	SET Impt.Risk;
+		IF		 SMOKE100 = 1 AND SMOKDAY2 IN(1,2) THEN SmokeStat = 1;
+		ELSE IF	 SMOKE100 = 1 AND SMOKDAY2 = 3	   THEN SmokeStat = 2;
+		ELSE IF  SMOKE100 = 2					   THEN SmokeStat = 3;
+		ELSE 									  	    SmokeStat = 4;
+		ATTRIB SmokeStat LABEL = "Smoking Status" FORMAT = SmokeStat.;
+	RUN;
+```
+
+#### Double Check for Correct Assignment
+
+```{sas}
+* Double check for correct assignment;
+PROC PRINT DATA = Impt.Risk (OBS = 10);
+	VAR SMOKE100 SMOKDAY2 SmokeStat;
+	RUN;
+```
+
+[Top of Tabset](#Risk)
+
+## Years Smoked
+
+#### Create Variable
+
+```{sas}
+#| results: "hide"
+* Create smoking status variable per PI specifications;
+DATA Impt.Risk;
+	SET Impt.Risk;
+	
+		IF 		SmokeStat = 4 THEN SmokeTime = .;
+		ELSE IF SmokeStat = 3 THEN SmokeTime = 0;
+		ELSE IF SmokeStat IN(1,2) AND LCSFIRST NOT IN(777,999) AND LCSLAST NOT IN(777,999)
+			THEN SmokeTime = LCSLAST - LCSFIRST;
+		ELSE 						SmokeTime = .;
+	ATTRIB SmokeTime LABEL = "How many years smoked";
+	RUN;
+```
+
+#### Double Check for Correct Assignment
+
+```{sas}
+* Double check for correct assignment;
+PROC PRINT DATA = Impt.Risk (OBS = 10);
+	VAR SmokeStat LCSFIRST LCSLAST SmokeTime;
+	RUN;
+```
+
+Note: there is a current smoker with 999 for last cigarette smoked. This was not reported in the data dictionary, but we will assume these are patients that did not wish to report their age.
+
+[Top of Tabset](#Risk)
+
+## Alcohol
+
+#### Create Format
+
+```{sas}
+#| results: "hide"
+* Create format for smoking status;
+TITLE "Risk Factors: Alcohol";
+PROC FORMAT;
+	VALUE Alcohol
+		1 = "Yes"
+		2 = "No";
+	RUN;
+```
+
+#### Create Variable
+
+```{sas}
+#| results: "hide"
+* Create alcohol consumption variable per PI specifications;
+DATA Impt.Risk;
+	SET Impt.Risk;
+		IF  	ALCDAY4 IN(., 777,999) THEN Alcohol = .;
+		ELSE IF ALCDAY4 = 888 THEN Alcohol = 2;
+		ELSE					   Alcohol = 1;
+	ATTRIB Alcohol LABEL = "Consumed alcohol in past 30 days" FORMAT = Alcohol.;
+	RUN;
+```
+
+#### Double Check for Correct Assignment
+
+```{sas}
+* Double check for correct assignment;
+PROC PRINT DATA = Impt.Risk (OBS = 10);
+	VAR ALCDAY4 Alcohol;
+	RUN;
+```
+
+[Top of Tabset](#Risk)
+
+## Months Between Covid Vaccines
+
+#### Create Format
+
+```{sas}
+#| results: "hide"
+* Create covid vaccine variable per PI specifications;
+DATA Impt.Risk;
+  SET Impt.Risk;
+  * Convert dates to a character string;
+  firstvax_char = TRIM(LEFT(PUT(COVIDFS1, 6.)));
+  secondvax_char = TRIM(LEFT(PUT(COVIDSE1, 6.)));
+  
+  * Extract Month and Year for firstvax_char;
+  IF LENGTH(firstvax_char) = 5 THEN DO;
+    month1 = INPUT(SUBSTR(firstvax_char, 1, 1), BEST12.);
+    year1 = INPUT(SUBSTR(firstvax_char, 2), BEST12.);
+  END;
+  ELSE IF LENGTH(firstvax_char) = 6 THEN DO;
+    month1 = INPUT(SUBSTR(firstvax_char, 1, 2), BEST12.);
+    year1 = INPUT(SUBSTR(firstvax_char, 3), BEST12.);
+  END;
+
+  * Extract Month and Year for secondvax_char;
+  IF LENGTH(secondvax_char) = 5 THEN DO;
+    month2 = INPUT(SUBSTR(secondvax_char, 1, 1), BEST12.);
+    year2 = INPUT(SUBSTR(secondvax_char, 2), BEST12.);
+  END;
+  ELSE IF LENGTH(secondvax_char) = 6 THEN DO;
+    month2 = INPUT(SUBSTR(secondvax_char, 1, 2), BEST12.);
+    year2 = INPUT(SUBSTR(secondvax_char, 3), BEST12.);
+  END;
+
+	* Calculate number of months inbetween;
+	IF SUBSTR(firstvax_char, 1, 2) NOT IN("77" "99") 
+	AND SUBSTR(Secondvax_char,1, 2) NOT IN ("77", "99")
+	THEN DO
+  date1 = MDY(month1, 1, year1);
+  date2 = MDY(month2, 1, year2);
+  
+  * Calculate the difference in months;
+  CovidVaxMonths = INTCK('MONTH', date1, date2);
+  ATTRIB CovidVaxMonths Label = "Number of months between first and second covid vaccination";
+  END;
+  
+  RUN;
+```
+
+#### Double Check for Correct Calculations
+
+```{sas}
+* Double check calculations are correct;
+PROC SORT DATA=Impt.Risk OUT=Impt.SortedRisk;
+  BY DESCENDING CovidVaxMonths;
+RUN;
+PROC PRINT DATA = Impt.SortedRisk (OBS = 10);
+	VAR month1 year1 month2 year2 CovidVaxMonths;
+	RUN;
+```
+
+[Top of Tabset](#Risk)
+
+## Marijuana Percent
+
+#### Create Variable
+
+```{sas}
+#| results: "hide"
+* Create Marijuana percent variable per PI specifications;
+TITLE "Risk Factors: Marijuana Percentage";
+DATA Impt.Risk;
+	SET Impt.Risk;
+	IF 		MARIJAN1 IN(.,77,99) THEN MarijuanaPerc = .;
+	ELSE IF MARIJAN1 = 88 		 THEN MarijuanaPerc  = 0;
+	ELSE 				       		  MarijuanaPerc = (MARIJAN1 /30) * 100;
+	LABEL MarijuanaPerc = "Percent of 30 days with marijuana use";
+	RUN;
+```
+
+#### Double Check for Correct Assignment
+
+```{sas}
+* Double check for correct assignment;
+PROC SORT DATA=Impt.Risk OUT=Impt.SortedRisk;
+  BY DESCENDING MarijuanaPerc;
+RUN;
+PROC PRINT DATA = Impt.SortedRisk (OBS = 10);
+	VAR MARIJAN1 MarijuanaPerc;
+	RUN;
+```
+
+[Top of Tabset](#Risk)
+
+## Marijuana Use
+
+#### Create Format
+
+```{sas}
+#| results: "hide"
+* Create format for Marijuana Use;
+TITLE "Risk Factors: Marijuana Use";
+PROC FORMAT;
+	VALUE Marijuana
+		1 = "Yes"
+		2 = "No";
+	RUN;
+```
+
+#### Create Variable
+
+```{sas}
+#| results: "hide"
+* Create marijuana use variable per PI specifications;
+DATA Impt.Risk;
+	SET Impt.Risk;
+		IF  	MARIJAN1 IN(., 77,99) THEN Marijuana = .;
+		ELSE IF MARIJAN1 = 88 THEN Marijuana = 2;
+		ELSE					   Marijuana = 1;
+	ATTRIB Marijuana LABEL = "Marijuana use in past 30 days" FORMAT = Marijuana.;
+	RUN;
+```
+
+#### Double Check for Correct Assignment
+
+```{sas}
+* Double check for correct assignment;
+PROC SORT DATA=Impt.Risk OUT=Impt.SortedRisk;
+  BY DESCENDING Marijuana;
+RUN;
+PROC PRINT DATA = Impt.SortedRisk (OBS = 10);
+	VAR MARIJAN1 Marijuana;
+	RUN;
+```
+
+[Top of Tabset](#Risk)
+
+## Packs of Cigarettes per Day
+
+#### Create Variable
+
+```{sas}
+#| results: "hide"
+* Create Variable;
+TITLE "Risk Factors: Number of Cigarette Packs per Day";
+DATA Impt.Risk;
+	SET Impt.Risk;
+		IF		LCSNUMCG IN(777,999) THEN SmokeNum = .;
+		ELSE IF LCSNUMCG = . 		 THEN SmokeNum = .;
+		ELSE IF LCSNUMCG = 0		 THEN SmokeNum = 0;
+		ELSE 							  SmokeNum =  LCSNUMCG/20;
+	ATTRIB SmokeNum LABEL = "Numer of Cigarette Packs Per Day";
+	RUN;
+```
+
+#### Double Check for Correct Assignment
+
+```{sas}
+* Double check for correct assignment;
+PROC PRINT DATA = Impt.Risk (OBS = 10);
+	VAR LCSNUMCG SmokeNum;
+	RUN;
+```
+
+[Top of Tabset](#Risk)
+:::
+
+## Consolidate Risk Factors Data Set
+
+Here we will collect only the variables we created which the investigator asked for, and the variables needed for the final merge.
+
+#### Collect Variables
+
+```{sas}
+#| results: "hide"
+TITLE "Risk Factors: Final Data Set";
+DATA Impt.Risk_Final;
+	SET Impt.Risk;
+	KEEP id PhysHealth MentHealth SmokeStat SmokeNum SmokeTime Alcohol CovidVaxMonths MarijuanaPerc Marijuana;
+	RUN;
+```
+
+#### View the Data Set
+
+```{sas}
+* Print head;
+PROC PRINT DATA = Impt.Risk_Final (OBS = 10);
+	RUN;
+	
+* Double check formats;
+TITLE "Risk Factors: Check Formats";
+ODS SELECT VARIABLES;
+PROC CONTENTS DATA = Impt.Risk_Final;
+	RUN;
+```
+
+# Step 6: Create Reference Table
+
+We just need to make one simple change to this data set: aggregate `Month`, `Day`, and `Year` into a date object in SAS.
+
+## Create `Date` Variable in Reference Table
+
+#### Create Variable
+
+```{sas}
+#| results: "hide"
+* Create and Format date variable;
+DATA Impt.Ref_Final;
+	SET Impt.ref_table_long;
+	IntvDate = MDY(IMONTH, IDAY, IYEAR);
+	ATTRIB IntvDate LABEL = "Interview Date" FORMAT = MMDDYY10.;
+	KEEP id SEQNO IntvDate;
+	RUN;
+```
+
+#### Double Check for Correct Conversion
+
+```{sas}
+* Double check by printing;
+PROC PRINT DATA = Impt.Ref_Final (OBS = 10);
+	RUN;
+```
+
+# Step 7: Merge Data Sets
+
+Before we can merge, we need to ensure the variable we will merge on is the same format and type across all data sets.
+
+In particular, SEQNO in the demographics Final data set is a character variable with '-'s in it. We have to clean those out and make it numeric to merge it using the reference table.
+
+## Merge Reference Table, Demographics, and Outcomes on SEQNO
+
+#### Ensure Same Format and Type for SEQNO
+
+```{sas}
+#| results: "hide"
+* Convert SEQNO in the reference table to numeric and SORT;
+TITLE "Final Data Set";
+DATA Impt.Ref_Final;
+	SET Impt.Ref_Final;
+	SEQNO_num = INPUT(SEQNO, BEST12.);
+	FORMAT SEQNO_num BEST12.;
+	DROP SEQNO;
+	RENAME SEQNO_NUM = SEQNO;
+	RUN;
+
+
+* Correct the SEQNO format in the demographics data set;
+DATA Impt.Demographics_Final;
+	SET Impt.Demographics_Final;
+	SEQNO = COMPRESS(SEQNO, "-");
+	SEQNO_num = INPUT(SEQNO, BEST12.);
+	FORMAT SEQNO_num BEST12.;
+	DROP SEQNO;
+	RENAME SEQNO_num = SEQNO;
+	RUN;
+```
+
+#### Sort Data Sets
+
+```{sas}
+#| results: "hide"
+* Sort Demographics_Final by SEQNO;
+PROC SORT DATA = Impt.Demographics_Final;
+	BY SEQNO;
+	RUN;
+
+* Sort Outcomes_Final by SEQNO;
+PROC SORT DATA = Impt.Outcomes_Final;
+	BY SEQNO;
+	RUN;	
+
+* Sort Ref_Final by SEQNO;
+PROC SORT DATA = Impt.Ref_Final;
+	BY SEQNO;
+	RUN;
+```
+
+#### Perform Merge on SEQNO
+
+```{sas}
+#| results: "hide"
+* First merge by SEQNO;
+DATA Impt.BRFSS_Final;
+	MERGE Impt.Demographics_Final (IN = a)
+		  Impt.Ref_Final (IN = b)
+		  Impt.Outcomes_Final (IN = c);
+	BY SEQNO;
+	IF a AND b AND c;
+	RUN;
+```
+
+## Merge Risk Factors on ID
+
+#### Sort by ID
+
+```{sas}
+#| results: "hide"
+* Sort by ID;
+PROC SORT DATA = Impt.BRFSS_Final;
+	BY id;
+	RUN;
+	
+* Sort by ID;
+PROC SORT DATA = impt.Risk_Final;
+	BY id;
+	RUN;
+```
+
+#### Perform Merge on ID
+
+```{sas}
+#| results: "hide"
+* Then merge by Id;
+DATA Impt.BRFSS_Final;
+	MERGE Impt.BRFSS_Final (IN = a)
+		  Impt.Risk_Final (IN = b);	
+	BY id;
+	IF a AND b;
+	RUN;
+```
+
+## Clean Final Data Set
+
+```{sas}
+#| results: "hide"
+* Rearrange and drop extraneous variables for a cleaner data set;
+DATA Impt.BRFSS_Final;
+	RETAIN id SEQNO IntvDate;
+	SET Impt.BRFSS_Final;
+	DROP SEQNO_OUTCOMES SEQNO_REF SEQNO_DEMO id_RISK id SEQNO;
+	ATTRIB SEQNO LABEL = "Sequence Number";
+	ATTRIB id LABEL = "ID";
+	RUN;
+```
+
+# Final Data Set
+
+```{sas}
+* Print top 10 observations;
+PROC PRINT DATA = Impt.BRFSS_Final (OBS = 10);
+	RUN;
+	
+* Check variable types;
+PROC CONTENTS DATA = Impt.BRFSS_Final;
+	RUN;
+```
