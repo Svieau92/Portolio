@@ -4,10 +4,10 @@ subtitle: "Advanced Data Analysis - Project 3"
 author: "Sean Vieau"
 date: October 30, 2024
 format: html
+smooth-scroll: true
 editor: visual
 toc: true
 bibliography: references.bib
-theme: cerulean
 ---
 
 ```{r setup, include=FALSE}
@@ -168,7 +168,6 @@ LBP works by comparing the intensity of a central pixel with its neighboring pix
 
 ![](/Project_3_Predictive_Modelling/Project_3_R/Media/Code_Information.png){fig-align="center" width="80%"}
 
-
 #### Image Features Provided by the LBP
 
 In general, the LBP provides image features on:
@@ -210,6 +209,8 @@ library(naniar) # Used to visualize missingness
 library(patchwork) # Used to chain ggplots together
 library(gridExtra) # Used to plot ggplots side by side
 library(corrplot) # Used for correlation matrix
+library(caret) # Used for K-fold cross validation
+library(bestNormalize) # Used to find best transformation
 ```
 
 #### Read .CSV
@@ -231,7 +232,7 @@ glimpse(data)
 
 #### Create Factors
 
-Everything is appropriately coded as a double. 
+Everything is appropriately coded as a double.
 
 Let's just convert `progression` into a factor that contains the levels for "slow" or "fast and we're good to go. We will also rename some variables for convenience.
 
@@ -257,9 +258,9 @@ glimpse(data)
 
 Our data set consists of:
 
- - 71 patients 
- - 19 MRI image features 
- - 4 kidney volume variables
+-   71 patients
+-   19 MRI image features
+-   4 kidney volume variables
 
 # Missingness
 
@@ -273,29 +274,112 @@ vis_miss(data)
 
 We have 0 missing values!
 
+# Data Split
+
+#### Background
+
+We have an N of 71, which is notably small.
+
+In order to increase the power of the study, we will perform a 5-fold cross validation. Thus, all patients will be in both the training and validation sets, providing a comprehensive evaluation.
+
+![](images/clipboard-802573844.png)
+
+#### Perform the Split
+
+To begin with, we will divide our data set into 5 even folds.
+
+First we randomly shuffle the data so it is not organized by Subject ID
+
+```{r}
+# Set seed for reproducibility
+set.seed(123)
+
+# Shuffle the rows
+data <- data |> slice_sample(n = nrow(data))
+```
+
+Then we create 5-folds of our data set.
+
+```{r}
+# Create labels for Folds1-5
+data |> 
+  mutate(fold_number = rep(c("Fold1", "Fold2", "Fold3", "Fold4", "Fold5"), length.out = n())) -> data
+
+#### Create separate data frames for each fold
+
+# Create Fold 1
+data1_train <- data |> 
+  filter(fold_number != "Fold1")
+data1_test <- data |> 
+  filter(fold_number == "Fold1")
+
+# Create fold 2
+data2_train <- data |> 
+  filter(fold_number != "Fold2")
+data2_test <- data |> 
+  filter(fold_number == "Fold2")
+
+# Create fold 3
+data3_train <- data |> 
+  filter(fold_number != "Fold3")
+data3_test <- data |> 
+  filter(fold_number == "Fold3")
+
+# Create fold 4
+data4_train <- data |> 
+  filter(fold_number != "Fold4")
+data4_test <- data |> 
+  filter(fold_number == "Fold4")
+
+# Create fold 5
+data5_train <- data |> 
+  filter(fold_number != "Fold5")
+data5_test <- data |> 
+  filter(fold_number == "Fold5")
+```
+
+And examine `Fold1` and ensure the dimensions check out.
+
+```{r}
+# Check dimensions of Fold1
+dim(data1_train)
+
+# Check dimensions of Fold1
+dim(data1_test)
+
+# Check for any overlapping patients
+inner_join(data1_train, data1_test, by = "Subject_ID")
+```
+
+We have 56 patients in the fold 1 training set, and 15 in the test set, with no overlapping IDs. Perfect!
+
 # Data Examination
 
-Here I will perform the intial examination of the distribution of our variables.
+Examining the distributions of the entire data set before splitting can cause subtle biases. For example, transformations or decisions based on the entire data set might inadvertently incorporate patterns from the test data into the training process!
 
-## Univariate Distributions 
+We essentially want to mimic real world situations, where we would not know the distributions of our test set prior to analysis.
+
+Thus, we will perform the initial examination of the distribution of our variables, using `Fold1_train`.
+
+## Univariate Distributions
 
 ### Outcome Variables {#Outcomes_Uni}
 
 ::: panel-tabset
-
 ## Kidney Volume
 
 #### Baseline Kidney Volume
 
 ```{r}
 # Visualize baseline kidney volume
-ggplot(data, aes(x = kidvol_base)) +
+ggplot(data1_train, aes(x = kidvol_base)) +
   geom_histogram() + 
   theme_minimal() + 
   labs(title = "Histogram for Baseline Kidney Volume",
        x = "Baseline Kidney Volume",
        y = "Count")
 ```
+
 Kidney volume at baseline appears to not be normally distributed.
 
 However, I learned in the last project that taking the change score (or percent) will make the outcome normally distributed, as it is a way of accounting for between subject variance. Let's check that that's the case this time.
@@ -306,7 +390,7 @@ However, I learned in the last project that taking the change score (or percent)
 #| fig-height: 3.5
 #| fig-width: 8
 # Create histogram
-hist_plot <- ggplot(data, aes(x = kidvol_change)) +
+hist_plot <- ggplot(data1_train, aes(x = kidvol_change)) +
   geom_histogram(binwidth = 4.5) +
   theme_minimal() +
   labs(title = "Histogram of Kidney Volume Change",
@@ -314,30 +398,90 @@ hist_plot <- ggplot(data, aes(x = kidvol_change)) +
        x = "Kidney Volume Change (%)")
 
 # Create qqplot
-qq_plot <- ggplot(data, aes(sample = kidvol_change)) +
+qq_plot <- ggplot(data1_train, aes(sample = kidvol_change)) +
   geom_qq() +
   geom_qq_line() +
   theme_minimal() +
-  labs(title = "QQ Plot of Kidney Volume Chage")
+  labs(title = "QQ Plot of Kidney Volume Change")
 
 # Plot side by side
 grid.arrange(hist_plot, qq_plot, ncol = 2)
 ```
 
-`kidvol_change` is approximately normally distributed.
+`kidvol_change` is not quite normally distributed.
+
+##### Log Transform
+
+Let's check if a logarithmic or sqrt transformation will be better.
+
+```{r}
+# Use bestNormalize R package to select the best transformation
+BNObject <- bestNormalize(data1_train$kidvol_change)
+BNObject
+
+# Create histogram
+hist_plot <- ggplot(data1_train, aes(x = log(kidvol_change))) +
+  geom_histogram(binwidth = 0.5) +
+  theme_minimal() +
+  labs(title = "Histogram of Log Kidney Volume Change",
+       y = "Count",
+       x = "Kidney Volume Change (%)")
+
+# Create qqplot
+qq_plot <- ggplot(data1_train, aes(sample = log(kidvol_change))) +
+  geom_qq() +
+  geom_qq_line() +
+  theme_minimal() +
+  labs(title = "QQ Plot of Log Kidney Volume Change")
+
+# Plot side by side
+grid.arrange(hist_plot, qq_plot, ncol = 2)
+```
+
+##### Square Root Transform
+
+```{r}
+# Create histogram
+hist_plot <- ggplot(data1_train, aes(x = sqrt(kidvol_change))) +
+  geom_histogram(binwidth = 0.5) +
+  theme_minimal() +
+  labs(title = "Histogram of Sqrt Kidney Volume Change",
+       y = "Count",
+       x = "Kidney Volume Change (%)")
+
+# Create qqplot
+qq_plot <- ggplot(data1_train, aes(sample = sqrt(kidvol_change))) +
+  geom_qq() +
+  geom_qq_line() +
+  theme_minimal() +
+  labs(title = "QQ Plot of Sqrt Kidney Volume Chage")
+
+# Plot side by side
+grid.arrange(hist_plot, qq_plot, ncol = 2)
+```
+
+The log transform appears the best for us.
+
+```{r}
+# Create log change in kidney volume
+data1_train <- data1_train |> 
+  mutate(kidvol_change_log = log(kidvol_change))
+```
+
+#### Outliers
 
 It also appears that we have two outlier values. Let's assess using boxplots.
 
 ```{r}
 # Calculate IQR and identify outliers
-IQR_val <- IQR(data$kidvol_change)
-Q1 <- quantile(data$kidvol_change, 0.25)
-Q3 <- quantile(data$kidvol_change, 0.75)
+IQR_val <- IQR(data1_train$kidvol_change)
+Q1 <- quantile(data1_train$kidvol_change, 0.25)
+Q3 <- quantile(data1_train$kidvol_change, 0.75)
 lower_bound <- Q1 - (1.5*IQR_val)
 upper_bound <- Q3 + (1.5*IQR_val)
 
 # Create boxplot and flag outliers
-ggplot(data, aes(x = "", y = kidvol_change)) +
+ggplot(data1_train, aes(x = "", y = kidvol_change)) +
   geom_boxplot(alpha = 0.8) +
   geom_text(aes(label = ifelse(kidvol_change < lower_bound | kidvol_change > upper_bound, Subject_ID, "")), hjust = -0.5, color = "red") +
   theme_minimal() +
@@ -350,14 +494,21 @@ Patients 37 and 51 are flagging as potential outliers. Let's examine them.
 
 ```{r}
 # Examine outlier patients
-data |> 
+data1_train |> 
   arrange(desc(kidvol_change)) |> 
   head() |> 
   pretty_print()
 ```
+
 Interesting, it looks like these patients also have high values for certain MRI image features, such as GLCM 1 and 2. Additionally, they do not have the highest visit 2 kidney volumes, they simply increases in size the most.
 
-#### Summary
+### Summary
+
+##### Transformation
+
+It appears that a log transform of `kidvol_change` gives us an approximately normal distribution, and this will be the value used for the outcome variable for task 1 going forward.
+
+##### Outliers
 
 While patients 37 and 51 are potential outliers on `kidvol_change`, these are NOT erroneous values. On the contrary, they are backed up by similar high values on other measurements such as `glcm2`, but are not universally high on all MRI image features. In other words, these appear to be very realistic values.
 
@@ -367,11 +518,9 @@ In summary, all values are derived from authentic biological data. They will be 
 
 ## Disease Progression
 
-####
-
 ```{r}
 # Create bar plot
-ggplot(data, aes(x = progression, fill = progression)) +
+ggplot(data1_train, aes(x = progression, fill = progression)) +
   geom_bar() +
   theme_minimal() +
   scale_fill_brewer(palette = "Pastel2") +
@@ -382,10 +531,10 @@ ggplot(data, aes(x = progression, fill = progression)) +
        fill = "Progression")
 
 # Create Table
-table(data$progression) 
+table(data1_train$progression) 
 ```
 
-We have an almost equal amount of patients that had slow vs fast disease progression.
+We have an equal amount of patients that had slow vs fast disease progression.
 
 [Top of Tabset](#Outcomes_Uni)
 
@@ -393,22 +542,22 @@ We have an almost equal amount of patients that had slow vs fast disease progres
 
 #### Kidney Volume Change
 
-`kidvol_change` is approximately normally distributed, with 2 potential outliers we will keep an eye on.
+`kidvol_change` is approximately normally distributed following a log transform, with 2 potential outliers we will keep an eye on.
 
 #### Slow vs Fast Disease Progression
 
-We have an approximately even count between patients who had slow vs fast disease progression.
+We have an even count between patients who had slow vs fast disease progression.
 
 [Top of Tabset](#Outcomes_Uni)
-
 :::
 
 # Feature Engineering {#Features_Uni}
 
-Here, we will examine the distribution of our variables and create quadratic terms for any variables that appear logarithmic.
+An assumption for a linear regression is that there is a linear relationship between the predictor and the outcome variable.
 
-::: panel-tabset
+Thus for the initial step, we will examine the distribution of our variables and create a quadratic term or take the log for each variable as necessary.
 
+::::::::: panel-tabset
 ## Geometry
 
 ::: panel-tabset
@@ -419,7 +568,7 @@ Here, we will examine the distribution of our variables and create quadratic ter
 #| fig-height: 3.5
 #| fig-width: 8
 # Create histogram
-hist_plot <- ggplot(data, aes(x = geom1)) +
+hist_plot <- ggplot(data1_train, aes(x = geom1)) +
   geom_histogram(binwidth = 30) +
   theme_minimal() +
   labs(title = "Histogram of Geom1",
@@ -427,7 +576,7 @@ hist_plot <- ggplot(data, aes(x = geom1)) +
        y = "Count")
 
 # Create qqplot
-qq_plot <- ggplot(data, aes(sample = geom1)) +
+qq_plot <- ggplot(data1_train, aes(sample = geom1)) +
   geom_qq() +
   geom_qq_line() +
   theme_minimal() +
@@ -441,17 +590,52 @@ There is 1 patient with a drastically lower value than everyone else. Let's exam
 
 ```{r}
 # Filter to most negative geom1 value
-data |> 
-  arrange(geom1)
+data1_train |> 
+  arrange(geom1) |> 
+  select(Subject_ID, geom1, geom2) |> 
+  head() |> 
+  pretty_print()
 ```
 
 Patient 48 appears to be an outlier on `geom1`.
 
+#### Perform Yeo Johnson Transformation
+
+Since we have negatie we have to perform the yeo johnson transformation or we will lose observations as `NA` values.
+
+```{r}
+# Use bestNormalize R package to select the best transformation
+BNObject <- bestNormalize(data1_train$geom1)
+BNObject
+
+# Create histogram
+hist_plot <- ggplot(data1_train, aes(x = yeojohnson(geom1)$x.t)) +
+  geom_histogram(binwidth = .4) +
+  theme_minimal() +
+  labs(title = "Histogram of Yeo Johnson Geom1",
+       y = "Count",
+       x = "Log Geom1")
+
+# Create qqplot
+qq_plot <- ggplot(data1_train, aes(sample = yeojohnson(geom1)$x.t)) +
+  geom_qq() +
+  geom_qq_line() +
+  theme_minimal() +
+  labs(title = "QQ Plot of Yeo Johnson Geom1")
+
+# Plot side by side
+grid.arrange(hist_plot, qq_plot, ncol = 2)
+
+# Perform transform
+data1_train <- data1_train |> 
+  mutate(geom1_yeo = yeojohnson(geom1)$x.t)
+```
+
+`geom` is more normally distributed after a Yeo Johnson transform.
+
 #### Summary
 
-`geom1` appears almost approximately normally distributed. There is potentially one outlier on the negative side, and the same two patients on the high end.
-
-We do not need to consider `geom1**2`.
+`geom1` is normally distributed following a Yeo Johnson transform. There is potentially one outlier on the negative side, but this seemed to not be a factor after transforming.
 
 [Top of Tabset](#Features_Uni)
 
@@ -461,7 +645,7 @@ We do not need to consider `geom1**2`.
 #| fig-height: 3.5
 #| fig-width: 8
 # Create histogram
-hist_plot <- ggplot(data, aes(x = geom2)) +
+hist_plot <- ggplot(data1_train, aes(x = geom2)) +
   geom_histogram(binwidth = 300) +
   theme_minimal() +
   labs(title = "Histogram of Geom2",
@@ -469,7 +653,7 @@ hist_plot <- ggplot(data, aes(x = geom2)) +
        y = "Count")
 
 # Create qqplot
-qq_plot <- ggplot(data, aes(sample = geom2)) +
+qq_plot <- ggplot(data1_train, aes(sample = geom2)) +
   geom_qq() +
   geom_qq_line() +
   theme_minimal() +
@@ -478,18 +662,21 @@ qq_plot <- ggplot(data, aes(sample = geom2)) +
 # Plot side by side
 grid.arrange(hist_plot, qq_plot, ncol = 2)
 ```
+
 `geom2` appears to be logarithmic. Let's adjust.
+
+#### Square Root Transformation
 
 ```{r}
 #| fig-height: 3.5
 #| fig-width: 8
 # Create new variable
-data <- data |> 
+data1_train <- data1_train |> 
  mutate(geom2_sqrt = sqrt(geom2),
         geom2_log = log(geom2)) 
 
 # Create histogram
-hist_plot <- ggplot(data, aes(x = geom2_sqrt)) +
+hist_plot <- ggplot(data1_train, aes(x = geom2_sqrt)) +
   geom_histogram(binwidth = 20) +
   theme_minimal() +
   labs(title = "Histogram of Geom2_sqrt",
@@ -497,7 +684,7 @@ hist_plot <- ggplot(data, aes(x = geom2_sqrt)) +
        y = "Count")
 
 # Create qqplot
-qq_plot <- ggplot(data, aes(sample = geom2_sqrt)) +
+qq_plot <- ggplot(data1_train, aes(sample = geom2_sqrt)) +
   geom_qq() +
   geom_qq_line() +
   theme_minimal() +
@@ -506,46 +693,85 @@ qq_plot <- ggplot(data, aes(sample = geom2_sqrt)) +
 # Plot side by side
 grid.arrange(hist_plot, qq_plot, ncol = 2)
 ```
-Sqrt kind of makes it better, still not a normall distribution, not that it has to be...
 
-Experimented with normalizing here.
+Sqrt kind of makes it better, but not quite.
+
+#### Log Transformation
+
+Let's examine the log.
+
 ```{r}
-data |> 
-  arrange(geom2_log)
-
-ggplot(data, aes(x = geom2_log, y = kidvol_change)) +
-  geom_point()
-
-ggplot(data, aes(x = geom2, y = kidvol_change)) +
-  geom_point()
 
 # Create histogram
-hist_plot <- ggplot(data, aes(x = geom2_norm)) +
-  geom_histogram(binwidth = 0.2) +
+hist_plot <- ggplot(data1_train, aes(x = log(geom2))) +
+  geom_histogram(binwidth = 1) +
   theme_minimal() +
-  labs(title = "Histogram of Geom2_norm",
-       x = "Geom2_norm",
+  labs(title = "Histogram of Geom2 log",
+       x = "Geom2 log",
        y = "Count")
 
+# Create qqplot
+qq_plot <- ggplot(data1_train, aes(sample = log(geom2))) +
+  geom_qq() +
+  geom_qq_line() +
+  theme_minimal() +
+  labs(title = "QQ Plot of Geom2 log")
+
+# Plot side by side
+grid.arrange(hist_plot, qq_plot, ncol = 2)
 ```
 
-We have an extremely low `geom2` value for patient 68...
+#### Yeo Johnson Transform
+
+A Yeo Johnson transformation
+
+```{r}
+# Use bestNormalize R package to select the best transformation
+BNObject <- bestNormalize(data1_train$geom2)
+BNObject
+
+# Create histogram
+hist_plot <- ggplot(data, aes(x = yeojohnson(geom2)$x.t)) +
+  geom_histogram(binwidth = 1) +
+  theme_minimal() +
+  labs(title = "Histogram of Geom2 Yeo",
+       x = "Geom2 Yeo",
+       y = "Count")
+
+# Create qqplot
+qq_plot <- ggplot(data, aes(sample = yeojohnson(geom2)$x.t)) +
+  geom_qq() +
+  geom_qq_line() +
+  theme_minimal() +
+  labs(title = "QQ Plot of Geom2 Yeo")
+
+# Plot side by side
+grid.arrange(hist_plot, qq_plot, ncol = 2)
+
+# Create the variable
+data1_train <- data1_train |> 
+  mutate(geom2_yeo = yeojohnson(geom2)$x.t)
+```
+
+I think log or yeo is our best bet here.
+
+#### Summary
+
+While there is no transformation that makes `geom2` normally distributed, log or yeojohnson transformation may help and will be considered. Let's select Yeo Johnson as it looks slightly better.
 
 [Top of Tabset](#Features_Uni)
-
 :::
 
 ## Gabor
 
 ::: panel-tabset
-
 ## Gabor1
 
 ```{r}
 #| fig-height: 3.5
 #| fig-width: 8
 # Create histogram
-hist_plot <- ggplot(data, aes(x = gabor1)) +
+hist_plot <- ggplot(data1_train, aes(x = gabor1)) +
   geom_histogram(binwidth = 0.2) +
   theme_minimal() +
   labs(title = "Histogram of Gabor1",
@@ -553,7 +779,7 @@ hist_plot <- ggplot(data, aes(x = gabor1)) +
        y = "Count")
 
 # Create qqplot
-qq_plot <- ggplot(data, aes(sample = gabor1)) +
+qq_plot <- ggplot(data1_train, aes(sample = gabor1)) +
   geom_qq() +
   geom_qq_line() +
   theme_minimal() +
@@ -562,6 +788,7 @@ qq_plot <- ggplot(data, aes(sample = gabor1)) +
 # Plot side by side
 grid.arrange(hist_plot, qq_plot, ncol = 2)
 ```
+
 `gabor1` is normally distributed.
 
 [Top of Tabset](#Features_Uni)
@@ -572,24 +799,56 @@ grid.arrange(hist_plot, qq_plot, ncol = 2)
 #| fig-height: 3.5
 #| fig-width: 8
 # Make plots
-distr_plots(data, "gabor2", 12)
+distr_plots(data1_train, "gabor2", 12)
 ```
+
 `gabor2` appears approximately normally distributed.
+
+```{r}
+# Use bestNormalize R package to select the best transformation
+BNObject <- bestNormalize(data1_train$gabor2)
+BNObject
+```
+
+It looks like a yeo johnson transformation will be most appropriate here.
+
+```{r}
+data1_train <- data1_train |> 
+  mutate(gabor2_yeo = yeojohnson(gabor2)$x.t)
+
+distr_plots(data1_train, "gabor2_yeo", 10)
+```
+
+A yeo johnson transformation *slightly* improves the normality of `gabor2`.
 
 [Top of Tabset](#Features_Uni)
 
-### Gabor3
+## Gabor3
 
 ```{r}
 #| fig-height: 3.5
 #| fig-width: 8
 # Make plots
-distr_plots(data, "gabor3", 30)
+distr_plots(data1_train, "gabor3", 30)
 ```
 
 [Top of Tabset](#Features_Uni)
 
 `gabor3` appears approximately normally distributed, with some potential outliers.
+
+```{r}
+# Use bestNormalize R package to select the best transformation
+BNObject <- bestNormalize(data1_train$gabor3)
+BNObject
+```
+
+Transformations don't seem to help much here. We want the values to be closest to 1 to indicate more normality.
+
+#### Summary
+
+Transformation doesn't seem to help much with `gabor3`.
+
+[Top of Tabset](#Features_Uni)
 
 ## Gabor4
 
@@ -597,19 +856,27 @@ distr_plots(data, "gabor3", 30)
 #| fig-height: 3.5
 #| fig-width: 8
 # Make plots
-distr_plots(data, "gabor4", 30)
+distr_plots(data1_train, "gabor4", 30)
 ```
+
 `gabor4` may be exponential.
 
 ```{r}
 #| fig-height: 3.5
 #| fig-width: 8
-data <- data |> 
+data1_train <- data1_train |> 
   mutate(gabor4_log = log(gabor4))
 
-distr_plots(data, "gabor4_log", 12)
+distr_plots(data1_train, "gabor4_log", 12)
 ```
+
 `gabor4_log` appears to be normally distributed.
+
+#### Summary
+
+The log transform of `gabor4` made it approximately normal.
+
+[Top of Tabset](#Features_Uni)
 
 ## Gabor5
 
@@ -617,32 +884,37 @@ distr_plots(data, "gabor4_log", 12)
 #| fig-height: 3.5
 #| fig-width: 8
 # Make plots
-distr_plots(data, "gabor5", 30)
+distr_plots(data1_train, "gabor5", 30)
 ```
 
-`gabor5` may be logarithmic?
+`gabor5` looks logarithmic potentially.
+
+#### Log Transform
 
 ```{r}
-#| fig-height: 3.5
-#| fig-width: 8
-data <- data |> 
-  mutate(gabor5_log = log(gabor5))
+# Use bestNormalize R package to select the best transformation
+BNObject <- bestNormalize(data1_train$gabor5)
+BNObject
 
-distr_plots(data, "gabor5_log", 30)
+# Create log term
+data1_train <- data1_train |> 
+  mutate(gabor5_log = log(gabor5))
+ 
+distr_plots(data1_train, "gabor5_log", 30)
 ```
 
-That's kind of better, don't really know what to do with that.
+That's kind of better.
 
 ```{r}
 # Calculate IQR and identify outliers
-IQR_val <- IQR(data$gabor5_log)
-Q1 <- quantile(data$gabor5_log, 0.25)
-Q3 <- quantile(data$gabor5_log, 0.75)
+IQR_val <- IQR(data1_train$gabor5_log)
+Q1 <- quantile(data1_train$gabor5_log, 0.25)
+Q3 <- quantile(data1_train$gabor5_log, 0.75)
 lower_bound <- Q1 - (1.5*IQR_val)
 upper_bound <- Q3 + (1.5*IQR_val)
 
 # Create boxplot and flag outliers
-ggplot(data, aes(x = "", y = gabor5_log)) +
+ggplot(data1_train, aes(x = "", y = gabor5_log)) +
   geom_boxplot(alpha = 0.8) +
   geom_text(aes(label = ifelse(gabor5_log < lower_bound | gabor5_log > upper_bound, Subject_ID, "")), hjust = -0.5, color = "red") +
   theme_minimal() +
@@ -651,6 +923,9 @@ ggplot(data, aes(x = "", y = gabor5_log)) +
        y = "Gabor5")
 ```
 
+#### Summary
+
+`gabor5` is not normally distributed, and no transform seems to help much. It may be dropped from consideration.
 
 [Top of Tabset](#Features_Uni)
 
@@ -658,7 +933,7 @@ ggplot(data, aes(x = "", y = gabor5_log)) +
 
 ## GLCM
 
-::: panel_tabset 
+::: panel_tabset
 
 ## GLCM1
 
@@ -666,7 +941,7 @@ ggplot(data, aes(x = "", y = gabor5_log)) +
 #| fig-height: 3.5
 #| fig-width: 8
 # Make plots
-distr_plots(data, "glcm1", 10)
+distr_plots(data1_train, "glcm1", 10)
 ```
 
 `glcm1` is approximately normally distributed.
@@ -679,23 +954,35 @@ distr_plots(data, "glcm1", 10)
 #| fig-height: 3.5
 #| fig-width: 8
 # Make plots
-distr_plots(data, "glcm2", 10)
+distr_plots(data1_train, "glcm2", 10)
 ```
 
 `glcm2` may be logarithmic.
 
+#### Log Transform
+
 ```{r}
 # Create log variable
-data <- data |> 
+data1_train <- data1_train |> 
   mutate(glcm2_log = log(glcm2))
 
 #| fig-height: 3.5
 #| fig-width: 8
 # Make plots
-distr_plots(data, "glcm2_log", 10)
+distr_plots(data1_train, "glcm2_log", 10)
 ```
 
-That's better, with perhaps a negative outlier.
+```{r}
+# Use bestNormalize R package to select the best transformation
+BNObject <- bestNormalize(data1_train$glcm2)
+BNObject
+```
+
+It appears that this is the best transformation we will get.
+
+#### Summary
+
+The best transformation for `glcm2` is a log transform.
 
 [Top of Tabset](#Features_Uni)
 
@@ -704,15 +991,17 @@ That's better, with perhaps a negative outlier.
 ## TXTI
 
 ::: panel-tabset
-
 ## TXT1
 
 ```{r}
 #| fig-height: 3.5
 #| fig-width: 8
 # Make plots
-distr_plots(data, "txti1", 10)
+distr_plots(data1_train, "txti1", 10)
 ```
+
+#### Summary
+
 `txti1` appears normally distributed
 
 [Top of Tabset](#Features_Uni)
@@ -723,8 +1012,10 @@ distr_plots(data, "txti1", 10)
 #| fig-height: 3.5
 #| fig-width: 8
 # Make plots
-distr_plots(data, "txti2", 10)
+distr_plots(data1_train, "txti2", 10)
 ```
+
+#### Summary
 
 `txti2` appears normally distributed.
 
@@ -736,8 +1027,10 @@ distr_plots(data, "txti2", 10)
 #| fig-height: 3.5
 #| fig-width: 8
 # Make plots
-distr_plots(data, "txti3", 10)
+distr_plots(data1_train, "txti3", 10)
 ```
+
+#### Summary
 
 `txti3` appears normally distributed.
 
@@ -749,22 +1042,36 @@ distr_plots(data, "txti3", 10)
 #| fig-height: 3.5
 #| fig-width: 8
 # Make plots
-distr_plots(data, "txti4", 10)
+distr_plots(data1_train, "txti4", 10)
 ```
 
 `txti4` may be logarithmic.
 
+#### Log Transform
+
 ```{r}
 #| fig-height: 3.5
 #| fig-width: 8
-data <- data |> 
+data1_train <- data1_train |> 
   mutate(txti4_log = log(txti4))
 
 # Make plots
-distr_plots(data, "txti4_log", 10)
+distr_plots(data1_train, "txti4_log", 10)
 ```
 
-That's better?
+That's better, still not perfect.
+
+```{r}
+# Use bestNormalize R package to select the best transformation
+BNObject <- bestNormalize(data1_train$txti4)
+BNObject
+```
+
+Log is better than sqrt so we will use log.
+
+#### Summary
+
+The best transformation for `txtxi4` is log, though it is still not perfect.
 
 [Top of Tabset](#Features_Uni)
 
@@ -774,38 +1081,50 @@ That's better?
 #| fig-height: 3.5
 #| fig-width: 8
 #| # Make plots
-distr_plots(data, "txti5", 10)
+distr_plots(data1_train, "txti5", 10)
 ```
 
-May be logarithmic?
+May be logarithmic.
+
+#### Log Transform
 
 ```{r}
 #| fig-height: 3.5
 #| fig-width: 8
-data <- data |> 
+data1_train <- data1_train |> 
   mutate(txti5_log = log(txti5))
 
 #| # Make plots
-distr_plots(data, "txti5_log", 10)
+distr_plots(data1_train, "txti5_log", 10)
 ```
 
 That looks better. Mostly.
 
-[Top of Tabset](#Features_Uni)
+```{r}
+# Use bestNormalize R package to select the best transformation
+BNObject <- bestNormalize(data1_train$txti5)
+BNObject
+```
 
+Log performs better than sqrt, that's as good as we can get.
+
+#### Summary
+
+The best transformation for `txti5` is logarithmic.
+
+[Top of Tabset](#Features_Uni)
 :::
 
 ## LBP
 
-::: panel-tabset
-
+:::: panel-tabset
 ## LBP1
 
 ```{r}
 #| fig-height: 3.5
 #| fig-width: 8
 #| # Make plots
-distr_plots(data, "lbp1", 20)
+distr_plots(data1_train, "lbp1", 20)
 ```
 
 Looks normally distributed with 1 outlier.
@@ -813,8 +1132,10 @@ Looks normally distributed with 1 outlier.
 #### Remove Outlier
 
 ```{r}
-data |> 
+# Examine LBP outlier
+data1_train |> 
   arrange(desc(lbp3)) |> 
+  select(Subject_ID, lbp1, lbp2, lbp3, lbp4, lbp5) |> 
   head() |> 
   pretty_print()
 ```
@@ -825,7 +1146,7 @@ We remove them.
 
 ```{r}
 # Remove outlier patient
-data <- data |> 
+data1_train <- data1_train |> 
   filter(!Subject_ID == 52)
 ```
 
@@ -835,10 +1156,43 @@ data <- data |>
 #| fig-height: 3.5
 #| fig-width: 8
 #| # Make plots
-distr_plots(data, "lbp1", 20)
+distr_plots(data1_train, "lbp1", 10)
 ```
 
-`lbp1` is normally distributed.
+That's close to normal, let's check if it could be better.
+
+```{r}
+# Use bestNormalize R package to select the best transformation
+BNObject <- bestNormalize(data1_train$lbp1)
+BNObject
+```
+
+#### Yeo Johnson Transform
+
+It seems a yeo transformation will be the best (since we have negatives and a log and sqrt transformation will cause NA values)
+
+```{r}
+#| fig-height: 3.5
+#| fig-width: 8
+# Perform transform
+data1_train <- data1_train |> 
+  mutate(lbp1_yeo = yeojohnson(lbp1)$x.t)
+
+#| # Make plots
+distr_plots(data1_train, "lbp1_yeo", 10)
+```
+
+It's slightly better, but not by much.
+
+#### Summary
+
+A yeo johnson transformation helps a little bit.
+
+We will choose to not transform this variable.
+
+::: callout-note
+Note: Patient 52 is a clear outlier and possibly erroneous value on the `lbp` features. Ensure to remove it from all data sets!
+:::
 
 [Top of Tabset](#Features_Uni)
 
@@ -848,25 +1202,27 @@ distr_plots(data, "lbp1", 20)
 #| fig-height: 3.5
 #| fig-width: 8
 #| # Make plots
-distr_plots(data, "lbp2", 20)
+distr_plots(data1_train, "lbp2", 20)
 ```
 
 We appear to have a different outlier for `lbp2`.
 
 ```{r}
 # Examine outlier
-data |> 
+data1_train |> 
   arrange(desc(lbp2)) |> 
+  select(Subject_ID, lbp1, lbp2, lbp3, lbp4, lbp5) |> 
   head() |> 
   pretty_print()
 ```
+
 Patient 48 is an outlier on `lbp2` (lbp2 = 3, all other patients are essentially below 1).
 
 We remove them
 
 ```{r}
 # Remove outlier
-data <- data |> 
+data1_train <- data1_train |> 
   filter(!Subject_ID == 48)
 ```
 
@@ -876,11 +1232,12 @@ data <- data |>
 #| fig-height: 3.5
 #| fig-width: 8
 #| # Make plots
-distr_plots(data, "lbp2", 20)
+distr_plots(data1_train, "lbp2", 20)
 ```
 
-`lbp2` is normally distributed
+#### 
 
+`lbp2` is normally distributed
 
 [Top of Tabset](#Features_Uni)
 
@@ -890,10 +1247,22 @@ distr_plots(data, "lbp2", 20)
 #| fig-height: 3.5
 #| fig-width: 8
 #| # Make plots
-distr_plots(data, "lbp3", 20)
+distr_plots(data1_train, "lbp3", 20)
 ```
 
-Approximately normalish.
+Doesn't look too good.
+
+```{r}
+# Use bestNormalize R package to select the best transformation
+BNObject <- bestNormalize(data1_train$lbp3)
+BNObject
+```
+
+None of the transformations help much here.
+
+#### Summary
+
+`lbp3` is not normally distributed and no transformations help. We keep the original unmodified values.
 
 [Top of Tabset](#Features_Uni)
 
@@ -903,7 +1272,7 @@ Approximately normalish.
 #| fig-height: 3.5
 #| fig-width: 8
 #| # Make plots
-distr_plots(data, "lbp4", 20)
+distr_plots(data1_train, "lbp4", 20)
 ```
 
 `lbp4` appears logarithmic.
@@ -912,14 +1281,30 @@ distr_plots(data, "lbp4", 20)
 #| fig-height: 3.5
 #| fig-width: 8
 # Create log variable
-data <- data |> 
+data1_train <- data1_train |> 
   mutate(lbp4_log = log(lbp4))
 
 #| # Make plots
-distr_plots(data, "lbp4_log", 20)
+distr_plots(data1_train, "lbp4_log", 20)
 ```
 
 Looks better.
+
+```{r}
+# Use bestNormalize R package to select the best transformation
+BNObject <- bestNormalize(data1_train$lbp4)
+BNObject
+```
+
+The log transform also provides the best performance here.
+
+#### Summary
+
+The log transform provides the best distribution for `lbp4`
+
+::: callout-note
+Note: Patient 48 is a clear outlier and possibly erroneous value on the `lbp2` feature. Ensure to remove it from all data sets!
+:::
 
 [Top of Tabset](#Features_Uni)
 
@@ -929,7 +1314,7 @@ Looks better.
 #| fig-height: 3.5
 #| fig-width: 8
 #| # Make plots
-distr_plots(data, "lbp5", 20)
+distr_plots(data1_train, "lbp5", 20)
 ```
 
 `lbp5` looks logarithmic.
@@ -938,52 +1323,291 @@ distr_plots(data, "lbp5", 20)
 #| fig-height: 3.5
 #| fig-width: 8
 # Create log variable
-data <- data |> 
+data1_train <- data1_train |> 
   mutate(lbp5_log = log(lbp5))
 
 #| # Make plots
-distr_plots(data, "lbp5_log", 20)
-```
+distr_plots(data1_train, "lbp5_log", 15)
 
-Looks better, maybe 1 outlier.
+# Create variable
+data1_train <- data1_train |> 
+  mutate(lbp5_log = log(lbp5))
+```
 
 ```{r}
-data |> 
-  arrange(lbp5_log) |> 
-  head()
+# Use bestNormalize R package to select the best transformation
+BNObject <- bestNormalize(data1_train$lbp5)
+BNObject
 ```
+
+Looks better, and we confirm that the log transform performs the best.
+
+#### Summary
+
+Log transform is the best for `lbp5`.
 
 [Top of Tabset](#Features_Uni)
 
-:::
+::::
 
-## Summary
+## Feature Engineering Summary
 
-We determined that the following variables were logarithmic:
+We determined that the following variables were approximately normally distributed after performing the transformations below:
+-   `kidvol_change_log`
+-   `geom1_yeo`
+-   `geom2_yeo`
+-   `gabor2_yeo`
+-   `gabor4_log`
+-   `glcm2_log`
+-   `txti4_log`
+-   `txti5_log`
+-   `lbp4_log`
+-   `lbp5_log`
 
- - `geom2`
- - `gabor4`
- - `gabor5`?
- - `glcm2`
- - `txti4`
- - `txti5`
- - `lbp4`
- - `lbp5`
+`gabor5` is not normal even after transforming.
 
 We also eliminated 2 outlier patients, `48` and `52`.
 
 [Top of Tabset](#Features_Uni)
 
-:::
+:::::::::
 
 # Correlation Matrices
 
-#### This is a matrix for Raw Data Set
+To assess for the best engineering of features and select the best covariates for this predictive model, I will create the following correlation matrices. 
+
+ - With unaltered features
+ - With most normalized features
+ - With unaltered quadratic features
+ - With most normalized quadratic features
+ - With averages of all related terms
+ - With averages of only the most significant related terms
+ - With Interaction terms
+
+## Matrix One
+
+This matrix will contain the unaltered features in their original form, as well as the engineered features as determined by examination of distributions. 
 
 ```{r}
+# Control matrix for better output
+matrix_order <- c("kidvol_base", "kidvol_change", "kidvol_change_log", "progression", "geom1", "geom1_yeo", "geom2", "geom2_yeo", "gabor1", "gabor2", "gabor2_yeo", "gabor3", "gabor4", "gabor4_log", "gabor5", "glcm1", "glcm2", "glcm2_log", "txti1", "txti2", "txti3", "txti4", "txti4_log", "txti5", "txti5_log", "lbp1", "lbp2", "lbp3", "lbp4", "lbp4_log", "lbp5", "lbp5_log")
+ 
 # Clean the output by making a trimmed dataset excluding extaneous variables
-data_for_matrix <- data |> 
-  select(kidvol_base, kidvol_visit2, kidvol_change, progression, everything(), -Subject_ID)
+data_for_matrix <- data1_train |> 
+  select(matrix_order)
+
+# We factored our variables at the start. To make a correlation matrix we must reconvert those back to numeric
+data_for_matrix <- data.frame(lapply(data_for_matrix, function(x) if (is.factor(x)) as.numeric(x) else x))
+
+# Make a correlation matrix with all variables of the trimmed data set
+correlation_matrix <- cor(data_for_matrix, use = "complete.obs")
+
+# Plot correlation matrix
+corrplot(correlation_matrix, method = "circle")
+```
+From this plot we can see a few relationships between our original and transformed features.
+
+#### Geom
+
+Yeo Johnson transforming `geom2` slightly improved the correlation.
+
+#### Gabor
+
+None of the original or transformed `gabor` features are correlated to change in `kidvol_change_log`. 
+
+Interestingly, `gabor3` appears to have a strong correlation to the untransformed `kidvol_change`. Let's assess.
+
+```{r}
+# Create plot
+ggplot(data1_train, aes(x = gabor3, y = kidvol_change)) +
+  geom_smooth(method = "lm") +
+  geom_point() +
+  labs(title = "Change in Kidney Volume by Gabor3",
+       x = "Gabor3",
+       y = "Change in Kidney Volume (%)") +
+  theme_minimal()
+```
+
+This relationship is driven entirely by that outlier on the far left!
+
+```{r}
+# Create plot
+ggplot(data1_train, aes(x = gabor3, y = kidvol_change_log)) +
+  geom_smooth(method = "lm") +
+  geom_point() +
+  labs(title = "Change in Log Kidney Volume by Gabor3",
+       x = "Gabor3",
+       y = "Change in Log Kidney Volume (%)") +
+  theme_minimal()
+```
+
+We now have a slope of zero for the relationship between `gabor3` and `kidvol_change_log`, which appears to be more accurate to the truth. 
+
+This finding and the fact that none of the `gabor` features were related to `kidvol_change_log` provides confidence that we were correct to transform this outcome variable.
+
+#### GLCM
+
+```{r}
+# Create plot
+ggplot(data1_train, aes(x = glcm2, y = kidvol_change)) +
+  geom_smooth(method = "lm") +
+  geom_point() +
+  labs(title = "Change in Kidney Volume by GLCM2",
+       x = "GLCM2",
+       y = "Change in Kidney Volume (%)") +
+  theme_minimal()
+```
+
+`GLCM2` was originally a strong predictor of `kidvol_change`, however we can clearly see that this was because `GLCM2` is a logarithmic variable.
+
+```{r}
+# Create plot
+ggplot(data1_train, aes(x = glcm2_log, y = kidvol_change_log)) +
+  geom_smooth(method = "lm") +
+  geom_point() +
+  labs(title = "Change in Log Kidney Volume by Log GLCM2",
+       x = "Log GLCM2",
+       y = "Change in Log Kidney Volume (%)") +
+  theme_minimal()
+```
+
+After transforming both `GLCM2` and `kidvol_change`, we can see that the relationship between the two variables does not appear that strong.
+
+#### Txti
+`txti2` is a strong predictor of change in `kidvol` regardless if whether `kidvol` is transformed or not.
+
+`txti` becomes correlated after we create `kidvol_change_log`, interestingly.
+
+Let's assess.
+
+```{r}
+# Create plot
+ggplot(data1_train, aes(x = txti1, y = kidvol_change)) +
+  geom_smooth(method = "lm") +
+  geom_point() +
+  labs(title = "Change in Kidney Volume by Txti1",
+       x = "Txti1",
+       y = "Change in Kidey Volume (%)") +
+  theme_minimal()
+```
+
+```{r}
+# Create plot
+ggplot(data1_train, aes(x = txti1, y = kidvol_change_log)) +
+  geom_smooth(method = "lm") +
+  geom_point() +
+  labs(title = "Change in Log Kidney Volume by Txti1",
+       x = "Txti1",
+       y = "Change in Log Kidney Volume (%)") +
+  theme_minimal()
+```
+
+The relationship between `txti1` and change in kidney volume appears slighly linear and positive in both version, just when we took the log of kidney volume change we seem to have drawn back some of those outliers.
+
+```{r}
+# Create plot
+ggplot(data1_train, aes(x = txti2, y = kidvol_change_log)) +
+  geom_smooth(method = "lm") +
+  geom_point() +
+  labs(title = "Change in Log Kidney Volume by Txti2",
+       x = "Txti2",
+       y = "Change in Log Kidney Volume (%)") +
+  theme_minimal()
+```
+
+`txti2` is a strong predictor of change in kidney volume!
+
+#### LBP
+
+`lbp2` is strongly related to change in kidney volume.
+
+```{r}
+# Create plot
+ggplot(data1_train, aes(x = lbp2, y = kidvol_change_log)) +
+  geom_smooth(method = "lm") +
+  geom_point() +
+  labs(title = "Change in Log Kidney Volume by lbp2",
+       x = "lbp2",
+       y = "Change in Log Kidney Volume (%)") +
+  theme_minimal()
+```
+`lbp2` is strongly positively associated with `kidvol_change_log`.
+
+`lbp4` after log transforming is significantly associated with change in kidney volume.
+
+```{r}
+# Create plot
+ggplot(data1_train, aes(x = lbp4, y = kidvol_change_log)) +
+  geom_smooth(method = "lm") +
+  geom_point() +
+  labs(title = "Change in Log Kidney Volume by Lbp4",
+       x = "Log Lbp2",
+       y = "Change in Kidney Volume (%)") +
+  theme_minimal()
+```
+
+We can tell that lbp2 increases exponentially.
+
+```{r}
+# Create plot
+ggplot(data1_train, aes(x = lbp4_log, y = kidvol_change_log)) +
+  geom_smooth(method = "lm") +
+  geom_point() +
+  labs(title = "Change in Log Kidney Volume by Log Lbp4",
+       x = "Log Lbp4",
+       y = "Change in Log Kidney Volume (%)") +
+  theme_minimal()
+```
+Our scale is still weird after transforming, but it does appear to be negatively related.
+
+`lbp5_log` is strongly correlated to change in kidney volume.
+
+```{r}
+# Create plot
+ggplot(data1_train, aes(x = lbp5_log, y = kidvol_change_log)) +
+  geom_smooth(method = "lm") +
+  geom_point() +
+  labs(title = "Change in Log Kidney Volume by Log Lbp5",
+       x = "Log Lbp5",
+       y = "Change in Log Kidney Volume (%)") +
+  theme_minimal()
+```
+
+We have a pretty strong negative relationship here.
+
+# Feature Engineering II
+
+We saw in the correlation matrix that both `geom1` and `geom2` had pretty even correlations with change in kidney volume. 
+
+In the interest of including as many variables as possible (at most we can include 5), and possibly uncovering a strong relationship, I will attempt to collapse these two variables by 
+
+ - Taking their average
+ - Taking their interaction term
+ 
+I will also do the same for `lbp2`, `lbp4_log`, and `lbp5_log`
+
+#### Create Average and Interaction Terms
+
+```{r}
+data1_train <- data1_train |> 
+  mutate(geom_avg = (geom1_yeo + geom2_yeo)/2,
+         geom_int = geom1_yeo*geom2_yeo,
+         lbp_avg  = (lbp2 + lbp5_log),
+         lbp_int  = lbp2*lbp5_log)
+```
+
+
+# Correlation Matrix II
+
+Now we can rerun the correlation matrix and examine how those relationships changed
+
+```{r}
+# Control matrix for better output
+matrix_order <- c("kidvol_base", "kidvol_change", "kidvol_change_log", "progression", "geom1", "geom1_yeo", "geom2", "geom2_yeo", "geom_avg", "geom_int", "gabor1", "gabor2", "gabor2_yeo", "gabor3", "gabor4", "gabor4_log", "gabor5", "glcm1", "glcm2", "glcm2_log", "txti1", "txti2", "txti3", "txti4", "txti4_log", "txti5", "txti5_log", "lbp1", "lbp2", "lbp3", "lbp4", "lbp4_log", "lbp5", "lbp5_log", "lbp_avg", "lbp_int")
+ 
+# Clean the output by making a trimmed dataset excluding extaneous variables
+data_for_matrix <- data1_train |> 
+  select(matrix_order)
 
 # We factored our variables at the start. To make a correlation matrix we must reconvert those back to numeric
 data_for_matrix <- data.frame(lapply(data_for_matrix, function(x) if (is.factor(x)) as.numeric(x) else x))
@@ -995,19 +1619,199 @@ correlation_matrix <- cor(data_for_matrix, use = "complete.obs")
 corrplot(correlation_matrix, method = "circle")
 ```
 
+#### Geom
+
+The `geom` interaction and average terms do not seem to perform differently from each other. They *may* perform slightly better than `geom2_yeo` alone.
+
+Let's check.
+
 ```{r}
-model <- lm(kidvol_change ~ txti4_log, data = data)
+# Create plot
+ggplot(data1_train, aes(x = geom2_yeo, y = kidvol_change_log)) +
+  geom_smooth(method = "lm") +
+  geom_point() +
+  labs(title = "Change in Log Kidney Volume by Geom2 Yeo",
+       x = "Geom2_Yeo",
+       y = "Change in Log Kidney Volume (%)") +
+  theme_minimal()
+```
+
+```{r}
+# Create plot
+ggplot(data1_train, aes(x = geom_avg, y = kidvol_change_log)) +
+  geom_smooth(method = "lm") +
+  geom_point() +
+  labs(title = "Change in Log Kidney Volume by geom_avg",
+       x = "geom_avg",
+       y = "Change in Log Kidney Volume (%)") +
+  theme_minimal()
+```
+
+These relationships do not appear any different and `geom2_yeo` will be selected as potential covariate for the final model.
+
+
+#### LBP
+
+Similarly, the `lbp` average and interaction terms do not appear to perform any differently then `lbp5_log` alone.
+
+```{r}
+# Create plot
+ggplot(data1_train, aes(x = lbp5_log, y = kidvol_change_log)) +
+  geom_smooth(method = "lm") +
+  geom_point() +
+  labs(title = "Change in Log Kidney Volume by lbp5 log",
+       x = "lb5p log",
+       y = "Change in Log Kidney Volume (%)") +
+  theme_minimal()
+```
+
+
+```{r}
+# Create plot
+ggplot(data1_train, aes(x = lbp_avg, y = kidvol_change_log)) +
+  geom_smooth(method = "lm") +
+  geom_point() +
+  labs(title = "Change in Log Kidney Volume by lbp avg",
+       x = "lbp_avg",
+       y = "Change in Log Kidney Volume (%)") +
+  theme_minimal()
+```
+These appear to be the same relationship and `lbp5_log` will be selected for simplicity.
+
+# Feature Engineering III
+
+Finally, we will consider square terms for each feature.
+
+```{r}
+# Create function to square specified columns and rename the new variables
+square_selected_variables <- function(df, columns) {
+  df <- df %>%
+    mutate(across(all_of(columns), ~ .^2, .names = "{.col}_square"))
+  return(df)
+}
+
+# Choose columns to get squared
+columns <- data1_train |>
+  select(geom1, geom1_yeo, geom2, geom2_yeo, geom_avg, geom_int, gabor1, gabor2, gabor2_yeo, gabor3, gabor4, gabor4_log, gabor5, glcm1, glcm2, glcm2_log, txti1, txti2, txti3, txti4, txti4_log, txti5, txti5_log, lbp1, lbp2, lbp3, lbp4, lbp4_log, lbp5, lbp5_log, lbp_avg, lbp_int) |>
+  colnames()
+
+
+# Square selected variables
+data_square <- square_selected_variables(data1_train, columns)
+  
+# Control matrix for better output
+matrix_order <- c("kidvol_base", "kidvol_change", "kidvol_change_log", "progression", "geom1_square", "geom1_yeo_square", "geom2_square", "geom2_yeo_square", "geom_avg_square", "geom_int_square", "gabor1_square", "gabor2_square", "gabor2_yeo_square", "gabor3_square", "gabor4_square", "gabor4_log_square", "gabor5_square", "glcm1_square", "glcm2_square", "glcm2_log_square", "txti1_square", "txti2_square", "txti3_square", "txti4_square", "txti4_log_square", "txti5_square", "txti5_log_square", "lbp1_square", "lbp2_square", "lbp3_square", "lbp4_square", "lbp4_log_square", "lbp5_square", "lbp5_log_square", "lbp_avg_square", "lbp_int_square")
+ 
+# Clean the output by making a trimmed dataset excluding extraneous variables
+data_for_matrix2 <- data_square |> 
+  select(matrix_order)
+
+# We factored our variables at the start. To make a correlation matrix we must reconvert those back to numeric
+data_for_matrix2 <- data.frame(lapply(data_for_matrix2, function(x) if (is.factor(x)) as.numeric(x) else x))
+
+# Make a correlation matrix with all variables of the trimmed data set
+correlation_matrix <- cor(data_for_matrix2, use = "complete.obs")
+
+# Plot correlation matrix
+corrplot(correlation_matrix, method = "circle")
+
+```
+```{r}
+ggplot(data_square, aes(x = gabor3_square, y = kidvol_change)) +
+  geom_point()
+```
+
+```{r}
+ggplot(data_square, aes(x = glcm2_square, y = kidvol_change)) +
+  geom_point() +
+  geom_smooth(method = "lm")
+```
+That kinda makes sense I guess?
+
+Should I take that?
+
+### LEAVING OFF HERE
+
+```{r}
+model <- lm(kidvol_change ~ kidvol_base, data = data_square)
+summary(model)
+plot(model)
+```
+
+
+```{r}
+model <- lm(kidvol_change ~ txti2 + lbp5_log + glcm2_square + gabor3, data = data_square)
+summary(model)
+plot(model)
+```
+
+
+```{r}
+model <- lm(kidvol_change ~ kidvol_base + txti2 + lbp5_log + glcm2_square + gabor3, data = data_square)
+summary(model)
+plot(model)
+```
+
+# Using log ki volume change makes the residuals normally distributed and meets the assumptions of a linear regression
+
+```{r}
+model <- lm(kidvol_change_log ~ kidvol_base + txti2 + lbp5_log + glcm2_square + gabor3, data = data_square)
+summary(model)
+plot(model)
+```
+
+
+#### Squaring only original terms
+
+```{r}
+# Create function to square specified columns and rename the new variables
+square_selected_variables <- function(df, columns) {
+  df <- df %>%
+    mutate(across(all_of(columns), ~ .^2, .names = "{.col}_square"))
+  return(df)
+}
+
+# Choose columns to get squared
+columns <- data1_train |>
+  select(geom1,geom2, gabor1, gabor2, gabor3, gabor4, gabor4_log, gabor5, glcm1, glcm2, txti1, txti2, txti3, txti4, txti5, lbp1, lbp2, lbp3, lbp4, lbp5) |>
+  colnames()
+
+
+# Square selected variables
+data_square <- square_selected_variables(data1_train, columns)
+  
+# Control matrix for better output
+matrix_order <- c("kidvol_base", "kidvol_change", "kidvol_change_log", "progression", "geom1_square", "geom2_square", "gabor1_square", "gabor2_square", "gabor3_square", "gabor4_square", "gabor5_square", "glcm1_square", "glcm2_square", "txti1_square", "txti2_square", "txti3_square", "txti4_square", "txti5_square", "lbp1_square", "lbp2_square", "lbp3_square", "lbp4_square", "lbp5_square")
+ 
+# Clean the output by making a trimmed dataset excluding extraneous variables
+data_for_matrix2 <- data_square |> 
+  select(matrix_order)
+
+# We factored our variables at the start. To make a correlation matrix we must reconvert those back to numeric
+data_for_matrix2 <- data.frame(lapply(data_for_matrix2, function(x) if (is.factor(x)) as.numeric(x) else x))
+
+# Make a correlation matrix with all variables of the trimmed data set
+correlation_matrix <- cor(data_for_matrix2, use = "complete.obs")
+
+# Plot correlation matrix
+corrplot(correlation_matrix, method = "circle")
+
+```
+
+
+
+```{r}
+model <- lm(kidvol_change ~ txti4_log, data = data1_train)
 summary(model)
 ```
 
 ```{r}
-model <- lm(kidvol_change ~ txti4_log, data = data)
+model <- lm(kidvol_change ~ txti4_log, data = data1_train)
 summary(model)
 ```
-
-
 
 #### This is a matrix for Feature Engineered Data Set
+
 ```{r}
 # # Function to square specified columns and rename the new variables
 # square_selected_variables <- function(df, columns) {
@@ -1036,37 +1840,30 @@ summary(model)
 # corrplot(correlation_matrix, method = "circle")
 
 ```
-```{r}
-ggplot(data, aes(x = gabor3, y = kidvol_change)) +
-  geom_point() +
-  geom_smooth(method = "lm")
 
-model <- lm(kidvol_change ~ gabor3, data = data)
+```{r}
+model <- lm(kidvol_change ~ gabor3, data = data1_train)
 summary(model)
 ```
 
 ```{r}
-ggplot(data, aes(x = gabor1, y = kidvol_change)) +
+ggplot(data1_train, aes(x = gabor1, y = kidvol_change)) +
   geom_point() +
   geom_smooth(method = "lm")
 
-model <- lm(kidvol_change ~ gabor1, data = data)
+model <- lm(kidvol_change ~ gabor1, data = data1_train)
 summary(model)
 ```
 
 ```{r}
-ggplot(data, aes(x = kidvol_base, y = kidvol_change)) +
-  geom_point() +
-  geom_smooth(method = "lm")
-
-model <- lm(kidvol_change ~kidvol_base, data = data)
+model <- lm(kidvol_change ~kidvol_base, data = data1_train)
 summary(model)
 
 ggplot(data, aes(x = kidvol_base, y = kidvol_change, size = geom1, color = geom1)) +
   geom_point() +
   geom_smooth(method = "lm")
 
-model <- lm(kidvol_change ~ kidvol_base + geom1 , data = data)
+model <- lm(kidvol_change ~ kidvol_base + geom1 , data = data1_train)
 
 summary(model)
 
@@ -1075,26 +1872,23 @@ library(car)
 vif(model)
 ```
 
-
-
-
 ```{r}
-ggplot(data, aes(x = sqrt(geom2), y = kidvol_visit2)) +
+ggplot(data1_train, aes(x = sqrt(geom2), y = kidvol_visit2)) +
   geom_point() +
   geom_smooth(method = "lm")
 ```
 
 ```{r}
-ggplot(data, aes(x = txti2, y = kidvol_change)) +
+ggplot(data1_train, aes(x = txti2, y = kidvol_change)) +
   geom_point() +
   geom_smooth(method = "lm")
 ```
 
 ```{r}
-data |> 
+data1_train |> 
   arrange(desc(lbp3))
 
-data_filtered <- data |> 
+data_filtered <- data1_train |> 
   filter(!Subject_ID %in% c(52, 48, 37, 51))
 
 ggplot(data_filtered, aes(x = gabor2, y = kidvol_change)) +
@@ -1102,6 +1896,15 @@ ggplot(data_filtered, aes(x = gabor2, y = kidvol_change)) +
   geom_smooth(method = "lm")
 ```
 
+# Proposal
+
+I propose here an approach to model selection based on the findings in the correlation matrix.
+
+Model 1) A model with the strongest relationships using only the untransformed variables.
+
+So `geom1`, `geom2`, `gabor`, `gabor3`, `glcm2`, `txti2`, `lbp2`, `lbp4_log`,`lbp5_log`
+
+Model 2) `geom1_yeo`, `geom2_yeo`, `txti2` and maaaybe `txti1`, `lpb2`, `lbp4_log`, and `lbp5_log`. on `kidvol_change_log`.
 :::
 
 # Bivariate Comparisons
@@ -1112,7 +1915,6 @@ data |>
   head() |> 
   pretty_print()
 ```
-
 
 #### Scatterplots
 
@@ -1160,7 +1962,6 @@ plot_features_against_outcome(features_gabor)
 
 It looks like `gabor4` and `gabor5` are exponential. We will get the square of those.
 
-
 ### Geom
 
 ```{r}
@@ -1197,28 +1998,20 @@ plot_features_against_outcome(features_lbp)
 Here we will perform the scaling as necessary to place all variables on the same scale.
 
 ```{r}
-# Min-max normalization function
-min_max_norm <- function(x) {
-  (x - min(x)) / (max(x) - min(x))
-}
-
-#############I was trying to features scale ecerything at once here.
-test <- scale(data$geom1)
-testly <- z_norm(data$geom1)
-
-data_scale <- data |> 
-  select()
-
-for (var in colnames(data)) {
-  datascale(var)
-}
+# # Min-max normalization function
+# min_max_norm <- function(x) {
+#   (x - min(x)) / (max(x) - min(x))
+# }
+# 
+# #############I was trying to features scale ecerything at once here.
+# test <- scale(data$geom1)
+# testly <- z_norm(data$geom1)
 
 ```
 
-
 # To do
 
-Split Data Set - technically was supposed to do this right at start... How does k-cross fold come into play though.
+gabor3 has an outlier somewhere. reexamine.
 
 Plot against outcome variable with transformed features as necessary (try with method - "lm", se = F)
 
@@ -1226,22 +2019,15 @@ Feature Scaling the training set
 
 Then feature scale the test set based on the training set values (mean and SD)
 
-Run the models
-1a
-1b
-1c
+Run the models 1a 1b
 
-2a
-2b
-2c
+Take interactions of only same features, not between different features (so bascially just do like geom1 \* geom2)
+
+2a 2b 2c
 
 ???
 
 Profit
-
-
-
-
 
 # References
 

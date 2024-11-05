@@ -1573,6 +1573,8 @@ Finally, we learned how much better suited a linear mixed model is to handling r
 
 # Bonus
 
+## Depression Interaction
+
 There was also a significant interaction between hard drug use and depression in this model.
 
 However, this model shows that current drug users have a steeper slope between depression and mental QOL.
@@ -1624,4 +1626,28 @@ model_MENT1 <- lme(AGG_MENT ~ hard_drugs_grp + years + ADH_HIGHVSLOW + hard_drug
 
 # Get model summary
 summary(model_MENT1)
+```
+
+## Animated Plots
+
+#### Log Viral Load
+
+```{r}
+library(gifski)
+library(png)
+library(gganimate)
+
+data <- drop_na(data)
+
+data |> 
+  group_by(hard_drugs, years) |> 
+  summarise(avg_VLOAD_log = mean(VLOAD_log, na.rm = T)) |> 
+  ggplot(aes(y = avg_VLOAD_log, x = years, color = as.factor(hard_drugs))) +
+  geom_line(size = 1) +
+  theme_minimal() +
+  labs(title = "Average Viral Load Over Time for hard Drug Users",
+       x = "Year",
+       y = "Averaeg Log Viral Load") +
+  transition_reveal(years) +
+  scale_color_brewer(palette = "Pastel2")
 ```
