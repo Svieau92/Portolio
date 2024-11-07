@@ -209,8 +209,10 @@ library(naniar) # Used to visualize missingness
 library(patchwork) # Used to chain ggplots together
 library(gridExtra) # Used to plot ggplots side by side
 library(corrplot) # Used for correlation matrix
-library(caret) # Used for K-fold cross validation
+library(caret) # Used for K-fold cross validation and machine learning
 library(bestNormalize) # Used to find best transformation
+library(olsrr) # used for backwards elimination model.
+library(car) # Used for influenceplot function
 ```
 
 #### Read .CSV
@@ -378,11 +380,43 @@ ggplot(data1_train, aes(x = kidvol_base)) +
   labs(title = "Histogram for Baseline Kidney Volume",
        x = "Baseline Kidney Volume",
        y = "Count")
+
+## QQ Plot
+ggplot(data1_train, aes(sample = kidvol_base)) +
+  geom_qq() +
+  geom_qq_line() +
+  theme_minimal() + 
+  labs(title = "Histogram for Baseline Kidney Volume",
+       x = "Baseline Kidney Volume",
+       y = "Count")
 ```
 
-Kidney volume at baseline appears to not be normally distributed.
+Kidney volume at baseline appears to be logarithmic.
 
-However, I learned in the last project that taking the change score (or percent) will make the outcome normally distributed, as it is a way of accounting for between subject variance. Let's check that that's the case this time.
+```{r}
+# Visualize baseline kidney volume
+ggplot(data1_train, aes(x = log(kidvol_base))) +
+  geom_histogram() + 
+  theme_minimal() + 
+  labs(title = "Histogram forLog Baseline Kidney Volume",
+       x = "Baseline Kidney Volume",
+       y = "Count")
+
+# QQ Plot
+ggplot(data1_train, aes(sample = log(kidvol_base))) +
+  geom_qq() +
+  geom_qq_line() +
+  theme_minimal() + 
+  labs(title = "Histogram for Log Baseline Kidney Volume",
+       x = "Baseline Kidney Volume",
+       y = "Count")
+
+# Create variable
+data1_train <- data1_train |> 
+  mutate(kidvol_base_log = log(kidvol_base))
+```
+
+`kidvol_base` is normally distributed approximately, after log transform and this variable will be used going forward.
 
 #### Percent Change in Kidney Volume
 
@@ -462,6 +496,8 @@ grid.arrange(hist_plot, qq_plot, ncol = 2)
 
 The log transform appears the best for us.
 
+However, after checking with the professor, it is very rare in machine learning that we engineer the outcome variable at all.
+
 ```{r}
 # Create log change in kidney volume
 data1_train <- data1_train |> 
@@ -506,7 +542,7 @@ Interesting, it looks like these patients also have high values for certain MRI 
 
 ##### Transformation
 
-It appears that a log transform of `kidvol_change` gives us an approximately normal distribution, and this will be the value used for the outcome variable for task 1 going forward.
+It appears that a log transform of `kidvol_base` gives us an approximately normal distribution, and this will be the value used for this covariate going forward.
 
 ##### Outliers
 
@@ -557,11 +593,10 @@ An assumption for a linear regression is that there is a linear relationship bet
 
 Thus for the initial step, we will examine the distribution of our variables and create a quadratic term or take the log for each variable as necessary.
 
-::::::::: panel-tabset
+:::::::::: panel-tabset
 ## Geometry
 
 ::: panel-tabset
-
 ## Geom1
 
 ```{r}
@@ -928,13 +963,11 @@ ggplot(data1_train, aes(x = "", y = gabor5_log)) +
 `gabor5` is not normally distributed, and no transform seems to help much. It may be dropped from consideration.
 
 [Top of Tabset](#Features_Uni)
-
 :::
 
 ## GLCM
 
 ::: panel_tabset
-
 ## GLCM1
 
 ```{r}
@@ -985,7 +1018,6 @@ It appears that this is the best transformation we will get.
 The best transformation for `glcm2` is a log transform.
 
 [Top of Tabset](#Features_Uni)
-
 :::
 
 ## TXTI
@@ -1117,7 +1149,7 @@ The best transformation for `txti5` is logarithmic.
 
 ## LBP
 
-:::: panel-tabset
+::::: panel-tabset
 ## LBP1
 
 ```{r}
@@ -1347,48 +1379,36 @@ Looks better, and we confirm that the log transform performs the best.
 Log transform is the best for `lbp5`.
 
 [Top of Tabset](#Features_Uni)
-
-::::
+:::::
 
 ## Feature Engineering Summary
 
-We determined that the following variables were approximately normally distributed after performing the transformations below:
--   `kidvol_change_log`
--   `geom1_yeo`
--   `geom2_yeo`
--   `gabor2_yeo`
--   `gabor4_log`
--   `glcm2_log`
--   `txti4_log`
--   `txti5_log`
--   `lbp4_log`
--   `lbp5_log`
+We determined that the following variables were approximately normally distributed after performing the transformations below: - `kidvol_base_log` - `kidvol_change_log` (this will be considered, but likely not used) - `geom1_yeo` - `geom2_yeo` - `gabor2_yeo` - `gabor4_log` - `glcm2_log` - `txti4_log` - `txti5_log` - `lbp4_log` - `lbp5_log`
+
+These variables will be used for all comparisons moving forward to ensure we meet the assumption of linearity for a linear regression model.
 
 `gabor5` is not normal even after transforming.
 
-We also eliminated 2 outlier patients, `48` and `52`.
+We also eliminated 2 outlier/possible erroneous values in the form of patients, `48` and `52`.
 
 [Top of Tabset](#Features_Uni)
+::::::::::
 
-:::::::::
+# Correlation Matrix I
 
-# Correlation Matrices
+To assess for the best engineering of features and select the most promising covariates for this predictive model, I will create the following correlation matrices.
 
-To assess for the best engineering of features and select the best covariates for this predictive model, I will create the following correlation matrices. 
+-   With unaltered features & engineered features
+-   With averages and interactions to aggregate features from the same class
+-   With squared features
 
- - With unaltered features
- - With most normalized features
- - With unaltered quadratic features
- - With most normalized quadratic features
- - With averages of all related terms
- - With averages of only the most significant related terms
- - With Interaction terms
+This process should uncover hidden relationships between features that are not immediately obvious (such as a squared feature being a significant predictor, but not in its original form).
 
-## Matrix One
-
-This matrix will contain the unaltered features in their original form, as well as the engineered features as determined by examination of distributions. 
+This first matrix will contain the unaltered features in their original form, as well as the engineered features as determined by examination of distributions.
 
 ```{r}
+#| fig-height: 8
+#| fig-width: 8
 # Control matrix for better output
 matrix_order <- c("kidvol_base", "kidvol_change", "kidvol_change_log", "progression", "geom1", "geom1_yeo", "geom2", "geom2_yeo", "gabor1", "gabor2", "gabor2_yeo", "gabor3", "gabor4", "gabor4_log", "gabor5", "glcm1", "glcm2", "glcm2_log", "txti1", "txti2", "txti3", "txti4", "txti4_log", "txti5", "txti5_log", "lbp1", "lbp2", "lbp3", "lbp4", "lbp4_log", "lbp5", "lbp5_log")
  
@@ -1403,19 +1423,25 @@ data_for_matrix <- data.frame(lapply(data_for_matrix, function(x) if (is.factor(
 correlation_matrix <- cor(data_for_matrix, use = "complete.obs")
 
 # Plot correlation matrix
-corrplot(correlation_matrix, method = "circle")
+corrplot(correlation_matrix, method = "color", addCoef.col = "black", number.cex = 0.4, insig = "blank")
 ```
+
 From this plot we can see a few relationships between our original and transformed features.
 
-#### Geom
+## Main Observations {#Corr_One}
 
-Yeo Johnson transforming `geom2` slightly improved the correlation.
+:::: panel-tabset
+## Geometry
 
-#### Gabor
+`geom1` (r = -0.17)and `geom2_yeo` (r = -0.15) have about equal correlation with `kidvol_change`
 
-None of the original or transformed `gabor` features are correlated to change in `kidvol_change_log`. 
+[Top of Tabset](#Corr_One)
 
-Interestingly, `gabor3` appears to have a strong correlation to the untransformed `kidvol_change`. Let's assess.
+## Gabor Transform
+
+None of the original or transformed `gabor` features are correlated to change in `kidvol_change_log`.
+
+Interestingly, `gabor3` appears to have a strong correlation to the untransformed `kidvol_change`, but not with `kidvol_change_log`. Let's assess.
 
 ```{r}
 # Create plot
@@ -1428,7 +1454,30 @@ ggplot(data1_train, aes(x = gabor3, y = kidvol_change)) +
   theme_minimal()
 ```
 
-This relationship is driven entirely by that outlier on the far left!
+This appears to be driven entirely by that outlier patient on the far left.
+
+We previously determined that patients 37 and 51 were outliers on the boxplots on `kidvol_change`.
+
+Let's assess how this relationship changes after removing them.
+
+```{r}
+# Remove outlier patients on kidvol change
+data_out_rem <- data1_train |> 
+  filter(!Subject_ID %in% c(37,51))
+
+# Plot
+ggplot(data_out_rem, aes(x = gabor3, y = kidvol_change)) +
+  geom_smooth(method = "lm") +
+  geom_point() +
+  labs(title = "Change in Kidney Volume by Gabor3",
+       x = "Gabor3",
+       y = "Change in Kidney Volume (%)") +
+  theme_minimal()
+```
+
+The relationship now looks appropriately linear when these outlier patients are removed.
+
+We can also see that taking the log of the change in kidney volume reduces the influence of these outliers and makes the correlation non significant
 
 ```{r}
 # Create plot
@@ -1441,72 +1490,25 @@ ggplot(data1_train, aes(x = gabor3, y = kidvol_change_log)) +
   theme_minimal()
 ```
 
-We now have a slope of zero for the relationship between `gabor3` and `kidvol_change_log`, which appears to be more accurate to the truth. 
+::: callout-note
+Note: Patients 37 and 51 may be outliers and will need to be assessed using leverage and influence after the final model is fit!
+:::
 
-This finding and the fact that none of the `gabor` features were related to `kidvol_change_log` provides confidence that we were correct to transform this outcome variable.
+[Top of Tabset](#Corr_One)
 
-#### GLCM
+## Gray Level Co-Occurence Matrix
 
-```{r}
-# Create plot
-ggplot(data1_train, aes(x = glcm2, y = kidvol_change)) +
-  geom_smooth(method = "lm") +
-  geom_point() +
-  labs(title = "Change in Kidney Volume by GLCM2",
-       x = "GLCM2",
-       y = "Change in Kidney Volume (%)") +
-  theme_minimal()
-```
+None of the MRI features from the gray level co-occurence matrix were strongly correlated with `kidvol_change`.
 
-`GLCM2` was originally a strong predictor of `kidvol_change`, however we can clearly see that this was because `GLCM2` is a logarithmic variable.
+[Top of Tabset](#Corr_One)
 
-```{r}
-# Create plot
-ggplot(data1_train, aes(x = glcm2_log, y = kidvol_change_log)) +
-  geom_smooth(method = "lm") +
-  geom_point() +
-  labs(title = "Change in Log Kidney Volume by Log GLCM2",
-       x = "Log GLCM2",
-       y = "Change in Log Kidney Volume (%)") +
-  theme_minimal()
-```
+## Txti
 
-After transforming both `GLCM2` and `kidvol_change`, we can see that the relationship between the two variables does not appear that strong.
-
-#### Txti
 `txti2` is a strong predictor of change in `kidvol` regardless if whether `kidvol` is transformed or not.
 
-`txti` becomes correlated after we create `kidvol_change_log`, interestingly.
-
-Let's assess.
-
 ```{r}
 # Create plot
-ggplot(data1_train, aes(x = txti1, y = kidvol_change)) +
-  geom_smooth(method = "lm") +
-  geom_point() +
-  labs(title = "Change in Kidney Volume by Txti1",
-       x = "Txti1",
-       y = "Change in Kidey Volume (%)") +
-  theme_minimal()
-```
-
-```{r}
-# Create plot
-ggplot(data1_train, aes(x = txti1, y = kidvol_change_log)) +
-  geom_smooth(method = "lm") +
-  geom_point() +
-  labs(title = "Change in Log Kidney Volume by Txti1",
-       x = "Txti1",
-       y = "Change in Log Kidney Volume (%)") +
-  theme_minimal()
-```
-
-The relationship between `txti1` and change in kidney volume appears slighly linear and positive in both version, just when we took the log of kidney volume change we seem to have drawn back some of those outliers.
-
-```{r}
-# Create plot
-ggplot(data1_train, aes(x = txti2, y = kidvol_change_log)) +
+ggplot(data1_train, aes(x = txti2, y = kidvol_change)) +
   geom_smooth(method = "lm") +
   geom_point() +
   labs(title = "Change in Log Kidney Volume by Txti2",
@@ -1517,54 +1519,51 @@ ggplot(data1_train, aes(x = txti2, y = kidvol_change_log)) +
 
 `txti2` is a strong predictor of change in kidney volume!
 
-#### LBP
+[Top of Tabset](#Corr_One)
 
-`lbp2` is strongly related to change in kidney volume.
+## Local Binary Pattern
+
+#### Lbp2
+
+`lbp2` is weakly correlated to change in kidney volume.
 
 ```{r}
 # Create plot
-ggplot(data1_train, aes(x = lbp2, y = kidvol_change_log)) +
+ggplot(data1_train, aes(x = lbp2, y = kidvol_change)) +
   geom_smooth(method = "lm") +
   geom_point() +
   labs(title = "Change in Log Kidney Volume by lbp2",
        x = "lbp2",
        y = "Change in Log Kidney Volume (%)") +
   theme_minimal()
-```
-`lbp2` is strongly positively associated with `kidvol_change_log`.
 
-`lbp4` after log transforming is significantly associated with change in kidney volume.
+
+model <- lm(kidvol_change ~ lbp2, data = data1_train)
+summary(model)
+```
+
+#### Lbp4
+
+`lbp4` after log transforming is weakly associated with change in kidney volume, but not strong enough to be significant.
 
 ```{r}
 # Create plot
-ggplot(data1_train, aes(x = lbp4, y = kidvol_change_log)) +
+ggplot(data1_train, aes(x = lbp4_log, y = kidvol_change)) +
   geom_smooth(method = "lm") +
   geom_point() +
   labs(title = "Change in Log Kidney Volume by Lbp4",
-       x = "Log Lbp2",
+       x = "Log Lbp4",
        y = "Change in Kidney Volume (%)") +
   theme_minimal()
 ```
 
-We can tell that lbp2 increases exponentially.
-
-```{r}
-# Create plot
-ggplot(data1_train, aes(x = lbp4_log, y = kidvol_change_log)) +
-  geom_smooth(method = "lm") +
-  geom_point() +
-  labs(title = "Change in Log Kidney Volume by Log Lbp4",
-       x = "Log Lbp4",
-       y = "Change in Log Kidney Volume (%)") +
-  theme_minimal()
-```
-Our scale is still weird after transforming, but it does appear to be negatively related.
+#### Lbp Log
 
 `lbp5_log` is strongly correlated to change in kidney volume.
 
 ```{r}
 # Create plot
-ggplot(data1_train, aes(x = lbp5_log, y = kidvol_change_log)) +
+ggplot(data1_train, aes(x = lbp5_log, y = kidvol_change)) +
   geom_smooth(method = "lm") +
   geom_point() +
   labs(title = "Change in Log Kidney Volume by Log Lbp5",
@@ -1573,22 +1572,37 @@ ggplot(data1_train, aes(x = lbp5_log, y = kidvol_change_log)) +
   theme_minimal()
 ```
 
-We have a pretty strong negative relationship here.
+We have a pretty strong negative relationship here, looks like it is slightly driven by those two outlier patients.
+
+[Top of Tabset](#Corr_One)
+::::
+
+## Summary
+
+The features that are most promising as covariates at this point are:
+
+-   `geom2_yeo`
+-   `gabor3`
+-   `txt12`
+-   `lbp5_log`
 
 # Feature Engineering II
 
-We saw in the correlation matrix that both `geom1` and `geom2` had pretty even correlations with change in kidney volume. 
+## Averages and Interaction Terms
 
-In the interest of including as many variables as possible (at most we can include 5), and possibly uncovering a strong relationship, I will attempt to collapse these two variables by 
+We saw in the correlation matrix that both `geom1` and `geom2` had pretty even correlations with change in kidney volume.
 
- - Taking their average
- - Taking their interaction term
- 
-I will also do the same for `lbp2`, `lbp4_log`, and `lbp5_log`
+In the interest of discovering underlying patterns (and minimizing the number of features we have, since we have a limit of 5 based on our sample size), I will attempt to collapse these two variables by
+
+-   Taking their average
+-   Taking their interaction term
+
+I will also do the same for `lbp2`, and `lbp5_log`, which were correlated with the outcome.
 
 #### Create Average and Interaction Terms
 
 ```{r}
+# Create average and interaction terms
 data1_train <- data1_train |> 
   mutate(geom_avg = (geom1_yeo + geom2_yeo)/2,
          geom_int = geom1_yeo*geom2_yeo,
@@ -1596,14 +1610,15 @@ data1_train <- data1_train |>
          lbp_int  = lbp2*lbp5_log)
 ```
 
-
 # Correlation Matrix II
 
 Now we can rerun the correlation matrix and examine how those relationships changed
 
 ```{r}
+#| fig-width: 8
+#| fig-height: 8
 # Control matrix for better output
-matrix_order <- c("kidvol_base", "kidvol_change", "kidvol_change_log", "progression", "geom1", "geom1_yeo", "geom2", "geom2_yeo", "geom_avg", "geom_int", "gabor1", "gabor2", "gabor2_yeo", "gabor3", "gabor4", "gabor4_log", "gabor5", "glcm1", "glcm2", "glcm2_log", "txti1", "txti2", "txti3", "txti4", "txti4_log", "txti5", "txti5_log", "lbp1", "lbp2", "lbp3", "lbp4", "lbp4_log", "lbp5", "lbp5_log", "lbp_avg", "lbp_int")
+matrix_order <- c("kidvol_base", "kidvol_change", "kidvol_change_log", "progression", "geom1", "geom1_yeo", "geom2", "geom2_yeo", "geom_avg", "geom_int", "lbp1", "lbp2", "lbp3", "lbp4", "lbp4_log", "lbp5", "lbp5_log", "lbp_avg", "lbp_int")
  
 # Clean the output by making a trimmed dataset excluding extaneous variables
 data_for_matrix <- data1_train |> 
@@ -1616,73 +1631,53 @@ data_for_matrix <- data.frame(lapply(data_for_matrix, function(x) if (is.factor(
 correlation_matrix <- cor(data_for_matrix, use = "complete.obs")
 
 # Plot correlation matrix
-corrplot(correlation_matrix, method = "circle")
+corrplot(correlation_matrix, method = "color", addCoef.col = "black", number.cex = 0.6)
 ```
 
-#### Geom
+## Main Observations {#Corr_Two}
 
-The `geom` interaction and average terms do not seem to perform differently from each other. They *may* perform slightly better than `geom2_yeo` alone.
+::: panel-tabset
+## Geometry
 
-Let's check.
+`geom_avg` (r = 0.20) has a higher correlation coefficient than `geom1_yeo` and `geom2_yeo` alone, and will thus be used as an aggregate covariate to capture the geometry of the MRIs going forward.
 
 ```{r}
 # Create plot
-ggplot(data1_train, aes(x = geom2_yeo, y = kidvol_change_log)) +
+ggplot(data1_train, aes(x = geom_avg, y = kidvol_change)) +
   geom_smooth(method = "lm") +
   geom_point() +
-  labs(title = "Change in Log Kidney Volume by Geom2 Yeo",
-       x = "Geom2_Yeo",
-       y = "Change in Log Kidney Volume (%)") +
-  theme_minimal()
-```
-
-```{r}
-# Create plot
-ggplot(data1_train, aes(x = geom_avg, y = kidvol_change_log)) +
-  geom_smooth(method = "lm") +
-  geom_point() +
-  labs(title = "Change in Log Kidney Volume by geom_avg",
+  labs(title = "Change in Kidney Volume by geom_avg",
        x = "geom_avg",
-       y = "Change in Log Kidney Volume (%)") +
+       y = "Change in Kidney Volume (%)") +
   theme_minimal()
 ```
 
-These relationships do not appear any different and `geom2_yeo` will be selected as potential covariate for the final model.
+Notably, this could be driven by those two outliers as mentioned previously.
 
+[Top of Tabset](#Corr_Two)
 
-#### LBP
+## Local Binary Pattern
 
-Similarly, the `lbp` average and interaction terms do not appear to perform any differently then `lbp5_log` alone.
+The average and interaction terms do not perform better than `lbp5_log` alone.
 
-```{r}
-# Create plot
-ggplot(data1_train, aes(x = lbp5_log, y = kidvol_change_log)) +
-  geom_smooth(method = "lm") +
-  geom_point() +
-  labs(title = "Change in Log Kidney Volume by lbp5 log",
-       x = "lb5p log",
-       y = "Change in Log Kidney Volume (%)") +
-  theme_minimal()
-```
+[Top of Tabset](#Corr_Two)
+:::
 
+### Summary
 
-```{r}
-# Create plot
-ggplot(data1_train, aes(x = lbp_avg, y = kidvol_change_log)) +
-  geom_smooth(method = "lm") +
-  geom_point() +
-  labs(title = "Change in Log Kidney Volume by lbp avg",
-       x = "lbp_avg",
-       y = "Change in Log Kidney Volume (%)") +
-  theme_minimal()
-```
-These appear to be the same relationship and `lbp5_log` will be selected for simplicity.
+`geom_avg` increases the r by 0.03 over the individual non-combined features, and will be chosen as a candidate covariate.
+
+`lbp_avg` does not perform better than `lbp5_log` alone, and thus `lbp5_log` will be chosen as a candidate covariate in the final model.
 
 # Feature Engineering III
 
-Finally, we will consider square terms for each feature.
+## Quadratic Terms
+
+Finally, we will consider quadratic terms for each feature.
 
 ```{r}
+#| fig-width: 10
+#| fig-height: 10
 # Create function to square specified columns and rename the new variables
 square_selected_variables <- function(df, columns) {
   df <- df %>%
@@ -1713,22 +1708,707 @@ data_for_matrix2 <- data.frame(lapply(data_for_matrix2, function(x) if (is.facto
 correlation_matrix <- cor(data_for_matrix2, use = "complete.obs")
 
 # Plot correlation matrix
-corrplot(correlation_matrix, method = "circle")
-
+corrplot(correlation_matrix, method = "color", addCoef.col = "black", number.cex = 0.5)
 ```
+
+## Main Observations {#Corr_Three}
+
+::: panel-tabset
+## Gabor Transform
+
+#### Gabor3
+
+The correlation coefficient for `gabor3_square` is higher than `gabor3`.
+
 ```{r}
 ggplot(data_square, aes(x = gabor3_square, y = kidvol_change)) +
-  geom_point()
+  geom_point() +
+  geom_smooth(method = "lm", formula = y ~ poly(x, 2), se = FALSE)
 ```
 
+Let's compare if we remove those outliers
+
 ```{r}
+ggplot(data_out_rem, aes(x = gabor3**2, y = kidvol_change)) +
+  geom_point() +
+  geom_smooth(method = "lm", formula = y ~ poly(x, 2), se = FALSE)
+```
+
+This appears to be driven by that outlier patient.
+
+[Top of Tabset](#Corr_Three)
+
+## Gray Level Co-Occurence Matrix
+
+`glcm2_square` has a strong correlation (r = 0.31). Let's examine.
+
+```{r}
+# Create the plot
 ggplot(data_square, aes(x = glcm2_square, y = kidvol_change)) +
   geom_point() +
   geom_smooth(method = "lm")
-```
-That kinda makes sense I guess?
 
-Should I take that?
+# Check the model
+model <- lm(kidvol_change ~ glcm2**2, data = data1_train)
+summary(model)
+```
+
+This could be driven by the outlier, but we will include `glcm2_square` as a covariate during model selection.
+
+[Top of Tabset](#Corr_Three)
+:::
+
+### Summary
+
+`GLCM2_square` will be considered as a potential covariate during model selection.
+
+# Feature Scaling
+
+Before we perform our regression, we must standardize our variables to place them all on the same scale so that they contribute equally to the model.
+
+This also makes it easier for the gradient descent process to converge faster and more efficiently.
+
+![](images/clipboard-243237117.png){fig-align="center" width="80%"}
+
+![](images/clipboard-2354431195.png){fig-align="center" width="80%"}
+
+## Perform Scaling
+
+```{r}
+# Z-score scale variables
+data1_train <- data1_train |> 
+  mutate(geom_avg_scale = scale(geom_avg),
+         gabor3_scale = scale(gabor3),
+         txti2_scale = scale(txti2),
+         lbp5_log_scale = scale(lbp5_log),
+         glcm2_square = glcm2**2,
+         glcm2_square_scale = scale(glcm2_square))
+```
+
+# Linear Regression
+
+# Background
+
+#### Cost Function
+
+The cost function in a linear regression is Mean Square Error (MSE):
+
+$$ \text{MSE} = \frac{1}{n} \sum_{i=1}^{n} (y_i - \hat{y}_i)^2 $$
+
+Where y is the actual change in outcome variable and y-hat is the predicted change, and n is the number of observations.
+
+#### Mapping Function
+
+In the case of linear regression, the mapping function is essentially each beta in the model.
+
+#### Goal
+
+The goal is to select a mapping function that minimizes the cost function and thereby produces the best predictions of the outcome variable.
+
+## Gradient Descent
+
+The purpose of gradient descent is to find a mapping function that minimizes the cost function.
+
+The general process of gradient descent is:
+
+1.  Initialize the betas (start with 0's or small values)
+
+2.  Predict the outcome variable
+
+3.  Calculate the error
+
+4.  Calculate the gradient (The direction and magnitude of the steepest increase in the cost function)
+
+5.  Adjust the betas in the opposite direction of the gradient
+
+6.  Iterate (repeat the process until the cost function converges on a minimum value
+
+# Performing the Predictive Model
+
+[This website](http://zevross.com/blog/2017/09/19/predictive-modeling-and-machine-learning-in-r-with-the-caret-package/) used for coding guidance
+
+## Model 1A: Baseline Kidney Volume
+
+To answer the researcher's first question, we will run a predictive model that uses the baseline height-corrected total kidney volume to predict percent change in kidney volume.
+
+$$ Kidney Volume Change = 𝛽_0 + 𝛽_{Log Kidney Volume Baseline} + e $$
+
+We will be using the `caret` package in R to perform the linear regression using 5-fold cross validation.
+
+```{r}
+set.seed(123)
+
+# Set up a 5-fold cross validation
+tc <- trainControl(method = "cv", number = 5)
+
+# Perform the linear regression using 5-fold CV
+model1a <- train(kidvol_change ~ log(kidvol_base), 
+                 data = data, 
+                 method = "lm",
+                 trControl = tc)
+# Get RMSE
+model1a
+
+# Get model coefficients
+summary(model1a)
+
+# Examine RSME and R Squared of each fold
+pretty_print(model1a$resample)
+```
+
+The model has an RMSE of 8.10.
+
+### Visualization
+
+#### Actual vs Predicted Values
+
+```{r}
+# Save predicted valuest to data set
+data$predictions1a <- predict(model1a, newdata = data)
+
+# Visualize predicted vs actual values
+ggplot(data, aes(x = kidvol_change, y = predictions1a)) +
+  geom_point() +
+  geom_abline(intercept = 0, slope = 1, color = "blue", linetype = "dashed") +
+  theme_minimal() +
+  labs(title = "Predicted vs Actual Values for Baseline Kidney Volume",
+       x = "Actual Values",
+       y = "Predicted Values")
+```
+In a well performing model, the dots are close to a straight line (the blue dashed line), which would indicate perfect overlap between predicted and actual values.
+
+#### Residuals
+
+```{r}
+# Calculate the residuals
+data$residuals1a <- data$kidvol_change - data$predictions1a
+
+# Plot
+ggplot(data, aes(x = predictions1a, y = residuals1a)) +
+  geom_point() +
+  geom_hline(yintercept = 0, color = "blue", linetype = "dashed") +
+  theme_minimal() +
+  labs(title = "Residuals for Baseline Kidney Volume",
+       x = "Predicted Values",
+       y = "Residuals")
+```
+
+There's some pretty large differences in the predictions here, with some patients having predicted values that are 15% off or greater!
+
+#### QQ Plot
+
+```{r}
+# Plot QQ Plot
+ggplot(data, aes(sample = residuals1a)) +
+  geom_qq() +
+  geom_qq_line() +
+  theme_minimal() +
+  labs(title = "QQ Plot of Model 1A")
+```
+
+The QQ plot is almost normal, but not quite.
+
+#### Histogram of Residuals
+
+```{r}
+# Create histogram of residuals
+ggplot(data, aes(x = residuals1a)) + 
+  geom_histogram(bins = 20) +
+  labs(title = "Histogram of Residuals for Model 1A", 
+       x = "Residuals", 
+       y = "Count") +
+  theme_minimal()
+```
+The residuals are almost normally distributed, but not quite.
+
+### Summary
+
+the RMSE of the model including `kidvol_base` alone is8.11
+
+The model does not perform too well, when looking at the plots of the predicted vs actual values.
+
+The assumption of normality is almost, but not quite, met.
+
+## Model 2: MRI Features
+
+To answer the researcher's second question, we will run a predictive model that uses only MRI image features to predict percent change in kidney volume at year 3.
+
+$$ Kidney Volume Change = 𝛽_0 + 𝛽_{Image Feature 1} + 𝛽_{Image Feature 2}+ ... + e $$
+
+### Model Selection
+
+Model selection will be performed on Fold 1 to avoid data snooping on the test set.
+
+The potential scaled covariates for our final model after feature engineering and interactive variable selection are:
+
+-   `geom_avg`
+-   `gabor3`
+-   `txti2`
+-   `lbp5_log`
+-   `glcm2_square`
+
+We will perform model selection using backwards elimination and BIC.
+
+## Backwards Elimination
+
+```{r}
+# First build the model with all variables
+model1b <- lm(kidvol_change ~ geom_avg_scale + gabor3_scale + txti2_scale + lbp5_log_scale + glcm2_square_scale, data = data1_train)
+summary(model1b)
+
+# Perform backward elimination 
+ols_step_backward_sbc(model1b)
+```
+`geom_avg` and `lbp5_log` are removed based on BIC. AIC prefers the model with `lbp5_log`
+
+However, we must note that we suspect patients 37 and 51 to be outliers on total kidney volume change, and we saw previously that the correlations for `gabor3` and `glcm2_square` may be being driven by these outlier patients.
+
+### Perform 5-Fold Cross Validation
+
+The final model selected via backwards elimination includes `gabor3`, `txti2`, and `glcm2_square`
+
+```{r}
+set.seed(123)
+# Create variables for original data set
+data <- data |> 
+  mutate(gabor3_scale = scale(gabor3),
+         txti2_scale = scale(txti2),
+         glcm2_square_scale = scale(glcm2**2),
+         lbp5_log_scale = scale(log(lbp5)),
+         geom_avg_scale = scale(geom1+geom2)/2)
+
+# Perform the linear regression using 5-fold CV
+model1b <- train(kidvol_change ~ gabor3_scale + txti2_scale + glcm2_square_scale, 
+                 data = data, 
+                 method = "lm",
+                 trControl = tc)
+# Get RMSE
+model1b
+
+# Get model coefficients
+summary(model1b)
+```
+The RMSE is 9.03, worse than the model with `kidvol_base` alone.
+
+### Visualization
+
+#### Actual vs Predicted Values
+
+```{r}
+# Save predicted valuest to data set
+data$predictions1b <- predict(model1b, newdata = data)
+
+# Visualize predicted vs actual values
+ggplot(data, aes(x = kidvol_change, y = predictions1b)) +
+  geom_point() +
+  geom_abline(intercept = 0, slope = 1, color = "blue", linetype = "dashed") +
+  theme_minimal() +
+  labs(title = "Predicted vs Actual Values for MRI Features",
+       x = "Actual Values",
+       y = "Predicted Values")
+```
+
+#### Residuals
+
+```{r}
+# Calculate the residuals
+data$residuals1b <- data$kidvol_change - data$predictions1b
+
+# Plot
+ggplot(data, aes(x = predictions1a, y = residuals1b)) +
+  geom_point() +
+  geom_hline(yintercept = 0, color = "blue", linetype = "dashed") +
+  theme_minimal() +
+  labs(title = "Residuals for MRI Features",
+       x = "Predicted Values",
+       y = "Residuals")
+```
+
+Our residuals are smaller in this model compared to modela 1A using `kidvol_base` alone.
+
+#### QQ Plot
+
+```{r}
+# Plot QQ Plot
+ggplot(data, aes(sample = residuals1b)) +
+  geom_qq() +
+  geom_qq_line() +
+  theme_minimal() +
+  labs(title = "QQ Plot of Model 1B")
+```
+
+#### Histogram of Residuals
+
+```{r}
+# Create histogram of residuals
+ggplot(data, aes(x = residuals1b)) + 
+  geom_histogram(bins = 20) +
+  labs(title = "Histogram of Residuals for Model 1B", 
+       x = "Residuals", 
+       y = "Count") +
+  theme_minimal()
+```
+
+### Leverage and Influence
+
+```{r}
+# Extract model
+model1b_ext <- model1b$finalModel
+
+# Influence plot
+influence_measures <- influencePlot(model1b_ext, main = "Influence Plot",
+              sub = "Circle size is proportional to Cook's Distance")
+
+# Get row numbers of outliers
+influence_measures
+```
+
+We have four clear outliers that are points of high leverage and influence.
+
+Let's identify them 
+
+```{r}
+# Identify outlier patients
+data[c(2, 8, 9, 35),]
+```
+
+As predicted, patients `37` and `52` are points of high leverage and influence.
+
+Also [as identified before](#Features_Uni), patients `48` and `52` are points of high leverage and influence, which can be denoted by their absurdly high values for `lbp1` and `lbp2`.
+
+Since we previously identified that certain correlations such as with `gabor3` and `glcm2_square` were being driven by these outlier patients, we will re-run model selection again using backwards elimination, with these patients removed.
+
+## Backwards Elimination II
+
+We will perform backwards elimination again with outlier patients removed.
+
+We can expect `gabor3` and `glcm2_square` to be removed since their correlations were driven by these outliers, as identified in earlier plots.
+
+```{r}
+# Remove outlier patients from data set
+data1_train <- data1_train |> 
+  filter(!Subject_ID %in% c(37, 48, 51, 52))
+
+# Create model
+model1b2 <- lm(kidvol_change ~ geom_avg_scale + gabor3_scale + txti2_scale + lbp5_log_scale + glcm2_square_scale, data = data1_train)
+
+# Examine Model Summary
+summary(model1b2)
+
+# Perform backward elimination 
+ols_step_forward_sbc(model1b2)
+```
+
+As predicted, when excluding these outlier patients, `gabor3` and `glcm2_square` are no longer significant.
+
+The only selected now using BIC is `txti2`!
+
+Let's perform 5-fold CV again using this model.
+
+### Perform Regression with 5-Fold Cross Validation
+
+```{r}
+set.seed(123)
+
+# Set up a 5-fold cross validation
+tc <- trainControl(method = "cv", number = 5)
+
+# Perform the linear regression using 5-fold CV
+model1b2 <- train(kidvol_change ~ txti2_scale, 
+                 data = data, 
+                 method = "lm",
+                 trControl = tc)
+
+# Get RMSE
+model1b2
+
+# Get model coefficients
+summary(model1b2)
+```
+
+The RMSE is now 7.89, slightly lower than with `kidvol_base_log` alone!
+
+This model predicts 17.8% of the variance in `kidvol_change`.
+
+### Visualization
+
+#### Actual vs Predicted Values
+
+```{r}
+# Save predicted valuest to data set
+data$predictions1b2 <- predict(model1b2, newdata = data)
+
+# Visualize predicted vs actual values
+ggplot(data, aes(x = kidvol_change, y = predictions1b2)) +
+  geom_point() +
+  geom_abline(intercept = 0, slope = 1, color = "blue", linetype = "dashed") +
+  theme_minimal() +
+  labs(title = "Predicted vs Actual Values for TXTI2",
+       x = "Actual Values",
+       y = "Predicted Values")
+```
+
+The predicted models are still not that class to the actual values.
+
+#### Residuals
+
+```{r}
+# Calculate the residuals
+data$residuals1b2 <- data$kidvol_change - data$predictions1b2
+
+# Plot residuals
+ggplot(data, aes(x = predictions1b2, y = residuals1b2)) +
+  geom_point() +
+  geom_hline(yintercept = 0, color = "blue", linetype = "dashed") +
+  theme_minimal() +
+  labs(title = "Residuals for TXTI2",
+       x = "Predicted Values",
+       y = "Residuals")
+```
+
+The residuals still look pretty large.
+
+#### QQ Plot
+
+```{r}
+# Plot QQ Plot
+ggplot(data, aes(sample = residuals1b2)) +
+  geom_qq() +
+  geom_qq_line() +
+  theme_minimal() +
+  labs(title = "QQ Plot of TXTI2")
+```
+
+#### Histogram of Residuals
+
+```{r}
+# Create histogram of residuals
+ggplot(data, aes(x = residuals1b2)) + 
+  geom_histogram(bins = 20) +
+  labs(title = "Histogram of Residuals for TXTI2", 
+       x = "Residuals", 
+       y = "Count") +
+  theme_minimal()
+```
+
+The residuals are approximately normally distributed presumably they would be with a larger sample size.
+
+### Leverage and Influence
+
+```{r}
+# Extract model
+model1b2_ext <- model1b2$finalModel
+
+# Influence plot
+influence_measures <- influencePlot(model1b2_ext, main = "Influence Plot",
+              sub = "Circle size is proportional to Cook's Distance")
+
+# Get row numbers of outliers
+influence_measures
+```
+
+We no longer have outliers in this model as assessed by cutoffs using leverage and influence.
+
+## Model 1C
+
+#### Baseline Kidney Volume and MRI Features
+
+To answer the researcher’s third question, we will run a predictive model that uses the baseline height-corrected total kidney volume AND MRI image features to predict percent change in kidney volume.
+
+$$ Kidney Volume Change = 𝛽_0 + 𝛽_{Baseline Kidney Volume} + 𝛽_{Txti2} +  e $$
+
+```{r}
+set.seed(123)
+
+# Perform the linear regression using 5-fold CV
+model1c <- train(kidvol_change ~ log(kidvol_base) + txti2_scale, 
+                 data = data, 
+                 method = "lm",
+                 trControl = tc)
+# Get RMSE
+model1c
+
+# Get model coefficients
+summary(model1c)
+```
+The RMSE for the combined model is 7.84, about the same as the model using just `txti2` alone.
+
+#### Visualization
+
+```{r}
+# Save predicted valuest to data set
+data$predictions1c <- predict(model1c, newdata = data)
+
+# Visualize predicted vs actual values
+ggplot(data, aes(x = kidvol_change, y = predictions1c)) +
+  geom_point() +
+  geom_abline(intercept = 0, slope = 1, color = "blue", linetype = "dashed") +
+  theme_minimal() +
+  labs(title = "Predicted vs Actual Values for Baseline Kidney Volumne and TXTI2",
+       x = "Actual Values",
+       y = "Predicted Values")
+```
+
+The model still does not have the best prediction.
+
+#### Residuals
+
+```{r}
+# Calculate the residuals
+data$residuals1c <- data$kidvol_change - data$predictions1c
+
+# Plot residuals
+ggplot(data, aes(x = predictions1c, y = residuals1c)) +
+  geom_point() +
+  geom_hline(yintercept = 0, color = "blue", linetype = "dashed") +
+  theme_minimal() +
+  labs(title = "Residuals for Baseline Kidney Volume and TXTI2",
+       x = "Predicted Values",
+       y = "Residuals")
+```
+The residuals are slightly better than the model with `kidvol_base` alone.
+
+```{r}
+# Plot QQ Plot
+ggplot(data, aes(sample = residuals1c)) +
+  geom_qq() +
+  geom_qq_line() +
+  theme_minimal() +
+  labs(title = "QQ Plot of Baseline Kidney Volumne and  TXTI2")
+```
+
+#### Histogram of Residuals
+
+```{r}
+# Create histogram of residuals
+ggplot(data, aes(x = residuals1c)) + 
+  geom_histogram(bins = 20) +
+  labs(title = "Histogram of Residuals for Baseline Kidney Volume and TXTI2", 
+       x = "Residuals", 
+       y = "Count") +
+  theme_minimal()
+```
+#### Leverage and Influence
+
+```{r}
+# Extract model
+model1c_ext <- model1c$finalModel
+
+# Influence plot
+influence_measures <- influencePlot(model1c_ext, main = "Influence Plot",
+              sub = "Circle size is proportional to Cook's Distance")
+
+# Get row numbers of outliers
+influence_measures
+```
+
+There are no outliers.
+
+#### Plot Final Model
+
+```{r}
+# Plot final model
+ggplot(data, aes(x = log(kidvol_base), y = kidvol_change)) +
+  geom_point() +
+  geom_smooth(method = "lm")
+```
+
+
+# Compare Models
+
+```{r}
+# Create list of models to compare
+model_list <- list(model1a = model1a, model1b = model1b2, model1c = model1c)
+
+# Compare models
+results <- resamples(model_list)
+summary(results)
+
+confint(model1c_ext)
+```
+
+```{r}
+# Sample data
+data(mtcars)
+
+# Set up training control with 5-fold cross-validation
+control <- trainControl(method = "cv", number = 5, savePredictions = "final")
+
+# Train the linear regression model with 5-fold cross-validation
+model <- train(mpg ~ ., data = mtcars, method = "lm", trControl = control)
+
+# Extract resample results
+resamples <- model$pred
+
+# Get the final model coefficients
+final_model <- model$finalModel
+
+# Predict using the final model
+predictions <- predict(final_model, newdata = mtcars)
+
+# Calculate prediction intervals manually
+pred_intervals <- predict(final_model, newdata = mtcars, interval = "prediction")
+
+# Combine actual values, predictions, and intervals
+results <- data.frame(
+  Actual = mtcars$mpg,
+  Fit = predictions,
+  Lower = pred_intervals[,"lwr"],
+  Upper = pred_intervals[,"upr"]
+)
+
+# Create a data frame with predictions and intervals
+prediction_data <- data.frame(
+  Actual = results$Actual,
+  Fit = results$Fit,
+  Lower = results$Lower,
+  Upper = results$Upper
+)
+
+# Plot the predictions with error bars
+ggplot(prediction_data, aes(x = Actual, y = Fit)) +
+  geom_point() +
+  geom_errorbar(aes(ymin = Lower, ymax = Upper), width = 0.2, color = "blue") +
+  labs(title = "Predictions with Error Bars (Linear Regression)", 
+       x = "Actual MPG", y = "Predicted MPG") +
+  theme_minimal()
+
+```
+
+
+#### Quantify Differences
+
+```{r}
+compare_models(model1a, model1b2)
+compare_models(model1a, model1c)
+compare_models(model1c, model1b2)
+```
+
+Model performance is not statistically significant from each other. This may be due to low sample size however.
+
+
+#### Conclusion
+
+The model with the lowest RMSE is the model 
+
+
+
+
+
+
+
+
+
+
+# ROC Curve
+
+[Source](https://www.r-project.org/conferences/useR-2013/Tutorials/kuhn/user_caret_2up.pdf)
+
+The `pROC` package can be used to create ROC curves.
+
+The function `roc` is used to capture the data and compute the ROC curve. The functions `plot.roc` and `auc.roc` generate plot and area under the curve, respectively.
+
+## Model Selection
 
 ### LEAVING OFF HERE
 
@@ -1738,13 +2418,11 @@ summary(model)
 plot(model)
 ```
 
-
 ```{r}
 model <- lm(kidvol_change ~ txti2 + lbp5_log + glcm2_square + gabor3, data = data_square)
 summary(model)
 plot(model)
 ```
-
 
 ```{r}
 model <- lm(kidvol_change ~ kidvol_base + txti2 + lbp5_log + glcm2_square + gabor3, data = data_square)
@@ -1759,7 +2437,6 @@ model <- lm(kidvol_change_log ~ kidvol_base + txti2 + lbp5_log + glcm2_square + 
 summary(model)
 plot(model)
 ```
-
 
 #### Squaring only original terms
 
@@ -1797,8 +2474,6 @@ correlation_matrix <- cor(data_for_matrix2, use = "complete.obs")
 corrplot(correlation_matrix, method = "circle")
 
 ```
-
-
 
 ```{r}
 model <- lm(kidvol_change ~ txti4_log, data = data1_train)
@@ -1904,8 +2579,7 @@ Model 1) A model with the strongest relationships using only the untransformed v
 
 So `geom1`, `geom2`, `gabor`, `gabor3`, `glcm2`, `txti2`, `lbp2`, `lbp4_log`,`lbp5_log`
 
-Model 2) `geom1_yeo`, `geom2_yeo`, `txti2` and maaaybe `txti1`, `lpb2`, `lbp4_log`, and `lbp5_log`. on `kidvol_change_log`.
-:::
+Model 2) `geom1_yeo`, `geom2_yeo`, `txti2` and maaaybe `txti1`, `lpb2`, `lbp4_log`, and `lbp5_log`. on `kidvol_change_log`. :::
 
 # Bivariate Comparisons
 
@@ -2009,19 +2683,9 @@ Here we will perform the scaling as necessary to place all variables on the same
 
 ```
 
+# Bonus
+
 # To do
-
-gabor3 has an outlier somewhere. reexamine.
-
-Plot against outcome variable with transformed features as necessary (try with method - "lm", se = F)
-
-Feature Scaling the training set
-
-Then feature scale the test set based on the training set values (mean and SD)
-
-Run the models 1a 1b
-
-Take interactions of only same features, not between different features (so bascially just do like geom1 \* geom2)
 
 2a 2b 2c
 
@@ -2032,3 +2696,63 @@ Profit
 # References
 
 [@fogel1989] [@kumar2020][@haralick1973] [@ojala2002]
+
+
+
+
+# Bonus
+
+## Principle Components Analysis
+
+```{r}
+# Load required libraries
+library(factoextra)
+
+# Scale the data
+data_scaled <- data |> 
+  select(geom1, geom2, gabor1, gabor2, gabor3, gabor4, gabor5, glcm1, glcm2, txti1, txti2, txti3, txti4, txti5, lbp1, lbp2, lbp3, lbp4, lbp5) |> 
+  scale()
+
+# Perform PCA
+pca_result <- prcomp(data_scaled, center = TRUE, scale. = TRUE)
+
+# Summary of PCA
+summary(pca_result)
+
+# Visualize the variance explained by each component
+fviz_eig(pca_result)
+
+# Biplot of the first two principal components
+fviz_pca_biplot(pca_result, geom = "point", label = "var")
+
+# Project data onto the principal components
+pca_transformed <- as.data.frame(pca_result$x)
+
+# Select the first few principal components that explain sufficient variance
+selected_components <- pca_transformed[, 1:2] # Example: select first 2 components
+
+# Display selected principal components
+head(selected_components)
+
+# Extract loadings and scores 
+loadings <- pca_result$rotation 
+scores <- as.data.frame(pca_result$x) 
+
+# View loadings 
+print(loadings) 
+
+# Visualize the variance explained by each component 
+fviz_eig(pca_result) 
+
+# Select the first few principal components that explain sufficient variance
+selected_components <- scores[, 1:2] 
+
+# Add the principal component scores to the original data for modeling 
+data_with_pcs <- cbind(data$kidvol_change, selected_components) 
+colnames(data_with_pcs) <- c("kidvol_change", "PC1", "PC2")
+
+# Train a linear regression model using the principal components 
+model_pca <- lm(kidvol_change ~ PC1 + PC2, data = data_with_pcs) 
+summary(model_pca)
+```
+
