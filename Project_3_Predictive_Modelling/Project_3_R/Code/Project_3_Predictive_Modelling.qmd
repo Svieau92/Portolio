@@ -355,17 +355,13 @@ inner_join(data1_train, data1_test, by = "Subject_ID")
 
 We have 56 patients in the fold 1 training set, and 15 in the test set, with no overlapping IDs. Perfect!
 
-# Data Examination
+# Outcome Variables {#Outcomes_Uni}
 
 Examining the distributions of the entire data set before splitting can cause subtle biases. For example, transformations or decisions based on the entire data set might inadvertently incorporate patterns from the test data into the training process!
 
 We essentially want to mimic real world situations, where we would not know the distributions of our test set prior to analysis.
 
 Thus, we will perform the initial examination of the distribution of our variables, using `Fold1_train`.
-
-## Univariate Distributions
-
-### Outcome Variables {#Outcomes_Uni}
 
 ::: panel-tabset
 ## Kidney Volume
@@ -573,6 +569,7 @@ table(data1_train$progression)
 We have an equal amount of patients that had slow vs fast disease progression.
 
 [Top of Tabset](#Outcomes_Uni)
+:::
 
 ## Summary
 
@@ -583,9 +580,6 @@ We have an equal amount of patients that had slow vs fast disease progression.
 #### Slow vs Fast Disease Progression
 
 We have an even count between patients who had slow vs fast disease progression.
-
-[Top of Tabset](#Outcomes_Uni)
-:::
 
 # Feature Engineering I {#Features_Uni}
 
@@ -1394,7 +1388,7 @@ We also eliminated 2 outlier/possible erroneous values in the form of patients, 
 [Top of Tabset](#Features_Uni)
 ::::::::::
 
-# Correlation Matrix I
+## Correlation Matrix I
 
 To assess for the best engineering of features and select the most promising covariates for this predictive model, I will create the following correlation matrices.
 
@@ -1433,7 +1427,7 @@ From this plot we can see a few relationships between our original and transform
 :::: panel-tabset
 ## Geometry
 
-`geom1` (r = -0.17)and `geom2_yeo` (r = -0.15) have about equal correlation with `kidvol_change`
+`geom1` (r = -0.17) and `geom2_yeo` (r = -0.15) have about equal correlation with `kidvol_change`
 
 [Top of Tabset](#Corr_One)
 
@@ -1610,7 +1604,7 @@ data1_train <- data1_train |>
          lbp_int  = lbp2*lbp5_log)
 ```
 
-# Correlation Matrix II
+## Correlation Matrix II
 
 Now we can rerun the correlation matrix and examine how those relationships changed
 
@@ -1694,6 +1688,11 @@ columns <- data1_train |>
 # Square selected variables
 data_square <- square_selected_variables(data1_train, columns)
   
+```
+
+## Correlation Matrix III
+
+```{r}
 # Control matrix for better output
 matrix_order <- c("kidvol_base", "kidvol_change", "kidvol_change_log", "progression", "geom1_square", "geom1_yeo_square", "geom2_square", "geom2_yeo_square", "geom_avg_square", "geom_int_square", "gabor1_square", "gabor2_square", "gabor2_yeo_square", "gabor3_square", "gabor4_square", "gabor4_log_square", "gabor5_square", "glcm1_square", "glcm2_square", "glcm2_log_square", "txti1_square", "txti2_square", "txti3_square", "txti4_square", "txti4_log_square", "txti5_square", "txti5_log_square", "lbp1_square", "lbp2_square", "lbp3_square", "lbp4_square", "lbp4_log_square", "lbp5_square", "lbp5_log_square", "lbp_avg_square", "lbp_int_square")
  
@@ -1708,7 +1707,7 @@ data_for_matrix2 <- data.frame(lapply(data_for_matrix2, function(x) if (is.facto
 correlation_matrix <- cor(data_for_matrix2, use = "complete.obs")
 
 # Plot correlation matrix
-corrplot(correlation_matrix, method = "color", addCoef.col = "black", number.cex = 0.5)
+corrplot(correlation_matrix, method = "color", addCoef.col = "black", number.cex = 0.2)
 ```
 
 ## Main Observations {#Corr_Three}
@@ -1723,7 +1722,7 @@ The correlation coefficient for `gabor3_square` is higher than `gabor3`.
 ```{r}
 ggplot(data_square, aes(x = gabor3_square, y = kidvol_change)) +
   geom_point() +
-  geom_smooth(method = "lm", formula = y ~ poly(x, 2), se = FALSE)
+  geom_smooth(method = "lm")
 ```
 
 Let's compare if we remove those outliers
@@ -1731,7 +1730,7 @@ Let's compare if we remove those outliers
 ```{r}
 ggplot(data_out_rem, aes(x = gabor3**2, y = kidvol_change)) +
   geom_point() +
-  geom_smooth(method = "lm", formula = y ~ poly(x, 2), se = FALSE)
+  geom_smooth(method = "lm")
 ```
 
 This appears to be driven by that outlier patient.
@@ -1774,26 +1773,17 @@ This also makes it easier for the gradient descent process to converge faster an
 
 ## Perform Scaling
 
-```{r}
-# Z-score scale variables
-data1_train <- data1_train |> 
-  mutate(geom_avg_scale = scale(geom_avg),
-         gabor3_scale = scale(gabor3),
-         txti2_scale = scale(txti2),
-         lbp5_log_scale = scale(lbp5_log),
-         glcm2_square = glcm2**2,
-         glcm2_square_scale = scale(glcm2_square))
-```
+We will perform z norm scaling using `caret`, which will appropriately scale the test set of each fold using the mean and standard deviation of each respective training set.
 
-# Linear Regression
+# Task One: Linear Regression
 
-# Background
+[This website](http://zevross.com/blog/2017/09/19/predictive-modeling-and-machine-learning-in-r-with-the-caret-package/) was used for coding guidance for the linear regression model.
 
-#### Cost Function
+## Cost Function
 
-The cost function in a linear regression is Mean Square Error (MSE):
+The cost function in a linear regression is Root Mean Square Error (RMSE):
 
-$$ \text{MSE} = \frac{1}{n} \sum_{i=1}^{n} (y_i - \hat{y}_i)^2 $$
+$$ \text{RMSE} = \sqrt{\frac{1}{n} \sum_{i=1}^{n} (y_i - \hat{y}_i)^2} $$
 
 Where y is the actual change in outcome variable and y-hat is the predicted change, and n is the number of observations.
 
@@ -1803,37 +1793,18 @@ In the case of linear regression, the mapping function is essentially each beta 
 
 #### Goal
 
-The goal is to select a mapping function that minimizes the cost function and thereby produces the best predictions of the outcome variable.
+The goal is to select a mapping function that minimizes the cost function and thereby produces the best predictions for the outcome variable.
 
-## Gradient Descent
+We will be using the `caret` package to perform model training using 5-fold cross validation and Ordinary Least Squares (OLS). Another option is to perform gradient descent.
 
-The purpose of gradient descent is to find a mapping function that minimizes the cost function.
+## Model 1A: Baseline Kidney Volume {#1A}
 
-The general process of gradient descent is:
+::: panel-tabset
+## Analysis
 
-1.  Initialize the betas (start with 0's or small values)
-
-2.  Predict the outcome variable
-
-3.  Calculate the error
-
-4.  Calculate the gradient (The direction and magnitude of the steepest increase in the cost function)
-
-5.  Adjust the betas in the opposite direction of the gradient
-
-6.  Iterate (repeat the process until the cost function converges on a minimum value
-
-# Performing the Predictive Model
-
-[This website](http://zevross.com/blog/2017/09/19/predictive-modeling-and-machine-learning-in-r-with-the-caret-package/) used for coding guidance
-
-## Model 1A: Baseline Kidney Volume
-
-To answer the researcher's first question, we will run a predictive model that uses the baseline height-corrected total kidney volume to predict percent change in kidney volume.
+To answer the researcher's first question for Task 1, we will perform a predictive model that uses the baseline height-corrected total kidney volume to predict percent change in kidney volume.
 
 $$ Kidney Volume Change = 𝛽_0 + 𝛽_{Log Kidney Volume Baseline} + e $$
-
-We will be using the `caret` package in R to perform the linear regression using 5-fold cross validation.
 
 ```{r}
 set.seed(123)
@@ -1858,12 +1829,14 @@ pretty_print(model1a$resample)
 
 The model has an RMSE of 8.10.
 
-### Visualization
+[Top of Tabset](#1A)
+
+## Visualization
 
 #### Actual vs Predicted Values
 
 ```{r}
-# Save predicted valuest to data set
+# Save predicted values to data set
 data$predictions1a <- predict(model1a, newdata = data)
 
 # Visualize predicted vs actual values
@@ -1875,6 +1848,7 @@ ggplot(data, aes(x = kidvol_change, y = predictions1a)) +
        x = "Actual Values",
        y = "Predicted Values")
 ```
+
 In a well performing model, the dots are close to a straight line (the blue dashed line), which would indicate perfect overlap between predicted and actual values.
 
 #### Residuals
@@ -1919,23 +1893,29 @@ ggplot(data, aes(x = residuals1a)) +
        y = "Count") +
   theme_minimal()
 ```
+
 The residuals are almost normally distributed, but not quite.
 
-### Summary
+[Top of Tabset](#1A)
 
-the RMSE of the model including `kidvol_base` alone is8.11
+## Summary
+
+the RMSE of the model including `kidvol_base` alone is 8.11
 
 The model does not perform too well, when looking at the plots of the predicted vs actual values.
 
 The assumption of normality is almost, but not quite, met.
 
-## Model 2: MRI Features
+[Top of Tabset](#1A)
+:::
 
-To answer the researcher's second question, we will run a predictive model that uses only MRI image features to predict percent change in kidney volume at year 3.
+## Model 1B: MRI Features {#1B}
+
+To answer the researcher's second question for Task 1, we will run a predictive model that uses only MRI image features to predict percent change in kidney volume at year 3.
 
 $$ Kidney Volume Change = 𝛽_0 + 𝛽_{Image Feature 1} + 𝛽_{Image Feature 2}+ ... + e $$
 
-### Model Selection
+#### Model Selection
 
 Model selection will be performed on Fold 1 to avoid data snooping on the test set.
 
@@ -1949,9 +1929,18 @@ The potential scaled covariates for our final model after feature engineering an
 
 We will perform model selection using backwards elimination and BIC.
 
-## Backwards Elimination
+::: panel-tabset
+## Backwards Elimination I
 
 ```{r}
+# Create variables
+data1_train <- data1_train |> 
+  mutate(geom_avg_scale = scale((geom1_yeo+geom2_yeo)/2),
+         gabor3_scale = scale(gabor3),
+         txti2_scale = scale(txti2),
+         lbp5_log_scale = scale(log(lbp5)),
+         glcm2_square_scale = scale(glcm2**2))
+
 # First build the model with all variables
 model1b <- lm(kidvol_change ~ geom_avg_scale + gabor3_scale + txti2_scale + lbp5_log_scale + glcm2_square_scale, data = data1_train)
 summary(model1b)
@@ -1959,9 +1948,14 @@ summary(model1b)
 # Perform backward elimination 
 ols_step_backward_sbc(model1b)
 ```
+
 `geom_avg` and `lbp5_log` are removed based on BIC. AIC prefers the model with `lbp5_log`
 
 However, we must note that we suspect patients 37 and 51 to be outliers on total kidney volume change, and we saw previously that the correlations for `gabor3` and `glcm2_square` may be being driven by these outlier patients.
+
+[Top of Tabset](#1B)
+
+## Analysis I
 
 ### Perform 5-Fold Cross Validation
 
@@ -1973,24 +1967,29 @@ set.seed(123)
 data <- data |> 
   mutate(gabor3_scale = scale(gabor3),
          txti2_scale = scale(txti2),
+         glcm2_square = glcm2**2,
          glcm2_square_scale = scale(glcm2**2),
          lbp5_log_scale = scale(log(lbp5)),
          geom_avg_scale = scale(geom1+geom2)/2)
 
 # Perform the linear regression using 5-fold CV
-model1b <- train(kidvol_change ~ gabor3_scale + txti2_scale + glcm2_square_scale, 
+model1b <- train(kidvol_change ~ gabor3 + txti2 + glcm2_square, 
                  data = data, 
                  method = "lm",
-                 trControl = tc)
+                 trControl = tc,
+                 preProc = "scale")
 # Get RMSE
 model1b
 
 # Get model coefficients
 summary(model1b)
 ```
+
 The RMSE is 9.03, worse than the model with `kidvol_base` alone.
 
-### Visualization
+[Top of Tabset](#1B)
+
+## Visualization I
 
 #### Actual vs Predicted Values
 
@@ -2024,7 +2023,7 @@ ggplot(data, aes(x = predictions1a, y = residuals1b)) +
        y = "Residuals")
 ```
 
-Our residuals are smaller in this model compared to modela 1A using `kidvol_base` alone.
+Our residuals are comparable in this model compared to modela 1A using `kidvol_base` alone. Some It appears that more residuals are closer to 0, but some predictions are as large as 30% off!
 
 #### QQ Plot
 
@@ -2049,7 +2048,13 @@ ggplot(data, aes(x = residuals1b)) +
   theme_minimal()
 ```
 
-### Leverage and Influence
+[Top of Tabset](#1B)
+
+## Leverage and Influence
+
+The cutoff for leverage (hat-value) is 2(p+1)/n, where p is the number of variables in the model, or 2(3+1)/71 = 0.112.
+
+The cut off for Cook's D \> 1.0.
 
 ```{r}
 # Extract model
@@ -2065,11 +2070,14 @@ influence_measures
 
 We have four clear outliers that are points of high leverage and influence.
 
-Let's identify them 
+Let's identify them
 
 ```{r}
 # Identify outlier patients
-data[c(2, 8, 9, 35),]
+outliers <- data[c(2, 8, 9, 35),]
+
+# Pretty print
+pretty_print(head(outliers))
 ```
 
 As predicted, patients `37` and `52` are points of high leverage and influence.
@@ -2078,7 +2086,11 @@ Also [as identified before](#Features_Uni), patients `48` and `52` are points of
 
 Since we previously identified that certain correlations such as with `gabor3` and `glcm2_square` were being driven by these outlier patients, we will re-run model selection again using backwards elimination, with these patients removed.
 
+[Top of Tabset](#1B)
+
 ## Backwards Elimination II
+
+#### Remove Outliers and Re-Run Variable Selection
 
 We will perform backwards elimination again with outlier patients removed.
 
@@ -2105,6 +2117,18 @@ The only selected now using BIC is `txti2`!
 
 Let's perform 5-fold CV again using this model.
 
+[Top of Tabset](#1B)
+
+## Analysis II
+
+#### Remove Outliers
+
+```{r}
+# Remove outlier patients from data set
+data <- data |> 
+  filter(!Subject_ID %in% c(37, 48, 51, 52))
+```
+
 ### Perform Regression with 5-Fold Cross Validation
 
 ```{r}
@@ -2114,10 +2138,11 @@ set.seed(123)
 tc <- trainControl(method = "cv", number = 5)
 
 # Perform the linear regression using 5-fold CV
-model1b2 <- train(kidvol_change ~ txti2_scale, 
+model1b2 <- train(kidvol_change ~ txti2, 
                  data = data, 
                  method = "lm",
-                 trControl = tc)
+                 trControl = tc,
+                 preProc = "scale")
 
 # Get RMSE
 model1b2
@@ -2126,11 +2151,13 @@ model1b2
 summary(model1b2)
 ```
 
-The RMSE is now 7.89, slightly lower than with `kidvol_base_log` alone!
+The RMSE is now 6.15, drastically lower than with `kidvol_base_log` alone (but we need to rerun that model without outliers).
 
-This model predicts 17.8% of the variance in `kidvol_change`.
+This model predicts 17.0% of the variance in `kidvol_change`.
 
-### Visualization
+[Top of Tabset](#1B)
+
+## Visualization II
 
 #### Actual vs Predicted Values
 
@@ -2148,7 +2175,7 @@ ggplot(data, aes(x = kidvol_change, y = predictions1b2)) +
        y = "Predicted Values")
 ```
 
-The predicted models are still not that class to the actual values.
+The predicted models are still not that close to the actual values.
 
 #### Residuals
 
@@ -2191,7 +2218,7 @@ ggplot(data, aes(x = residuals1b2)) +
   theme_minimal()
 ```
 
-The residuals are approximately normally distributed presumably they would be with a larger sample size.
+The residuals are now approximately normally distributed, and would be more so with a larger sample size.
 
 ### Leverage and Influence
 
@@ -2209,9 +2236,21 @@ influence_measures
 
 We no longer have outliers in this model as assessed by cutoffs using leverage and influence.
 
-## Model 1C
+[Top of Tabset](#1B)
 
-#### Baseline Kidney Volume and MRI Features
+## Summary
+
+In this step we discovered that patiens 37, 48, 51, and 52 were outliers with high leverage and influence in our model.
+
+After removing them, only `txti2` was selected as an MRI image feature predicting change in kidney volume.
+
+The RMSE for model 1B after removing outliers was 6.15
+:::
+
+## Model 1C: Baseline Kidney Volume and TXTI2 {#1C}
+
+::: panel-tabset
+## Analysis
 
 To answer the researcher’s third question, we will run a predictive model that uses the baseline height-corrected total kidney volume AND MRI image features to predict percent change in kidney volume.
 
@@ -2221,19 +2260,26 @@ $$ Kidney Volume Change = 𝛽_0 + 𝛽_{Baseline Kidney Volume} + 𝛽_{Txti2} 
 set.seed(123)
 
 # Perform the linear regression using 5-fold CV
-model1c <- train(kidvol_change ~ log(kidvol_base) + txti2_scale, 
+model1c <- train(kidvol_change ~ log(kidvol_base) + txti2, 
                  data = data, 
                  method = "lm",
-                 trControl = tc)
+                 trControl = tc,
+                 preProc = "scale",
+                 metric = "RMSE")
 # Get RMSE
 model1c
 
 # Get model coefficients
 summary(model1c)
 ```
-The RMSE for the combined model is 7.84, about the same as the model using just `txti2` alone.
 
-#### Visualization
+The RMSE for the combined model is 6.14, about the same as the model using just `txti2` alone.
+
+[Top of Tabset](#1C)
+
+## Visualization
+
+#### Actual Vs Predicted
 
 ```{r}
 # Save predicted valuest to data set
@@ -2266,6 +2312,7 @@ ggplot(data, aes(x = predictions1c, y = residuals1c)) +
        x = "Predicted Values",
        y = "Residuals")
 ```
+
 The residuals are slightly better than the model with `kidvol_base` alone.
 
 ```{r}
@@ -2276,6 +2323,8 @@ ggplot(data, aes(sample = residuals1c)) +
   theme_minimal() +
   labs(title = "QQ Plot of Baseline Kidney Volumne and  TXTI2")
 ```
+
+This is the best QQ plot we have had so far.
 
 #### Histogram of Residuals
 
@@ -2288,6 +2337,7 @@ ggplot(data, aes(x = residuals1c)) +
        y = "Count") +
   theme_minimal()
 ```
+
 #### Leverage and Influence
 
 ```{r}
@@ -2302,7 +2352,7 @@ influence_measures <- influencePlot(model1c_ext, main = "Influence Plot",
 influence_measures
 ```
 
-There are no outliers.
+There are no outliers (some edge cases but we will retain them)
 
 #### Plot Final Model
 
@@ -2310,11 +2360,90 @@ There are no outliers.
 # Plot final model
 ggplot(data, aes(x = log(kidvol_base), y = kidvol_change)) +
   geom_point() +
-  geom_smooth(method = "lm")
+  geom_smooth(method = "lm") +
+  labs(title = "Model 1C: Baseline Kidney Volume and Txti2",
+       x = "Baseline Kidney Volume (log)",
+       y = "Change in Kidney Volume (%)") +
+  theme_minimal()
 ```
 
+This plot shows that generally, the larger your kidney volume at baseline, the less of an increase there was in size over 3 years.
 
-# Compare Models
+[Top of Tabset](#1C)
+
+## Summary
+
+The RMSE for model 1C is 6.14, this is similar performance to model 1B.
+
+Model 1C meets the assumptions of a linear regression (normality) the best.
+
+[Top of Tabset](#1C)
+:::
+
+## Model Comparison
+
+Here we will compare how models 1A, 1B, and 1C performed.
+
+Note: We removed outliers over the course of our model inspection. Thus we will re-run each analysis to get the true RMSE for each model.
+
+#### Model 1A
+
+```{r}
+set.seed(123)
+##### Model 1A
+# Perform the linear regression using 5-fold CV
+model1a <- train(kidvol_change ~ log(kidvol_base), 
+                 data = data, 
+                 method = "lm",
+                 trControl = tc)
+# Get RMSE
+model1a
+
+```
+
+#### Model 1B
+
+```{r}
+set.seed(123)
+##### Model 1B
+# Perform the linear regression using 5-fold CV
+model1b2 <- train(kidvol_change ~ txti2, 
+                 data = data, 
+                 method = "lm",
+                 trControl = tc,
+                 preProc = "scale")
+# Get RMSE
+model1b2
+```
+
+#### Model 1C
+
+```{r}
+set.seed(123)
+# Perform the linear regression using 5-fold CV
+model1c <- train(kidvol_change ~ log(kidvol_base) + txti2_scale, 
+                 data = data, 
+                 method = "lm",
+                 trControl = tc)
+# Get RMSE
+model1c
+```
+
+### Final Average RMSE
+
+| Model                               | RMSE |
+|-------------------------------------|------|
+| 1A: Baseline Kidney Volume          | 6.52 |
+| 1B: Txti2                           | 6.15 |
+| 1C Baseline Kidney Volume and Txti2 | 6.14 |
+
+### Compare Model Performance
+
+We can also use the `caret` package to compare perfomance between these three models.
+
+-   Upper Diagonal Values: These are the differences in the metric values between models. Positive values mean the first model has a higher metric value, while negative values mean the first model has a lower metric value.
+
+-   Lower Diagonal Values: These are the p-values from hypothesis tests comparing the metric values between models. Small p-values (typically \< 0.05) indicate significant differences between the models for that metric.
 
 ```{r}
 # Create list of models to compare
@@ -2324,261 +2453,421 @@ model_list <- list(model1a = model1a, model1b = model1b2, model1c = model1c)
 results <- resamples(model_list)
 summary(results)
 
-confint(model1c_ext)
+# Compare the RMSEs 
+diffs <- diff(results) 
+summary(diffs)
+
+# Plot RMSEs of each model
+dotplot(results, metric = "RMSE")
 ```
+
+Model A had an RMSE that was 0.37 points higher than model B (p = 0.68), and 0.74 points higher than model C (p = 0.75)
+
+## Conclusion
+
+The differences in model performance for task one were not statistically significant. Model A had an RMSE that was 0.37 points higher than model B (p = 0.68), and 0.74 points higher than model C (p = 0.75). This may be due to small sample size however.
+
+Thus, including MRI image features into the predictive model did not increase predictive capability above and beyond that of just using kidney volume measurements at baseline.
+
+On the other hand, if it is true that a model with baseline kidney volume, a model with `txti2` alone, and a model with both included all perform similarly at predicting percent change in kidney volume after 3 years, then this could provide support for predicting change in kidney volume percent by EITHER MRI image features or baseline kidney volume.
+
+That is, utilizing MRI image features alone may offer similar predictive capabilities to using kidney volume measurements taken by a practiced physician. Therefore, if one is easier or cheaper than the other to acquire, the easier alternative could be used in place of the harder alternative and still achieve similar predictive power. For example, if there are MRI records but perhaps kidney volume measurements were not taken, then the MRI images can be used instead for making predictions.
+
+# Task Two: Logistic Regression
+
+Here we will perform the logistic regression predicting disease progression as `fast` or `slow`.
+
+## Model 2A {#2A}
+
+### Baseline Kidney Volume
+
+To answer the researcher’s first question for this task, we will run a predictive model that uses the baseline height-corrected total kidney volume to predict whether a patient had fast or slow disease progression.
+
+$$ logit(Progression) = 𝛽_0 + 𝛽_{Baseline Kidney Volume} + e $$
+
+::: panel-tabset
+
+## Analysis
 
 ```{r}
-# Sample data
-data(mtcars)
+library(plotROC)
+# Convert progression into a factor
+data <- data |>
+  mutate(progression_num = as.numeric(progression)-1)
+data$progression
 
-# Set up training control with 5-fold cross-validation
-control <- trainControl(method = "cv", number = 5, savePredictions = "final")
+set.seed(123)
+# Create a training control object with 5-fold cross-validation and class probabilities 
+tc <- trainControl(method = "cv", number = 5, classProbs = TRUE, summaryFunction = twoClassSummary)
 
-# Train the linear regression model with 5-fold cross-validation
-model <- train(mpg ~ ., data = mtcars, method = "lm", trControl = control)
+# Perform the linear regression using 5-fold CV
+model2a <- train(progression~ log(kidvol_base), 
+                 data = data, 
+                 method = "glm",
+                 family = "binomial",
+                 trControl = tc,
+                 metric = "ROC")
 
-# Extract resample results
-resamples <- model$pred
-
-# Get the final model coefficients
-final_model <- model$finalModel
-
-# Predict using the final model
-predictions <- predict(final_model, newdata = mtcars)
-
-# Calculate prediction intervals manually
-pred_intervals <- predict(final_model, newdata = mtcars, interval = "prediction")
-
-# Combine actual values, predictions, and intervals
-results <- data.frame(
-  Actual = mtcars$mpg,
-  Fit = predictions,
-  Lower = pred_intervals[,"lwr"],
-  Upper = pred_intervals[,"upr"]
-)
-
-# Create a data frame with predictions and intervals
-prediction_data <- data.frame(
-  Actual = results$Actual,
-  Fit = results$Fit,
-  Lower = results$Lower,
-  Upper = results$Upper
-)
-
-# Plot the predictions with error bars
-ggplot(prediction_data, aes(x = Actual, y = Fit)) +
-  geom_point() +
-  geom_errorbar(aes(ymin = Lower, ymax = Upper), width = 0.2, color = "blue") +
-  labs(title = "Predictions with Error Bars (Linear Regression)", 
-       x = "Actual MPG", y = "Predicted MPG") +
-  theme_minimal()
+# Examine model
+model2a
+summary(model2a)
 ```
+`kidvol_base_log` is not a significant predictor of change in kidney volume (p = 0.75).
 
+The AUC for this model is 0.47, which is near guessing. The sensitivity is 0.3 and the specificity is 0.71
 
-#### Quantify Differences
+[Top of Tabset](#2A)
+
+## Visualization
+
+#### Confusion Matrix
 
 ```{r}
-compare_models(model1a, model1b2)
-compare_models(model1a, model1c)
-compare_models(model1c, model1b2)
+# Save predictions
+data$predictions2a <- predict(model2a, newdata = data)
+data$predictions2a_prob <- predict(model2a, newdata = data, type = "prob")[,2]
+data$predictions2a_num <- as.numeric(data$predictions2a_prob)-1
+
+# Create confusion matrix
+cm <- table(Predicted = data$predictions2a, Actual = data$progression)
+
+# Examine confusion matrix and performance
+cm
 ```
 
-Model performance is not statistically significant from each other. This may be due to low sample size however.
+We can see the poor performance clearly in the confusion matrix.
 
+#### ROC Curve
 
-#### Conclusion
+```{r}
+# Plot ROC Curve
+roc2a <- ggplot(data, aes(m = predictions2a_num, d = progression_num)) +
+  geom_roc(n.cuts = 10, labels = F, labelround = 4) +
+  theme_minimal() +
+  labs(title = "ROC Curve Model 2A: Baseline Kidney Volume",
+       x = "False Positive Rate",
+       y = "True Positive Rate") +
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "blue")
 
-The model with the lowest RMSE is the model 
+# Visualize Plot
+roc2a
+```
 
+We can see that the ROC curve is very poor, near guessing.
 
+## Summary
 
+The model using `kidvol_base_log` alone performed poorly.
 
+AUC: 0.47
 
+Sensitivity: 0.3
 
+Specificity: 0.71
 
+[Top of Tabset](#2A)
 
+:::
+
+## Model 2B: MRI Image Features {#2B}
+
+To answer the researcher’s second question for this task, we will run a predictive model that uses the MRI features to predict whether a patient had fast or slow disease progression.
+
+$$ logit(Progression) = 𝛽_0 + 𝛽_{MRI Feature 1} + 𝛽_{MRI Feature 1} + ... + e $$
+
+As the correlation matrices revealed similar relationship between the MRI image features and `progression` as they did with `kidvol_change`, we will select the same candidate covariates for Task 2 as we did for Task 1. 
+
+These are: 
+
+- `geom_avg`
+- `gabor3`
+- `txti2`
+- `lbp5_log`
+- `glcm2_square`
+
+::: panel-tabset
+
+## Model Selection
+
+```{r}
+# Create variable
+data1_train <- data1_train |> 
+  mutate(progression_num = as.numeric(progression)-1)
+
+# Create model
+model2b <- glm(progression_num ~ geom_avg_scale + gabor3_scale + txti2_scale + lbp5_log_scale + glcm2_square_scale, data = data1_train, family = "binomial")
+
+# Examine Model Summary
+summary(model2b)
+
+# Perform backward elimination 
+ols_step_forward_sbc(model2b)
+```
+
+The model with the smallest BIC is with `txti2` alone, thus that will be our final model.
+
+[Top of Tabset](#2B)
+
+## Analysis
+
+```{r}
+set.seed(123)
+
+# Perform the linear regression using 5-fold CV
+model2b <- train(progression ~ txti2, 
+                 data = data, 
+                 method = "glm",
+                 family = "binomial",
+                 trControl = tc,
+                 metric = "ROC",
+                 preProc = "scale")
+
+# Examine model
+model2b
+summary(model2b)
+```
+`txti2` is a significant predictor of `kidvol_change` (p = 0.0062).
+ 
+The AUC is 0.74, the senstivity is 0.57, and the specificity is 0.64
+
+[Top of Tabset](#2B)
+
+## Visualization
+
+#### Confusion Matrix
+
+```{r}
+# Save predictions
+data$predictions2b <- predict(model2b, newdata = data)
+data$predictions2b_prob <- predict(model2b, newdata = data, type = "prob")[,2]
+data$predictions2b_num <- as.numeric(data$predictions2b_prob)-1
+
+# Create confusion matrix
+cm <- table(Predicted = data$predictions2b, Actual = data$progression)
+
+# Examine confusion matrix and performance
+cm
+```
+
+We can see that we are getting more correct hits in the confusion matrix compared to using baseline kidney volume alone. 
+
+[Top of Tabset](#2B)
+
+#### ROC Curve
+
+```{r}
+# Plot ROC Curve
+roc2b <- ggplot(data, aes(m = predictions2b_num, d = progression_num)) +
+  geom_roc(n.cuts = 10, labels = F, labelround = 4) +
+  theme_minimal() +
+  labs(title = "ROC Curve Model 2B: Txti2",
+       x = "False Positive Rate",
+       y = "True Positive Rate") +
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "blue")
+
+# Visualize Plot
+roc2b
+```
+
+That's not a bad curve!
+
+[Top of Tabset](#2B)
+
+## Messing around with saturated model
+
+```{r}
+set.seed(123)
+
+# Create variable
+data <- data |> 
+  mutate(geom_avg = (geom1+geom2/2))
+
+# Perform the linear regression using 5-fold CV
+model2b_sat <- train(progression ~ txti2 + geom_avg + log(lbp5) + gabor3, 
+                 data = data, 
+                 method = "glm",
+                 family = "binomial",
+                 trControl = tc,
+                 metric = "ROC",
+                 preProc = "scale")
+
+# Examine model
+model2b_sat
+summary(model2b_sat)
+
+# Save predictions
+data$predictions2b_sat <- predict(model2b_sat, newdata = data)
+data$predictions2b_prob_sat <- predict(model2b_sat, newdata = data, type = "prob")[,2]
+data$predictions2b_num_sat <- as.numeric(data$predictions2b_prob_sat)-1
+
+# Create confusion matrix
+cm <- table(Predicted = data$predictions2b, Actual = data$progression)
+
+# Examine confusion matrix and performance
+cm
+
+# Plot ROC Curve
+roc2b <- ggplot(data, aes(m = predictions2b_num, d = progression_num)) +
+  geom_roc(n.cuts = 10, labels = F, labelround = 4) +
+  theme_minimal() +
+  labs(title = "ROC Curve Model 2B: Txti2",
+       x = "False Positive Rate",
+       y = "True Positive Rate") +
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "blue")
+
+# Visualize Plot
+roc2b
+
+# Calculate area under the curve
+calc_auc(roc2b)$AUC
+```
+
+Not that different from just txti2. I just wanted to check because I was getting the BIC backwards selection choosing this model.
+
+## Summary
+
+Model 2B performs much better than model 2A. We can especially see this when we look at the ROC curve.
+
+AUC: 0.74
+
+Sensitivity: 0.57
+
+Specificity: 0.64
+
+[Top of Tabset](#2B)
+
+:::
+
+## Model 2C: Baseline Kidney Volume and MRI Image Features {#2C}
+
+To answer the researcher’s third question, we will run a predictive model that uses the baseline height-corrected total kidney volume AND MRI image features to predict slow vs fast disease progression.
+
+$$ logit(Progression) = 𝛽_0 + 𝛽_{Baseline Kidney Volume} + 𝛽_{Txti2} + ... + e $$
+
+::: panel-tabset
+
+## Analysis
+
+```{r}
+set.seed(123)
+
+# Perform the linear regression using 5-fold CV
+model2c <- train(progression ~ log(kidvol_base) + txti2, 
+                 data = data, 
+                 method = "glm",
+                 family = "binomial",
+                 trControl = tc,
+                 metric = "ROC",
+                 preProc = "scale")
+
+# Examine model
+model2c
+summary(model2c)
+```
+The model performs similarly to using `txti2` alone.
+
+The AUC is 0.71, the sensitivity is 0.57, and the specificity is 0.59
+
+[Top of Tabset](#2C)
+
+## Visualization
+
+#### Confusion Matrix
+
+```{r}
+# Save predictions
+data$predictions2c <- predict(model2c, newdata = data)
+data$predictions2c_prob <- predict(model2c, newdata = data, type = "prob")[,2]
+data$predictions2c_num <- as.numeric(data$predictions2c_prob)-1
+
+# Create confusion matrix
+cm <- table(Predicted = data$predictions2c, Actual = data$progression)
+
+# Examine confusion matrix and performance
+cm
+```
+
+Not much different than model 2.
+
+#### ROC Curve
+
+```{r}
+# Plot ROC Curve
+roc2c <- ggplot(data, aes(m = predictions2c_num, d = progression_num)) +
+  geom_roc(n.cuts = 10, labels = F, labelround = 4) +
+  theme_minimal() +
+  labs(title = "ROC Curve Model 2C: Baseline Kidney Volume and Txti2",
+       x = "False Positive Rate",
+       y = "True Positive Rate") +
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "blue")
+
+# Visualize Plot
+roc2c
+```
+
+Not much different than just using `txti2` alone.
+
+[Top of Tabset](#2C)
+
+## Summary
+
+Model C does not appear to perform much differently than model B.
+
+AUC: 0.71
+
+Sensitivity: 0.57
+
+Specificity is 0.59
+
+[Top of Tabset](#2C)
+
+:::
+
+## Model Comparison
+
+```{r}
+# Create list of models to compare
+model_list <- list(model2a = model2a, model2b = model2b, model2c = model2c)
+
+# Compare models
+results <- resamples(model_list)
+summary(results)
+
+# Compare the RMSEs 
+diffs <- diff(results) 
+summary(diffs)
+
+# Plot RMSEs of each model
+dotplot(results, metric = "ROC")
+```
+
+The difference in performance between models was not statistically significant (report AUC's and 95% CI's here)
+
+## Discussion
+
+The model using `txti2` alone performed better at predicting disease progression than the model using `kidvol_base` alone (AUC = , 95% CI: _,_). However, this difference was not statistically significant (p = ___).
+
+Additionally, the model incorporating both `txti2` and `kidvol_base` did not perform better than the model using just `txti` (AUC = , 95% CI: )
+
+However, examining the ROC curves and the 95% CIs for all of the models, it does appear that there is a trend towards these difference being significant. It is possible that these may have not been statistically significant due to a small sample size (N = 67).
+
+# Plot ROC Curves on Top of each other here.
 
 
 # ROC Curve
 
 [Source](https://www.r-project.org/conferences/useR-2013/Tutorials/kuhn/user_caret_2up.pdf)
 
-The `pROC` package can be used to create ROC curves.
+# Discussion
 
-The function `roc` is used to capture the data and compute the ROC curve. The functions `plot.roc` and `auc.roc` generate plot and area under the curve, respectively.
+Using linear regression to answer task one, there appeared to not be much of a difference between models.
 
-## Model Selection
+However when performing logistic regression, there appeared to be a difference in perforamance between models. Specifically using the MRI image feature of `txti2` increase accuracy, specificity, and sensitivty over that of just using baseline kidney volume alone. While this difference was not statistically, this may have been due to a small sample size.
 
-### LEAVING OFF HERE
+The statisticians recommend collecting more data.
 
-```{r}
-model <- lm(kidvol_change ~ kidvol_base, data = data_square)
-summary(model)
-plot(model)
-```
+Add details here about how using `txti2` in conjunction with other strong predictors of ADPKD such as hypertension, elevated serum creatinine, sex could be incorporated into a single model to enhance predictive power.
 
-```{r}
-model <- lm(kidvol_change ~ txti2 + lbp5_log + glcm2_square + gabor3, data = data_square)
-summary(model)
-plot(model)
-```
-
-```{r}
-model <- lm(kidvol_change ~ kidvol_base + txti2 + lbp5_log + glcm2_square + gabor3, data = data_square)
-summary(model)
-plot(model)
-```
-
-# Using log ki volume change makes the residuals normally distributed and meets the assumptions of a linear regression
-
-```{r}
-model <- lm(kidvol_change_log ~ kidvol_base + txti2 + lbp5_log + glcm2_square + gabor3, data = data_square)
-summary(model)
-plot(model)
-```
-
-#### Squaring only original terms
-
-```{r}
-# Create function to square specified columns and rename the new variables
-square_selected_variables <- function(df, columns) {
-  df <- df %>%
-    mutate(across(all_of(columns), ~ .^2, .names = "{.col}_square"))
-  return(df)
-}
-
-# Choose columns to get squared
-columns <- data1_train |>
-  select(geom1,geom2, gabor1, gabor2, gabor3, gabor4, gabor4_log, gabor5, glcm1, glcm2, txti1, txti2, txti3, txti4, txti5, lbp1, lbp2, lbp3, lbp4, lbp5) |>
-  colnames()
-
-
-# Square selected variables
-data_square <- square_selected_variables(data1_train, columns)
-  
-# Control matrix for better output
-matrix_order <- c("kidvol_base", "kidvol_change", "kidvol_change_log", "progression", "geom1_square", "geom2_square", "gabor1_square", "gabor2_square", "gabor3_square", "gabor4_square", "gabor5_square", "glcm1_square", "glcm2_square", "txti1_square", "txti2_square", "txti3_square", "txti4_square", "txti5_square", "lbp1_square", "lbp2_square", "lbp3_square", "lbp4_square", "lbp5_square")
- 
-# Clean the output by making a trimmed dataset excluding extraneous variables
-data_for_matrix2 <- data_square |> 
-  select(matrix_order)
-
-# We factored our variables at the start. To make a correlation matrix we must reconvert those back to numeric
-data_for_matrix2 <- data.frame(lapply(data_for_matrix2, function(x) if (is.factor(x)) as.numeric(x) else x))
-
-# Make a correlation matrix with all variables of the trimmed data set
-correlation_matrix <- cor(data_for_matrix2, use = "complete.obs")
-
-# Plot correlation matrix
-corrplot(correlation_matrix, method = "circle")
-
-```
-
-```{r}
-model <- lm(kidvol_change ~ txti4_log, data = data1_train)
-summary(model)
-```
-
-```{r}
-model <- lm(kidvol_change ~ txti4_log, data = data1_train)
-summary(model)
-```
-
-#### This is a matrix for Feature Engineered Data Set
-
-```{r}
-# # Function to square specified columns and rename the new variables
-# square_selected_variables <- function(df, columns) {
-#   df %>%
-#     mutate(across(all_of(columns), ~ .^2, .names = "{.col}_square"))
-# }
-# 
-# columns <- data |> 
-#   select(-Subject_ID, -progression, - kidvol_base, -kidvol_visit2, -kidvol_change) |> 
-#   colnames()
-# 
-# data_test <- square_selected_variables(data, columns)
-# 
-# 
-# # Clean the output by making a trimmed dataset excluding extaneous variables
-# data_for_matrix <- data_test |> 
-#   select(kidvol_base, kidvol_visit2, kidvol_change, everything(), -Subject_ID, -progression)
-# 
-# # We factored our variables at the start. To make a correlation matrix we must reconvert those back to numeric
-# data_for_matrix <- data.frame(lapply(data_for_matrix, function(x) if (is.factor(x)) as.numeric(x) else x))
-# 
-# # Make a correlation matrix with all variables of the trimmed data set
-# correlation_matrix <- cor(data_for_matrix, use = "complete.obs")
-# 
-# # Plot correlation matrix
-# corrplot(correlation_matrix, method = "circle")
-
-```
-
-```{r}
-model <- lm(kidvol_change ~ gabor3, data = data1_train)
-summary(model)
-```
-
-```{r}
-ggplot(data1_train, aes(x = gabor1, y = kidvol_change)) +
-  geom_point() +
-  geom_smooth(method = "lm")
-
-model <- lm(kidvol_change ~ gabor1, data = data1_train)
-summary(model)
-```
-
-```{r}
-model <- lm(kidvol_change ~kidvol_base, data = data1_train)
-summary(model)
-
-ggplot(data, aes(x = kidvol_base, y = kidvol_change, size = geom1, color = geom1)) +
-  geom_point() +
-  geom_smooth(method = "lm")
-
-model <- lm(kidvol_change ~ kidvol_base + geom1 , data = data1_train)
-
-summary(model)
-
-library(car)
-
-vif(model)
-```
-
-```{r}
-ggplot(data1_train, aes(x = sqrt(geom2), y = kidvol_visit2)) +
-  geom_point() +
-  geom_smooth(method = "lm")
-```
-
-```{r}
-ggplot(data1_train, aes(x = txti2, y = kidvol_change)) +
-  geom_point() +
-  geom_smooth(method = "lm")
-```
-
-```{r}
-data1_train |> 
-  arrange(desc(lbp3))
-
-data_filtered <- data1_train |> 
-  filter(!Subject_ID %in% c(52, 48, 37, 51))
-
-ggplot(data_filtered, aes(x = gabor2, y = kidvol_change)) +
-  geom_point() +
-  geom_smooth(method = "lm")
-```
-
-# Proposal
-
-I propose here an approach to model selection based on the findings in the correlation matrix.
-
-Model 1) A model with the strongest relationships using only the untransformed variables.
-
-So `geom1`, `geom2`, `gabor`, `gabor3`, `glcm2`, `txti2`, `lbp2`, `lbp4_log`,`lbp5_log`
-
-Model 2) `geom1_yeo`, `geom2_yeo`, `txti2` and maaaybe `txti1`, `lpb2`, `lbp4_log`, and `lbp5_log`. on `kidvol_change_log`. :::
 
 # Bivariate Comparisons
 
@@ -2684,6 +2973,33 @@ Here we will perform the scaling as necessary to place all variables on the same
 
 # Bonus
 
+#### Messing around with plotting results of logistic regression to visualize
+
+```{r}
+ggplot(data, aes(y = log(kidvol_base), x = txti2, color = progression)) +
+  geom_point() +
+  theme_minimal()
+```
+
+
+## Gradient Descent
+
+The purpose of gradient descent is to find a mapping function that minimizes the cost function.
+
+The general process of gradient descent is:
+
+1.  Initialize the betas (start with 0's or small values)
+
+2.  Predict the outcome variable
+
+3.  Calculate the error
+
+4.  Calculate the gradient (The direction and magnitude of the steepest increase in the cost function)
+
+5.  Adjust the betas in the opposite direction of the gradient
+
+6.  Iterate (repeat the process until the cost function converges on a minimum value
+
 # To do
 
 I need to rerun the 5 fold CV with correctly centering the test sets based on the values from each training set.
@@ -2699,9 +3015,6 @@ Profit
 # References
 
 [@fogel1989] [@kumar2020][@haralick1973] [@ojala2002]
-
-
-
 
 # Bonus
 
@@ -2758,4 +3071,3 @@ colnames(data_with_pcs) <- c("kidvol_change", "PC1", "PC2")
 model_pca <- lm(kidvol_change ~ PC1 + PC2, data = data_with_pcs) 
 summary(model_pca)
 ```
-
