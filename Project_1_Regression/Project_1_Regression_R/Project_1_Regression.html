@@ -163,39 +163,55 @@ window.Quarto = {
 <span class="menu-text">Home</span></a>
   </li>  
   <li class="nav-item dropdown ">
-    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-advanced-data-analyses" role="link" data-bs-toggle="dropdown" aria-expanded="false">
- <span class="menu-text">Advanced Data Analyses</span>
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-advanced-data-analyses-(rsas" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Advanced Data Analyses (R/SAS)</span>
     </a>
-    <ul class="dropdown-menu" aria-labelledby="nav-menu-advanced-data-analyses">    
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-advanced-data-analyses-(rsas">    
         <li>
     <a class="dropdown-item" href="../../Project_1_Regression/Project_1_Regression_R/Project_1_Regression.html">
  <span class="dropdown-text">Regression (R)</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="../../_site/Project_1_Regression/Project_1_Regression_SAS/Project_1_Regression_SAS.html">
+    <a class="dropdown-item" href="../../Project_1_Regression/Project_1_Regression_SAS/Project_1_Regression_SAS.html">
  <span class="dropdown-text">Regression (SAS)</span></a>
   </li>  
         <li>
     <a class="dropdown-item" href="../../Project_2/Project_2_R/Code/Project2.html">
- <span class="dropdown-text">Regression with Moderator (R)</span></a>
+ <span class="dropdown-text">MLR With Confounding and Interaction (R)</span></a>
   </li>  
-        <li class="dropdown-header">Regression with Moderator (SAS)</li>
+        <li class="dropdown-header">MLR With Confounding and Interaction (SAS)</li>
+        <li>
+    <a class="dropdown-item" href="../../Project_2/Project_2_R/Code/Project2LMM.html">
+ <span class="dropdown-text">Linear Mixed Model (R)</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../Project_3_Predictive_Modelling/Project_3_R/Code/Project_3_Predictive_Modelling.html">
+ <span class="dropdown-text">Predictive Modelling (R)</span></a>
+  </li>  
     </ul>
   </li>
   <li class="nav-item">
-    <span class="nav-link">
-<span class="menu-text">Data Wrangling</span>
-    </span>
+    <a class="nav-link" href="../../Data_Wrangling/Treadmill_Data_Cleaning/Code/Automated_Treadmill_Data_Cleaning.html"> 
+<span class="menu-text">Data Wrangling (Python)</span></a>
   </li>  
-  <li class="nav-item">
-    <span class="nav-link">
-<span class="menu-text">Clinical Research Informatics</span>
-    </span>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-data-management-(sas" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Data Management (SAS)</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-data-management-(sas">    
+        <li>
+    <a class="dropdown-item" href="../../Data_Management_(SAS)/Project_1/Project_1_Importing.html">
+ <span class="dropdown-text">Project 1 - Importing</span></a>
   </li>  
+        <li>
+    <a class="dropdown-item" href="../../Data_Management_(SAS)/Project_3/Project3.html">
+ <span class="dropdown-text">Project 3 - Data Set Creation</span></a>
+  </li>  
+    </ul>
+  </li>
   <li class="nav-item">
-    <span class="nav-link">
-<span class="menu-text">CV</span>
-    </span>
+    <a class="nav-link" href="../../Resume/Publications_and_Presentations.html"> 
+<span class="menu-text">Publications/Presentations</span></a>
   </li>  
 </ul>
           </div> <!-- /navcollapse -->
@@ -238,7 +254,6 @@ window.Quarto = {
   <li><a href="#Multiple_imputation" id="toc-Multiple_imputation" class="nav-link" data-scroll-target="#Multiple_imputation">Multiple Imputation</a></li>
   <li><a href="#Jackknife" id="toc-Jackknife" class="nav-link" data-scroll-target="#Jackknife">Identify Outliers using Jackknife Residuals</a></li>
   </ul></li>
-  <li><a href="#to-do-list" id="toc-to-do-list" class="nav-link" data-scroll-target="#to-do-list">To do List</a></li>
   </ul>
 </nav>
     </div>
@@ -1577,7 +1592,243 @@ Note
 <span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Save the matrix as a LaTex file for paper</span></span>
 <span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>cor_table <span class="ot">&lt;-</span> <span class="fu">xtable</span>(correlation_matrix, <span class="at">caption =</span> <span class="st">"Correlation Matrix"</span>, <span class="at">label =</span> <span class="st">"tab:correlation"</span>)</span>
-<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(cor_table, <span class="at">type =</span> <span class="st">"latex"</span>, <span class="at">file =</span> <span class="st">"correlation_matrix.tex"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(cor_table, <span class="at">type =</span> <span class="st">"latex"</span>, <span class="at">file =</span> <span class="st">"correlation_matrix999.tex"</span>)</span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a><span class="fu">kable</span>(correlation_matrix, <span class="at">format =</span> <span class="st">"html"</span>, <span class="at">table.attr =</span> <span class="st">"class='table table-bordered'"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<table class="table table-bordered caption-top table-sm table-striped small" data-quarto-postprocess="true">
+<thead>
+<tr class="header">
+<th style="text-align: left;" data-quarto-table-cell-role="th"></th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">id</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">trtgroup</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">gender</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">race</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">age</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">smoker</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">sites</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">attachbase</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">attach1year</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">pdbase</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">pd1year</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">attachchange</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">pdchange</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">id</td>
+<td style="text-align: right;">1.0000000</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">trtgroup</td>
+<td style="text-align: right;">-0.1452850</td>
+<td style="text-align: right;">1.0000000</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">gender</td>
+<td style="text-align: right;">-0.8306185</td>
+<td style="text-align: right;">0.1428866</td>
+<td style="text-align: right;">1.0000000</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">race</td>
+<td style="text-align: right;">0.1319767</td>
+<td style="text-align: right;">-0.0314771</td>
+<td style="text-align: right;">-0.0955531</td>
+<td style="text-align: right;">1.0000000</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">age</td>
+<td style="text-align: right;">0.0593032</td>
+<td style="text-align: right;">0.1100051</td>
+<td style="text-align: right;">-0.0453862</td>
+<td style="text-align: right;">0.1787040</td>
+<td style="text-align: right;">1.0000000</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">smoker</td>
+<td style="text-align: right;">-0.2742888</td>
+<td style="text-align: right;">-0.0495029</td>
+<td style="text-align: right;">0.0206456</td>
+<td style="text-align: right;">0.0377211</td>
+<td style="text-align: right;">-0.2229620</td>
+<td style="text-align: right;">1.0000000</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">sites</td>
+<td style="text-align: right;">0.0520821</td>
+<td style="text-align: right;">-0.0393742</td>
+<td style="text-align: right;">-0.1291127</td>
+<td style="text-align: right;">0.0505164</td>
+<td style="text-align: right;">-0.0274695</td>
+<td style="text-align: right;">-0.0226381</td>
+<td style="text-align: right;">1.0000000</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">attachbase</td>
+<td style="text-align: right;">-0.1641513</td>
+<td style="text-align: right;">0.1440999</td>
+<td style="text-align: right;">0.2416242</td>
+<td style="text-align: right;">0.0313438</td>
+<td style="text-align: right;">0.1354434</td>
+<td style="text-align: right;">0.1456234</td>
+<td style="text-align: right;">-0.4237813</td>
+<td style="text-align: right;">1.0000000</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">attach1year</td>
+<td style="text-align: right;">-0.1440182</td>
+<td style="text-align: right;">0.1671499</td>
+<td style="text-align: right;">0.2021284</td>
+<td style="text-align: right;">0.0671713</td>
+<td style="text-align: right;">0.0850851</td>
+<td style="text-align: right;">0.1987327</td>
+<td style="text-align: right;">-0.4042743</td>
+<td style="text-align: right;">0.9450189</td>
+<td style="text-align: right;">1.0000000</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">pdbase</td>
+<td style="text-align: right;">-0.2010672</td>
+<td style="text-align: right;">-0.0224838</td>
+<td style="text-align: right;">0.2645908</td>
+<td style="text-align: right;">0.0182289</td>
+<td style="text-align: right;">-0.0884687</td>
+<td style="text-align: right;">0.2614919</td>
+<td style="text-align: right;">-0.1805543</td>
+<td style="text-align: right;">0.6047132</td>
+<td style="text-align: right;">0.6093346</td>
+<td style="text-align: right;">1.0000000</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">pd1year</td>
+<td style="text-align: right;">-0.0685783</td>
+<td style="text-align: right;">0.0126731</td>
+<td style="text-align: right;">0.1362804</td>
+<td style="text-align: right;">0.0606735</td>
+<td style="text-align: right;">-0.1246106</td>
+<td style="text-align: right;">0.2447030</td>
+<td style="text-align: right;">-0.1901940</td>
+<td style="text-align: right;">0.5601052</td>
+<td style="text-align: right;">0.6685457</td>
+<td style="text-align: right;">0.8436653</td>
+<td style="text-align: right;">1.0000000</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">attachchange</td>
+<td style="text-align: right;">0.0964391</td>
+<td style="text-align: right;">0.0296043</td>
+<td style="text-align: right;">-0.1696216</td>
+<td style="text-align: right;">0.0928969</td>
+<td style="text-align: right;">-0.1742586</td>
+<td style="text-align: right;">0.1135740</td>
+<td style="text-align: right;">0.1578683</td>
+<td style="text-align: right;">-0.3976360</td>
+<td style="text-align: right;">-0.0757224</td>
+<td style="text-align: right;">-0.1342018</td>
+<td style="text-align: right;">0.1679506</td>
+<td style="text-align: right;">1.0000000</td>
+<td style="text-align: right;">NA</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">pdchange</td>
+<td style="text-align: right;">0.2251487</td>
+<td style="text-align: right;">0.0622762</td>
+<td style="text-align: right;">-0.2123192</td>
+<td style="text-align: right;">0.0789059</td>
+<td style="text-align: right;">-0.0731704</td>
+<td style="text-align: right;">-0.0091784</td>
+<td style="text-align: right;">-0.0323859</td>
+<td style="text-align: right;">-0.0317726</td>
+<td style="text-align: right;">0.1579534</td>
+<td style="text-align: right;">-0.2031295</td>
+<td style="text-align: right;">0.3543035</td>
+<td style="text-align: right;">0.5400668</td>
+<td style="text-align: right;">1</td>
+</tr>
+</tbody>
+</table>
+
+
+</div>
 </div>
 <p>Visually, we can see a cluster of high positive correlations between all of attachment loss and pocket depth at baseline and 1 year. This makes sense, as all measurements were taken from the same sites in the gums. This will be explored later <a href="#Exploratory">(See Exploratory Data Analysis - Dependent Variables)</a></p>
 <p>Just for sanity (and practice), let’s make a table of our correlation coefficients.</p>
@@ -5095,42 +5346,9 @@ F-statistic: 1.954 on 4 and 97 DF,  p-value: 0.1077</code></pre>
 </div>
 </div>
 </div>
-</section>
-</section>
-<section id="to-do-list" class="level1">
-<h1>To do List</h1>
-<p><u>Important</u></p>
-<p>check for outliers using jackknife residuals</p>
-<p><u>Aesthetic</u></p>
-<p>Try adding captions to all graphs and tables (eg #| fig-cap )</p>
-<p>mess around with a final clean version that makes use of echo = FALSE to hide unneeded code chunks</p>
-<p>question for a TA or prof:</p>
-<ul>
-<li><p>consuslting Prof: Did he make the slides for jackknife residuals? Why the cutoff in Cooks D of 1.0, interwebs says other equation.</p></li>
-<li><p>what is leverage vs half normal quantile plot? in detecting outliers.</p></li>
-<li><p>good way to get correlation matrix or just how do you get good tables out of R for papers? What’s you rmethodology/pipeline?</p></li>
-</ul>
-<p>Suppose that the complete-data model is a regression with outcome Y and predictors X . If the missing data occur in Y only, complete-case analysis and multiple imputation are equivalent, so then complete-case analysis is preferred since it is easier, more efficient and more robust (Von Hippel 2007).</p>
-<p>Complete case analysis is the same as listwise deletion, which we did anyway.</p>
-<p>If the missing data occur in y only, then it is possible to correct the variance formulas of method norm.predict. However, if the missing data occur in X , norm.predict is severely biased, so then variance correction is not useful.</p>
-<p>…</p>
-<p>good format to follow for write up. “I used mice (Multiple imputation by chained equations) to impute my dataset with missing variables. Next, I did a linear regression on the imputed datasets (m=50) and pooled the results according to Rubin’s Rules.”</p>
-<p>Look into Little’s Test for MCAR</p>
-<hr>
-<p>Meeting with Zoey</p>
-<p>**Look into making R shiny apps**</p>
-<p>Be careful with Kable cause it can cause conflicts (and crashes)</p>
-<p>Work with base R so it’s not effected by updates of packages</p>
-<p>Table 1 is good enough, if not use custom table. You can create a matrix first.</p>
-<p>Look into R custom table (could also use kable)(but can crash)</p>
-<p>plotly for interactive graphs</p>
-<p>r-graph-galler.com/interactive-charts.html plotly gampinder, highchart interactive line plot in R (plotly is more popular) (highchart requires minimal coding, seems simpler. but is limited)</p>
-<p>can use R to directly send an email to someone</p>
-<p>Options: Directly upload photos to online cloud and link to those Everytime you share the doc, share as folders and include link to those folders. Use setwd()./(test) command and set the working directory at the start(the . means the current folder) Use github (?) (be careful of automatic updates function, )</p>
-<p>alexkaizer.com/bios_6618 - can ask him how to turn my qmd into a website.</p>
-<p>look into Tableau for interactive graphs (she says its easy).</p>
 
 
+</section>
 </section>
 
 </main> <!-- /main -->
