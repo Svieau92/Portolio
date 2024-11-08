@@ -587,7 +587,7 @@ We have an even count between patients who had slow vs fast disease progression.
 [Top of Tabset](#Outcomes_Uni)
 :::
 
-# Feature Engineering {#Features_Uni}
+# Feature Engineering I {#Features_Uni}
 
 An assumption for a linear regression is that there is a linear relationship between the predictor and the outcome variable.
 
@@ -2372,7 +2372,6 @@ ggplot(prediction_data, aes(x = Actual, y = Fit)) +
   labs(title = "Predictions with Error Bars (Linear Regression)", 
        x = "Actual MPG", y = "Predicted MPG") +
   theme_minimal()
-
 ```
 
 
@@ -2686,6 +2685,10 @@ Here we will perform the scaling as necessary to place all variables on the same
 # Bonus
 
 # To do
+
+I need to rerun the 5 fold CV with correctly centering the test sets based on the values from each training set.
+
+As I did it, I centered them all together.
 
 2a 2b 2c
 
