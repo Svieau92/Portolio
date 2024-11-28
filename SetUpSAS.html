@@ -213,7 +213,7 @@ ul.task-list li input[type="checkbox"] {
 sas_session = saspy.SASsession(cfgfile="C:\\Users\\sviea\\anaconda3\\Lib\\site-packages\\saspy\\sascfg_personal.py")
 sas_session</code></pre>
 <pre class="{r}"><code>install.packages("configSAS")</code></pre>
-<div id="c751d824" class="cell" data-execution_count="1">
+<div id="033e5117" class="cell" data-execution_count="1">
 <details class="code-fold">
 <summary>Code</summary>
 <pre class="sas cell-code"><code>#| capture: log
@@ -223,7 +223,7 @@ proc candisc data=sashelp.iris out=outcan distance anova;
 run;</code></pre>
 </details>
 <div class="cell-output cell-output-stdout">
-<pre><code>5                                                          The SAS System                    Thursday, November 28, 2024 09:46:00 AM
+<pre><code>5                                                          The SAS System                    Thursday, November 28, 2024 10:27:00 AM
 
 24         ods listing close;ods html5 (id=saspy_internal) file=_tomods1 options(bitmap_mode='inline') device=svg style=HTMLBlue;
 24       ! ods graphics on / outputfmt=png;
@@ -249,7 +249,7 @@ ERROR 180-322: Statement is not valid or it is used out of proper order.
 32         
 33         ods html5 (id=saspy_internal) close;ods listing;
 34         
-6                                                          The SAS System                    Thursday, November 28, 2024 09:46:00 AM
+6                                                          The SAS System                    Thursday, November 28, 2024 10:27:00 AM
 
 35         </code></pre>
 </div>
@@ -324,7 +324,7 @@ result = sas.submit("proc print data=sashelp.class; run;")
 
 # Display the output in the Quarto document
 display(HTML(result['LST']))</code></pre>
-<div id="47a3b563" class="cell" data-execution_count="2">
+<div id="a0c60f34" class="cell" data-execution_count="2">
 <details class="code-fold">
 <summary>Code</summary>
 <pre class="sas cell-code"><code>proc candisc data=sashelp.iris out=outcan distance anova;
