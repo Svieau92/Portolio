@@ -180,8 +180,12 @@ window.Quarto = {
   </li>  
         <li class="dropdown-header">MLR With Confounding and Interaction (SAS)</li>
         <li>
-    <a class="dropdown-item" href="../../../Project_2/Project_2_R/Code/Project2LMM.qmdu">
+    <a class="dropdown-item" href="../../../Project_2/Project_2_R/Code/Project2LMM.html">
  <span class="dropdown-text">Linear Mixed Model (R)</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../Project_3_Predictive_Modelling/Project_3_R/Code/Project_3_Predictive_Modelling.html">
+ <span class="dropdown-text">Predictive Modelling</span></a>
   </li>  
     </ul>
   </li>
@@ -291,9 +295,7 @@ window.Quarto = {
   <li><a href="#final-average-rmse" id="toc-final-average-rmse" class="nav-link" data-scroll-target="#final-average-rmse">Final Average RMSE</a></li>
   <li><a href="#compare-model-performance" id="toc-compare-model-performance" class="nav-link" data-scroll-target="#compare-model-performance">Compare Model Performance</a></li>
   </ul></li>
-  </ul></li>
-  <li><a href="#results" id="toc-results" class="nav-link" data-scroll-target="#results">Results</a>
-  <ul class="collapse">
+  <li><a href="#results" id="toc-results" class="nav-link" data-scroll-target="#results">Results</a></li>
   <li><a href="#conclusion" id="toc-conclusion" class="nav-link" data-scroll-target="#conclusion">Conclusion</a></li>
   </ul></li>
   <li><a href="#task-two-logistic-regression" id="toc-task-two-logistic-regression" class="nav-link" data-scroll-target="#task-two-logistic-regression">Task Two: Logistic Regression</a>
@@ -305,9 +307,7 @@ window.Quarto = {
   <li><a href="#2B" id="toc-2B" class="nav-link" data-scroll-target="#2B">Model 2B: MRI Image Features</a></li>
   <li><a href="#2C" id="toc-2C" class="nav-link" data-scroll-target="#2C">Model 2C: Baseline Kidney Volume and MRI Image Features</a></li>
   <li><a href="#model-comparison-1" id="toc-model-comparison-1" class="nav-link" data-scroll-target="#model-comparison-1">Model Comparison</a></li>
-  </ul></li>
-  <li><a href="#results-1" id="toc-results-1" class="nav-link" data-scroll-target="#results-1">Results</a>
-  <ul class="collapse">
+  <li><a href="#results-1" id="toc-results-1" class="nav-link" data-scroll-target="#results-1">Results</a></li>
   <li><a href="#discussion" id="toc-discussion" class="nav-link" data-scroll-target="#discussion">Discussion</a></li>
   </ul></li>
   <li><a href="#roc-curves" id="toc-roc-curves" class="nav-link" data-scroll-target="#roc-curves">ROC Curves</a></li>
@@ -4834,9 +4834,8 @@ Kidney Volume at Baseline and Txti2                                    </code></
 <p>Model A had an RMSE that was 0.37 points higher than model B (p = 0.68), and 0.74 points higher than model C (p = 0.75)</p>
 </section>
 </section>
-</section>
-<section id="results" class="level1">
-<h1>Results</h1>
+<section id="results" class="level2">
+<h2 class="anchored" data-anchor-id="results">Results</h2>
 <p>To evaluate whether differences in model performance were statistically significant, RMSE for each model were compared using pairwise t-tests with Bonferroni p-value correction. The differences in model performance were not statistically significant. Model A had a 0.37 higher RMSE compared to model B (p = 0.68), and a 0.38 higher RMSE compared to model C (p = 0.75).</p>
 <table class="caption-top table">
 <thead>
@@ -4861,13 +4860,14 @@ Kidney Volume at Baseline and Txti2                                    </code></
 <td>—</td>
 </tr>
 <tr class="odd">
-<td>1C Baseline Kidney Volume and Txti2</td>
+<td>1C: Baseline Kidney Volume and Txti2</td>
 <td>6.14</td>
 <td>0.75</td>
 <td>1.0000</td>
 </tr>
 </tbody>
 </table>
+</section>
 <section id="conclusion" class="level2">
 <h2 class="anchored" data-anchor-id="conclusion">Conclusion</h2>
 <p>The differences in model performance for task one were not statistically significant. Model A had an RMSE that was 0.37 points higher than model B (p = 0.68), and 0.74 points higher than model C (p = 0.75). This may be due to small sample size however.</p>
@@ -5588,9 +5588,8 @@ Kidney Volume at Baseline and Txti2                                    </code></
 </div>
 <p>The difference in performance between models was not statistically significant (report AUC’s and 95% CI’s here)</p>
 </section>
-</section>
-<section id="results-1" class="level1">
-<h1>Results</h1>
+<section id="results-1" class="level2">
+<h2 class="anchored" data-anchor-id="results-1">Results</h2>
 <p>Table 2. Results of Pairwise T-Tests Comparing Model Performance Predicting Disease Progression using AUC</p>
 <table class="caption-top table">
 <colgroup>
@@ -5631,6 +5630,7 @@ Kidney Volume at Baseline and Txti2                                    </code></
 </tr>
 </tbody>
 </table>
+</section>
 <section id="discussion" class="level2">
 <h2 class="anchored" data-anchor-id="discussion">Discussion</h2>
 <p>The model using <code>txti2</code> alone performed better at predicting disease progression than the model using <code>kidvol_base</code> alone (AUC = , 95% CI: <em>,</em>). However, this difference was not statistically significant (p = ___).</p>
@@ -5772,7 +5772,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
   }
     var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
     var mailtoRegex = new RegExp(/^mailto:/);
-      var filterRegex = new RegExp('/' + window.location.host + '/');
+      var filterRegex = new RegExp("https:\/\/svieau\.quarto\.pub\/portfolio");
     var isInternal = (href) => {
         return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
     }

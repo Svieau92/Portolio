@@ -2464,7 +2464,7 @@ dotplot(results, metric = "RMSE", main = "Comparison of RMSE Across Models")
 
 Model A had an RMSE that was 0.37 points higher than model B (p = 0.68), and 0.74 points higher than model C (p = 0.75)
 
-# Results
+## Results
 
 To evaluate whether differences in model performance were statistically significant, RMSE for each model were compared using pairwise t-tests with Bonferroni p-value correction. The differences in model performance were not statistically significant. Model A had a 0.37 higher RMSE compared to model B (p = 0.68), and a 0.38 higher RMSE compared to model C (p = 0.75).
 
@@ -2560,9 +2560,6 @@ roc2a <- ggplot(data, aes(m = predictions2a_num, d = progression_num)) +
        x = "False Positive Rate",
        y = "True Positive Rate") +
   geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "blue")
-
-# Visualize Plot
-roc2a
 ```
 
 We can see that the ROC curve is very poor, near guessing.
@@ -2861,7 +2858,7 @@ dotplot(results, metric = "Spec",
 
 The difference in performance between models was not statistically significant (report AUC's and 95% CI's here)
 
-# Results
+## Results
 
 Table 2. Results of Pairwise T-Tests Comparing Model Performance Predicting Disease Progression using AUC
 
@@ -2872,15 +2869,35 @@ Table 2. Results of Pairwise T-Tests Comparing Model Performance Predicting Dise
 | Txti2                            | 0.74 | 0.57        | 0.64        | 0.28         |
 | Baseline Kidney Volume and Txti2 | 0.71 | 0.57        | 0.59        | 0.31         |
 
-## Discussion
+## Summary
 
-The model using `txti2` alone performed better at predicting disease progression than the model using `kidvol_base` alone (AUC = , 95% CI: *,*). However, this difference was not statistically significant (p = \_\_\_).
+The model using `txti2` alone performed better at predicting disease progression than the model using `kidvol_base` alone. However, this difference was not statistically significant.
 
-Additionally, the model incorporating both `txti2` and `kidvol_base` did not perform better than the model using just `txti` (AUC = , 95% CI: )
+Additionally, the model incorporating both `txti2` and `kidvol_base` did not perform better than the model using just `txti`.
 
 However, examining the ROC curves and the 95% CIs for all of the models, it does appear that there is a trend towards these difference being significant. It is possible that these may have not been statistically significant due to a small sample size (N = 67).
 
-# ROC Curve
+# Results
+
+#### Predicting Height-Corrected Kidney Volume
+
+To evaluate whether differences in model performance were statistically significant, RMSE for each model were compared using pairwise t-tests with Bonferroni correction for p-values. The differences in model performance were not statistically significant (see Table 1 and Figure 1). Model A (Baseline only) had a 0.37 higher RMSE compared to model B (Txti2 only) (p = 0.68), and a 0.38 higher RMSE compared to model C (Mixed) (p = 0.75).
+
+![](images/clipboard-2391200633.png)
+
+![](images/clipboard-3668317329.png)
+
+![](images/clipboard-2980058113.png)
+
+#### Predicting Disease Progression
+
+To evaluate whether differences in model performance were statistically significant, AUC for each model was compared using pairwise t-test with Bonferroni correction for p-values, and ROC curves for each model were plotted (see Table 2 and Figure 2). The models using Txti2 alone (AUC = 0.74), or Txti2 and baseline kidney volume (AUC= 0.71), performed better at predicting disease progression speed than the model using baseline kidney volume alone (AUC 0.47). However, these differences were not statistically significant (p \> 0.05).
+
+![](images/clipboard-1453485702.png)
+
+![](images/clipboard-3181863504.png)
+
+## ROC Curves
 
 [Source](https://www.r-project.org/conferences/useR-2013/Tutorials/kuhn/user_caret_2up.pdf)
 
@@ -2897,7 +2914,6 @@ data_for_ROC <- data.frame(
 
 # Melt the data frame for ggplot
 data_melted <- melt(data_for_ROC, id.vars = "progression_num", variable.name = "model", value.name = "predictions")
-data_melted
 
 # Plot ROC Curves
 roc_plot <- ggplot(data_melted, aes(m = predictions, d = progression_num, color = model)) +
@@ -2917,212 +2933,14 @@ roc_plot
 
 # Discussion
 
-Using linear regression to answer task one, there appeared to not be much of a difference between models.
+Note: Discussion section co-written with project partner Dominick DeMarsico.
 
-However when performing logistic regression, there appeared to be a difference in perforamance between models. Specifically using the MRI image feature of `txti2` increase accuracy, specificity, and sensitivty over that of just using baseline kidney volume alone. While this difference was not statistically, this may have been due to a small sample size.
+After review of the many MRI image transformations available to the team, none of the feature engineering conducted stood out as particularly meaningful or helpful for prediction. However, the Txti2 variable was specifically created by the PI to be a summary value for kidney images. To avoid overfitting, we thought it best to primarily focus on this variable as our other variables of interest were not particularly associated with the outcome variables. With regard to our linear regression modeling, we found that none of the models were statistically better at predicting kidney change over time. Thus, including MRI image features did not increase the predictive capability of a model predicting kidney volume at 3 years above and beyond that of just using kidney volume measurements at baseline. Given the time and money needed to both collect MRI images and process them into usable formats, it may be more efficient to simply focus on measuring kidney volume in children with ADPKD. Given this outcome, we fail to reject the null hypothesis or question 1.
 
-The statisticians recommend collecting more data.
+With regard to our logistic regression, we found that none of the models were statistically different from one another when comparing AUC. However, the combined model and the model containing solely Txti2 were approaching significance when compared to the baseline kidney volume in a Two Sample T-Test (figure 2.). Given our small sample size, it is possible that a larger N would lead to this effect becoming statistically significant. Thus, even though we failed to reject the null hypothesis for our given sample size, utilizing the MRI image feature of Txti2 in our model allows us to achieve an AUC of \> 0.70, yielding drastically better performance than the near-guess level performance of the model using baseline kidney volume alone (AUC = 0.47). Additionally, we believe this stark trend to be clinically significant as it provides significantly better outcomes at the higher end of the confidence interval.
 
-Add details here about how using `txti2` in conjunction with other strong predictors of ADPKD such as hypertension, elevated serum creatinine, sex could be incorporated into a single model to enhance predictive power.
-
-# Bivariate Comparisons
-
-```{r}
-data |> 
-  arrange(desc(lbp5)) |> 
-  head() |> 
-  pretty_print()
-```
-
-#### Scatterplots
-
-Let's make a function here that will make the scatterplots with the layout that we prefer.
-
-```{r}
-#| warning: false
-
-# Initialize empty list
-plots <- list()
-
-# Get column names of MRI features
-features_gabor <- c("gabor1", "gabor2", "gabor3", "gabor4", "gabor5")
-features_geom <- c("geom1", "geom2")
-features_glcm <- c("glcm1", "glcm2")
-features_txti <- c("txti1", "txti2", "txti3", "txti4", "txti5")
-features_lbp <- c("lbp1", "lbp2", "lbp3", "lbp4", "lbp5")
-  
-# Plot scatterplots of each MRI feature against kidney volume change
-plot_features_against_outcome <- function(features) {
-for (feature in features) {
-  p <- ggplot(data, aes_string(x = feature, y = "kidvol_change")) +
-    geom_point() +
-    theme_minimal() +
-    labs(title = paste(feature),
-                       x = feature,
-                       y = "Kidney Volume Change (%)")
-    plots[[feature]] <- p
-}
-
-# Combine all plots into a grid
-combined_plot <- wrap_plots(plots, ncol = 3)
-combined_plot
-}
-```
-
-### Gabor Transform
-
-```{r}
-#| fig-width: 8
-#| fig-height: 6
-# Plot features against total change in kidney volume
-plot_features_against_outcome(features_gabor)
-```
-
-It looks like `gabor4` and `gabor5` are exponential. We will get the square of those.
-
-### Geom
-
-```{r}
-#| fig-width: 8
-#| fig-height: 2.5
-# Plot features against total change in kidney volume
-plot_features_against_outcome(features_geom)
-```
-
-Geom 2 looks quadratic.
-
-### Txti
-
-```{r}
-#| fig-width: 8
-#| fig-height: 6
-# Plot features against total change in kidney volume
-plot_features_against_outcome(features_txti)
-```
-
-`txti4` and `txti5` look quadratic.
-
-### LBP
-
-```{r}
-#| fig-width: 8
-#| fig-height: 6
-# Plot features against total change in kidney volume
-plot_features_against_outcome(features_lbp)
-```
-
-# Feature Scaling
-
-Here we will perform the scaling as necessary to place all variables on the same scale.
-
-```{r}
-# # Min-max normalization function
-# min_max_norm <- function(x) {
-#   (x - min(x)) / (max(x) - min(x))
-# }
-# 
-# #############I was trying to features scale ecerything at once here.
-# test <- scale(data$geom1)
-# testly <- z_norm(data$geom1)
-
-```
-
-# Bonus
-
-#### Messing around with plotting results of logistic regression to visualize
-
-```{r}
-ggplot(data, aes(y = log(kidvol_base), x = txti2, color = progression)) +
-  geom_point() +
-  theme_minimal()
-```
-
-## Gradient Descent
-
-The purpose of gradient descent is to find a mapping function that minimizes the cost function.
-
-The general process of gradient descent is:
-
-1.  Initialize the betas (start with 0's or small values)
-
-2.  Predict the outcome variable
-
-3.  Calculate the error
-
-4.  Calculate the gradient (The direction and magnitude of the steepest increase in the cost function)
-
-5.  Adjust the betas in the opposite direction of the gradient
-
-6.  Iterate (repeat the process until the cost function converges on a minimum value
-
-# To do
-
-I need to rerun the 5 fold CV with correctly centering the test sets based on the values from each training set.
-
-As I did it, I centered them all together.
-
-2a 2b 2c
-
-???
-
-Profit
+The study’s primary limitation is sample size. It is difficult to make exceptionally accurate models without exceptionally large amounts of data; we would expect a higher degree of accuracy if our N was significantly larger. Additionally, we were not given demographic variables for subject sex, age, and eGFR (estimated glomerular filtration rate), which are significant predictors of ADPKD. We suspect that these additional factors in conjunction with the MRI image feature Txti2 would produce a more robust model.
 
 # References
 
 [@fogel1989] [@kumar2020][@haralick1973] [@ojala2002]
-
-# Bonus
-
-## Principle Components Analysis
-
-```{r}
-# Load required libraries
-library(factoextra)
-
-# Scale the data
-data_scaled <- data |> 
-  select(geom1, geom2, gabor1, gabor2, gabor3, gabor4, gabor5, glcm1, glcm2, txti1, txti2, txti3, txti4, txti5, lbp1, lbp2, lbp3, lbp4, lbp5) |> 
-  scale()
-
-# Perform PCA
-pca_result <- prcomp(data_scaled, center = TRUE, scale. = TRUE)
-
-# Summary of PCA
-summary(pca_result)
-
-# Visualize the variance explained by each component
-fviz_eig(pca_result)
-
-# Biplot of the first two principal components
-fviz_pca_biplot(pca_result, geom = "point", label = "var")
-
-# Project data onto the principal components
-pca_transformed <- as.data.frame(pca_result$x)
-
-# Select the first few principal components that explain sufficient variance
-selected_components <- pca_transformed[, 1:2] # Example: select first 2 components
-
-# Display selected principal components
-head(selected_components)
-
-# Extract loadings and scores 
-loadings <- pca_result$rotation 
-scores <- as.data.frame(pca_result$x) 
-
-# View loadings 
-print(loadings) 
-
-# Visualize the variance explained by each component 
-fviz_eig(pca_result) 
-
-# Select the first few principal components that explain sufficient variance
-selected_components <- scores[, 1:2] 
-
-# Add the principal component scores to the original data for modeling 
-data_with_pcs <- cbind(data$kidvol_change, selected_components) 
-colnames(data_with_pcs) <- c("kidvol_change", "PC1", "PC2")
-
-# Train a linear regression model using the principal components 
-model_pca <- lm(kidvol_change ~ PC1 + PC2, data = data_with_pcs) 
-summary(model_pca)
-```

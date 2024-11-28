@@ -122,7 +122,6 @@ div.csl-indent {
     "search-label": "Search"
   }
 }</script>
-<style>html{ scroll-behavior: smooth; }</style>
 <script src="../../../site_libs/kePrint-0.0.1/kePrint.js"></script>
 
 <link href="../../../site_libs/lightable-0.0.1/lightable.css" rel="stylesheet">
@@ -200,8 +199,12 @@ window.Quarto = {
   </li>  
         <li class="dropdown-header">MLR With Confounding and Interaction (SAS)</li>
         <li>
-    <a class="dropdown-item" href="../../../Project_2/Project_2_R/Code/Project2LMM.qmdu">
+    <a class="dropdown-item" href="../../../Project_2/Project_2_R/Code/Project2LMM.html">
  <span class="dropdown-text">Linear Mixed Model (R)</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../Project_3_Predictive_Modelling/Project_3_R/Code/Project_3_Predictive_Modelling.html">
+ <span class="dropdown-text">Predictive Modelling</span></a>
   </li>  
     </ul>
   </li>
@@ -225,12 +228,12 @@ window.Quarto = {
     </ul>
   </li>
   <li class="nav-item">
-    <a class="nav-link" href="../../../Resume/Publications_and_Presentations.html"> 
-<span class="menu-text">Publications/Presentations</span></a>
-  </li>  
-  <li class="nav-item">
     <a class="nav-link" href="C:/Users/sviea/Documents/Vieau_Project_01/Code/Megan_Watson_Project.qmd"> 
 <span class="menu-text">Statistical Consulting (R)</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../Resume/Publications_and_Presentations.html"> 
+<span class="menu-text">Publications/Presentations</span></a>
   </li>  
 </ul>
           </div> <!-- /navcollapse -->
@@ -311,9 +314,7 @@ window.Quarto = {
   <li><a href="#final-average-rmse" id="toc-final-average-rmse" class="nav-link" data-scroll-target="#final-average-rmse">Final Average RMSE</a></li>
   <li><a href="#compare-model-performance" id="toc-compare-model-performance" class="nav-link" data-scroll-target="#compare-model-performance">Compare Model Performance</a></li>
   </ul></li>
-  </ul></li>
-  <li><a href="#results" id="toc-results" class="nav-link" data-scroll-target="#results">Results</a>
-  <ul class="collapse">
+  <li><a href="#results" id="toc-results" class="nav-link" data-scroll-target="#results">Results</a></li>
   <li><a href="#conclusion" id="toc-conclusion" class="nav-link" data-scroll-target="#conclusion">Conclusion</a></li>
   </ul></li>
   <li><a href="#task-two-logistic-regression" id="toc-task-two-logistic-regression" class="nav-link" data-scroll-target="#task-two-logistic-regression">Task Two: Logistic Regression</a>
@@ -325,31 +326,15 @@ window.Quarto = {
   <li><a href="#2B" id="toc-2B" class="nav-link" data-scroll-target="#2B">Model 2B: MRI Image Features</a></li>
   <li><a href="#2C" id="toc-2C" class="nav-link" data-scroll-target="#2C">Model 2C: Baseline Kidney Volume and MRI Image Features</a></li>
   <li><a href="#model-comparison-1" id="toc-model-comparison-1" class="nav-link" data-scroll-target="#model-comparison-1">Model Comparison</a></li>
+  <li><a href="#results-1" id="toc-results-1" class="nav-link" data-scroll-target="#results-1">Results</a></li>
+  <li><a href="#summary-27" id="toc-summary-27" class="nav-link" data-scroll-target="#summary-27">Summary</a></li>
   </ul></li>
-  <li><a href="#results-1" id="toc-results-1" class="nav-link" data-scroll-target="#results-1">Results</a>
+  <li><a href="#results-2" id="toc-results-2" class="nav-link" data-scroll-target="#results-2">Results</a>
   <ul class="collapse">
+  <li><a href="#roc-curves" id="toc-roc-curves" class="nav-link" data-scroll-target="#roc-curves">ROC Curves</a></li>
+  </ul></li>
   <li><a href="#discussion" id="toc-discussion" class="nav-link" data-scroll-target="#discussion">Discussion</a></li>
-  </ul></li>
-  <li><a href="#roc-curve-3" id="toc-roc-curve-3" class="nav-link" data-scroll-target="#roc-curve-3">ROC Curve</a></li>
-  <li><a href="#discussion-1" id="toc-discussion-1" class="nav-link" data-scroll-target="#discussion-1">Discussion</a></li>
-  <li><a href="#bivariate-comparisons" id="toc-bivariate-comparisons" class="nav-link" data-scroll-target="#bivariate-comparisons">Bivariate Comparisons</a>
-  <ul class="collapse">
-  <li><a href="#gabor-transform-3" id="toc-gabor-transform-3" class="nav-link" data-scroll-target="#gabor-transform-3">Gabor Transform</a></li>
-  <li><a href="#geom" id="toc-geom" class="nav-link" data-scroll-target="#geom">Geom</a></li>
-  <li><a href="#txti-2" id="toc-txti-2" class="nav-link" data-scroll-target="#txti-2">Txti</a></li>
-  <li><a href="#lbp-1" id="toc-lbp-1" class="nav-link" data-scroll-target="#lbp-1">LBP</a></li>
-  </ul></li>
-  <li><a href="#feature-scaling-1" id="toc-feature-scaling-1" class="nav-link" data-scroll-target="#feature-scaling-1">Feature Scaling</a></li>
-  <li><a href="#bonus" id="toc-bonus" class="nav-link" data-scroll-target="#bonus">Bonus</a>
-  <ul class="collapse">
-  <li><a href="#gradient-descent" id="toc-gradient-descent" class="nav-link" data-scroll-target="#gradient-descent">Gradient Descent</a></li>
-  </ul></li>
-  <li><a href="#to-do" id="toc-to-do" class="nav-link" data-scroll-target="#to-do">To do</a></li>
   <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references">References</a></li>
-  <li><a href="#bonus-1" id="toc-bonus-1" class="nav-link" data-scroll-target="#bonus-1">Bonus</a>
-  <ul class="collapse">
-  <li><a href="#principle-components-analysis" id="toc-principle-components-analysis" class="nav-link" data-scroll-target="#principle-components-analysis">Principle Components Analysis</a></li>
-  </ul></li>
   </ul>
 </nav>
     </div>
@@ -4873,9 +4858,8 @@ Kidney Volume at Baseline and Txti2                                    </code></
 <p>Model A had an RMSE that was 0.37 points higher than model B (p = 0.68), and 0.74 points higher than model C (p = 0.75)</p>
 </section>
 </section>
-</section>
-<section id="results" class="level1">
-<h1>Results</h1>
+<section id="results" class="level2">
+<h2 class="anchored" data-anchor-id="results">Results</h2>
 <p>To evaluate whether differences in model performance were statistically significant, RMSE for each model were compared using pairwise t-tests with Bonferroni p-value correction. The differences in model performance were not statistically significant. Model A had a 0.37 higher RMSE compared to model B (p = 0.68), and a 0.38 higher RMSE compared to model C (p = 0.75).</p>
 <table class="caption-top table">
 <thead>
@@ -4907,6 +4891,7 @@ Kidney Volume at Baseline and Txti2                                    </code></
 </tr>
 </tbody>
 </table>
+</section>
 <section id="conclusion" class="level2">
 <h2 class="anchored" data-anchor-id="conclusion">Conclusion</h2>
 <p>The differences in model performance for task one were not statistically significant. Model A had an RMSE that was 0.37 points higher than model B (p = 0.68), and 0.74 points higher than model C (p = 0.75). This may be due to small sample size however.</p>
@@ -5029,17 +5014,7 @@ Predicted Slow Fast
 <span id="cb224-5"><a href="#cb224-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"ROC Curve Model 2A: Baseline Kidney Volume"</span>,</span>
 <span id="cb224-6"><a href="#cb224-6" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="st">"False Positive Rate"</span>,</span>
 <span id="cb224-7"><a href="#cb224-7" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">"True Positive Rate"</span>) <span class="sc">+</span></span>
-<span id="cb224-8"><a href="#cb224-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_abline</span>(<span class="at">intercept =</span> <span class="dv">0</span>, <span class="at">slope =</span> <span class="dv">1</span>, <span class="at">linetype =</span> <span class="st">"dashed"</span>, <span class="at">color =</span> <span class="st">"blue"</span>)</span>
-<span id="cb224-9"><a href="#cb224-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb224-10"><a href="#cb224-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Visualize Plot</span></span>
-<span id="cb224-11"><a href="#cb224-11" aria-hidden="true" tabindex="-1"></a>roc2a</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Project_3_Predictive_Modelling_files/figure-html/unnamed-chunk-117-1.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
+<span id="cb224-8"><a href="#cb224-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_abline</span>(<span class="at">intercept =</span> <span class="dv">0</span>, <span class="at">slope =</span> <span class="dv">1</span>, <span class="at">linetype =</span> <span class="st">"dashed"</span>, <span class="at">color =</span> <span class="st">"blue"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>We can see that the ROC curve is very poor, near guessing.</p>
 </section>
@@ -5627,9 +5602,8 @@ Kidney Volume at Baseline and Txti2                                    </code></
 </div>
 <p>The difference in performance between models was not statistically significant (report AUC’s and 95% CI’s here)</p>
 </section>
-</section>
-<section id="results-1" class="level1">
-<h1>Results</h1>
+<section id="results-1" class="level2">
+<h2 class="anchored" data-anchor-id="results-1">Results</h2>
 <p>Table 2. Results of Pairwise T-Tests Comparing Model Performance Predicting Disease Progression using AUC</p>
 <table class="caption-top table">
 <colgroup>
@@ -5670,15 +5644,31 @@ Kidney Volume at Baseline and Txti2                                    </code></
 </tr>
 </tbody>
 </table>
-<section id="discussion" class="level2">
-<h2 class="anchored" data-anchor-id="discussion">Discussion</h2>
-<p>The model using <code>txti2</code> alone performed better at predicting disease progression than the model using <code>kidvol_base</code> alone (AUC = , 95% CI: <em>,</em>). However, this difference was not statistically significant (p = ___).</p>
-<p>Additionally, the model incorporating both <code>txti2</code> and <code>kidvol_base</code> did not perform better than the model using just <code>txti</code> (AUC = , 95% CI: )</p>
+</section>
+<section id="summary-27" class="level2">
+<h2 class="anchored" data-anchor-id="summary-27">Summary</h2>
+<p>The model using <code>txti2</code> alone performed better at predicting disease progression than the model using <code>kidvol_base</code> alone. However, this difference was not statistically significant.</p>
+<p>Additionally, the model incorporating both <code>txti2</code> and <code>kidvol_base</code> did not perform better than the model using just <code>txti</code>.</p>
 <p>However, examining the ROC curves and the 95% CIs for all of the models, it does appear that there is a trend towards these difference being significant. It is possible that these may have not been statistically significant due to a small sample size (N = 67).</p>
 </section>
 </section>
-<section id="roc-curve-3" class="level1">
-<h1>ROC Curve</h1>
+<section id="results-2" class="level1">
+<h1>Results</h1>
+<section id="predicting-height-corrected-kidney-volume" class="level4">
+<h4 class="anchored" data-anchor-id="predicting-height-corrected-kidney-volume">Predicting Height-Corrected Kidney Volume</h4>
+<p>To evaluate whether differences in model performance were statistically significant, RMSE for each model were compared using pairwise t-tests with Bonferroni correction for p-values. The differences in model performance were not statistically significant (see Table 1 and Figure 1). Model A (Baseline only) had a 0.37 higher RMSE compared to model B (Txti2 only) (p = 0.68), and a 0.38 higher RMSE compared to model C (Mixed) (p = 0.75).</p>
+<p><img src="images/clipboard-2391200633.png" class="img-fluid"></p>
+<p><img src="images/clipboard-3668317329.png" class="img-fluid"></p>
+<p><img src="images/clipboard-2980058113.png" class="img-fluid"></p>
+</section>
+<section id="predicting-disease-progression" class="level4">
+<h4 class="anchored" data-anchor-id="predicting-disease-progression">Predicting Disease Progression</h4>
+<p>To evaluate whether differences in model performance were statistically significant, AUC for each model was compared using pairwise t-test with Bonferroni correction for p-values, and ROC curves for each model were plotted (see Table 2 and Figures 2, 3). The models using Txti2 alone (AUC = 0.74), or Txti2 and baseline kidney volume (AUC= 0.71), performed better at predicting disease progression speed than the model using baseline kidney volume alone (AUC 0.47). However, these differences were not statistically significant (p &gt; 0.05).</p>
+<p><img src="images/clipboard-1453485702.png" class="img-fluid"></p>
+<p><img src="images/clipboard-3181863504.png" class="img-fluid"></p>
+</section>
+<section id="roc-curves" class="level2">
+<h2 class="anchored" data-anchor-id="roc-curves">ROC Curves</h2>
 <p><a href="https://www.r-project.org/conferences/useR-2013/Tutorials/kuhn/user_caret_2up.pdf">Source</a></p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb261"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb261-1"><a href="#cb261-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Example Data: Combine predictions into a single data frame</span></span>
@@ -5691,225 +5681,21 @@ Kidney Volume at Baseline and Txti2                                    </code></
 <span id="cb261-8"><a href="#cb261-8" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb261-9"><a href="#cb261-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Melt the data frame for ggplot</span></span>
 <span id="cb261-10"><a href="#cb261-10" aria-hidden="true" tabindex="-1"></a>data_melted <span class="ot">&lt;-</span> <span class="fu">melt</span>(data_for_ROC, <span class="at">id.vars =</span> <span class="st">"progression_num"</span>, <span class="at">variable.name =</span> <span class="st">"model"</span>, <span class="at">value.name =</span> <span class="st">"predictions"</span>)</span>
-<span id="cb261-11"><a href="#cb261-11" aria-hidden="true" tabindex="-1"></a>data_melted</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>    progression_num                            model predictions
-1                 0           Baseline.Kidney.Volume  -0.4708250
-2                 1           Baseline.Kidney.Volume  -0.5426931
-3                 0           Baseline.Kidney.Volume  -0.4741579
-4                 0           Baseline.Kidney.Volume  -0.5037401
-5                 1           Baseline.Kidney.Volume  -0.4944109
-6                 1           Baseline.Kidney.Volume  -0.4743575
-7                 0           Baseline.Kidney.Volume  -0.4710415
-8                 1           Baseline.Kidney.Volume  -0.5131325
-9                 0           Baseline.Kidney.Volume  -0.4958481
-10                0           Baseline.Kidney.Volume  -0.4862022
-11                1           Baseline.Kidney.Volume  -0.5149378
-12                0           Baseline.Kidney.Volume  -0.4846839
-13                1           Baseline.Kidney.Volume  -0.4593843
-14                1           Baseline.Kidney.Volume  -0.5179154
-15                0           Baseline.Kidney.Volume  -0.5375431
-16                0           Baseline.Kidney.Volume  -0.4948956
-17                0           Baseline.Kidney.Volume  -0.5208797
-18                1           Baseline.Kidney.Volume  -0.4657490
-19                0           Baseline.Kidney.Volume  -0.5168770
-20                1           Baseline.Kidney.Volume  -0.4827843
-21                1           Baseline.Kidney.Volume  -0.4616175
-22                1           Baseline.Kidney.Volume  -0.4889402
-23                1           Baseline.Kidney.Volume  -0.4863510
-24                1           Baseline.Kidney.Volume  -0.5146425
-25                0           Baseline.Kidney.Volume  -0.4779754
-26                1           Baseline.Kidney.Volume  -0.5036430
-27                1           Baseline.Kidney.Volume  -0.4991254
-28                0           Baseline.Kidney.Volume  -0.4816340
-29                1           Baseline.Kidney.Volume  -0.5162409
-30                0           Baseline.Kidney.Volume  -0.5078840
-31                0           Baseline.Kidney.Volume  -0.4816340
-32                0           Baseline.Kidney.Volume  -0.4735533
-33                0           Baseline.Kidney.Volume  -0.4883789
-34                1           Baseline.Kidney.Volume  -0.4875221
-35                0           Baseline.Kidney.Volume  -0.5010345
-36                0           Baseline.Kidney.Volume  -0.5384967
-37                0           Baseline.Kidney.Volume  -0.4729396
-38                0           Baseline.Kidney.Volume  -0.4714709
-39                0           Baseline.Kidney.Volume  -0.4818003
-40                1           Baseline.Kidney.Volume  -0.5041260
-41                1           Baseline.Kidney.Volume  -0.5188612
-42                1           Baseline.Kidney.Volume  -0.4710415
-43                0           Baseline.Kidney.Volume  -0.5150847
-44                0           Baseline.Kidney.Volume  -0.4982473
-45                1           Baseline.Kidney.Volume  -0.4718960
-46                0           Baseline.Kidney.Volume  -0.5232238
-47                1           Baseline.Kidney.Volume  -0.5118033
-48                0           Baseline.Kidney.Volume  -0.4818003
-49                1           Baseline.Kidney.Volume  -0.5051689
-50                1           Baseline.Kidney.Volume  -0.4946540
-51                1           Baseline.Kidney.Volume  -0.4936729
-52                0           Baseline.Kidney.Volume  -0.4829460
-53                0           Baseline.Kidney.Volume  -0.4729396
-54                0           Baseline.Kidney.Volume  -0.4794080
-55                1           Baseline.Kidney.Volume  -0.4751461
-56                1           Baseline.Kidney.Volume  -0.4944109
-57                1           Baseline.Kidney.Volume  -0.4899045
-58                1           Baseline.Kidney.Volume  -0.4774249
-59                0           Baseline.Kidney.Volume  -0.4873775
-60                1           Baseline.Kidney.Volume  -0.4541919
-61                0           Baseline.Kidney.Volume  -0.4845290
-62                0           Baseline.Kidney.Volume  -0.5059108
-63                1           Baseline.Kidney.Volume  -0.4743575
-64                1           Baseline.Kidney.Volume  -0.4982473
-65                0           Baseline.Kidney.Volume  -0.5144196
-66                1           Baseline.Kidney.Volume  -0.4716840
-67                1           Baseline.Kidney.Volume  -0.4905795
-68                0                            Txti2  -0.5579399
-69                1                            Txti2  -0.5686805
-70                0                            Txti2  -0.6669021
-71                0                            Txti2  -0.5190688
-72                1                            Txti2  -0.5037407
-73                1                            Txti2  -0.4219741
-74                0                            Txti2  -0.6596017
-75                1                            Txti2  -0.5785179
-76                0                            Txti2  -0.5599739
-77                0                            Txti2  -0.4081948
-78                1                            Txti2  -0.2130124
-79                0                            Txti2  -0.3154345
-80                1                            Txti2  -0.7537647
-81                1                            Txti2  -0.4634235
-82                0                            Txti2  -0.6561340
-83                0                            Txti2  -0.2772118
-84                0                            Txti2  -0.4243647
-85                1                            Txti2  -0.2585929
-86                0                            Txti2  -0.7678605
-87                1                            Txti2  -0.3127572
-88                1                            Txti2  -0.5986122
-89                1                            Txti2  -0.5864381
-90                1                            Txti2  -0.4709304
-91                1                            Txti2  -0.3029938
-92                0                            Txti2  -0.8536952
-93                1                            Txti2  -0.5561946
-94                1                            Txti2  -0.1193335
-95                0                            Txti2  -0.5771956
-96                1                            Txti2  -0.3487426
-97                0                            Txti2  -0.6479752
-98                0                            Txti2  -0.7352142
-99                0                            Txti2  -0.8307550
-100               0                            Txti2  -0.4736156
-101               1                            Txti2  -0.2134181
-102               0                            Txti2  -0.1961383
-103               0                            Txti2  -0.5904161
-104               0                            Txti2  -0.2963898
-105               0                            Txti2  -0.7129740
-106               0                            Txti2  -0.4184794
-107               1                            Txti2  -0.4788465
-108               1                            Txti2  -0.3100347
-109               1                            Txti2  -0.4107947
-110               0                            Txti2  -0.4364813
-111               0                            Txti2  -0.3447281
-112               1                            Txti2  -0.5674375
-113               0                            Txti2  -0.5158655
-114               1                            Txti2  -0.3467816
-115               0                            Txti2  -0.7977138
-116               1                            Txti2  -0.1865114
-117               1                            Txti2  -0.4833467
-118               1                            Txti2  -0.4140986
-119               0                            Txti2  -0.3782038
-120               0                            Txti2  -0.9079266
-121               0                            Txti2  -0.7156976
-122               1                            Txti2  -0.5883474
-123               1                            Txti2  -0.3349340
-124               1                            Txti2  -0.6160527
-125               1                            Txti2  -0.3023118
-126               0                            Txti2  -0.6108341
-127               1                            Txti2  -0.6947496
-128               0                            Txti2  -0.4170650
-129               0                            Txti2  -0.4685747
-130               1                            Txti2  -0.6831324
-131               1                            Txti2  -0.2919089
-132               0                            Txti2  -0.6213693
-133               1                            Txti2  -0.3417460
-134               1                            Txti2  -0.3178433
-135               0 Baseline.Kidney.Volume.and.Txti2  -0.4864176
-136               1 Baseline.Kidney.Volume.and.Txti2  -0.7302954
-137               0 Baseline.Kidney.Volume.and.Txti2  -0.6199067
-138               0 Baseline.Kidney.Volume.and.Txti2  -0.5587957
-139               1 Baseline.Kidney.Volume.and.Txti2  -0.5100471
-140               1 Baseline.Kidney.Volume.and.Txti2  -0.3555850
-141               0 Baseline.Kidney.Volume.and.Txti2  -0.6011813
-142               1 Baseline.Kidney.Volume.and.Txti2  -0.6516013
-143               0 Baseline.Kidney.Volume.and.Txti2  -0.5753506
-144               0 Baseline.Kidney.Volume.and.Txti2  -0.3798051
-145               1 Baseline.Kidney.Volume.and.Txti2  -0.2502591
-146               0 Baseline.Kidney.Volume.and.Txti2  -0.2796909
-147               1 Baseline.Kidney.Volume.and.Txti2  -0.6769094
-148               1 Baseline.Kidney.Volume.and.Txti2  -0.5483220
-149               0 Baseline.Kidney.Volume.and.Txti2  -0.7895103
-150               0 Baseline.Kidney.Volume.and.Txti2  -0.2686962
-151               0 Baseline.Kidney.Volume.and.Txti2  -0.5161864
-152               1 Baseline.Kidney.Volume.and.Txti2  -0.1808739
-153               0 Baseline.Kidney.Volume.and.Txti2  -0.8355630
-154               1 Baseline.Kidney.Volume.and.Txti2  -0.2717267
-155               1 Baseline.Kidney.Volume.and.Txti2  -0.4991188
-156               1 Baseline.Kidney.Volume.and.Txti2  -0.5802884
-157               1 Baseline.Kidney.Volume.and.Txti2  -0.4467892
-158               1 Baseline.Kidney.Volume.and.Txti2  -0.3563801
-159               0 Baseline.Kidney.Volume.and.Txti2  -0.8448104
-160               1 Baseline.Kidney.Volume.and.Txti2  -0.5976882
-161               1 Baseline.Kidney.Volume.and.Txti2  -0.1127666
-162               0 Baseline.Kidney.Volume.and.Txti2  -0.5451613
-163               1 Baseline.Kidney.Volume.and.Txti2  -0.4147755
-164               0 Baseline.Kidney.Volume.and.Txti2  -0.7045278
-165               0 Baseline.Kidney.Volume.and.Txti2  -0.7202583
-166               0 Baseline.Kidney.Volume.and.Txti2  -0.8094584
-167               0 Baseline.Kidney.Volume.and.Txti2  -0.4566661
-168               1 Baseline.Kidney.Volume.and.Txti2  -0.1859143
-169               0 Baseline.Kidney.Volume.and.Txti2  -0.1973765
-170               0 Baseline.Kidney.Volume.and.Txti2  -0.7375620
-171               0 Baseline.Kidney.Volume.and.Txti2  -0.2303064
-172               0 Baseline.Kidney.Volume.and.Txti2  -0.6645993
-173               0 Baseline.Kidney.Volume.and.Txti2  -0.3761074
-174               1 Baseline.Kidney.Volume.and.Txti2  -0.5170658
-175               1 Baseline.Kidney.Volume.and.Txti2  -0.3783446
-176               1 Baseline.Kidney.Volume.and.Txti2  -0.3339276
-177               0 Baseline.Kidney.Volume.and.Txti2  -0.5092828
-178               0 Baseline.Kidney.Volume.and.Txti2  -0.3511072
-179               1 Baseline.Kidney.Volume.and.Txti2  -0.5005498
-180               0 Baseline.Kidney.Volume.and.Txti2  -0.6210977
-181               1 Baseline.Kidney.Volume.and.Txti2  -0.3976041
-182               0 Baseline.Kidney.Volume.and.Txti2  -0.7901595
-183               1 Baseline.Kidney.Volume.and.Txti2  -0.1958910
-184               1 Baseline.Kidney.Volume.and.Txti2  -0.4889271
-185               1 Baseline.Kidney.Volume.and.Txti2  -0.4109689
-186               0 Baseline.Kidney.Volume.and.Txti2  -0.3382240
-187               0 Baseline.Kidney.Volume.and.Txti2  -0.8992747
-188               0 Baseline.Kidney.Volume.and.Txti2  -0.6919198
-189               1 Baseline.Kidney.Volume.and.Txti2  -0.5349309
-190               1 Baseline.Kidney.Volume.and.Txti2  -0.3285698
-191               1 Baseline.Kidney.Volume.and.Txti2  -0.6154965
-192               1 Baseline.Kidney.Volume.and.Txti2  -0.2472167
-193               0 Baseline.Kidney.Volume.and.Txti2  -0.6014578
-194               1 Baseline.Kidney.Volume.and.Txti2  -0.5860156
-195               0 Baseline.Kidney.Volume.and.Txti2  -0.3835996
-196               0 Baseline.Kidney.Volume.and.Txti2  -0.5121956
-197               1 Baseline.Kidney.Volume.and.Txti2  -0.6391399
-198               1 Baseline.Kidney.Volume.and.Txti2  -0.2938461
-199               0 Baseline.Kidney.Volume.and.Txti2  -0.6977182
-200               1 Baseline.Kidney.Volume.and.Txti2  -0.2691338
-201               1 Baseline.Kidney.Volume.and.Txti2  -0.2990560</code></pre>
-</div>
-<div class="sourceCode cell-code" id="cb263"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb263-1"><a href="#cb263-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot ROC Curves</span></span>
-<span id="cb263-2"><a href="#cb263-2" aria-hidden="true" tabindex="-1"></a>roc_plot <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(data_melted, <span class="fu">aes</span>(<span class="at">m =</span> predictions, <span class="at">d =</span> progression_num, <span class="at">color =</span> model)) <span class="sc">+</span></span>
-<span id="cb263-3"><a href="#cb263-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_roc</span>(<span class="at">n.cuts =</span> <span class="dv">10</span>, <span class="at">labels =</span> <span class="cn">FALSE</span>, <span class="at">labelround =</span> <span class="dv">4</span>) <span class="sc">+</span></span>
-<span id="cb263-4"><a href="#cb263-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
-<span id="cb263-5"><a href="#cb263-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"ROC Curves for Models Predicting Kidney Disease Progression"</span>,</span>
-<span id="cb263-6"><a href="#cb263-6" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="st">"False Positive Rate"</span>,</span>
-<span id="cb263-7"><a href="#cb263-7" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">"True Positive Rate"</span>,</span>
-<span id="cb263-8"><a href="#cb263-8" aria-hidden="true" tabindex="-1"></a>       <span class="at">color =</span> <span class="st">"Model"</span>) <span class="sc">+</span></span>
-<span id="cb263-9"><a href="#cb263-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_abline</span>(<span class="at">intercept =</span> <span class="dv">0</span>, <span class="at">slope =</span> <span class="dv">1</span>, <span class="at">linetype =</span> <span class="st">"dashed"</span>, <span class="at">color =</span> <span class="st">"black"</span>) <span class="sc">+</span></span>
-<span id="cb263-10"><a href="#cb263-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_color_brewer</span>(<span class="at">palette =</span> <span class="st">"Set2"</span>) <span class="sc">+</span></span>
-<span id="cb263-11"><a href="#cb263-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>( <span class="at">text =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">15</span>))</span>
-<span id="cb263-12"><a href="#cb263-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb263-13"><a href="#cb263-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Visualize Plot</span></span>
-<span id="cb263-14"><a href="#cb263-14" aria-hidden="true" tabindex="-1"></a>roc_plot</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb261-11"><a href="#cb261-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb261-12"><a href="#cb261-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot ROC Curves</span></span>
+<span id="cb261-13"><a href="#cb261-13" aria-hidden="true" tabindex="-1"></a>roc_plot <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(data_melted, <span class="fu">aes</span>(<span class="at">m =</span> predictions, <span class="at">d =</span> progression_num, <span class="at">color =</span> model)) <span class="sc">+</span></span>
+<span id="cb261-14"><a href="#cb261-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_roc</span>(<span class="at">n.cuts =</span> <span class="dv">10</span>, <span class="at">labels =</span> <span class="cn">FALSE</span>, <span class="at">labelround =</span> <span class="dv">4</span>) <span class="sc">+</span></span>
+<span id="cb261-15"><a href="#cb261-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb261-16"><a href="#cb261-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"ROC Curves for Models Predicting Kidney Disease Progression"</span>,</span>
+<span id="cb261-17"><a href="#cb261-17" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="st">"False Positive Rate"</span>,</span>
+<span id="cb261-18"><a href="#cb261-18" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">"True Positive Rate"</span>,</span>
+<span id="cb261-19"><a href="#cb261-19" aria-hidden="true" tabindex="-1"></a>       <span class="at">color =</span> <span class="st">"Model"</span>) <span class="sc">+</span></span>
+<span id="cb261-20"><a href="#cb261-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_abline</span>(<span class="at">intercept =</span> <span class="dv">0</span>, <span class="at">slope =</span> <span class="dv">1</span>, <span class="at">linetype =</span> <span class="st">"dashed"</span>, <span class="at">color =</span> <span class="st">"black"</span>) <span class="sc">+</span></span>
+<span id="cb261-21"><a href="#cb261-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_color_brewer</span>(<span class="at">palette =</span> <span class="st">"Set2"</span>) <span class="sc">+</span></span>
+<span id="cb261-22"><a href="#cb261-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>( <span class="at">text =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">15</span>))</span>
+<span id="cb261-23"><a href="#cb261-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb261-24"><a href="#cb261-24" aria-hidden="true" tabindex="-1"></a><span class="co"># Visualize Plot</span></span>
+<span id="cb261-25"><a href="#cb261-25" aria-hidden="true" tabindex="-1"></a>roc_plot</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -5919,768 +5705,20 @@ Kidney Volume at Baseline and Txti2                                    </code></
 </div>
 </div>
 </section>
-<section id="discussion-1" class="level1">
+</section>
+<section id="discussion" class="level1">
 <h1>Discussion</h1>
-<p>Using linear regression to answer task one, there appeared to not be much of a difference between models.</p>
-<p>However when performing logistic regression, there appeared to be a difference in perforamance between models. Specifically using the MRI image feature of <code>txti2</code> increase accuracy, specificity, and sensitivty over that of just using baseline kidney volume alone. While this difference was not statistically, this may have been due to a small sample size.</p>
-<p>The statisticians recommend collecting more data.</p>
-<p>Add details here about how using <code>txti2</code> in conjunction with other strong predictors of ADPKD such as hypertension, elevated serum creatinine, sex could be incorporated into a single model to enhance predictive power.</p>
-</section>
-<section id="bivariate-comparisons" class="level1">
-<h1>Bivariate Comparisons</h1>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb264"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb264-1"><a href="#cb264-1" aria-hidden="true" tabindex="-1"></a>data <span class="sc">|&gt;</span> </span>
-<span id="cb264-2"><a href="#cb264-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(lbp5)) <span class="sc">|&gt;</span> </span>
-<span id="cb264-3"><a href="#cb264-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">head</span>() <span class="sc">|&gt;</span> </span>
-<span id="cb264-4"><a href="#cb264-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pretty_print</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output-display">
-<table class="table table-striped table-hover table-condensed caption-top table-sm small" data-quarto-postprocess="true">
-<thead>
-<tr class="header">
-<th style="text-align: right;" data-quarto-table-cell-role="th">Subject_ID</th>
-<th style="text-align: right;" data-quarto-table-cell-role="th">geom1</th>
-<th style="text-align: right;" data-quarto-table-cell-role="th">geom2</th>
-<th style="text-align: right;" data-quarto-table-cell-role="th">gabor1</th>
-<th style="text-align: right;" data-quarto-table-cell-role="th">gabor2</th>
-<th style="text-align: right;" data-quarto-table-cell-role="th">gabor3</th>
-<th style="text-align: right;" data-quarto-table-cell-role="th">gabor4</th>
-<th style="text-align: right;" data-quarto-table-cell-role="th">gabor5</th>
-<th style="text-align: right;" data-quarto-table-cell-role="th">glcm1</th>
-<th style="text-align: right;" data-quarto-table-cell-role="th">glcm2</th>
-<th style="text-align: right;" data-quarto-table-cell-role="th">txti1</th>
-<th style="text-align: right;" data-quarto-table-cell-role="th">txti2</th>
-<th style="text-align: right;" data-quarto-table-cell-role="th">txti3</th>
-<th style="text-align: right;" data-quarto-table-cell-role="th">txti4</th>
-<th style="text-align: right;" data-quarto-table-cell-role="th">txti5</th>
-<th style="text-align: right;" data-quarto-table-cell-role="th">lbp1</th>
-<th style="text-align: right;" data-quarto-table-cell-role="th">lbp2</th>
-<th style="text-align: right;" data-quarto-table-cell-role="th">lbp3</th>
-<th style="text-align: right;" data-quarto-table-cell-role="th">lbp4</th>
-<th style="text-align: right;" data-quarto-table-cell-role="th">lbp5</th>
-<th style="text-align: right;" data-quarto-table-cell-role="th">kidvol_base</th>
-<th style="text-align: right;" data-quarto-table-cell-role="th">kidvol_visit2</th>
-<th style="text-align: left;" data-quarto-table-cell-role="th">progression</th>
-<th style="text-align: right;" data-quarto-table-cell-role="th">kidvol_change</th>
-<th style="text-align: left;" data-quarto-table-cell-role="th">fold_number</th>
-<th style="text-align: right;" data-quarto-table-cell-role="th">predictions1a</th>
-<th style="text-align: right;" data-quarto-table-cell-role="th">residuals1a</th>
-<th style="text-align: right;" data-quarto-table-cell-role="th">gabor3_scale</th>
-<th style="text-align: right;" data-quarto-table-cell-role="th">txti2_scale</th>
-<th style="text-align: right;" data-quarto-table-cell-role="th">glcm2_square</th>
-<th style="text-align: right;" data-quarto-table-cell-role="th">glcm2_square_scale</th>
-<th style="text-align: right;" data-quarto-table-cell-role="th">lbp5_log_scale</th>
-<th style="text-align: right;" data-quarto-table-cell-role="th">geom_avg_scale</th>
-<th style="text-align: right;" data-quarto-table-cell-role="th">predictions1b</th>
-<th style="text-align: right;" data-quarto-table-cell-role="th">residuals1b</th>
-<th style="text-align: right;" data-quarto-table-cell-role="th">predictions1b2</th>
-<th style="text-align: right;" data-quarto-table-cell-role="th">residuals1b2</th>
-<th style="text-align: right;" data-quarto-table-cell-role="th">predictions1c</th>
-<th style="text-align: right;" data-quarto-table-cell-role="th">residuals1c</th>
-<th style="text-align: right;" data-quarto-table-cell-role="th">progression_num</th>
-<th style="text-align: left;" data-quarto-table-cell-role="th">predictions2a</th>
-<th style="text-align: right;" data-quarto-table-cell-role="th">predictions2a_prob</th>
-<th style="text-align: right;" data-quarto-table-cell-role="th">predictions2a_num</th>
-<th style="text-align: left;" data-quarto-table-cell-role="th">predictions2b</th>
-<th style="text-align: right;" data-quarto-table-cell-role="th">predictions2b_prob</th>
-<th style="text-align: right;" data-quarto-table-cell-role="th">predictions2b_num</th>
-<th style="text-align: right;" data-quarto-table-cell-role="th">geom_avg</th>
-<th style="text-align: left;" data-quarto-table-cell-role="th">predictions2b_sat</th>
-<th style="text-align: right;" data-quarto-table-cell-role="th">predictions2b_prob_sat</th>
-<th style="text-align: right;" data-quarto-table-cell-role="th">predictions2b_num_sat</th>
-<th style="text-align: left;" data-quarto-table-cell-role="th">predictions2c</th>
-<th style="text-align: right;" data-quarto-table-cell-role="th">predictions2c_prob</th>
-<th style="text-align: right;" data-quarto-table-cell-role="th">predictions2c_num</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: right;">29</td>
-<td style="text-align: right;">99.01753</td>
-<td style="text-align: right;">9804.4722</td>
-<td style="text-align: right;">-0.0967480</td>
-<td style="text-align: right;">-0.1348293</td>
-<td style="text-align: right;">0.0130445</td>
-<td style="text-align: right;">0.0093602</td>
-<td style="text-align: right;">0.0181789</td>
-<td style="text-align: right;">-836.17879</td>
-<td style="text-align: right;">699194.9728</td>
-<td style="text-align: right;">-0.9002584</td>
-<td style="text-align: right;">-2.4015620</td>
-<td style="text-align: right;">2.162026</td>
-<td style="text-align: right;">0.8104653</td>
-<td style="text-align: right;">5.7674999</td>
-<td style="text-align: right;">-0.1323868</td>
-<td style="text-align: right;">-1.298322</td>
-<td style="text-align: right;">0.1718807</td>
-<td style="text-align: right;">0.0175263</td>
-<td style="text-align: right;">1.685640</td>
-<td style="text-align: right;">640</td>
-<td style="text-align: right;">780</td>
-<td style="text-align: left;">Slow</td>
-<td style="text-align: right;">7.29</td>
-<td style="text-align: left;">Fold5</td>
-<td style="text-align: right;">7.282365</td>
-<td style="text-align: right;">0.0076352</td>
-<td style="text-align: right;">0.833390670</td>
-<td style="text-align: right;">-0.34748532</td>
-<td style="text-align: right;">488873609988.8</td>
-<td style="text-align: right;">-0.3420917</td>
-<td style="text-align: right;">1.175116</td>
-<td style="text-align: right;">0.64458410</td>
-<td style="text-align: right;">10.016880</td>
-<td style="text-align: right;">-2.726880</td>
-<td style="text-align: right;">9.097001</td>
-<td style="text-align: right;">-1.8070008</td>
-<td style="text-align: right;">7.625596</td>
-<td style="text-align: right;">-0.3355962</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: left;">Slow</td>
-<td style="text-align: right;">0.4791203</td>
-<td style="text-align: right;">-0.5208797</td>
-<td style="text-align: left;">Fast</td>
-<td style="text-align: right;">0.5756353</td>
-<td style="text-align: right;">-0.4243647</td>
-<td style="text-align: right;">5001.2536</td>
-<td style="text-align: left;">Fast</td>
-<td style="text-align: right;">0.5104553</td>
-<td style="text-align: right;">-0.4895447</td>
-<td style="text-align: left;">Slow</td>
-<td style="text-align: right;">0.4838136</td>
-<td style="text-align: right;">-0.5161864</td>
-</tr>
-<tr class="even">
-<td style="text-align: right;">49</td>
-<td style="text-align: right;">-27.09583</td>
-<td style="text-align: right;">734.1840</td>
-<td style="text-align: right;">0.0060605</td>
-<td style="text-align: right;">-0.0091584</td>
-<td style="text-align: right;">-0.0000555</td>
-<td style="text-align: right;">0.0000367</td>
-<td style="text-align: right;">0.0000839</td>
-<td style="text-align: right;">19.99586</td>
-<td style="text-align: right;">399.8344</td>
-<td style="text-align: right;">-5.8350075</td>
-<td style="text-align: right;">6.4954341</td>
-<td style="text-align: right;">-37.900906</td>
-<td style="text-align: right;">34.0473126</td>
-<td style="text-align: right;">42.1906635</td>
-<td style="text-align: right;">1.3632157</td>
-<td style="text-align: right;">-1.216510</td>
-<td style="text-align: right;">-1.6583658</td>
-<td style="text-align: right;">1.8583569</td>
-<td style="text-align: right;">1.479897</td>
-<td style="text-align: right;">204</td>
-<td style="text-align: right;">303</td>
-<td style="text-align: left;">Fast</td>
-<td style="text-align: right;">16.09</td>
-<td style="text-align: left;">Fold2</td>
-<td style="text-align: right;">10.697444</td>
-<td style="text-align: right;">5.3925564</td>
-<td style="text-align: right;">-0.003545814</td>
-<td style="text-align: right;">0.93983332</td>
-<td style="text-align: right;">159867.6</td>
-<td style="text-align: right;">-0.4078754</td>
-<td style="text-align: right;">1.123806</td>
-<td style="text-align: right;">-0.16754848</td>
-<td style="text-align: right;">6.975870</td>
-<td style="text-align: right;">9.114130</td>
-<td style="text-align: right;">6.442775</td>
-<td style="text-align: right;">9.6472254</td>
-<td style="text-align: right;">7.211089</td>
-<td style="text-align: right;">8.8789114</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: left;">Fast</td>
-<td style="text-align: right;">0.5256425</td>
-<td style="text-align: right;">-0.4743575</td>
-<td style="text-align: left;">Slow</td>
-<td style="text-align: right;">0.3168676</td>
-<td style="text-align: right;">-0.6831324</td>
-<td style="text-align: right;">339.9962</td>
-<td style="text-align: left;">Slow</td>
-<td style="text-align: right;">0.2494136</td>
-<td style="text-align: right;">-0.7505864</td>
-<td style="text-align: left;">Slow</td>
-<td style="text-align: right;">0.3608601</td>
-<td style="text-align: right;">-0.6391399</td>
-</tr>
-<tr class="odd">
-<td style="text-align: right;">50</td>
-<td style="text-align: right;">33.36150</td>
-<td style="text-align: right;">1112.9900</td>
-<td style="text-align: right;">-0.1270457</td>
-<td style="text-align: right;">-0.0812793</td>
-<td style="text-align: right;">0.0103262</td>
-<td style="text-align: right;">0.0161406</td>
-<td style="text-align: right;">0.0066063</td>
-<td style="text-align: right;">1063.37433</td>
-<td style="text-align: right;">1130764.9750</td>
-<td style="text-align: right;">-26.0477722</td>
-<td style="text-align: right;">0.2502787</td>
-<td style="text-align: right;">-6.519202</td>
-<td style="text-align: right;">678.4864381</td>
-<td style="text-align: right;">0.0626394</td>
-<td style="text-align: right;">0.5581614</td>
-<td style="text-align: right;">-1.161650</td>
-<td style="text-align: right;">-0.6483883</td>
-<td style="text-align: right;">0.3115442</td>
-<td style="text-align: right;">1.349431</td>
-<td style="text-align: right;">334</td>
-<td style="text-align: right;">583</td>
-<td style="text-align: left;">Fast</td>
-<td style="text-align: right;">24.77</td>
-<td style="text-align: left;">Fold1</td>
-<td style="text-align: right;">9.224834</td>
-<td style="text-align: right;">15.5451660</td>
-<td style="text-align: right;">0.659723945</td>
-<td style="text-align: right;">0.03621317</td>
-<td style="text-align: right;">1278629428686.8</td>
-<td style="text-align: right;">-0.2358207</td>
-<td style="text-align: right;">1.087429</td>
-<td style="text-align: right;">-0.12875721</td>
-<td style="text-align: right;">9.228772</td>
-<td style="text-align: right;">15.541228</td>
-<td style="text-align: right;">8.305881</td>
-<td style="text-align: right;">16.4641185</td>
-<td style="text-align: right;">8.191333</td>
-<td style="text-align: right;">16.5786669</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: left;">Fast</td>
-<td style="text-align: right;">0.5055891</td>
-<td style="text-align: right;">-0.4944109</td>
-<td style="text-align: left;">Slow</td>
-<td style="text-align: right;">0.4962593</td>
-<td style="text-align: right;">-0.5037407</td>
-<td style="text-align: right;">589.8565</td>
-<td style="text-align: left;">Slow</td>
-<td style="text-align: right;">0.4367694</td>
-<td style="text-align: right;">-0.5632306</td>
-<td style="text-align: left;">Slow</td>
-<td style="text-align: right;">0.4899529</td>
-<td style="text-align: right;">-0.5100471</td>
-</tr>
-<tr class="even">
-<td style="text-align: right;">9</td>
-<td style="text-align: right;">-24.20654</td>
-<td style="text-align: right;">585.9565</td>
-<td style="text-align: right;">-0.0843726</td>
-<td style="text-align: right;">-0.0581341</td>
-<td style="text-align: right;">0.0049049</td>
-<td style="text-align: right;">0.0071187</td>
-<td style="text-align: right;">0.0033796</td>
-<td style="text-align: right;">-692.94653</td>
-<td style="text-align: right;">480174.8902</td>
-<td style="text-align: right;">10.6659293</td>
-<td style="text-align: right;">-7.8193680</td>
-<td style="text-align: right;">-83.400826</td>
-<td style="text-align: right;">113.7620469</td>
-<td style="text-align: right;">61.1425166</td>
-<td style="text-align: right;">1.0998956</td>
-<td style="text-align: right;">-1.088283</td>
-<td style="text-align: right;">-1.1969973</td>
-<td style="text-align: right;">1.2097704</td>
-<td style="text-align: right;">1.184359</td>
-<td style="text-align: right;">338</td>
-<td style="text-align: right;">362</td>
-<td style="text-align: left;">Slow</td>
-<td style="text-align: right;">2.30</td>
-<td style="text-align: left;">Fold4</td>
-<td style="text-align: right;">9.189275</td>
-<td style="text-align: right;">-6.8892751</td>
-<td style="text-align: right;">0.313368116</td>
-<td style="text-align: right;">-1.13139516</td>
-<td style="text-align: right;">230567925178.6</td>
-<td style="text-align: right;">-0.3768498</td>
-<td style="text-align: right;">1.035998</td>
-<td style="text-align: right;">-0.18038327</td>
-<td style="text-align: right;">11.650677</td>
-<td style="text-align: right;">-9.350677</td>
-<td style="text-align: right;">10.713286</td>
-<td style="text-align: right;">-8.4132859</td>
-<td style="text-align: right;">10.850035</td>
-<td style="text-align: right;">-8.5500350</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: left;">Fast</td>
-<td style="text-align: right;">0.5051044</td>
-<td style="text-align: right;">-0.4948956</td>
-<td style="text-align: left;">Fast</td>
-<td style="text-align: right;">0.7227882</td>
-<td style="text-align: right;">-0.2772118</td>
-<td style="text-align: right;">268.7717</td>
-<td style="text-align: left;">Fast</td>
-<td style="text-align: right;">0.6617155</td>
-<td style="text-align: right;">-0.3382845</td>
-<td style="text-align: left;">Fast</td>
-<td style="text-align: right;">0.7313038</td>
-<td style="text-align: right;">-0.2686962</td>
-</tr>
-<tr class="odd">
-<td style="text-align: right;">8</td>
-<td style="text-align: right;">41.75540</td>
-<td style="text-align: right;">1743.5133</td>
-<td style="text-align: right;">-0.4340978</td>
-<td style="text-align: right;">0.0061235</td>
-<td style="text-align: right;">-0.0026582</td>
-<td style="text-align: right;">0.1884409</td>
-<td style="text-align: right;">0.0000375</td>
-<td style="text-align: right;">-416.41953</td>
-<td style="text-align: right;">173405.2259</td>
-<td style="text-align: right;">-8.0969095</td>
-<td style="text-align: right;">10.0445332</td>
-<td style="text-align: right;">-81.329676</td>
-<td style="text-align: right;">65.5599435</td>
-<td style="text-align: right;">100.8926474</td>
-<td style="text-align: right;">-1.7843187</td>
-<td style="text-align: right;">1.079779</td>
-<td style="text-align: right;">-1.9266699</td>
-<td style="text-align: right;">3.1837934</td>
-<td style="text-align: right;">1.165923</td>
-<td style="text-align: right;">580</td>
-<td style="text-align: right;">657</td>
-<td style="text-align: left;">Slow</td>
-<td style="text-align: right;">4.40</td>
-<td style="text-align: left;">Fold2</td>
-<td style="text-align: right;">7.576397</td>
-<td style="text-align: right;">-3.1763965</td>
-<td style="text-align: right;">-0.169828761</td>
-<td style="text-align: right;">1.45335738</td>
-<td style="text-align: right;">30069372369.4</td>
-<td style="text-align: right;">-0.4038293</td>
-<td style="text-align: right;">1.029814</td>
-<td style="text-align: right;">-0.07233454</td>
-<td style="text-align: right;">5.813649</td>
-<td style="text-align: right;">-1.413649</td>
-<td style="text-align: right;">5.383978</td>
-<td style="text-align: right;">-0.9839777</td>
-<td style="text-align: right;">3.703308</td>
-<td style="text-align: right;">0.6966922</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: left;">Slow</td>
-<td style="text-align: right;">0.4831230</td>
-<td style="text-align: right;">-0.5168770</td>
-<td style="text-align: left;">Slow</td>
-<td style="text-align: right;">0.2321395</td>
-<td style="text-align: right;">-0.7678605</td>
-<td style="text-align: right;">913.5121</td>
-<td style="text-align: left;">Slow</td>
-<td style="text-align: right;">0.1795027</td>
-<td style="text-align: right;">-0.8204973</td>
-<td style="text-align: left;">Slow</td>
-<td style="text-align: right;">0.1644370</td>
-<td style="text-align: right;">-0.8355630</td>
-</tr>
-<tr class="even">
-<td style="text-align: right;">30</td>
-<td style="text-align: right;">-33.02185</td>
-<td style="text-align: right;">1090.4426</td>
-<td style="text-align: right;">0.0263439</td>
-<td style="text-align: right;">0.0911421</td>
-<td style="text-align: right;">0.0024010</td>
-<td style="text-align: right;">0.0006940</td>
-<td style="text-align: right;">0.0083069</td>
-<td style="text-align: right;">511.29651</td>
-<td style="text-align: right;">261424.1224</td>
-<td style="text-align: right;">11.9569384</td>
-<td style="text-align: right;">-2.6499008</td>
-<td style="text-align: right;">-31.684701</td>
-<td style="text-align: right;">142.9683769</td>
-<td style="text-align: right;">7.0219744</td>
-<td style="text-align: right;">-0.8565558</td>
-<td style="text-align: right;">1.025040</td>
-<td style="text-align: right;">-0.8780035</td>
-<td style="text-align: right;">0.7336879</td>
-<td style="text-align: right;">1.050706</td>
-<td style="text-align: right;">262</td>
-<td style="text-align: right;">310</td>
-<td style="text-align: left;">Slow</td>
-<td style="text-align: right;">6.12</td>
-<td style="text-align: left;">Fold5</td>
-<td style="text-align: right;">9.950045</td>
-<td style="text-align: right;">-3.8300454</td>
-<td style="text-align: right;">0.153398369</td>
-<td style="text-align: right;">-0.38341781</td>
-<td style="text-align: right;">68342571772.6</td>
-<td style="text-align: right;">-0.3986791</td>
-<td style="text-align: right;">0.988801</td>
-<td style="text-align: right;">-0.13661067</td>
-<td style="text-align: right;">9.946622</td>
-<td style="text-align: right;">-3.826622</td>
-<td style="text-align: right;">9.171087</td>
-<td style="text-align: right;">-3.0510873</td>
-<td style="text-align: right;">9.697040</td>
-<td style="text-align: right;">-3.5770404</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: left;">Fast</td>
-<td style="text-align: right;">0.5154710</td>
-<td style="text-align: right;">-0.4845290</td>
-<td style="text-align: left;">Fast</td>
-<td style="text-align: right;">0.5829350</td>
-<td style="text-align: right;">-0.4170650</td>
-<td style="text-align: right;">512.1995</td>
-<td style="text-align: left;">Fast</td>
-<td style="text-align: right;">0.5120246</td>
-<td style="text-align: right;">-0.4879754</td>
-<td style="text-align: left;">Fast</td>
-<td style="text-align: right;">0.6164004</td>
-<td style="text-align: right;">-0.3835996</td>
-</tr>
-</tbody>
-</table>
-
-
-</div>
-</div>
-<section id="scatterplots" class="level4">
-<h4 class="anchored" data-anchor-id="scatterplots">Scatterplots</h4>
-<p>Let’s make a function here that will make the scatterplots with the layout that we prefer.</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb265"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb265-1"><a href="#cb265-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Initialize empty list</span></span>
-<span id="cb265-2"><a href="#cb265-2" aria-hidden="true" tabindex="-1"></a>plots <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
-<span id="cb265-3"><a href="#cb265-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb265-4"><a href="#cb265-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Get column names of MRI features</span></span>
-<span id="cb265-5"><a href="#cb265-5" aria-hidden="true" tabindex="-1"></a>features_gabor <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"gabor1"</span>, <span class="st">"gabor2"</span>, <span class="st">"gabor3"</span>, <span class="st">"gabor4"</span>, <span class="st">"gabor5"</span>)</span>
-<span id="cb265-6"><a href="#cb265-6" aria-hidden="true" tabindex="-1"></a>features_geom <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"geom1"</span>, <span class="st">"geom2"</span>)</span>
-<span id="cb265-7"><a href="#cb265-7" aria-hidden="true" tabindex="-1"></a>features_glcm <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"glcm1"</span>, <span class="st">"glcm2"</span>)</span>
-<span id="cb265-8"><a href="#cb265-8" aria-hidden="true" tabindex="-1"></a>features_txti <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"txti1"</span>, <span class="st">"txti2"</span>, <span class="st">"txti3"</span>, <span class="st">"txti4"</span>, <span class="st">"txti5"</span>)</span>
-<span id="cb265-9"><a href="#cb265-9" aria-hidden="true" tabindex="-1"></a>features_lbp <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"lbp1"</span>, <span class="st">"lbp2"</span>, <span class="st">"lbp3"</span>, <span class="st">"lbp4"</span>, <span class="st">"lbp5"</span>)</span>
-<span id="cb265-10"><a href="#cb265-10" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb265-11"><a href="#cb265-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot scatterplots of each MRI feature against kidney volume change</span></span>
-<span id="cb265-12"><a href="#cb265-12" aria-hidden="true" tabindex="-1"></a>plot_features_against_outcome <span class="ot">&lt;-</span> <span class="cf">function</span>(features) {</span>
-<span id="cb265-13"><a href="#cb265-13" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (feature <span class="cf">in</span> features) {</span>
-<span id="cb265-14"><a href="#cb265-14" aria-hidden="true" tabindex="-1"></a>  p <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(data, <span class="fu">aes_string</span>(<span class="at">x =</span> feature, <span class="at">y =</span> <span class="st">"kidvol_change"</span>)) <span class="sc">+</span></span>
-<span id="cb265-15"><a href="#cb265-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_point</span>() <span class="sc">+</span></span>
-<span id="cb265-16"><a href="#cb265-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
-<span id="cb265-17"><a href="#cb265-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">labs</span>(<span class="at">title =</span> <span class="fu">paste</span>(feature),</span>
-<span id="cb265-18"><a href="#cb265-18" aria-hidden="true" tabindex="-1"></a>                       <span class="at">x =</span> feature,</span>
-<span id="cb265-19"><a href="#cb265-19" aria-hidden="true" tabindex="-1"></a>                       <span class="at">y =</span> <span class="st">"Kidney Volume Change (%)"</span>)</span>
-<span id="cb265-20"><a href="#cb265-20" aria-hidden="true" tabindex="-1"></a>    plots[[feature]] <span class="ot">&lt;-</span> p</span>
-<span id="cb265-21"><a href="#cb265-21" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb265-22"><a href="#cb265-22" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb265-23"><a href="#cb265-23" aria-hidden="true" tabindex="-1"></a><span class="co"># Combine all plots into a grid</span></span>
-<span id="cb265-24"><a href="#cb265-24" aria-hidden="true" tabindex="-1"></a>combined_plot <span class="ot">&lt;-</span> <span class="fu">wrap_plots</span>(plots, <span class="at">ncol =</span> <span class="dv">3</span>)</span>
-<span id="cb265-25"><a href="#cb265-25" aria-hidden="true" tabindex="-1"></a>combined_plot</span>
-<span id="cb265-26"><a href="#cb265-26" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-</section>
-<section id="gabor-transform-3" class="level3">
-<h3 class="anchored" data-anchor-id="gabor-transform-3">Gabor Transform</h3>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb266"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb266-1"><a href="#cb266-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot features against total change in kidney volume</span></span>
-<span id="cb266-2"><a href="#cb266-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_features_against_outcome</span>(features_gabor)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Project_3_Predictive_Modelling_files/figure-html/unnamed-chunk-130-1.png" class="img-fluid figure-img" width="768"></p>
-</figure>
-</div>
-</div>
-</div>
-<p>It looks like <code>gabor4</code> and <code>gabor5</code> are exponential. We will get the square of those.</p>
-</section>
-<section id="geom" class="level3">
-<h3 class="anchored" data-anchor-id="geom">Geom</h3>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb267"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb267-1"><a href="#cb267-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot features against total change in kidney volume</span></span>
-<span id="cb267-2"><a href="#cb267-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_features_against_outcome</span>(features_geom)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Project_3_Predictive_Modelling_files/figure-html/unnamed-chunk-131-1.png" class="img-fluid figure-img" width="768"></p>
-</figure>
-</div>
-</div>
-</div>
-<p>Geom 2 looks quadratic.</p>
-</section>
-<section id="txti-2" class="level3">
-<h3 class="anchored" data-anchor-id="txti-2">Txti</h3>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb268"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb268-1"><a href="#cb268-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot features against total change in kidney volume</span></span>
-<span id="cb268-2"><a href="#cb268-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_features_against_outcome</span>(features_txti)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Project_3_Predictive_Modelling_files/figure-html/unnamed-chunk-132-1.png" class="img-fluid figure-img" width="768"></p>
-</figure>
-</div>
-</div>
-</div>
-<p><code>txti4</code> and <code>txti5</code> look quadratic.</p>
-</section>
-<section id="lbp-1" class="level3">
-<h3 class="anchored" data-anchor-id="lbp-1">LBP</h3>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb269"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb269-1"><a href="#cb269-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot features against total change in kidney volume</span></span>
-<span id="cb269-2"><a href="#cb269-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_features_against_outcome</span>(features_lbp)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Project_3_Predictive_Modelling_files/figure-html/unnamed-chunk-133-1.png" class="img-fluid figure-img" width="768"></p>
-</figure>
-</div>
-</div>
-</div>
-</section>
-</section>
-<section id="feature-scaling-1" class="level1">
-<h1>Feature Scaling</h1>
-<p>Here we will perform the scaling as necessary to place all variables on the same scale.</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb270"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb270-1"><a href="#cb270-1" aria-hidden="true" tabindex="-1"></a><span class="co"># # Min-max normalization function</span></span>
-<span id="cb270-2"><a href="#cb270-2" aria-hidden="true" tabindex="-1"></a><span class="co"># min_max_norm &lt;- function(x) {</span></span>
-<span id="cb270-3"><a href="#cb270-3" aria-hidden="true" tabindex="-1"></a><span class="co">#   (x - min(x)) / (max(x) - min(x))</span></span>
-<span id="cb270-4"><a href="#cb270-4" aria-hidden="true" tabindex="-1"></a><span class="co"># }</span></span>
-<span id="cb270-5"><a href="#cb270-5" aria-hidden="true" tabindex="-1"></a><span class="co"># </span></span>
-<span id="cb270-6"><a href="#cb270-6" aria-hidden="true" tabindex="-1"></a><span class="co"># #############I was trying to features scale ecerything at once here.</span></span>
-<span id="cb270-7"><a href="#cb270-7" aria-hidden="true" tabindex="-1"></a><span class="co"># test &lt;- scale(data$geom1)</span></span>
-<span id="cb270-8"><a href="#cb270-8" aria-hidden="true" tabindex="-1"></a><span class="co"># testly &lt;- z_norm(data$geom1)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-</section>
-<section id="bonus" class="level1">
-<h1>Bonus</h1>
-<section id="messing-around-with-plotting-results-of-logistic-regression-to-visualize" class="level4">
-<h4 class="anchored" data-anchor-id="messing-around-with-plotting-results-of-logistic-regression-to-visualize">Messing around with plotting results of logistic regression to visualize</h4>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb271"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb271-1"><a href="#cb271-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(data, <span class="fu">aes</span>(<span class="at">y =</span> <span class="fu">log</span>(kidvol_base), <span class="at">x =</span> txti2, <span class="at">color =</span> progression)) <span class="sc">+</span></span>
-<span id="cb271-2"><a href="#cb271-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span></span>
-<span id="cb271-3"><a href="#cb271-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Project_3_Predictive_Modelling_files/figure-html/unnamed-chunk-135-1.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-</div>
-</section>
-<section id="gradient-descent" class="level2">
-<h2 class="anchored" data-anchor-id="gradient-descent">Gradient Descent</h2>
-<p>The purpose of gradient descent is to find a mapping function that minimizes the cost function.</p>
-<p>The general process of gradient descent is:</p>
-<ol type="1">
-<li><p>Initialize the betas (start with 0’s or small values)</p></li>
-<li><p>Predict the outcome variable</p></li>
-<li><p>Calculate the error</p></li>
-<li><p>Calculate the gradient (The direction and magnitude of the steepest increase in the cost function)</p></li>
-<li><p>Adjust the betas in the opposite direction of the gradient</p></li>
-<li><p>Iterate (repeat the process until the cost function converges on a minimum value</p></li>
-</ol>
-</section>
-</section>
-<section id="to-do" class="level1">
-<h1>To do</h1>
-<p>I need to rerun the 5 fold CV with correctly centering the test sets based on the values from each training set.</p>
-<p>As I did it, I centered them all together.</p>
-<p>2a 2b 2c</p>
-<p>???</p>
-<p>Profit</p>
+<p>Note: Discussion section co-written with project partner Dominick DeMarsico.</p>
+<p>After review of the many MRI image transformations available to the team, none of the feature engineering conducted stood out as particularly meaningful or helpful for prediction. However, the Txti2 variable was specifically created by the PI to be a summary value for kidney images. To avoid overfitting, we thought it best to primarily focus on this variable as our other variables of interest were not particularly associated with the outcome variables. With regard to our linear regression modeling, we found that none of the models were statistically better at predicting kidney change over time. Thus, including MRI image features did not increase the predictive capability of a model predicting kidney volume at 3 years above and beyond that of just using kidney volume measurements at baseline. Given the time and money needed to both collect MRI images and process them into usable formats, it may be more efficient to simply focus on measuring kidney volume in children with ADPKD. Given this outcome, we fail to reject the null hypothesis or question 1.</p>
+<p>With regard to our logistic regression, we found that none of the models were statistically different from one another when comparing AUC. However, the combined model and the model containing solely Txti2 were approaching significance when compared to the baseline kidney volume in a Two Sample T-Test (figure 2.). Given our small sample size, it is possible that a larger N would lead to this effect becoming statistically significant. Thus, even though we failed to reject the null hypothesis for our given sample size, utilizing the MRI image feature of Txti2 in our model allows us to achieve an AUC of &gt; 0.70, yielding drastically better performance than the near-guess level performance of the model using baseline kidney volume alone (AUC = 0.47). Additionally, we believe this stark trend to be clinically significant as it provides significantly better outcomes at the higher end of the confidence interval.</p>
+<p>The study’s primary limitation is sample size. It is difficult to make exceptionally accurate models without exceptionally large amounts of data; we would expect a higher degree of accuracy if our N was significantly larger. Additionally, we were not given demographic variables for subject sex, age, and eGFR (estimated glomerular filtration rate), which are significant predictors of ADPKD. We suspect that these additional factors in conjunction with the MRI image feature Txti2 would produce a more robust model.</p>
 </section>
 <section id="references" class="level1">
 <h1>References</h1>
 <p><span class="citation" data-cites="fogel1989">(<a href="#ref-fogel1989" role="doc-biblioref">Fogel and Sagi 1989</a>)</span> [<span class="citation" data-cites="kumar2020">Kumar, Satyanarayana, and Prasad (<a href="#ref-kumar2020" role="doc-biblioref">2020</a>)</span>]<span class="citation" data-cites="haralick1973">(<a href="#ref-haralick1973" role="doc-biblioref">Haralick, Shanmugam, and Dinstein 1973</a>)</span> <span class="citation" data-cites="ojala2002">(<a href="#ref-ojala2002" role="doc-biblioref">Ojala, Pietikainen, and Maenpaa 2002</a>)</span></p>
-</section>
-<section id="bonus-1" class="level1">
-<h1>Bonus</h1>
-<section id="principle-components-analysis" class="level2">
-<h2 class="anchored" data-anchor-id="principle-components-analysis">Principle Components Analysis</h2>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb272"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb272-1"><a href="#cb272-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load required libraries</span></span>
-<span id="cb272-2"><a href="#cb272-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(factoextra)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stderr">
-<pre><code>Welcome! Want to learn more? See two factoextra-related books at https://goo.gl/ve3WBa</code></pre>
-</div>
-<div class="sourceCode cell-code" id="cb274"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb274-1"><a href="#cb274-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Scale the data</span></span>
-<span id="cb274-2"><a href="#cb274-2" aria-hidden="true" tabindex="-1"></a>data_scaled <span class="ot">&lt;-</span> data <span class="sc">|&gt;</span> </span>
-<span id="cb274-3"><a href="#cb274-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(geom1, geom2, gabor1, gabor2, gabor3, gabor4, gabor5, glcm1, glcm2, txti1, txti2, txti3, txti4, txti5, lbp1, lbp2, lbp3, lbp4, lbp5) <span class="sc">|&gt;</span> </span>
-<span id="cb274-4"><a href="#cb274-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale</span>()</span>
-<span id="cb274-5"><a href="#cb274-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb274-6"><a href="#cb274-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Perform PCA</span></span>
-<span id="cb274-7"><a href="#cb274-7" aria-hidden="true" tabindex="-1"></a>pca_result <span class="ot">&lt;-</span> <span class="fu">prcomp</span>(data_scaled, <span class="at">center =</span> <span class="cn">TRUE</span>, <span class="at">scale. =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb274-8"><a href="#cb274-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb274-9"><a href="#cb274-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Summary of PCA</span></span>
-<span id="cb274-10"><a href="#cb274-10" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(pca_result)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>Importance of components:
-                         PC1   PC2    PC3    PC4     PC5    PC6     PC7    PC8
-Standard deviation     1.949 1.619 1.5265 1.4348 1.24161 1.1713 1.02952 0.9824
-Proportion of Variance 0.200 0.138 0.1226 0.1084 0.08114 0.0722 0.05578 0.0508
-Cumulative Proportion  0.200 0.338 0.4607 0.5690 0.65014 0.7223 0.77813 0.8289
-                           PC9    PC10    PC11    PC12    PC13    PC14    PC15
-Standard deviation     0.83306 0.76177 0.74275 0.68525 0.57149 0.52006 0.44863
-Proportion of Variance 0.03653 0.03054 0.02904 0.02471 0.01719 0.01423 0.01059
-Cumulative Proportion  0.86545 0.89600 0.92503 0.94975 0.96694 0.98117 0.99176
-                          PC16    PC17    PC18    PC19
-Standard deviation     0.30326 0.18403 0.16127 0.06817
-Proportion of Variance 0.00484 0.00178 0.00137 0.00024
-Cumulative Proportion  0.99660 0.99839 0.99976 1.00000</code></pre>
-</div>
-<div class="sourceCode cell-code" id="cb276"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb276-1"><a href="#cb276-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Visualize the variance explained by each component</span></span>
-<span id="cb276-2"><a href="#cb276-2" aria-hidden="true" tabindex="-1"></a><span class="fu">fviz_eig</span>(pca_result)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Project_3_Predictive_Modelling_files/figure-html/unnamed-chunk-136-1.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="sourceCode cell-code" id="cb277"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb277-1"><a href="#cb277-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Biplot of the first two principal components</span></span>
-<span id="cb277-2"><a href="#cb277-2" aria-hidden="true" tabindex="-1"></a><span class="fu">fviz_pca_biplot</span>(pca_result, <span class="at">geom =</span> <span class="st">"point"</span>, <span class="at">label =</span> <span class="st">"var"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Project_3_Predictive_Modelling_files/figure-html/unnamed-chunk-136-2.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="sourceCode cell-code" id="cb278"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb278-1"><a href="#cb278-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Project data onto the principal components</span></span>
-<span id="cb278-2"><a href="#cb278-2" aria-hidden="true" tabindex="-1"></a>pca_transformed <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(pca_result<span class="sc">$</span>x)</span>
-<span id="cb278-3"><a href="#cb278-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb278-4"><a href="#cb278-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Select the first few principal components that explain sufficient variance</span></span>
-<span id="cb278-5"><a href="#cb278-5" aria-hidden="true" tabindex="-1"></a>selected_components <span class="ot">&lt;-</span> pca_transformed[, <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>] <span class="co"># Example: select first 2 components</span></span>
-<span id="cb278-6"><a href="#cb278-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb278-7"><a href="#cb278-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Display selected principal components</span></span>
-<span id="cb278-8"><a href="#cb278-8" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(selected_components)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>        PC1       PC2
-1 -2.589253 -3.551832
-2  5.846004 -1.063585
-3 -2.146932 -1.518788
-4  2.171231 -1.326184
-5  1.525561  1.246005
-6 -1.831468 -1.464629</code></pre>
-</div>
-<div class="sourceCode cell-code" id="cb280"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb280-1"><a href="#cb280-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Extract loadings and scores </span></span>
-<span id="cb280-2"><a href="#cb280-2" aria-hidden="true" tabindex="-1"></a>loadings <span class="ot">&lt;-</span> pca_result<span class="sc">$</span>rotation </span>
-<span id="cb280-3"><a href="#cb280-3" aria-hidden="true" tabindex="-1"></a>scores <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(pca_result<span class="sc">$</span>x) </span>
-<span id="cb280-4"><a href="#cb280-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb280-5"><a href="#cb280-5" aria-hidden="true" tabindex="-1"></a><span class="co"># View loadings </span></span>
-<span id="cb280-6"><a href="#cb280-6" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(loadings) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>                PC1         PC2         PC3         PC4          PC5
-geom1   0.473652545 -0.05836136 -0.11446502  0.09561889 -0.091741535
-geom2   0.327338932 -0.10326388 -0.26242410  0.14222936  0.053976616
-gabor1 -0.058179221 -0.20724293  0.21679495  0.04736845  0.563219482
-gabor2 -0.436148211 -0.04644881 -0.15307694  0.05274642  0.003970337
-gabor3 -0.104354711 -0.13047404 -0.45195562 -0.05589650 -0.309926758
-gabor4  0.077879041  0.26774668  0.31127082  0.29273466 -0.252549019
-gabor5  0.086257257 -0.25393530 -0.01045363  0.39389211  0.401076208
-glcm1   0.313331158  0.15663872  0.03194739 -0.22402617  0.141026546
-glcm2   0.001067055 -0.42523216  0.01810827  0.20955032 -0.059643373
-txti1  -0.396429901 -0.20888380  0.03039971  0.16485472 -0.129449529
-txti2  -0.078784763  0.16657657 -0.29265979  0.04820761  0.222094559
-txti3  -0.001305716  0.10596465  0.16455583 -0.15480303  0.135241418
-txti4   0.043208364 -0.40864577 -0.09752939  0.25429807 -0.011921373
-txti5  -0.094005206  0.16148643  0.04057927  0.04741707  0.315078281
-lbp1   -0.303543335  0.15709667 -0.34538785 -0.11730409  0.266130917
-lbp2   -0.173212439 -0.14738508  0.45825608  0.07507830 -0.206628394
-lbp3    0.213652140 -0.38026070 -0.05404014 -0.36612506  0.033896679
-lbp4    0.091436146  0.28886312  0.02514951  0.45934640  0.102214560
-lbp5    0.045839119  0.17930604 -0.29552007  0.37776877 -0.135598324
-                PC6         PC7          PC8         PC9         PC10
-geom1   0.132684175  0.05416527  0.089984327 -0.07064358  0.064336320
-geom2   0.218593736  0.20026997  0.352359668  0.06576654 -0.175517969
-gabor1  0.260300246 -0.19901782 -0.028768087  0.09844579 -0.109793725
-gabor2  0.005965509  0.25553342 -0.037140226 -0.00879263 -0.064327749
-gabor3 -0.226716275  0.11519157  0.239234595 -0.15054708 -0.007455788
-gabor4  0.072399939  0.18992590 -0.111531312  0.20017404 -0.168860264
-gabor5  0.014018884  0.07486427  0.002228778 -0.17016314 -0.110374229
-glcm1  -0.336345640  0.02865126 -0.331924263  0.01082207 -0.107616262
-glcm2  -0.379830325 -0.06895104 -0.171720203  0.05761532  0.309064798
-txti1   0.275017483 -0.06661386  0.216148096 -0.05527109 -0.024051583
-txti2   0.117091382  0.48442448 -0.148870011  0.59985339  0.299194075
-txti3  -0.360439578 -0.24762967  0.657528081  0.45147619  0.002279503
-txti4  -0.362051693 -0.06020832 -0.151350897  0.26233227 -0.042685784
-txti5  -0.408259414  0.44900159  0.153386700 -0.34707063 -0.339448193
-lbp1   -0.041522073 -0.22269761 -0.065747568  0.01715261 -0.035152200
-lbp2   -0.065517369  0.30527587  0.077879476  0.17604455 -0.170267569
-lbp3    0.163353283  0.22014967  0.140991647  0.08344160 -0.125888602
-lbp4   -0.053014787 -0.00973492  0.268694379 -0.18861368  0.483540728
-lbp5   -0.007177907 -0.30745937 -0.077950291  0.23660022 -0.560333100
-               PC11         PC12         PC13         PC14        PC15
-geom1  -0.169447734  0.004212159  0.132582413  0.010797459 -0.02565119
-geom2   0.155515131  0.097888322 -0.447180659  0.231250378 -0.09751578
-gabor1 -0.009976427  0.324729184  0.092724185 -0.232737728 -0.51293502
-gabor2  0.364781401 -0.217854757 -0.007931586  0.151245120 -0.07036240
-gabor3  0.143646229  0.075388205  0.325999063 -0.321060291 -0.48884487
-gabor4 -0.233656985 -0.465389747 -0.070233178 -0.010784949 -0.51229346
-gabor5  0.248161031 -0.473288646  0.387582813  0.053467093  0.18616726
-glcm1   0.472592178  0.102725996 -0.088465694  0.183827419 -0.19514329
-glcm2  -0.222441229  0.124380241  0.057926581  0.584380439 -0.23376621
-txti1  -0.106869274  0.119180937 -0.101082246  0.193892582  0.02571635
-txti2  -0.105579554  0.152010264  0.192851690 -0.015656724  0.08825963
-txti3   0.017115145 -0.183251488  0.158913598  0.089046807  0.02249726
-txti4  -0.069241396 -0.100006688 -0.405133195 -0.533691226  0.16419113
-txti5  -0.431315639  0.189325006 -0.046761560  0.014717973  0.05274887
-lbp1   -0.058285441 -0.266150562 -0.407455372  0.136311200 -0.17725250
-lbp2    0.360674308  0.257115656 -0.088998147 -0.001572431  0.06351369
-lbp3   -0.063243775 -0.167664428 -0.089731376  0.086367726 -0.04031033
-lbp4    0.229680110  0.121590910 -0.222109262 -0.088096130 -0.07060692
-lbp5    0.019387603  0.261947073  0.175707755  0.152976134  0.11053834
-              PC16         PC17         PC18         PC19
-geom1  -0.22358457  0.399829512 -0.253401110  0.618604002
-geom2  -0.22229352 -0.212483239  0.383315714 -0.069124163
-gabor1 -0.13844836 -0.003105147 -0.081450305  0.006334100
-gabor2 -0.57803315  0.143632400 -0.375960801 -0.077103302
-gabor3  0.16979665 -0.046679685  0.131304303  0.033591835
-gabor4  0.05391358  0.041615300  0.041607783 -0.092193684
-gabor5  0.22582105 -0.041872411  0.185144556  0.068261470
-glcm1   0.14048306  0.460523348  0.129230625 -0.090864036
-glcm2  -0.03816676 -0.164723422 -0.030780402 -0.005920474
-txti1   0.25626187  0.654291104  0.216447933 -0.095979035
-txti2   0.12845769  0.069389142  0.089295595  0.009684587
-txti3  -0.10898838  0.111474508  0.011463004  0.004606797
-txti4  -0.07685078  0.171854640 -0.007262309 -0.048577085
-txti5  -0.01437266  0.067582167 -0.046872465 -0.019829984
-lbp1    0.28378198 -0.096187132 -0.059158426  0.488463076
-lbp2    0.22815272 -0.193081719 -0.066702226  0.473788596
-lbp3    0.38431608 -0.012770661 -0.532199264 -0.271022630
-lbp4    0.22221431  0.007118966 -0.370026188 -0.160199839
-lbp5    0.11642083 -0.057286319 -0.290979071 -0.098579124</code></pre>
-</div>
-<div class="sourceCode cell-code" id="cb282"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb282-1"><a href="#cb282-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Visualize the variance explained by each component </span></span>
-<span id="cb282-2"><a href="#cb282-2" aria-hidden="true" tabindex="-1"></a><span class="fu">fviz_eig</span>(pca_result) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Project_3_Predictive_Modelling_files/figure-html/unnamed-chunk-136-3.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="sourceCode cell-code" id="cb283"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb283-1"><a href="#cb283-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Select the first few principal components that explain sufficient variance</span></span>
-<span id="cb283-2"><a href="#cb283-2" aria-hidden="true" tabindex="-1"></a>selected_components <span class="ot">&lt;-</span> scores[, <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>] </span>
-<span id="cb283-3"><a href="#cb283-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb283-4"><a href="#cb283-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Add the principal component scores to the original data for modeling </span></span>
-<span id="cb283-5"><a href="#cb283-5" aria-hidden="true" tabindex="-1"></a>data_with_pcs <span class="ot">&lt;-</span> <span class="fu">cbind</span>(data<span class="sc">$</span>kidvol_change, selected_components) </span>
-<span id="cb283-6"><a href="#cb283-6" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(data_with_pcs) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"kidvol_change"</span>, <span class="st">"PC1"</span>, <span class="st">"PC2"</span>)</span>
-<span id="cb283-7"><a href="#cb283-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb283-8"><a href="#cb283-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Train a linear regression model using the principal components </span></span>
-<span id="cb283-9"><a href="#cb283-9" aria-hidden="true" tabindex="-1"></a>model_pca <span class="ot">&lt;-</span> <span class="fu">lm</span>(kidvol_change <span class="sc">~</span> PC1 <span class="sc">+</span> PC2, <span class="at">data =</span> data_with_pcs) </span>
-<span id="cb283-10"><a href="#cb283-10" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(model_pca)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>
-Call:
-lm(formula = kidvol_change ~ PC1 + PC2, data = data_with_pcs)
-
-Residuals:
-     Min       1Q   Median       3Q      Max 
--14.5091  -4.9659  -0.7606   3.8255  16.7856 
-
-Coefficients:
-             Estimate Std. Error t value            Pr(&gt;|t|)    
-(Intercept)  8.407313   0.811568  10.359 0.00000000000000258 ***
-PC1         -0.003297   0.419451  -0.008               0.994    
-PC2         -0.204244   0.504992  -0.404               0.687    
----
-Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-
-Residual standard error: 6.643 on 64 degrees of freedom
-Multiple R-squared:  0.00255,   Adjusted R-squared:  -0.02862 
-F-statistic: 0.08182 on 2 and 64 DF,  p-value: 0.9215</code></pre>
-</div>
-</div>
 
 
 
-</section>
 </section>
 
 <div id="quarto-appendix" class="default"><section class="quarto-appendix-contents" role="doc-bibliography" id="quarto-bibliography"><h2 class="anchored quarto-appendix-heading">References</h2><div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list">
@@ -7122,5 +6160,4 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 
 
 
-<script src="../../../site_libs/quarto-html/zenscroll-min.js"></script>
 </body></html>

@@ -169,8 +169,12 @@ div.csl-indent {
   </li>  
         <li class="dropdown-header">MLR With Confounding and Interaction (SAS)</li>
         <li>
-    <a class="dropdown-item" href="../../../Project_2/Project_2_R/Code/Project2LMM.qmdu">
+    <a class="dropdown-item" href="../../../Project_2/Project_2_R/Code/Project2LMM.html">
  <span class="dropdown-text">Linear Mixed Model (R)</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../Project_3_Predictive_Modelling/Project_3_R/Code/Project_3_Predictive_Modelling.html">
+ <span class="dropdown-text">Predictive Modelling</span></a>
   </li>  
     </ul>
   </li>
@@ -359,14 +363,14 @@ div.csl-indent {
 <section id="developing-the-program" class="level1">
 <h1>Developing the Program</h1>
 <p>First we will define our import statements.</p>
-<div id="fc8d7573" class="cell" data-execution_count="1">
+<div id="4ee63f37" class="cell" data-execution_count="1">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Import statements</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> os</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>And then import an example treadmill.xlsx file</p>
-<div id="ac60a501" class="cell" data-execution_count="2">
+<div id="d8abf20a" class="cell" data-execution_count="2">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Define column names</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>col_names <span class="op">=</span> [<span class="st">"Treadmill Position (V)"</span>, <span class="st">"Camera On/Off"</span>, <span class="st">"Time (sec)"</span>]</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -465,7 +469,7 @@ div.csl-indent {
 <section id="removing-empty-rows" class="level3">
 <h3 class="anchored" data-anchor-id="removing-empty-rows">Removing Empty Rows</h3>
 <p>As mentioned previously, every other row of these files is blank. Let’s drop those NaN values.</p>
-<div id="1c290412" class="cell" data-execution_count="3">
+<div id="46405ae6" class="cell" data-execution_count="3">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Drop NaN values</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>treadmill <span class="op">=</span> treadmill.dropna()</span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>treadmill</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -561,7 +565,7 @@ div.csl-indent {
 <section id="filtering-to-when-camera-was-on" class="level3">
 <h3 class="anchored" data-anchor-id="filtering-to-when-camera-was-on">Filtering to When Camera was On</h3>
 <p>Now let’s filter down to only time points when the camera was turned on.</p>
-<div id="db5038d7" class="cell" data-execution_count="4">
+<div id="e22cb4c8" class="cell" data-execution_count="4">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Slice the treadmill df so it only includes values where the camera was turned on (i.e. value &gt; 3)</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>treadmill <span class="op">=</span> treadmill[treadmill[<span class="st">"Camera On/Off"</span>] <span class="op">&gt;</span> <span class="dv">3</span>]</span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>treadmill</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -656,7 +660,7 @@ div.csl-indent {
 </section>
 <section id="resetting-first-time-point-to-zero" class="level3">
 <h3 class="anchored" data-anchor-id="resetting-first-time-point-to-zero">Resetting First Time Point to Zero</h3>
-<div id="d5990ddc" class="cell" data-message="false" data-execution_count="5">
+<div id="8014fe79" class="cell" data-message="false" data-execution_count="5">
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Set the first Time (sec) value to 0</span></span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>time_start <span class="op">=</span> treadmill[<span class="st">"Time (sec)"</span>].iloc[<span class="dv">0</span>]</span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -761,7 +765,7 @@ div.csl-indent {
 </figure>
 </div>
 <p>Let’s make that conversion now instead of later.</p>
-<div id="33b7183b" class="cell" data-message="false" data-execution_count="6">
+<div id="5264e2f4" class="cell" data-message="false" data-execution_count="6">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># The highest value for Treadmill Position (in Volts) gets designated as 360 degrees, or the end of the circle</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>circle_360 <span class="op">=</span> treadmill[<span class="st">"Treadmill Position (V)"</span>].<span class="bu">max</span>() <span class="co"># Set 360 as the max value for Treadmill Position (V) </span></span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>one_volt <span class="op">=</span> <span class="dv">360</span> <span class="op">/</span> circle_360 <span class="co"># One volt is therefore (360 / the max value for Treadmill Position (V)) degrees (e.g., if the max was 5 volts, then 360 / 5 = 72 degrees, or 1 volt = 72 degrees)</span></span>
@@ -874,7 +878,7 @@ div.csl-indent {
 <h2 class="anchored" data-anchor-id="saving-the-cleaned-data">Saving the Cleaned Data</h2>
 <p>We will want to save each treadmill file after it is cleaned.</p>
 <p>For thorough record keeping, let’s create a subfolder within the folder that the treadmill.xlsx files are found within and store the cleaned files there.</p>
-<div id="7ed69f14" class="cell" data-execution_count="7">
+<div id="daf652ad" class="cell" data-execution_count="7">
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Name the new folder "Cleaned Treadmill Files", and place it within the folder that the uncleaned treadmill files will all be kept in</span></span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>new_folder <span class="op">=</span> <span class="vs">r"C:\Users\sviea\Documents\Portfolio\Data_Wrangling\Treadmill_Data_Cleaning\Treadmill Files Uncleaned\Cleaned Treadmill Files"</span></span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -891,7 +895,7 @@ div.csl-indent {
 <p>We just wrote code to import, clean, and save a single treadmill.xlsx file.</p>
 <p>For the final product, we need to make a program that walks through every uncleaned treadmill file in a folder and cleans it.</p>
 <p>To that end, we need to convert the file-cleaning-and-saving steps into a single function, that we can then apply to multiple files en masse.</p>
-<div id="758ed01e" class="cell" data-execution_count="8">
+<div id="fb16ebe8" class="cell" data-execution_count="8">
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Making a function to clean a single treadmill.xlsx file</span></span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> treadmill_cleaner(file_path, save_location):</span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">'''</span></span>
@@ -930,7 +934,7 @@ div.csl-indent {
 <section id="clean-a-single-treadmill-file" class="level2">
 <h2 class="anchored" data-anchor-id="clean-a-single-treadmill-file">Clean a Single Treadmill File</h2>
 <p>If we want to run the program to clean a single file, we can run the code below.</p>
-<div id="2e176dee" class="cell" data-execution_count="9">
+<div id="d7228bce" class="cell" data-execution_count="9">
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Change file paths as needed below</span></span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>filename <span class="op">=</span> <span class="st">"121523_RC1_Pace_1.xlsx"</span> <span class="co"># Change this to what you want the last part of the file name to be!</span></span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>file_path <span class="op">=</span> <span class="vs">r"C:\Users\sviea\Documents\Portfolio\Data_Wrangling\Treadmill_Data_Cleaning\Treadmill Files Uncleaned\121523_RC1_Pace_1.xlsx"</span> <span class="co"># Change this to the file path of the treadmill file you want to clean</span></span>
@@ -944,7 +948,7 @@ div.csl-indent {
 <section id="clean-an-entire-folder-containing-raw-treadmill-files" class="level2">
 <h2 class="anchored" data-anchor-id="clean-an-entire-folder-containing-raw-treadmill-files">Clean an Entire Folder Containing Raw Treadmill Files</h2>
 <p>If we want to clean a folder containing multiple treadmill files, we can run the chunk below.</p>
-<div id="c84b7b1e" class="cell" data-execution_count="10">
+<div id="e17fe667" class="cell" data-execution_count="10">
 <div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># This program walks through every file in a designated folder and applies the above treadmill_cleaner() function to each file, saving the cleaned file in the same subfolder</span></span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="co">#__Enter the file path to the folder containing treadmill files here!!!!!__</span></span>
@@ -976,7 +980,7 @@ invalid escape sequence '\C'
 
 invalid escape sequence '\C'
 
-C:\Users\sviea\AppData\Local\Temp\ipykernel_14204\1169796177.py:9: SyntaxWarning:
+C:\Users\sviea\AppData\Local\Temp\ipykernel_17012\1169796177.py:9: SyntaxWarning:
 
 invalid escape sequence '\C'
 </code></pre>
@@ -1005,7 +1009,7 @@ File is a folder -  skipping</code></pre>
 <section id="checking-the-output" class="level2">
 <h2 class="anchored" data-anchor-id="checking-the-output">Checking the Output</h2>
 <p>For good measure, let’s check the output of the first and last file we cleaned.</p>
-<div id="761ece35" class="cell" data-execution_count="11">
+<div id="ceb7fd29" class="cell" data-execution_count="11">
 <div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Check first file</span></span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>file_1 <span class="op">=</span> pd.read_excel(<span class="vs">r"C:\Users\sviea\Documents\Portfolio\Data_Wrangling\Treadmill_Data_Cleaning\Treadmill Files Uncleaned\Cleaned Treadmill Files\121523_RC1_Pace_1_cleaned.xlsx"</span>)</span>
 <span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>file_1</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -1108,7 +1112,7 @@ File is a folder -  skipping</code></pre>
 </div>
 </div>
 </div>
-<div id="13547104" class="cell" data-execution_count="12">
+<div id="8f88a24c" class="cell" data-execution_count="12">
 <div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Check last file</span></span>
 <span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>file_6 <span class="op">=</span> pd.read_excel(<span class="vs">r"C:\Users\sviea\Documents\Portfolio\Data_Wrangling\Treadmill_Data_Cleaning\Treadmill Files Uncleaned\Cleaned Treadmill Files\121523_RC1_Pace_6_cleaned.xlsx"</span>)</span>
 <span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>file_6</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
