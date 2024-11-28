@@ -19,7 +19,7 @@ website:
           - text: MLR With Confounding and Interaction (SAS)
           - text: Linear Mixed Model (R)
             href: Project_2/Project_2_R/Code/Project2LMM.qmd
-          - text: Predictive Modelling (R)
+          # - text: Predictive Modelling (R)
             href: Project_3_Predictive_Modelling/Project_3_R/Code/Project_3_Predictive_Modelling.qmd
       - text: Data Wrangling (Python)
         href: Data_Wrangling/Treadmill_Data_Cleaning/Code/Automated_Treadmill_Data_Cleaning.qmd
@@ -36,7 +36,7 @@ website:
       - text: Data Viz (R)
         menu:
           - text: Animated Plots (R)
-            href: Data Visualization/Cancer_Animations/Gapminder_Cancer_Animations.qmd
+            href: Data_Visualization/Cancer_Animations/Gapminder_Cancer_Animations.qmd
       - text: Publications/Presentations
         href: Resume/Publications_and_Presentations.qmd
       
