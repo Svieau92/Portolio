@@ -1,0 +1,291 @@
+---
+title: "Animated Plot - Global Lung Cancer Rates"
+format: html
+editor: visual
+author: Sean Vieau
+date: 11/18/2024
+toc: true
+---
+
+```{r setup, include=FALSE}
+# Sets the default for all chunks as echo = TRUE (ensures they show unless specified not to)
+knitr::opts_chunk$set(echo = TRUE)
+
+# Create a function to pretty print our dataframes
+pretty_print <- function(x) {
+  kable(x, format = "html") |>
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+}
+```
+
+# Introduction
+
+In this mini-project we perform data tidying, joining, and ggplot animation to answer a public health research question using data sets from the gapminder data base.
+
+![](images/clipboard-1836962271.png)
+
+## Research Question
+
+I am interested in trends in lung cancer in men over time (because the data sets from Gapminder are split by sex).
+
+-   [Hypothesis:]{.underline} I predict that over time, as life expectancy increases, lung cancer rates will increase.
+    -   Additionally, as GDP increases, cancer rates should decrease.
+
+This research question is inspired by a TED talk which discussed how society has progressed in medicine so much that we have "killed all other killers", allowing cancer to become more common, as longer life expectancies increase the chances of cancerous mutations occurring.
+
+# Data Preparation
+
+## Load Libraries
+
+```{r}
+#| message: false
+library(gapminder)
+library(tidyverse)
+library(ggdark) # Used for fun dark themes for plots
+library(kableExtra)
+library(gganimate)
+```
+
+All data sets are from [Gapminder.org](https://www.gapminder.org/data/)
+
+### Read in Lung Cancer Data
+
+```{r}
+# Read in data set
+data_cancer <- read_csv(r"(C:\Users\sviea\Downloads\lung_cancer_new_cases_per_100000_men.csv)")
+
+# Examine data
+pretty_print(head(data_cancer))
+```
+
+We have `NA` values for 1953-1989. Let's just get rid of those now.
+
+```{r}
+# Remove unnecessary columns with missing values
+data_cancer <- data_cancer |> 
+  select(-c("1953":"1989"))
+
+# Double check for correct removal
+pretty_print(head(data_cancer))
+```
+
+### Read in GDP Per Capita Data
+
+The `gapminder` data set that comes with the `tidyverse` package only goes up to 2007. To get a more complete data set we will read in the GDP per capita data set downloaded from the gapminder website.
+
+```{r}
+# Read in data set
+data_gdp <- read_csv(r"(C:\Users\sviea\Documents\R for Data Science\gdp_pcap.csv)")
+
+# Filter data set
+data_gdp <- data_gdp |> 
+  select(c("country", "1990":"2019"))
+
+# Examine data
+pretty_print(head(data_gdp))
+```
+
+Note: We have mixed data representation here! Some variables have a "k" to represent 10,000. We will have to process this.
+
+### Read in Life Expectancy Data
+
+```{r}
+# Read in data set
+data_lex <- read_csv(r"(C:\Users\sviea\Documents\R for Data Science\lex.csv)")
+
+# Filter data set
+data_lex <- data_lex |> 
+  select(c("country", "1990":"2019"))
+
+# Examine data
+pretty_print(head(data_lex))
+```
+
+# Integrate Data Sets
+
+### Transpose
+
+First we will pivot all data sets to be in long form
+
+```{r}
+#| warning: false
+# Pivot lung cancer data set
+data_cancer <- data_cancer |> 
+  pivot_longer(cols = c("1990":"2019"), names_to = "year", values_to = "lung_cancer") |>
+  mutate(year = as.integer(year))
+
+# Double check
+pretty_print(head(data_cancer))
+```
+
+```{r}
+#| warning: false
+# Pivot gdp data set
+data_gdp <- data_gdp |> 
+  pivot_longer(cols = c("1990":"2019"), names_to = "year", values_to = "gdpPercap") |>
+  mutate(year = as.integer(year))
+
+# Custom function to clean gdpPercap values
+clean_gdp <- function(gdp) {
+  ifelse(grepl("k", gdp), 
+         as.numeric(sub("k", "", gdp)) * 1000, 
+         as.numeric(gdp))
+}
+
+# Apply the custom function and convert gdpPercap to numeric
+data_gdp <- data_gdp %>%
+  mutate(gdpPercap = clean_gdp(gdpPercap))
+
+# Fix data type of gdpPercap
+data_gdp <- data_gdp |> 
+  mutate(gdpPercap = as.double(gdpPercap))
+
+# Double check
+pretty_print(head(data_gdp))
+```
+
+```{r}
+# Pivot lex data set
+data_lex <- data_lex |> 
+  pivot_longer(cols = c("1990":"2019"), names_to = "year", values_to = "life_expectancy") |>
+  mutate(year = as.integer(year))
+
+# Double check
+pretty_print(head(data_lex))
+```
+
+### Merge
+
+And then merge the data sets.
+
+```{r}
+# Get continent info from gapminder
+data_cont <- gapminder |> 
+  select(country, continent) |> 
+  distinct()
+
+# Perform join statements
+data_merged <- data_cancer |> 
+  left_join(data_gdp) |> 
+  left_join(data_lex) |> 
+  left_join(data_cont)
+
+# Double check for correct merging
+pretty_print(head(data_merged))
+```
+
+# Animations
+
+### All Countries Over Time
+
+```{r}
+#| warning: false
+# Create lables for countries with highest lung cancer rates at any time point
+labels <- data_merged |> 
+  group_by(country) |> 
+  summarise(max_cancer = max(lung_cancer)) |> 
+  arrange(desc(max_cancer)) |> 
+  top_n(6) |> 
+  pull(country)
+
+# Create plot
+ggplot(data_merged, aes(x = life_expectancy, y = lung_cancer, color = gdpPercap, size = gdpPercap)) +
+  geom_point(alpha = 0.7) +
+  geom_text(show.legend = FALSE, aes(label = ifelse(country %in% labels, as.character(country), ''))) + 
+  dark_theme_minimal() +
+  scale_color_gradient(low = "skyblue2", high = "white") + 
+  labs(title = "Year: {frame_time}",
+       y = "New Lung Cancer Cases per 100K People",
+       x = "Log GDP per Capita",
+       color = "GDP Per Capita") +
+  transition_time(year) +
+  guides(size = "none")
+```
+
+We can see Monaco increase over time to become the country with the highest lung cancer rates in men in 2019. We can also see Hungary at one point be the country with the highest lung cancer rates, but then decrease drastically to be more in the middle. Finally, Montenegro slowly increases to become the country with the second highest lung cancer rates.
+
+We can also see some countries like Rwanda have a drastic dip in their population during tumultuous years.
+
+Let's create a plot by year so we can isolate any timepoints where the pattern changes
+
+```{r}
+#| warning: false
+# Create plot
+ggplot(data_merged, aes(x = life_expectancy, y = lung_cancer, color = gdpPercap)) +
+  geom_point(alpha = 0.7) +
+  dark_theme_minimal() +
+  scale_color_gradient(low = "skyblue2", high = "white") + 
+  labs(title = "Lung Cancer Rates over Time",
+       y = "New Lung Cancer Cases per 100K People",
+       x = "Log GDP per Capita",
+       color = "GDP Per Capita") +
+  guides(size = "none") +
+  facet_wrap(~year)
+```
+
+There appears to be a decrease in the rate of new lung cancer cases over time. Let's isolate.
+
+#### Difference in Lung Cancer from 1990 to 2019
+
+```{r}
+#| warning: false
+# Create plot
+data_merged |> filter(year ==1990 | year == 2019) |> 
+ggplot(aes(x = life_expectancy, y = lung_cancer, color = gdpPercap, size = gdpPercap)) +
+  geom_point(alpha = 0.7) +
+  dark_theme_minimal() +
+  scale_color_gradient(low = "skyblue2", high = "white") + 
+  labs(title = "Change in Lung Cancer Rates: 1990 vs 2019",
+       y = "New Lung Cancer Cases per 100K People",
+       x = "Log GDP per Capita",
+       color = "GDP Per Capita") +
+  guides(size = "none") +
+  facet_wrap(~year) +
+  geom_smooth(method = "lm", se = F, color = "white", linetype = "dashed", alpha = 0.3)
+```
+
+We can see that the slopes are different. Showing that in 2019, each one year increase in age is associated with LESS of an increase in new lung cancer cases than it was in 1990.
+
+This is preliminary evidence that we as a planet are getting a better control over cancer by slightly decreasing the rate of new cases as the global population gets older.
+
+### By Continent
+
+Note: Some countries were not in the gapminder data set and thus did not have a corresponding `continent`. I have filtered them out.
+
+```{r}
+#| warning: false
+# Perform join statements
+data_merged <- data_cancer |> 
+  left_join(data_gdp) |> 
+  left_join(data_lex) |> 
+  right_join(data_cont) # Right join here because we only want countries that were in the gapminder dataset
+
+# Create plot
+ggplot(data_merged, aes(x = life_expectancy, y = lung_cancer, color = gdpPercap, size = gdpPercap)) +
+  geom_point(alpha = 0.7) +
+  dark_theme_minimal() +
+  scale_color_gradient(low = "skyblue2", high = "white") + 
+  labs(title = "Year: {frame_time}",
+       y = "New Lung Cancer Cases per 100K People",
+       x = "Life Expectancy",
+       color = "GDP Per Capita") +
+  transition_time(year) +
+  guides(size = "none") +
+  facet_wrap(~continent)
+```
+
+We can see countries in Africa increase in life expectancy over time! They also appear to be slowly increasing in new lung cancer cases.
+
+We can also see that continents like the Americas, Asia, and Europe already had a high life expectancy starting in 1990. We can also see these countries slowly decrease in new cancer rates over time!
+
+# Observations
+
+-   We do see an overall linear trend, where for all countries, increased life expectancy is associated with an increase in new lung cancer cases per 100k people.
+
+-   When broken down by continent, we can see Africa slowly increase in new lung cancer cases as its population life expectancies increase
+
+-   Continents with higher GDP per capita on the hand (Europe, Americas, Asia) however, show a decrease in new lung cancer cases over time
+
+-   After 2010, there appears to be a trend in most countries of a decrease in new lung cancer cases. This may be due to improvements in efforts to decrease cancer (e.g. anti-smoking campaigns)
+
+-   Monaco became the country with the highest lung cancer rate in 2019. Hungary held this position, but decreased in new lung cancer cases in time, likely due to intervention efforts.
