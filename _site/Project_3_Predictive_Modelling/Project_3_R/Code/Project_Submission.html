@@ -185,7 +185,7 @@ window.Quarto = {
   </li>  
         <li>
     <a class="dropdown-item" href="../../../Project_3_Predictive_Modelling/Project_3_R/Code/Project_3_Predictive_Modelling.html">
- <span class="dropdown-text">Predictive Modelling</span></a>
+ <span class="dropdown-text">Predictive Modelling (R)</span></a>
   </li>  
     </ul>
   </li>
@@ -208,13 +208,31 @@ window.Quarto = {
   </li>  
     </ul>
   </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-statistical-consulting-(r" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Statistical Consulting (R)</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-statistical-consulting-(r">    
+        <li>
+    <a class="dropdown-item" href="../../../Statistical_Consulting/Vieau_Project_01/Code/Megan_Watson_Project.html">
+ <span class="dropdown-text">Scope of Work and Negative Binomial Regression (R)</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-data-viz-(r" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Data Viz (R)</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-data-viz-(r">    
+        <li>
+    <a class="dropdown-item" href="../../../Data_Visualization/Cancer_Animations/Gapminder_Cancer_Animations.html">
+ <span class="dropdown-text">Animated Plots (R)</span></a>
+  </li>  
+    </ul>
+  </li>
   <li class="nav-item">
     <a class="nav-link" href="../../../Resume/Publications_and_Presentations.html"> 
 <span class="menu-text">Publications/Presentations</span></a>
-  </li>  
-  <li class="nav-item">
-    <a class="nav-link" href="C:/Users/sviea/Documents/Vieau_Project_01/Code/Megan_Watson_Project.qmd"> 
-<span class="menu-text">Statistical Consulting (R)</span></a>
   </li>  
 </ul>
           </div> <!-- /navcollapse -->
@@ -5772,7 +5790,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
   }
     var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
     var mailtoRegex = new RegExp(/^mailto:/);
-      var filterRegex = new RegExp("https:\/\/svieau\.quarto\.pub\/portfolio");
+      var filterRegex = new RegExp('/' + window.location.host + '/');
     var isInternal = (href) => {
         return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
     }

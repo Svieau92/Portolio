@@ -118,7 +118,7 @@ ul.task-list li input[type="checkbox"] {
   </li>  
         <li>
     <a class="dropdown-item" href="./Project_3_Predictive_Modelling/Project_3_R/Code/Project_3_Predictive_Modelling.html">
- <span class="dropdown-text">Predictive Modelling</span></a>
+ <span class="dropdown-text">Predictive Modelling (R)</span></a>
   </li>  
     </ul>
   </li>
@@ -141,13 +141,31 @@ ul.task-list li input[type="checkbox"] {
   </li>  
     </ul>
   </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-statistical-consulting-(r" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Statistical Consulting (R)</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-statistical-consulting-(r">    
+        <li>
+    <a class="dropdown-item" href="./Statistical_Consulting/Vieau_Project_01/Code/Megan_Watson_Project.html">
+ <span class="dropdown-text">Scope of Work and Negative Binomial Regression (R)</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-data-viz-(r" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Data Viz (R)</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-data-viz-(r">    
+        <li>
+    <a class="dropdown-item" href="./Data_Visualization/Cancer_Animations/Gapminder_Cancer_Animations.html">
+ <span class="dropdown-text">Animated Plots (R)</span></a>
+  </li>  
+    </ul>
+  </li>
   <li class="nav-item">
     <a class="nav-link" href="./Resume/Publications_and_Presentations.html"> 
 <span class="menu-text">Publications/Presentations</span></a>
-  </li>  
-  <li class="nav-item">
-    <a class="nav-link" href="C:/Users/sviea/Documents/Vieau_Project_01/Code/Megan_Watson_Project.qmd"> 
-<span class="menu-text">Statistical Consulting (R)</span></a>
   </li>  
 </ul>
           </div> <!-- /navcollapse -->
@@ -195,7 +213,7 @@ ul.task-list li input[type="checkbox"] {
 sas_session = saspy.SASsession(cfgfile="C:\\Users\\sviea\\anaconda3\\Lib\\site-packages\\saspy\\sascfg_personal.py")
 sas_session</code></pre>
 <pre class="{r}"><code>install.packages("configSAS")</code></pre>
-<div id="7e0cb791" class="cell" data-execution_count="1">
+<div id="4df03e09" class="cell" data-execution_count="1">
 <details class="code-fold">
 <summary>Code</summary>
 <pre class="sas cell-code"><code>#| capture: log
@@ -205,7 +223,7 @@ proc candisc data=sashelp.iris out=outcan distance anova;
 run;</code></pre>
 </details>
 <div class="cell-output cell-output-stdout">
-<pre><code>5                                                          The SAS System                    Thursday, November 28, 2024 06:28:00 AM
+<pre><code>5                                                          The SAS System                    Thursday, November 28, 2024 09:23:00 PM
 
 24         ods listing close;ods html5 (id=saspy_internal) file=_tomods1 options(bitmap_mode='inline') device=svg style=HTMLBlue;
 24       ! ods graphics on / outputfmt=png;
@@ -231,7 +249,7 @@ ERROR 180-322: Statement is not valid or it is used out of proper order.
 32         
 33         ods html5 (id=saspy_internal) close;ods listing;
 34         
-6                                                          The SAS System                    Thursday, November 28, 2024 06:28:00 AM
+6                                                          The SAS System                    Thursday, November 28, 2024 09:23:00 PM
 
 35         </code></pre>
 </div>
@@ -306,7 +324,7 @@ result = sas.submit("proc print data=sashelp.class; run;")
 
 # Display the output in the Quarto document
 display(HTML(result['LST']))</code></pre>
-<div id="a7699573" class="cell" data-execution_count="2">
+<div id="1373207d" class="cell" data-execution_count="2">
 <details class="code-fold">
 <summary>Code</summary>
 <pre class="sas cell-code"><code>proc candisc data=sashelp.iris out=outcan distance anova;
@@ -2298,7 +2316,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
   }
     var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
     var mailtoRegex = new RegExp(/^mailto:/);
-      var filterRegex = new RegExp("https:\/\/svieau\.quarto\.pub\/portfolio");
+      var filterRegex = new RegExp('/' + window.location.host + '/');
     var isInternal = (href) => {
         return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
     }

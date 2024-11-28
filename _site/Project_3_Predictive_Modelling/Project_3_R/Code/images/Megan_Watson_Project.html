@@ -157,7 +157,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </li>  
         <li>
     <a class="dropdown-item" href="../../../../Project_3_Predictive_Modelling/Project_3_R/Code/Project_3_Predictive_Modelling.html">
- <span class="dropdown-text">Predictive Modelling</span></a>
+ <span class="dropdown-text">Predictive Modelling (R)</span></a>
   </li>  
     </ul>
   </li>
@@ -180,13 +180,31 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </li>  
     </ul>
   </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-statistical-consulting-(r" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Statistical Consulting (R)</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-statistical-consulting-(r">    
+        <li>
+    <a class="dropdown-item" href="../../../../Statistical_Consulting/Vieau_Project_01/Code/Megan_Watson_Project.html">
+ <span class="dropdown-text">Scope of Work and Negative Binomial Regression (R)</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-data-viz-(r" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Data Viz (R)</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-data-viz-(r">    
+        <li>
+    <a class="dropdown-item" href="../../../../Data_Visualization/Cancer_Animations/Gapminder_Cancer_Animations.html">
+ <span class="dropdown-text">Animated Plots (R)</span></a>
+  </li>  
+    </ul>
+  </li>
   <li class="nav-item">
     <a class="nav-link" href="../../../../Resume/Publications_and_Presentations.html"> 
 <span class="menu-text">Publications/Presentations</span></a>
-  </li>  
-  <li class="nav-item">
-    <a class="nav-link" href="C:/Users/sviea/Documents/Vieau_Project_01/Code/Megan_Watson_Project.qmd"> 
-<span class="menu-text">Statistical Consulting (R)</span></a>
   </li>  
 </ul>
           </div> <!-- /navcollapse -->
@@ -966,15 +984,15 @@ $ Age_Quartile                          &lt;chr&gt; "57-66", "43-56", "43-56", "
 <div class="cell-output cell-output-stdout">
 <pre><code>Best Normalizing transformation with 3264 Observations
  Estimated Normality Statistics (Pearson P / df, lower =&gt; more normal):
- - arcsinh(x): 24.3737
- - Box-Cox: 24.4328
- - Center+scale: 23.8599
- - Double Reversed Log_b(x+a): 25.6305
- - Exp(x): 344.126
- - Log_b(x+a): 24.3821
- - orderNorm (ORQ): 24.0432
- - sqrt(x + a): 24.1788
- - Yeo-Johnson: 24.6534
+ - arcsinh(x): 24.4402
+ - Box-Cox: 24.5487
+ - Center+scale: 23.8153
+ - Double Reversed Log_b(x+a): 27.2549
+ - Exp(x): 342.9721
+ - Log_b(x+a): 24.4624
+ - orderNorm (ORQ): 24.1765
+ - sqrt(x + a): 24.1665
+ - Yeo-Johnson: 24.7466
 Estimation method: Out-of-sample via CV with 10 folds and 5 repeats
  
 Based off these, bestNormalize chose:
@@ -1050,14 +1068,14 @@ center_scale(x) Transformation with 3264 nonmissing obs.
 <div class="cell-output cell-output-stdout">
 <pre><code>Best Normalizing transformation with 6430 Observations
  Estimated Normality Statistics (Pearson P / df, lower =&gt; more normal):
- - arcsinh(x): 9.1374
- - Box-Cox: 5.596
- - Center+scale: 33.5405
- - Double Reversed Log_b(x+a): 58.3778
- - Log_b(x+a): 9.124
- - orderNorm (ORQ): 1.3246
- - sqrt(x + a): 20.2544
- - Yeo-Johnson: 5.6084
+ - arcsinh(x): 9.175
+ - Box-Cox: 5.7466
+ - Center+scale: 34.2473
+ - Double Reversed Log_b(x+a): 56.8023
+ - Log_b(x+a): 9.1733
+ - orderNorm (ORQ): 1.2786
+ - sqrt(x + a): 19.2932
+ - Yeo-Johnson: 5.7307
 Estimation method: Out-of-sample via CV with 10 folds and 5 repeats
  
 Based off these, bestNormalize chose:
@@ -1211,13 +1229,13 @@ orderNorm Transformation with 6430 nonmissing obs and ties
 <div class="cell-output cell-output-stdout">
 <pre><code>Best Normalizing transformation with 6430 Observations
  Estimated Normality Statistics (Pearson P / df, lower =&gt; more normal):
- - arcsinh(x): 7.1432
- - Center+scale: 52.823
- - Double Reversed Log_b(x+a): 59.4003
- - Log_b(x+a): 8.8098
- - orderNorm (ORQ): 1.5557
- - sqrt(x + a): 10.7902
- - Yeo-Johnson: 5.3665
+ - arcsinh(x): 7.2628
+ - Center+scale: 51.6093
+ - Double Reversed Log_b(x+a): 57.9189
+ - Log_b(x+a): 8.6407
+ - orderNorm (ORQ): 1.7003
+ - sqrt(x + a): 10.9199
+ - Yeo-Johnson: 5.4667
 Estimation method: Out-of-sample via CV with 10 folds and 5 repeats
  
 Based off these, bestNormalize chose:
@@ -31208,7 +31226,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
   }
     var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
     var mailtoRegex = new RegExp(/^mailto:/);
-      var filterRegex = new RegExp("https:\/\/svieau\.quarto\.pub\/portfolio");
+      var filterRegex = new RegExp('/' + window.location.host + '/');
     var isInternal = (href) => {
         return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
     }
