@@ -1,0 +1,14 @@
+/*-- scss:defaults --*/
+$success: #28a745; /* Your desired success color */
+$success-dark: darken($success, 10%); /* Darker shade of success color */
+
+/*-- scss:rules --*/
+.btn-success {
+  background-color: $success;
+  border-color: $success;
+}
+
+.btn-success:hover {
+  background-color: $success-dark;
+  border-color: $success-dark;
+}

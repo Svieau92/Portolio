@@ -19,7 +19,7 @@ website:
           - text: MLR With Confounding and Interaction (SAS)
           - text: Linear Mixed Model (R)
             href: Project_2/Project_2_R/Code/Project2LMM.qmd
-          - text: Predictive Modelling (R)
+          - text: Predictive Modelling
             href: Project_3_Predictive_Modelling/Project_3_R/Code/Project_3_Predictive_Modelling.qmd
       - text: Data Wrangling (Python)
         href: Data_Wrangling/Treadmill_Data_Cleaning/Code/Automated_Treadmill_Data_Cleaning.qmd
@@ -31,6 +31,8 @@ website:
             href: Data_Management_(SAS)/Project_3/Project3.qmd
       - text: Publications/Presentations
         href: Resume/Publications_and_Presentations.qmd
+      - text: Statistical Consulting (R)
+        href: C:/Users/sviea/Documents/Vieau_Project_01/Code/Megan_Watson_Project.qmd
       
 theme: minty
 

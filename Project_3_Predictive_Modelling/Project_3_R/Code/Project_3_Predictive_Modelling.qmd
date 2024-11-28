@@ -4,7 +4,6 @@ subtitle: "Advanced Data Analysis - Project 3"
 author: "Sean Vieau"
 date: October 30, 2024
 format: html
-smooth-scroll: true
 editor: visual
 toc: true
 bibliography: references.bib
@@ -213,6 +212,7 @@ library(caret) # Used for K-fold cross validation and machine learning
 library(bestNormalize) # Used to find best transformation
 library(olsrr) # used for backwards elimination model.
 library(car) # Used for influenceplot function
+library(reshape2) # Used for melting data for multi ROC plotting
 ```
 
 #### Read .CSV
@@ -1804,7 +1804,7 @@ We will be using the `caret` package to perform model training using 5-fold cros
 
 To answer the researcher's first question for Task 1, we will perform a predictive model that uses the baseline height-corrected total kidney volume to predict percent change in kidney volume.
 
-$$ Kidney Volume Change = 𝛽_0 + 𝛽_{Log Kidney Volume Baseline} + e $$
+$$ Kidney Volume Change = 𝛽_0 + 𝛽_1*Log Kidney Volume Baseline + e $$
 
 ```{r}
 set.seed(123)
@@ -1913,7 +1913,7 @@ The assumption of normality is almost, but not quite, met.
 
 To answer the researcher's second question for Task 1, we will run a predictive model that uses only MRI image features to predict percent change in kidney volume at year 3.
 
-$$ Kidney Volume Change = 𝛽_0 + 𝛽_{Image Feature 1} + 𝛽_{Image Feature 2}+ ... + e $$
+$$ Kidney Volume Change = 𝛽_0 + 𝛽_1*Txti2 + e $$
 
 #### Model Selection
 
@@ -2254,7 +2254,7 @@ The RMSE for model 1B after removing outliers was 6.15
 
 To answer the researcher’s third question, we will run a predictive model that uses the baseline height-corrected total kidney volume AND MRI image features to predict percent change in kidney volume.
 
-$$ Kidney Volume Change = 𝛽_0 + 𝛽_{Baseline Kidney Volume} + 𝛽_{Txti2} +  e $$
+$$ Kidney Volume Change = 𝛽_0 + 𝛽_{1}*Baseline Kidney Volume + 𝛽_{2}*Txti2 +  e $$
 
 ```{r}
 set.seed(123)
@@ -2321,7 +2321,7 @@ ggplot(data, aes(sample = residuals1c)) +
   geom_qq() +
   geom_qq_line() +
   theme_minimal() +
-  labs(title = "QQ Plot of Baseline Kidney Volumne and  TXTI2")
+  labs(title = "QQ Plot of Baseline Kidney Volume and  TXTI2")
 ```
 
 This is the best QQ plot we have had so far.
@@ -2446,8 +2446,9 @@ We can also use the `caret` package to compare perfomance between these three mo
 -   Lower Diagonal Values: These are the p-values from hypothesis tests comparing the metric values between models. Small p-values (typically \< 0.05) indicate significant differences between the models for that metric.
 
 ```{r}
+#| fig-width: 8
 # Create list of models to compare
-model_list <- list(model1a = model1a, model1b = model1b2, model1c = model1c)
+model_list <- list(`Kidney Volume at Baseline` = model1a, `Txti2` = model1b2, `Kidney Volume at Baseline and Txti2` = model1c)
 
 # Compare models
 results <- resamples(model_list)
@@ -2458,10 +2459,20 @@ diffs <- diff(results)
 summary(diffs)
 
 # Plot RMSEs of each model
-dotplot(results, metric = "RMSE")
+dotplot(results, metric = "RMSE", main = "Comparison of RMSE Across Models")
 ```
 
 Model A had an RMSE that was 0.37 points higher than model B (p = 0.68), and 0.74 points higher than model C (p = 0.75)
+
+# Results
+
+To evaluate whether differences in model performance were statistically significant, RMSE for each model were compared using pairwise t-tests with Bonferroni p-value correction. The differences in model performance were not statistically significant. Model A had a 0.37 higher RMSE compared to model B (p = 0.68), and a 0.38 higher RMSE compared to model C (p = 0.75).
+
+| Model                               | RMSE | P-Adjusted |        |
+|-------------------------------------|------|------------|--------|
+| 1A: Baseline Kidney Volume          | 6.52 | --         |        |
+| 1B: Txti2                           | 6.15 | 0.68       | ---    |
+| 1C Baseline Kidney Volume and Txti2 | 6.14 | 0.75       | 1.0000 |
 
 ## Conclusion
 
@@ -2486,7 +2497,6 @@ To answer the researcher’s first question for this task, we will run a predict
 $$ logit(Progression) = 𝛽_0 + 𝛽_{Baseline Kidney Volume} + e $$
 
 ::: panel-tabset
-
 ## Analysis
 
 ```{r}
@@ -2506,12 +2516,14 @@ model2a <- train(progression~ log(kidvol_base),
                  method = "glm",
                  family = "binomial",
                  trControl = tc,
-                 metric = "ROC")
+                 metric = "ROC",
+                 preProc = "scale")
 
 # Examine model
 model2a
 summary(model2a)
 ```
+
 `kidvol_base_log` is not a significant predictor of change in kidney volume (p = 0.75).
 
 The AUC for this model is 0.47, which is near guessing. The sensitivity is 0.3 and the specificity is 0.71
@@ -2566,7 +2578,6 @@ Sensitivity: 0.3
 Specificity: 0.71
 
 [Top of Tabset](#2A)
-
 :::
 
 ## Model 2B: MRI Image Features {#2B}
@@ -2575,18 +2586,17 @@ To answer the researcher’s second question for this task, we will run a predic
 
 $$ logit(Progression) = 𝛽_0 + 𝛽_{MRI Feature 1} + 𝛽_{MRI Feature 1} + ... + e $$
 
-As the correlation matrices revealed similar relationship between the MRI image features and `progression` as they did with `kidvol_change`, we will select the same candidate covariates for Task 2 as we did for Task 1. 
+As the correlation matrices revealed similar relationship between the MRI image features and `progression` as they did with `kidvol_change`, we will select the same candidate covariates for Task 2 as we did for Task 1.
 
-These are: 
+These are:
 
-- `geom_avg`
-- `gabor3`
-- `txti2`
-- `lbp5_log`
-- `glcm2_square`
+-   `geom_avg`
+-   `gabor3`
+-   `txti2`
+-   `lbp5_log`
+-   `glcm2_square`
 
 ::: panel-tabset
-
 ## Model Selection
 
 ```{r}
@@ -2626,8 +2636,9 @@ model2b <- train(progression ~ txti2,
 model2b
 summary(model2b)
 ```
+
 `txti2` is a significant predictor of `kidvol_change` (p = 0.0062).
- 
+
 The AUC is 0.74, the senstivity is 0.57, and the specificity is 0.64
 
 [Top of Tabset](#2B)
@@ -2649,7 +2660,7 @@ cm <- table(Predicted = data$predictions2b, Actual = data$progression)
 cm
 ```
 
-We can see that we are getting more correct hits in the confusion matrix compared to using baseline kidney volume alone. 
+We can see that we are getting more correct hits in the confusion matrix compared to using baseline kidney volume alone.
 
 [Top of Tabset](#2B)
 
@@ -2735,7 +2746,6 @@ Sensitivity: 0.57
 Specificity: 0.64
 
 [Top of Tabset](#2B)
-
 :::
 
 ## Model 2C: Baseline Kidney Volume and MRI Image Features {#2C}
@@ -2745,7 +2755,6 @@ To answer the researcher’s third question, we will run a predictive model that
 $$ logit(Progression) = 𝛽_0 + 𝛽_{Baseline Kidney Volume} + 𝛽_{Txti2} + ... + e $$
 
 ::: panel-tabset
-
 ## Analysis
 
 ```{r}
@@ -2764,6 +2773,7 @@ model2c <- train(progression ~ log(kidvol_base) + txti2,
 model2c
 summary(model2c)
 ```
+
 The model performs similarly to using `txti2` alone.
 
 The AUC is 0.71, the sensitivity is 0.57, and the specificity is 0.59
@@ -2820,43 +2830,90 @@ Sensitivity: 0.57
 Specificity is 0.59
 
 [Top of Tabset](#2C)
-
 :::
 
 ## Model Comparison
 
 ```{r}
+#| fig-width: 8
+
 # Create list of models to compare
-model_list <- list(model2a = model2a, model2b = model2b, model2c = model2c)
+model_list <- list(`Kidney Volume at Baseline` = model2a, Txti2 = model2b, `Kidney Volume at Baseline and Txti2` = model2c)
 
 # Compare models
 results <- resamples(model_list)
 summary(results)
 
-# Compare the RMSEs 
+results$models
+
+# Compare the AUCs 
 diffs <- diff(results) 
 summary(diffs)
 
 # Plot RMSEs of each model
-dotplot(results, metric = "ROC")
+dotplot(results, metric = "ROC",
+        main = "Comparison of AUC Across Models")
+dotplot(results, metric = "Sens",
+        main = "Comparison of Sensitivity Across Models")
+dotplot(results, metric = "Spec",
+        main = "Comparison of Specificity Across Models")
 ```
 
 The difference in performance between models was not statistically significant (report AUC's and 95% CI's here)
 
+# Results
+
+Table 2. Results of Pairwise T-Tests Comparing Model Performance Predicting Disease Progression using AUC
+
+|                                  |      |             |             |              |
+|---------------|---------------|---------------|---------------|---------------|
+| Model                            | AUC  | Sensitivity | Specificity |   P-Adjusted |
+| Baseline Kidney Volume           | 0.47 | 0.30        | 0.71        | —            |
+| Txti2                            | 0.74 | 0.57        | 0.64        | 0.28         |
+| Baseline Kidney Volume and Txti2 | 0.71 | 0.57        | 0.59        | 0.31         |
+
 ## Discussion
 
-The model using `txti2` alone performed better at predicting disease progression than the model using `kidvol_base` alone (AUC = , 95% CI: _,_). However, this difference was not statistically significant (p = ___).
+The model using `txti2` alone performed better at predicting disease progression than the model using `kidvol_base` alone (AUC = , 95% CI: *,*). However, this difference was not statistically significant (p = \_\_\_).
 
 Additionally, the model incorporating both `txti2` and `kidvol_base` did not perform better than the model using just `txti` (AUC = , 95% CI: )
 
 However, examining the ROC curves and the 95% CIs for all of the models, it does appear that there is a trend towards these difference being significant. It is possible that these may have not been statistically significant due to a small sample size (N = 67).
 
-# Plot ROC Curves on Top of each other here.
-
-
 # ROC Curve
 
 [Source](https://www.r-project.org/conferences/useR-2013/Tutorials/kuhn/user_caret_2up.pdf)
+
+```{r}
+#| fig-width: 10
+#| fig-height: 6
+# Example Data: Combine predictions into a single data frame
+data_for_ROC <- data.frame(
+  progression_num = data$progression_num,  # Your actual outcomes
+  `Baseline Kidney Volume` = data$predictions2a_num,
+  `Txti2` = data$predictions2b_num,
+  `Baseline Kidney Volume and Txti2` = data$predictions2c_num
+)
+
+# Melt the data frame for ggplot
+data_melted <- melt(data_for_ROC, id.vars = "progression_num", variable.name = "model", value.name = "predictions")
+data_melted
+
+# Plot ROC Curves
+roc_plot <- ggplot(data_melted, aes(m = predictions, d = progression_num, color = model)) +
+  geom_roc(n.cuts = 10, labels = FALSE, labelround = 4) +
+  theme_minimal() +
+  labs(title = "ROC Curves for Models Predicting Kidney Disease Progression",
+       x = "False Positive Rate",
+       y = "True Positive Rate",
+       color = "Model") +
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "black") +
+  scale_color_brewer(palette = "Set2") +
+  theme( text = element_text(size = 15))
+
+# Visualize Plot
+roc_plot
+```
 
 # Discussion
 
@@ -2867,7 +2924,6 @@ However when performing logistic regression, there appeared to be a difference i
 The statisticians recommend collecting more data.
 
 Add details here about how using `txti2` in conjunction with other strong predictors of ADPKD such as hypertension, elevated serum creatinine, sex could be incorporated into a single model to enhance predictive power.
-
 
 # Bivariate Comparisons
 
@@ -2980,7 +3036,6 @@ ggplot(data, aes(y = log(kidvol_base), x = txti2, color = progression)) +
   geom_point() +
   theme_minimal()
 ```
-
 
 ## Gradient Descent
 
