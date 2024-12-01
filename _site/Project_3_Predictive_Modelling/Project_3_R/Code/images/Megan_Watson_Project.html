@@ -984,15 +984,15 @@ $ Age_Quartile                          &lt;chr&gt; "57-66", "43-56", "43-56", "
 <div class="cell-output cell-output-stdout">
 <pre><code>Best Normalizing transformation with 3264 Observations
  Estimated Normality Statistics (Pearson P / df, lower =&gt; more normal):
- - arcsinh(x): 24.4402
- - Box-Cox: 24.5487
- - Center+scale: 23.8153
- - Double Reversed Log_b(x+a): 27.2549
- - Exp(x): 342.9721
- - Log_b(x+a): 24.4624
- - orderNorm (ORQ): 24.1765
- - sqrt(x + a): 24.1665
- - Yeo-Johnson: 24.7466
+ - arcsinh(x): 24.5317
+ - Box-Cox: 24.6712
+ - Center+scale: 23.8581
+ - Double Reversed Log_b(x+a): 26.8101
+ - Exp(x): 345.3443
+ - Log_b(x+a): 24.4751
+ - orderNorm (ORQ): 24.1353
+ - sqrt(x + a): 24.22
+ - Yeo-Johnson: 24.6749
 Estimation method: Out-of-sample via CV with 10 folds and 5 repeats
  
 Based off these, bestNormalize chose:
@@ -1068,14 +1068,14 @@ center_scale(x) Transformation with 3264 nonmissing obs.
 <div class="cell-output cell-output-stdout">
 <pre><code>Best Normalizing transformation with 6430 Observations
  Estimated Normality Statistics (Pearson P / df, lower =&gt; more normal):
- - arcsinh(x): 9.175
- - Box-Cox: 5.7466
- - Center+scale: 34.2473
- - Double Reversed Log_b(x+a): 56.8023
- - Log_b(x+a): 9.1733
- - orderNorm (ORQ): 1.2786
- - sqrt(x + a): 19.2932
- - Yeo-Johnson: 5.7307
+ - arcsinh(x): 9.3801
+ - Box-Cox: 5.7235
+ - Center+scale: 34.5026
+ - Double Reversed Log_b(x+a): 56.9275
+ - Log_b(x+a): 9.3801
+ - orderNorm (ORQ): 1.4126
+ - sqrt(x + a): 19.7606
+ - Yeo-Johnson: 5.7441
 Estimation method: Out-of-sample via CV with 10 folds and 5 repeats
  
 Based off these, bestNormalize chose:
@@ -1229,13 +1229,13 @@ orderNorm Transformation with 6430 nonmissing obs and ties
 <div class="cell-output cell-output-stdout">
 <pre><code>Best Normalizing transformation with 6430 Observations
  Estimated Normality Statistics (Pearson P / df, lower =&gt; more normal):
- - arcsinh(x): 7.2628
- - Center+scale: 51.6093
- - Double Reversed Log_b(x+a): 57.9189
- - Log_b(x+a): 8.6407
- - orderNorm (ORQ): 1.7003
- - sqrt(x + a): 10.9199
- - Yeo-Johnson: 5.4667
+ - arcsinh(x): 7.1709
+ - Center+scale: 51.377
+ - Double Reversed Log_b(x+a): 56.9337
+ - Log_b(x+a): 8.6526
+ - orderNorm (ORQ): 1.5641
+ - sqrt(x + a): 10.4779
+ - Yeo-Johnson: 5.2637
 Estimation method: Out-of-sample via CV with 10 folds and 5 repeats
  
 Based off these, bestNormalize chose:
@@ -31226,7 +31226,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
   }
     var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
     var mailtoRegex = new RegExp(/^mailto:/);
-      var filterRegex = new RegExp('/' + window.location.host + '/');
+      var filterRegex = new RegExp("https:\/\/svieau\.quarto\.pub\/portfolio");
     var isInternal = (href) => {
         return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
     }

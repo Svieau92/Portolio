@@ -1,0 +1,440 @@
+---
+title: "The Opioid Epidemic in Colorado: A Geospatial Analysis"
+author: "Sean Vieau"
+date: 11/30/2024
+format: html
+editor: visual
+toc: true
+---
+
+```{r setup, include = FALSE}
+# Sets the default for all chunks as echo = TRUE (ensures they show unless specified not to)
+knitr::opts_chunk$set(echo = TRUE)
+
+# Create a function to pretty print our dataframes
+pretty_print <- function(x) {
+  kable(x, format = "html") |>
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+}
+
+# Set options to avoid scientific notation
+options(scipen = 999)
+```
+
+# Introduction
+
+This is the final project for BIOS 6640: R for Data Science. In this project we analyze spatial variation patterns in the presence of Behavioral Health Treatment Service Providers throughout Colorado to investigate the opioid epidemic.
+
+![](images/clipboard-3840054476.png){width="90%"}Background
+
+The opioid epidemic is a significant public health crisis in Colorado, with severe impacts on communities, families, and individuals themselves. Prescription pain killers such as oxycodone and hydrocodone are significant causes of opioid addiction, with approximately 70% of heroin users in Colorado reporting that their drug use began with these prescription medications (1). Additionally, fentanyl overdoses have increased by 10x since 2016, with the number of deaths from opioid overdose increasing by 54% from 2019 to 2020 alone (2).
+
+The data set used for this analysis is from the Substance Abuse and Mental Health Services Administration (SAMHSA) in collaboration from the Colorado Public Health and Environment Department (CDPHE), and tracks the different substance use treatment facilities in Colorado. This data set includes the geospatial location (latitude and longitude) of each facility, as well as the type (e.g. mental health facility). The two questions that will be addressed are:
+
+1.  Are the spatial distributions of Behavioral Health Treatment Service Providers through-out Colorado different by Facility Type?
+
+2.  Are the spatial distributions of Behavioral Health Treatment Service Providers through-out Colorado different based on whether Naltrexone or Buprenorphine is used in treatment?
+
+# Data Preparation
+
+```{r, message = FALSE, warning = FALSE}
+library(ggplot2)
+library(naniar) # Used to visualize missing data
+library(kableExtra) # Used for pretty printing (kable_styling)
+library(table1) # Used to make Table 1
+library(tidyverse)
+library(spatstat) # For running geospatial analyses
+library(ggmap) # For plotting geospatial data with stadia
+```
+
+```{r}
+# Read in data set
+data <- read_csv(r"(C:\Users\sviea\Documents\R for Data Science\SAMHSA.csv)")
+
+# Examine data set
+pretty_print(head(data))
+```
+
+#### Examine Missingness
+
+```{r}
+# Examine Missingness
+vis_miss(data)
+```
+
+As noted in the project description, many variables have values of 0 coded as `NA`.
+
+## Variable Creation
+
+We will first create a variable for whether the facility is a mental health treatment or substance abuse treatment facility.
+
+#### Facility Type
+
+```{r}
+# Examine Facility Types
+pretty_print(table(data$Type_))
+```
+
+We will condense these descriptions into two facility types:
+
+-   Substance Abuse Treatment
+
+-   Mental Abuse Treatment
+
+```{r}
+# Aggregate facility types
+data <- data |> 
+  mutate(facility = ifelse(Type_ %in% c("Mental health treatment", "Transitional housing or halfway house"), "Mental Health Treatment", "Substance Abuse Treatment"))
+
+# Create table of facility type
+pretty_print(table(data$facility))
+```
+
+#### Naltrexone or Buprenorphrine Used in Treatment
+
+For question 2 we need to dummy code whether the facility uses naltrexone or buprenorphine in treatment
+
+```{r}
+# Create dummy variables
+data <- data |> 
+  mutate(nal = ifelse(is.na(Naltrexone_used_in_Treatment), 0, 1),
+         bup = ifelse(is.na(Buprenorphine_used_in_Treatment), 0, 1),
+         nal_bup = ifelse(!is.na(Buprenorphine_used_in_Treatment) | !is.na(Naltrexone_used_in_Treatment), "Naltrexone or Buprenorphine Used", "Neither Used"))
+
+# Examine
+pretty_print(table(data$nal_bup))
+```
+
+There are 408 facilities that do not use naltrexone or buprenorphine, and 98 that use at least one.
+
+#### Summary
+
+We successfully created variables for `facility` type (for question 1), and use of naltrexone or buprenorphine (for question 2)
+
+# Analysis One
+
+## Mental Health vs Substance Abuse Treatment Facility
+
+To answer question one "Are the spatial distributions of Behavioral Health Treatment Service Providers through-out Colorado different by Facility Type" we will first visualize the difference in distributions over a map of Colorado. We will then test whether these distributions are significantly different using the estimated K-Functions.
+
+### Visualize Distribution of Facilities Across Colorado
+
+First, let us begin by visualizing the distribution of behavioral care facilities across Colorado, separated by mental health vs substance abuse treatment.
+
+```{r}
+#| warning: false
+#| fig-width: 10
+#| fig-height: 15
+# API Key from https://client.stadiamaps.com/signup
+
+# Register Stadia API so we can use it to retrieve maps
+register_stadiamaps(key = "4a4ea0df-9bd4-4ce8-a9ff-f1a7d86c0da9")
+
+# Define the bounding box for Colorado
+colo <- c(left = -109, bottom = 37, right = -102, top = 41)
+
+# Retrieve and plot the stamen toner map of colorado
+colo_map <- get_stadiamap(colo, zoom = 8, maptype = "stamen_terrain") |> ggmap()
+
+# Plot the distribution of behavioral care facilities across Colorado, separated by facility type
+colo_map +
+  geom_point(aes(LONGITUDE, LATITUDE), data = data, color = "red") +
+  stat_density_2d(aes(LONGITUDE, LATITUDE, fill = ..level..), data = data, geom = "polygon", alpha = 0.3) +
+  scale_fill_gradient2("Facility\nPropensity", low = "white", mid = "yellow", high = "red") +
+  facet_wrap(~facility, ncol=1) +
+  labs(title = "Distribution of Behavioral Health Treatment Service Providers throughout Colorado",
+       x = "Longitude",
+       y = "Latitude")
+```
+
+It appears that there is a *higher concentration of substance abuse treatment facilities* around Denver compared to mental health treatment facilities. This could be due to the smaller sample size of mental health treatment facilities however.
+
+### Descriptive Statistics
+
+We will perform a simple density plot to compare the densities of both treatment facilities.
+
+#### Create Geospatial Objects
+
+```{r}
+#| warning: false
+# Code adjusted from SpatialPart2.Rmd from class
+# Create owin and ppp objects
+bbx <- owin(xrange=range(data$LONGITUDE),yrange=range(data$LATITUDE))
+X <- ppp(data$LONGITUDE,data$LATITUDE,window=bbx)
+
+# Get row length of dataset
+n <- dim(data)[1]
+
+# Create a blank vector with 0's to that specification
+data_vec <- rep(0,n)
+
+# Search facility column for mental health units
+tmp <- grep("Mental", data$facility)
+
+# Mark them as 1
+data_vec[tmp] <- 1
+
+# Ensure values are a factor and not numeric
+data_vec_fact <- factor(data_vec, levels = c(0,1), labels = c("Substance Abuse Facility", "Mental Health Facility"))
+
+# Use the ppp function from the spatstat package to create a point pattern object X.m1
+X.m1 <- ppp(data$LONGITUDE,data$LATITUDE,window=bbx,marks=data_vec_fact)
+
+# Create Plot
+plot(X.m1)  
+```
+
+```{r}
+# Plot the densities of each treatment facility type
+pretty_print(intensity(X.m1))
+plot(density(split(X.m1)))
+```
+
+#### Interpretation
+
+Substance Abuse Facility: The intensity is approximately 13.80 facilities per unit area.
+
+Mental Health Facility: The intensity is approximately 5.82 facilities per unit area.
+
+This means that Substance Abuse Facilities are more densely distributed compared to Mental Health Facilities in Colorado.
+
+### Statistical Inference
+
+Now that we have visualized the distribution of facility types across Colorado, let's test whether there is a significant difference in the distribution between mental health and substance abuse treatment facilities.
+
+This spatial data analysis will use the **K-Function**. This is the empirical distribution of the pairwise distance between points. It includes the variance based on bootstrapping, and describes the clustering/dispersion of points.
+
+#### Perform Statistical Inference
+
+```{r}
+#| message: false
+#| echo: false
+# Split the point pattern by facility type
+split_facility <- split(X.m1, f = data_vec_fact)
+
+# Loop through each facility type and calculate the estimated K-function for point pattern X.m1
+results <- lapply(split_facility, function(pattern) {
+  estK <- Kest(pattern)
+  plot(estK, main = paste("K-function for", pattern$marks[1]))
+})
+
+# Plot the estimated K-functions with 95% CI's
+ci_results <- lapply(split_facility, function(pattern) {
+  Kvl <- lohboot(pattern, Kest, progress = FALSE)
+  return(Kvl)
+})
+plot(ci_results[[1]], main="K-function with 95% CI by Facility Type", legend=FALSE)
+for (i in 2:length(ci_results)) {
+  plot(ci_results[[i]], add=TRUE, col=i)
+}
+legend("topright", legend=names(ci_results), col=1:length(ci_results), lty=1)
+```
+
+#### Interpretation
+
+The K-function measures the number of points within a given distance from a typical point, compared to what would be expected under complete spatial randomness (CSR). The null hypothesis here is that of complete spatial randomness (i.e. the red dotted line).
+
+The estimated K-functions for both mental health treatment and substance abuse treatment facilities lie above the theoretical K-Function, indicating that the distributions for each facility type do not exhibit complete spatial randomness. Additionally, since the 95% CIs do not overlap, we can conclude that this difference is statistically significant.
+
+The estimated K-Function for substance abuse treatment facilities is significantly greater than that of mental health treatment clinics indicating that the substance abuse treatment facilities are significantly more clustered than the mental health treatment clinics.
+
+### Summary
+
+We have discovered that the distributions for both facility types are not random, and that substance abuse clinics are more clustered together compared to mental health clinics, with a approximately 13.80 Substance Abuse facilities per unit area, and approximately 5.82 Mental Health facilities per unit area.
+
+# Analysis Two
+
+## Naltrexone and Buprenorphine Use
+
+To answer question two, "Are the spatial distributions of Behavioral Health Treatment Service Providers through-out Colorado different based on whether Naltrexone or Buprenorphine is used in treatment?" we will examine the quadrat plots and compare distributions using the estimated K-Functions.
+
+### Visualize Distribution of Facilities Across Colorado
+
+First, let us begin by visualizing the distribution of facilities that use buprenorphrine or naltrexone across Colorado.
+
+```{r}
+#| warning: false
+#| fig-width: 10
+#| fig-height: 15
+# Plot the distribution of behavioral care facilities across Colorado, separated by facility type
+colo_map +
+  geom_point(aes(LONGITUDE, LATITUDE), data = data, color = "red") +
+  stat_density_2d(aes(LONGITUDE, LATITUDE, fill = ..level..), data = data, geom = "polygon", alpha = 0.3) +
+  scale_fill_gradient2("Facility\nPropensity", low = "white", mid = "yellow", high = "red") +
+  facet_wrap(~nal_bup, ncol=1) +
+  labs(title = "Distribution of Behavioral Health Treatment Service Providers throughout Colorado",
+       x = "Longitude",
+       y = "Latitude")
+```
+
+It appears that facilities that use naltrexone or buprenorphine may be more localized around Denver compared to facilities that do not.
+
+### Descriptive Statistics
+
+We will be examining the quadrat plots to examine the distributions of facilities.
+
+#### Prepare and Split the Data
+
+```{r}
+#| warning: false
+# Split the data into two groups
+bup_or_nal <- subset(data, nal_bup == "Naltrexone or Buprenorphine Used")
+neither <- subset(data, nal_bup == "Neither Used")
+
+# Create ppp for bup or nal data set
+bup_or_nal_ppp <- ppp(bup_or_nal$LONGITUDE, bup_or_nal$LATITUDE, window=bbx)
+
+# Create ppp for neither data set
+neither_ppp <- ppp(neither$LONGITUDE, neither$LATITUDE, window=bbx)
+```
+
+#### Perform Quadrat Count
+
+```{r}
+# Define the number of quadrats
+nx <- 5
+ny <- 5
+
+# Quadrat counts for Bup or Nal and Neither
+bup_or_nal_quadrat <- quadratcount(bup_or_nal_ppp, nx = nx, ny = ny)
+neither_quadrat <- quadratcount(neither_ppp, nx = nx, ny = ny)
+```
+
+#### Plot Quadrat Counts
+
+```{r}
+# Plot quadrat counts for Bup or Nal
+plot(bup_or_nal_quadrat, col="blue", main = "Naltrexone or Buprenorphine Used")
+
+# Plot quadrat counts for Neither
+plot(neither_quadrat, col="red", main = "Neither Used")
+```
+
+#### Compare Quadrat Counts
+
+```{r}
+# Summary of quadrat counts
+quadrat.test(bup_or_nal_quadrat)
+quadrat.test(neither_quadrat)
+
+# Chi-squared test for comparison
+observed_counts <- rbind(as.vector(bup_or_nal_quadrat), as.vector(neither_quadrat))
+chisq.test(observed_counts)
+```
+
+#### Interpretation
+
+The results for the Chi-squared test of complete spatial randomness for facilities that use nalextrone or buprenorphrine (2 = 525.98, df = 24, p-value \< 0.0001) and those that use neither (X2 = 1415.8, df = 24, p-value \< 0.0001) are highly significant, indicating that there is spatial preference for both facility types (i.e. they are not CSR).
+
+However, the Pearson Chi-Squared test comparing the distributions of both was not significant (X-squared = 24.761, df = 24, p-value = 0.42), indicating that there is not a significant difference in the distribution of facilities based on nalextrone or buprenorprhine use.
+
+### Sensitivity Analysis
+
+We can also perform this analysis as many different bin sizes.
+
+```{r}
+# Define the number of quadrats
+nx <- 3
+ny <- 3
+
+# Quadrat counts for Bup or Nal and Neither
+bup_or_nal_quadrat <- quadratcount(bup_or_nal_ppp, nx = nx, ny = ny)
+neither_quadrat <- quadratcount(neither_ppp, nx = nx, ny = ny)
+
+# Summary of quadrat counts
+quadrat.test(bup_or_nal_quadrat)
+quadrat.test(neither_quadrat)
+
+# Chi-squared test for comparison
+observed_counts <- rbind(as.vector(bup_or_nal_quadrat), as.vector(neither_quadrat))
+chisq.test(observed_counts)
+```
+
+Even at 9 bins total, we get the same results, giving us more confidence in our findings.
+
+### Statistical Inference
+
+We will again perform K-Function analyses to compare the distributions between facilities that use nalextrone/buprenorphrine and those that do not.
+
+```{r}
+#| include: false
+#| warning: false
+# Code adjusted from SpatialPart2.Rmd from class
+# Create owin and ppp objects
+bbx <- owin(xrange=range(data$LONGITUDE),yrange=range(data$LATITUDE))
+X <- ppp(data$LONGITUDE,data$LATITUDE,window=bbx)
+
+# Get row length of dataset
+n <- dim(data)[1]
+
+# Create a blank vector with 0's to that specification
+data_vec <- rep(0,n)
+
+# Search facility column for mental health units
+tmp <- grep("Bup", data$nal_bup)
+
+# Mark them as 1
+data_vec[tmp] <- 1
+
+# Ensure values are a factor and not numeric
+data_vec_fact <- factor(data_vec, levels = c(0,1), labels = c("Neither Used", "Naltrexone or Buprenorphine Used"))
+
+# Use the ppp function from the spatstat package to create a point pattern object X.m1
+X.m1 <- ppp(data$LONGITUDE,data$LATITUDE,window=bbx,marks=data_vec_fact)
+
+# Create Plot
+plot(X.m1)  
+data$nal_bup
+```
+
+```{r}
+#| message: false
+#| echo: false
+# Split the point pattern by facility type
+split_facility <- split(X.m1, f = data_vec_fact)
+
+# Loop through each facility type and calculate the estimated K-function for point pattern X.m1
+results <- lapply(split_facility, function(pattern) {
+  estK <- Kest(pattern)
+  plot(estK, main = paste("K-function for", pattern$marks[1]))
+})
+
+# Plot the estimated K-functions with 95% CI's
+ci_results <- lapply(split_facility, function(pattern) {
+  Kvl <- lohboot(pattern, Kest, progress = FALSE)
+  return(Kvl)
+})
+plot(ci_results[[1]], main="K-function with 95% CI by Naltrexone/Buprenorphrine Use", legend=FALSE)
+for (i in 2:length(ci_results)) {
+  plot(ci_results[[i]], add=TRUE, col=i)
+}
+legend("topright", legend=names(ci_results), col=1:length(ci_results), lty=1)
+```
+
+#### Interpretation
+
+Here we can see that the CI's for facilities that use Naltrexone/Buprenorphrine and those that do not overlap, confirming the results from the quadrat plots that these distributions across Colorado are not significantly different.
+
+### Summary
+
+We discovered that facilities that use naltrexone/buprenorphrine and those that do not both show spatial preference. Additionally, we learned that their distributions did not significantly differ from each other.
+
+# Results and Conclusion
+
+#### Analysis One
+
+To assess question one, facilities were separated by type (NMental Health Treatment = 150, NSubstance Abuse Treatment = 356) (Note: facilities which performed detoxification only were considered substance abuse facilities, and one transitional/halfway house was considered a mental health treatment facility). The location and density of every Behavioral Health Treatment facility was then plotted against a map of Colorado and separated by facility type (see Figure 1). Density plots were then made to compare the intensities between the distribution of substance abuse and mental health facilities (See Figure 2). While both facility types were localized around Denver, substance abuse facilities had an intensity of 13.80 facilities per unit area, compared to mental health facilities which had approximately 5.82 facilities per unit area.
+
+To test whether the distributions between substance abuse vs mental health facilities were statistically significant, we performed spatial data analysis using the estimated K-Functions for each facility type (See Figure 3). The estimated K-functions for both mental health treatment and substance abuse treatment facilities were above the theoretical K-Function, indicating that the distributions for each facility type do not exhibit complete spatial randomness. Additionally, since the 95% CIs do not overlap, we concluded that this difference was statistically significant. Finally, the estimated K-Function for substance abuse treatment facilities was significantly higher than that of mental health treatment clinics, indicating that substance abuse treatment facilities are significantly more clustered than mental health treatment clinics, aligning with the findings from the descriptive statistics.
+
+#### Analysis Two
+
+To assess question two, facilities were separated into those that used nalextrone or buprenorphrine during treatment (N = 98), and those that did not (N = 408). The location and density of every Behavioral Health Treatment facility by these categories was then plotted against a map of Colorado (See Figure 4). For descriptive statistics, 5x5 quadrat plots were made (See Figure 5), and the quadrat counts of facilities that use nalextrone or buprenorphrine and those that do not were compared. The results for the Chi-squared test of complete spatial randomness for facilities that use nalextrone or buprenorphrine (X2 = 525.98, df = 24, p-value \< 0.0001) and those that use neither (X2 = 1415.80, df = 24, p-value \< 0.0001) were highly significant, indicating that there is spatial preference for both facility types (i.e. they are not completely spatially random). However, the Pearson Chi-Squared test comparing the distributions of both facility types to each other was not significant (X2 = 24.761, df = 24, p-value = 0.42), indicating that there is not a significant difference in the distribution of facilities based on nalextrone or buprenorphrine use. A sensitivity analysis using a 3x3 quadrat plot was also conducted, yielding the same findings. To test whether the distributions between facilities that use nalextrone or buprenorphrine and those that do not were significantly different, we performed spatial data analysis using the estimated K-Functions for each facility type (See Figure 6). The findings confirm the results of the descriptive analyses, showing overlap in the 95% confidence intervals in the K-functions for facilities that use nalextrone or buprenorphrine and those that do not, indicating that these distributions are not significantly different from each other.
+
+#### Conclusion
+
+In this project we performed a series of descriptive and inferential geospatial analyses to assess the distribution of Behavioral Health Treatment facilities in Colorado. To answer question one, we found that the distribution of mental health and substance abuse treatment facilities was not random. Additionally, we found that substance abuse clinics are more clustered together compared to mental health treatment facilities. In question two, we discovered that facilities that use naltrexone or buprenorphrine and those that do not both show spatial preference and are not randomly distributed. Additionally, we learned that their distributions did not significantly differ from each other.
+
+###### Strengths and Limitations
+
+A strength of this study was the combination of descriptive and inferential statistics using geospatial analysis coupled with the high-quality data set provided by SAMHSA, resulting in a robust analysis on the distribution of Behavioral Health Treatment facilities in Colorado. Additionally, a sensitivity analysis using varying sized quadrat plots was performed, showing consistent findings across quadrat sizes. A limitation is that additional analyses, such as the nonparametric test of relative risk for evaluating the dependence between spatial locations and the mark was not used, which could have added to the strength of the analysis. Finally, data on deaths by opioid use for each region was not included, which could have provided much needed context to the extent of the opioid epidemic in Colorado.

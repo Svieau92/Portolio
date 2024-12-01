@@ -37,6 +37,8 @@ website:
         menu:
           - text: Animated Plots (R)
             href: Data_Visualization/Cancer_Animations/Gapminder_Cancer_Animations.qmd
+          - text: Geospatial Analysis (R)
+            href: Statistical_Consulting/Opioid_Epidemic/GeoSpatial_Opioid_Epidemic.qmd
       - text: Publications/Presentations
         href: Resume/Publications_and_Presentations.qmd
       
