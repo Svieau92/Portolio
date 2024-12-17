@@ -1,0 +1,642 @@
+---
+title: "Project 5 - Analysis and Report"
+subtitle: "Data Management Using SAS"
+format: html
+editor: visual
+author: Sean Vieau
+date: 12/16/2024
+toc: true
+---
+
+# Introduction
+
+For this project, we implement the Data Analysis Plan (DAP) we created for project 4, and analyze the PI's research question and our own question of interest. Importantly, we write SAS code to create a reproducible pdf report directly from SAS.
+
+# Data Analysis Plan
+
+![](images/clipboard-2744288749.png){fig-align="center"}
+
+### Research Questions
+
+1.  Is there a significant difference in BMI between California and North Carolina?
+2.  Is Marijuana usage a significant predictor of cancer, while controlling for years of cigarette smoking, alcohol use, and age?
+
+# Set Up
+
+::: panel-tabset
+
+## Connect to SAS
+
+#### Connect to SAS
+
+```{r}
+# This code connects to SAS On Demand
+library(configSAS)
+configSAS::set_sas_engine()
+
+#  This code allows you to run ```{sas}``` chunks
+sas = knitr::opts_chunk$get("sas")
+```
+
+## Macros
+
+#### Macros
+
+```{sas, results = "hide"}
+* Set Courseroot;
+%LET CourseRoot = /home/u63376223/sasuser.v94/Data Management Using SAS;
+```
+
+## Libraries
+
+#### Libraries
+
+```{sas, results = "hide"}
+* Create libraries;
+LIBNAME Source "&CourseRoot/BRFSS/Data/1_Source";
+LIBNAME Impt "&CourseRoot/BRFSS/Data/2_Import";
+```
+## System Options
+
+#### System Options
+
+```{sas, results = "hide"}
+* Suppress error messages that occur when SAS cannot find a format or an informat
+OPTIONS NOFMTERR;
+```
+## Formats
+
+#### Formats
+
+```{sas, results = "hide"}
+*How do we want the variable names to display?;
+PROC FORMAT;
+	VALUE $Varnames
+	"BMI" = "BMI"
+	"SmokeTime" = "Years Smoked"
+	"Age" = "Age";
+	RUN;
+```
+
+```{sas, include = FALSE}
+* Create FORMAT for age;
+TITLE "Demographics: Age";
+PROC FORMAT;
+	VALUE AgeCd
+		1 = "18-44"
+		2 = "45-64"
+		3 = "65+";
+	RUN;
+		
+TITLE "Demographics: Race";
+PROC FORMAT;
+	VALUE RaceCd
+			1 = "Non-Hispanic White"
+			2 = "Non-Hispanic Black"
+			3 = "Non-Hispanic American Indian or Alaskan Native"
+			4 = "Hispanic"
+			5 = "Other";
+	RUN;
+
+* Create FORMAT for age;
+TITLE "Demographics: Age";
+PROC FORMAT;
+	VALUE AgeCd
+		1 = "18-44"
+		2 = "45-64"
+		3 = "65+";
+	RUN;
+
+* Create format for BMI category;
+TITLE "Outcomes: BMI Category";
+PROC FORMAT;
+	VALUE BMIcat
+		1= "Underweight"
+		2 = "Normal Weight"
+		3 = "Overweight"
+		4 = "Obese";
+	RUN;
+
+* Create format for cancer status;
+PROC FORMAT;
+	VALUE CancerCd
+		1 = "Yes"
+		2 = "No";
+	RUN;
+		
+* Create format for cancer age;
+TITLE "Outcomes: Cancer Age";
+PROC FORMAT;
+	VALUE CancerAge
+		1 = "0-<15"
+		2 = "15-<18"
+		3 = "18-<39"
+		4 = "40+";
+	RUN;
+		
+* Create format for smoking status;
+TITLE "Risk Factors: Smoking Status";
+PROC FORMAT;
+	VALUE SmokeStat
+		1 = "Current Smoker"
+		2 = "Former Smoker"
+		3 = "Never Smoker"
+		4 = "Don't Know/Refused/Missing";
+	RUN;
+
+* Create format for smoking status;
+TITLE "Risk Factors: Alcohol";
+PROC FORMAT;
+	VALUE Alcohol
+		1 = "Yes"
+		2 = "No";
+	RUN;
+		
+* Create format for Marijuana Use;
+TITLE "Risk Factors: Marijuana Use";
+PROC FORMAT;
+	VALUE Marijuana
+		1 = "Yes"
+		2 = "No";
+	RUN;
+		
+* Create format for state;
+PROC FORMAT;
+	VALUE $stateCd
+	6 = "California"
+	8 = "Colorado"
+	9 = "Connecticut";
+	RUN;
+```
+:::
+
+# Descriptive Statistics
+
+## Table 1A: Continuous Variables {#Table_1A}
+
+::: panel-tabset
+
+## Create Data Set
+
+#### Create Data Set of Means and Standard Deviations
+
+```{sas, results = "hide"}
+TITLE "Table 1A. Means and Standard Deviation";
+*Step 1- Use ODS TRACE to identify name of Table;
+*Step 2- Use ODS OUTPUT to create a dataset;
+/*	ods trace on;*/
+ODS OUTPUT Table = Table1_pre;
+PROC TABULATE DATA = IMPT.BRFSS_FINAL MISSING;
+	VAR BMI SmokeTime Age;
+	TABLE BMI SmokeTime Age, mean*f=comma9.2 std*f=comma9.2/nocellmerge;
+	RUN;
+/*	ods trace off;*/
+```
+
+#### Examine Table
+
+```{sas}
+* Step 3- Examine table;
+PROC PRINT DATA = Table1_pre;
+	RUN;
+```
+
+[Top of Tabset](#Table_1A)
+
+## Clean Data Set
+
+#### Format Data Set to be More Visually Appealling
+
+```{sas, results = "hide"}
+* Step 4-  Clean the dataset with the output to look pretty;
+DATA Table1_pre2;
+	SET Table1_pre;
+		BMI = strip(put(BMI_mean,8.2))||" ("||strip(put(BMI_std, 8.2))||")";
+		SmokeTime = strip(put(SmokeTime_mean,8.2))||" ("||strip(put(SmokeTime_std, 8.2))||")";
+		Age = strip(put(Age_mean,8.2))||" ("||strip(put(Age_std, 8.2))||")";
+		RUN;
+```
+
+#### Examine Table
+
+```{sas}
+* Step 5- Examine table;
+PROC PRINT DATA = table1_pre2;
+	VAR BMI SmokeTime Age;
+	RUN;
+```
+
+[Top of Tabset](#Table_1A)
+
+## Transpose Data Set
+
+#### Transpose from Long Form to Wide Form
+
+```{sas, results = "hide"}
+*Step 5. Tranpose the data;
+PROC TRANSPOSE DATA = Table1_Pre2 OUT = Table1_Clean(RENAME = (_NAME_ = Variable Col1 = MeanSD));
+	VAR BMI SmokeTime Age;
+	RUN;
+```
+
+#### Examine Table
+
+```{sas}
+PROC PRINT DATA = Table1_Clean LABEL NOOBS;
+	RUN;
+```
+
+[Top of Tabset](#Table_1A)
+
+## Final Table
+
+#### Reapply Labels
+
+```{sas, results = "hide"}
+* Reapply Labels;
+DATA Table1_Clean;
+	SET Table1_Clean;
+	LABEL Variable = "Variable" MeanSd = "Mean(SD)";
+	FORMAT Variable $Varnames.;
+	RUN;
+```
+#### Examine Final Table
+
+```{sas}
+* Examine Final clean table 1a;
+PROC PRINT DATA = Table1_Clean LABEL NOOBS;
+	RUN;
+TITLE;
+```
+
+[Top of Tabset](#Table_1A)
+
+:::
+
+## Table 1B: Categorical Variables {#Table_1B}
+
+::: panel-tabset
+
+## Create Data Set
+
+#### Create Data Set of Frequencies and Proportions
+
+```{sas}
+*Step 1- Use ODS TRACE to identify name of Table;
+*Step 2- Use OUT to create a dataset;
+*ODS TRACE ON;
+TITLE "Table 1B. Frequency and Proportion";
+PROC FREQ DATA = IMPT.BRFSS_FINAL;
+	TABLES Marijuana / OUT = Marijuana_Freq;
+	TABLES Cancer / OUT = Cancer_Freq;
+	TABLES Alcohol / OUT = Alcohol_Freq;
+	RUN;
+*ODS TRACE OFF;
+```
+
+[Top of Tabset](#Table_1B)
+
+## Clean Data Set
+
+### Handle Missing Values and Examine Data Sets
+
+#### Marijuana Usage
+
+```{sas}
+* Step 3- Examine data set;
+* Handle Missing;
+DATA Marijuana_Freq;
+	SET Marijuana_Freq;
+	IF Marijuana = . THEN DELETE;
+	ELSE IF Marijuana = 1 THEN Marijuana_Status = "Marijuana Usage: Yes";
+	ELSE IF Marijuana = 2 THEN Marijuana_Status = "Marijuana Usage: No";
+	DROP Marijuana;
+	RENAME Marijuana_Status = Marijuana;
+	RUN;
+	
+PROC PRINT DATA = Marijuana_Freq;
+	RUN;
+```
+
+#### Cancer
+
+```{sas}
+* Handle Missing;
+DATA Cancer_Freq;
+	SET Cancer_Freq;
+	IF Cancer = . THEN DELETE;
+	ELSE IF Cancer = 1 THEN Cancer_Status = "Had Cancer: Yes";
+	ELSE IF Cancer = 2 THEN Cancer_Status = "Had Cancer: No";
+	DROP Cancer;
+	RENAME Cancer_Status = Cancer;
+	RUN;
+
+PROC PRINT DATA = Cancer_Freq;
+	RUN;
+```
+
+#### Alcohol Usage
+
+```{sas}
+* Handle Missing;
+DATA Alcohol_Freq;
+	SET Alcohol_Freq;
+	IF Alcohol = . THEN DELETE;
+	ELSE IF Alcohol = 1 THEN Alcohol_Status = "Drink Alcohol: Yes";
+	ELSE IF Alcohol = 2 THEN Alcohol_Status = "Drink Alcohol: No";
+	DROP Alcohol;
+	RENAME Alcohol_Status = Alcohol;
+	RUN;
+	
+PROC PRINT DATA = Alcohol_Freq;
+	RUN;
+```
+
+
+## Final Table
+
+#### Concatenate and Examine Final Data Set
+
+```{sas}
+*Step 4- Concatanate the data;
+DATA Table1b_Combine;
+	SET Marijuana_Freq(Rename = (Marijuana = Variable))
+		Cancer_Freq(Rename = (Cancer = Variable))
+		Alcohol_Freq(Rename = (Alcohol = Variable));
+	N_PERCENT = strip(put(count,8.)||" ("||strip(put(round(percent,0.2),8.))||"%)");
+	LABEL N_PERCENT = "N(%)" Variable = "Variable";
+	DROP COUNT PERCENT;
+	RUN;
+
+PROC PRINT DATA = Table1b_Combine LABEL NOOBS;
+	RUN;
+TITLE;
+```
+
+:::
+
+# Analyses
+
+## Table 2: T-Test {#T-Test}
+
+::: panel-tabset
+
+## Means and Standard Deviations
+
+#### Acquire Means and Standard Deviations for each State
+
+```{sas}
+*Step 1- Use ODS TRACE to identify name of Table;
+*Step 2- Use ODS OUTPUT to create a dataset;
+/*	ods trace on;*/
+TITLE "Table 2. T-Test of BMI By State";
+ODS OUTPUT TABLE = Table2_pre;
+	PROC TABULATE DATA = IMPT.BRFSS_FINAL;
+	WHERE State NE "9";
+	CLASS State;
+	VAR BMI;
+	TABLE BMI,(State)*(mean*f=comma9.2 std*f=comma9.2)/nocellmerge;
+	RUN;
+/*	ods trace off;*/
+```
+
+#### Examine Table
+
+```{sas}
+* Step 3- Examine table;
+PROC PRINT DATA = Table2_Pre;
+	RUN;
+```
+
+#### Manipulate Table for Desired Appearance
+
+```{sas}
+* Step 4- Manipulate SAS Table for desired appearance;
+DATA table2_pre;
+    SET table2_pre;
+
+    /* Assuming BMI_Mean and BMI_Std are the correct variable names for means and standard deviations */
+    ARRAY clean(1) $12 BMI_clean; /* Create a new character variable for the formatted result */
+    ARRAY means(1) BMI_Mean;
+    ARRAY sds(1) BMI_Std;
+
+    DO i = 1 TO dim(clean);
+        clean(i) = STRIP(PUT(means(i), 9.2)) || " (" || STRIP(PUT(sds(i), 9.2)) || ")";
+    END;
+
+    KEEP State BMI_clean; /* Keep the state and new formatted BMI variable */
+    RENAME BMI_clean = BMI; /* Rename the formatted variable to BMI */
+RUN;
+
+* Step 5- Check table;
+PROC PRINT DATA = Table2_pre;
+	RUN;
+```
+
+#### Transpose Table
+
+```{sas, results = "hide"}
+* Step 6- Transpose;
+PROC TRANSPOSE DATA = Table2_pre OUT = Table2_Clean;
+	VAR BMI;
+	ID State;
+	RUN;
+```
+
+#### Examine Transposed Table
+
+```{sas}
+* Step 7- Check table;
+PROC PRINT DATA = Table2_Clean;
+	RUN;
+```
+
+[Top of Tabset](#T-Test)
+
+## Perform T-Test
+
+#### Perform the T-Test and Save Results Table
+
+```{sas}
+*Step 8- Use ODS TRACE to identify name of Table;
+*Step 9- Use ODS OUTPUT to create a dataset;
+/*	ods trace on;*/
+ODS OUTPUT ttests=ttest_results;
+	PROC TTEST DATA = IMPT.BRFSS_FINAL;
+	WHERE State NE "9";
+	CLASS State;
+	VAR BMI;
+	RUN;
+/*	ods trace off;*/
+```
+
+
+#### Examine T-Test Results Table
+
+```{sas}
+*Step 10 Look at the SAS table;
+PROC PRINT DATA = ttest_results;
+	RUN;
+```
+
+
+[Top of Tabset](#T-Test)
+
+## Final Table
+
+#### Change Number of Decimals
+
+```{sas, results = "hide"}
+* Change number of decimals;
+DATA ttest_results;
+	SET ttest_results;
+	FORMAT Probt 8.3;
+	RUN;
+```
+
+#### Merge both Tables
+
+```{sas, results = "hide"}
+*Step 11 Merge the tables (descriptives and p-value) together;
+PROC SQL;
+	CREATE TABLE Final_Table2 AS
+	SELECT 
+		a._name_ as Variable label = "Variable",
+		a.California LABEL = "California",
+		a.Colorado LABEL = "Colorado",
+		b.Probt label = "p-Value"
+	FROM Table2_Clean a 	
+	LEFT JOIN ttest_Results(WHERE=(VARIANCES = "Unequal")) b
+	ON a._name_ = b.variable;
+	QUIT;
+```
+
+#### Examine Final Table
+
+```{sas}
+* Examine Final Table;
+PROC PRINT DATA = Final_table2 NOOBS LABEL;
+	RUN;
+TITLE;
+```
+
+:::
+
+## Table 3: Multiple Logistic Regression {#MLR}
+
+::: panel-tabset
+
+## Perform Regression
+
+#### Perform Multiple Logistic Regression
+
+#### Save Parameter Estimates and Odds Ratio Tables
+
+```{sas}
+TITLE "Table 3. Multiple Logistic Regression Predicting Ever Having Cancer";
+/* ODS TRACE ON; */
+ODS OUTPUT ParameterEstimates = Parameter_estimates OddsRatios = Odds_Ratio;
+PROC LOGISTIC DATA = Impt.BRFSS_Final;
+	MODEL Cancer = marijuana SmokeNum alcohol age;
+	RUN;
+/* ODS TRACE OFF; */
+```
+
+#### Examine Parameter Estimates Table
+
+```{sas}
+* Examine table;
+PROC PRINT DATA = Parameter_estimates;
+	RUN;
+```
+
+#### Examine Odds Ratio Table
+```{sas}
+* Examine table;
+PROC PRINT DATA = Odds_Ratio;
+	RUN;
+```
+
+[Top of Tabset](#MLR)
+
+## Clean Tables
+
+#### Clean Parameter Estimates Table
+
+```{sas}
+* Trim data set;
+DATA parameter_estimates LABEL;
+	SET Parameter_estimates;
+	if _N_ > 1; /* This condition excludes the first row */
+	DROP _ESTTYPE_;
+	FORMAT Estimate StdErr WaldChiSq 8.2;
+	FORMAT ProbChiSq 8.3; 
+	RENAME Estimate = Beta StdErr = SE ProbChiSq = p_Value;
+	RUN;
+	
+* Double Check;
+PROC PRINT DATA = parameter_estimates;
+	RUN;
+```
+
+#### Clean Odds Ratio Table
+
+```{sas}
+* Clean up OR table;
+DATA Odds_Ratio;
+	SET Odds_Ratio;
+	FORMAT OddsRatioEst LowerCL UpperCL 8.2;
+	RUN;
+	
+PROC PRINT DATA = Odds_Ratio;
+	RUN;
+```
+
+#### Join Tables with SQL
+
+```{sas, results = "hide"}
+* Join Tables;
+PROC SQL;
+	CREATE TABLE Final_Table3 AS
+	SELECT a.Effect as Variable label = "Variable",
+		   a.OddsRatioEst LABEL = "OR",
+		   a.LowerCL LABEL = "Lower 95% CI",
+		   a.UpperCL LABEL = "Upper 95% CI",
+		   b.p_Value LABEL = "p-Value"
+	FROM Odds_ratio a 
+	LEFT JOIN Parameter_estimates b
+	ON a.Effect = b.Variable;
+	QUIT;
+	
+DATA Final_Table3;
+	LENGTH Variable $32;
+	SET Final_Table3;
+	IF Variable = "Alcohol" THEN Variable = "Alcohol Used";
+	ELSE IF Variable = "Marijuana" THEN Variable = "Marijuana Used";
+	ELSE IF Variable = "SmokeNum" THEN Variable = "Number of Cigarette Packs Smoked";
+	RUN;
+```
+
+[Top of Tabset](#MLR)
+
+## Final Table
+
+#### Examine Final Table
+
+```{sas}
+* Check final table3;
+PROC PRINT DATA = Final_Table3 LABEL NOOBS;
+	RUN;
+TITLE;
+```
+
+[Top of Tabset](#MLR)
+
+:::
+
+# Figures
+
+# Results
+
+# Create ODS Report
+

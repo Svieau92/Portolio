@@ -161,6 +161,10 @@ ul.task-list li input[type="checkbox"] {
     <a class="dropdown-item" href="./Data_Visualization/Cancer_Animations/Gapminder_Cancer_Animations.html">
  <span class="dropdown-text">Animated Plots (R)</span></a>
   </li>  
+        <li>
+    <a class="dropdown-item" href="./Statistical_Consulting/Opioid_Epidemic/GeoSpatial_Opioid_Epidemic.html">
+ <span class="dropdown-text">Geospatial Analysis (R)</span></a>
+  </li>  
     </ul>
   </li>
   <li class="nav-item">
@@ -213,7 +217,7 @@ ul.task-list li input[type="checkbox"] {
 sas_session = saspy.SASsession(cfgfile="C:\\Users\\sviea\\anaconda3\\Lib\\site-packages\\saspy\\sascfg_personal.py")
 sas_session</code></pre>
 <pre class="{r}"><code>install.packages("configSAS")</code></pre>
-<div id="34252c63" class="cell" data-execution_count="1">
+<div id="ed458d99" class="cell" data-execution_count="1">
 <details class="code-fold">
 <summary>Code</summary>
 <pre class="sas cell-code"><code>#| capture: log
@@ -223,7 +227,7 @@ proc candisc data=sashelp.iris out=outcan distance anova;
 run;</code></pre>
 </details>
 <div class="cell-output cell-output-stdout">
-<pre><code>5                                                          The SAS System                    Thursday, November 28, 2024 10:18:00 PM
+<pre><code>5                                                          The SAS System                      Sunday, December  1, 2024 09:36:00 AM
 
 24         ods listing close;ods html5 (id=saspy_internal) file=_tomods1 options(bitmap_mode='inline') device=svg style=HTMLBlue;
 24       ! ods graphics on / outputfmt=png;
@@ -249,7 +253,7 @@ ERROR 180-322: Statement is not valid or it is used out of proper order.
 32         
 33         ods html5 (id=saspy_internal) close;ods listing;
 34         
-6                                                          The SAS System                    Thursday, November 28, 2024 10:18:00 PM
+6                                                          The SAS System                      Sunday, December  1, 2024 09:36:00 AM
 
 35         </code></pre>
 </div>
@@ -324,7 +328,7 @@ result = sas.submit("proc print data=sashelp.class; run;")
 
 # Display the output in the Quarto document
 display(HTML(result['LST']))</code></pre>
-<div id="c16d8e76" class="cell" data-execution_count="2">
+<div id="29afece7" class="cell" data-execution_count="2">
 <details class="code-fold">
 <summary>Code</summary>
 <pre class="sas cell-code"><code>proc candisc data=sashelp.iris out=outcan distance anova;

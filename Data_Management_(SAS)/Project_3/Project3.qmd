@@ -11,7 +11,7 @@ output: html-document
 
 # Introduction
 
-This is part three of the main project for BIOS 6680: Data Management Using SAS, in which we plan and carry out data management activities including data cleaning/quality assurance, data documentation, analytic data set creation, and a final analysis. A key goal of this project is to demonstrate reproducible research and reporting.
+This is part three of the main project for BIOS 6680: Data Management Using SAS, in which we plan and carry out data management activities including data cleaning/quality assurance, data documentation, and analytic data set creation. A key goal of this project is to demonstrate reproducible research and reporting.
 
 **The purpose of this project is to write a SAS program to create a combined analysis data set.**
 
