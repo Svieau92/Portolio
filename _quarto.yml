@@ -19,6 +19,8 @@ website:
           - text: MLR With Confounding and Interaction (SAS)
           - text: Linear Mixed Model (R)
             href: Project_2/Project_2_R/Code/Project2LMM.qmd
+          - text: Linear Mixed Model (SAS)
+            href: Project_2/Project_2_SAS/Code/Linear_Mixed_Model_SAS.qmd
           - text: Predictive Modelling (R)
             href: Project_3_Predictive_Modelling/Project_3_R/Code/Project_3_Predictive_Modelling.qmd
       - text: Data Wrangling (Python)
@@ -29,6 +31,8 @@ website:
             href: Data_Management_(SAS)/Project_1/Project_1_Importing.qmd
           - text: Project 3 - Data Set Creation
             href: Data_Management_(SAS)/Project_3/Project3.qmd
+          - text: Project 5 - Report and Analysis
+            href: Data_Management_(SAS)/Project_5/Project_5_Report_and_Analysis.qmd
       - text: Statistical Consulting (R)
         menu:
           - text: Scope of Work and Negative Binomial Regression (R)

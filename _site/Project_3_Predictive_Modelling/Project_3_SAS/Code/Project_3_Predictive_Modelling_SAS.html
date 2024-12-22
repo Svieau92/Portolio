@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.5.57">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Sean Vieau">
+<meta name="dcterms.date" content="2024-12-17">
+
+<title>Predictive Modelling (SAS) – Sean Vieau Portfolio</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../">
+<script src="../../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../../index.html">
+    <span class="navbar-title">Sean Vieau Portfolio</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../../index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-advanced-data-analyses-(rsas" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Advanced Data Analyses (R/SAS)</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-advanced-data-analyses-(rsas">    
+        <li>
+    <a class="dropdown-item" href="../../../Project_1_Regression/Project_1_Regression_R/Project_1_Regression.html">
+ <span class="dropdown-text">Regression (R)</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../Project_1_Regression/Project_1_Regression_SAS/Project_1_Regression_SAS.html">
+ <span class="dropdown-text">Regression (SAS)</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../Project_2/Project_2_R/Code/Project2.html">
+ <span class="dropdown-text">MLR With Confounding and Interaction (R)</span></a>
+  </li>  
+        <li class="dropdown-header">MLR With Confounding and Interaction (SAS)</li>
+        <li>
+    <a class="dropdown-item" href="../../../Project_2/Project_2_R/Code/Project2LMM.html">
+ <span class="dropdown-text">Linear Mixed Model (R)</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../Project_2/Project_2_SAS/Code/Linear_Mixed_Model_SAS.html">
+ <span class="dropdown-text">Linear Mixed Model (SAS)</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../Project_3_Predictive_Modelling/Project_3_R/Code/Project_3_Predictive_Modelling.html">
+ <span class="dropdown-text">Predictive Modelling (R)</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" href="../../../Data_Wrangling/Treadmill_Data_Cleaning/Code/Automated_Treadmill_Data_Cleaning.html"> 
+<span class="menu-text">Data Wrangling (Python)</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-data-management-(sas" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Data Management (SAS)</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-data-management-(sas">    
+        <li>
+    <a class="dropdown-item" href="../../../Data_Management_(SAS)/Project_1/Project_1_Importing.html">
+ <span class="dropdown-text">Project 1 - Importing</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../Data_Management_(SAS)/Project_3/Project3.html">
+ <span class="dropdown-text">Project 3 - Data Set Creation</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../Data_Management_(SAS)/Project_5/Project_5_Report_and_Analysis.html">
+ <span class="dropdown-text">Project 5 - Report and Analysis</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-statistical-consulting-(r" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Statistical Consulting (R)</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-statistical-consulting-(r">    
+        <li>
+    <a class="dropdown-item" href="../../../Statistical_Consulting/Vieau_Project_01/Code/Megan_Watson_Project.html">
+ <span class="dropdown-text">Scope of Work and Negative Binomial Regression (R)</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-data-viz-(r" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Data Viz (R)</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-data-viz-(r">    
+        <li>
+    <a class="dropdown-item" href="../../../Data_Visualization/Cancer_Animations/Gapminder_Cancer_Animations.html">
+ <span class="dropdown-text">Animated Plots (R)</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../Statistical_Consulting/Opioid_Epidemic/GeoSpatial_Opioid_Epidemic.html">
+ <span class="dropdown-text">Geospatial Analysis (R)</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" href="../../../Resume/Publications_and_Presentations.html"> 
+<span class="menu-text">Publications/Presentations</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#introduction" id="toc-introduction" class="nav-link active" data-scroll-target="#introduction">Introduction</a>
+  <ul class="collapse">
+  <li><a href="#clinical-hypotheses" id="toc-clinical-hypotheses" class="nav-link" data-scroll-target="#clinical-hypotheses">Clinical Hypotheses</a></li>
+  </ul></li>
+  <li><a href="#background" id="toc-background" class="nav-link" data-scroll-target="#background">Background</a>
+  <ul class="collapse">
+  <li><a href="#gabor-transform" id="toc-gabor-transform" class="nav-link" data-scroll-target="#gabor-transform">Gabor Transform</a></li>
+  <li><a href="#gray-level-co-occurrence-matrix" id="toc-gray-level-co-occurrence-matrix" class="nav-link" data-scroll-target="#gray-level-co-occurrence-matrix">Gray Level Co-Occurrence Matrix</a></li>
+  <li><a href="#local-binary-pattern" id="toc-local-binary-pattern" class="nav-link" data-scroll-target="#local-binary-pattern">Local Binary Pattern</a></li>
+  </ul></li>
+  <li><a href="#method" id="toc-method" class="nav-link" data-scroll-target="#method">Method</a>
+  <ul class="collapse">
+  <li><a href="#study-design" id="toc-study-design" class="nav-link" data-scroll-target="#study-design">Study Design</a>
+  <ul class="collapse">
+  <li><a href="#statistical-hypotheses" id="toc-statistical-hypotheses" class="nav-link" data-scroll-target="#statistical-hypotheses">Statistical Hypotheses</a></li>
+  </ul></li>
+  </ul></li>
+  <li><a href="#data-preparation" id="toc-data-preparation" class="nav-link" data-scroll-target="#data-preparation">Data Preparation</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Predictive Modelling (SAS)</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Sean Vieau </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">December 17, 2024</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="introduction" class="level1">
+<h1>Introduction</h1>
+<p>The aim of the current study is to investigate whether MRI image features extracted from baseline kidney images can enhance the prediction of disease progression in young Autosomal Dominant Polycystic Kidney Disease (ADPKD) patients. This study is important because recent literature has demonstrated the inclusion of MRI image features improves the prognostic accuracy of models in adults, but this has not yet been demonstrated in children. Improving prediction models could greatly assist in diagnosing and predicting kidney disease outcomes in children, which is more challenging than in adults and could lead to improved treatment.</p>
+<div style="text-align: center;">
+<p><img src="../../../Project_3_Predictive_Modelling/Project_3_R/Media/Project_Description.png" style="width:80%;"></p>
+</div>
+<section id="task-one" class="level4">
+<h4 class="anchored" data-anchor-id="task-one">Task One</h4>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../../..\Project_3_Predictive_Modelling/Project_3_R/Media/Task_One.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:80.0%"></p>
+</figure>
+</div>
+</section>
+<section id="task-two" class="level4">
+<h4 class="anchored" data-anchor-id="task-two">Task Two</h4>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../../..\Project_3_Predictive_Modelling/Project_3_R/Media/Task_Two.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:80.0%"></p>
+</figure>
+</div>
+</section>
+<section id="clinical-hypotheses" class="level3">
+<h3 class="anchored" data-anchor-id="clinical-hypotheses">Clinical Hypotheses</h3>
+<p>The two clinical hypotheses for this study are that including MRI image features will improve model performance compared to using baseline kidney volume alone in models predicting</p>
+<ol type="1">
+<li><p>Percentage change of total kidney volume growth</p></li>
+<li><p>Classification of a patient as having fast or slow progression of the disease.</p></li>
+</ol>
+</section>
+</section>
+<section id="background" class="level1">
+<h1>Background</h1>
+<p>Here we will review background information on the methodology and variables provided in this data set.</p>
+<section id="gabor-transform" class="level2">
+<h2 class="anchored" data-anchor-id="gabor-transform">Gabor Transform</h2>
+<section id="what-is-it" class="level4">
+<h4 class="anchored" data-anchor-id="what-is-it">What is it</h4>
+<p>The Gabor Transform, named after Dennis Gabor, is a powerful technique for analyzing the <u><strong>texture</strong></u> of MRI images. By convolving the image with a Gabor filter, it becomes possible to discriminate between features based on intensity differences. This allows the target region and background to be differentiated if they possess distinct features, as they will exhibit different intensity levels. Moreover, the Gabor Transform has tunable parameters, such as the frequency of the sinusoidal wave, which can be adjusted to extract specific textures from the images. Higher frequencies are ideal for capturing fine textures, while lower frequencies are better suited for coarse textures.</p>
+</section>
+<section id="how-it-works" class="level4">
+<h4 class="anchored" data-anchor-id="how-it-works">How it Works</h4>
+<p>The Gabor Filter first applies a Gaussian Envelope to focus on a small region of the image. It then applies a sinusoidal wave that oscillates at a specific frequency and captures the variation in intensities at that frequency and orientation within that region.</p>
+</section>
+<section id="example-of-gabor-transform" class="level4">
+<h4 class="anchored" data-anchor-id="example-of-gabor-transform">Example of Gabor Transform</h4>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/clipboard-573562689.png" class="img-fluid figure-img"></p>
+<figcaption>Example of applying a Gaussian, then Gabor, and Laplacian Filter (GGL) for differentiation between two different textures (+’s vs L’s) (<a href="https://link.springer.com/article/10.1007/BF00204594">2</a>).</figcaption>
+</figure>
+</div>
+</section>
+<section id="image-features-provided-by-the-gabor-transform" class="level4">
+<h4 class="anchored" data-anchor-id="image-features-provided-by-the-gabor-transform">Image Features Provided by the Gabor Transform</h4>
+<p>In general, Gabor functions can easily extract features of:</p>
+<ul>
+<li><p>Spatial Frequency (e.g.&nbsp;how often pixel intensity changes in a given area)</p></li>
+<li><p>Density (e.g.&nbsp;concentration of features within a certain area)</p></li>
+<li><p>Orientation (e.g.&nbsp;Textures or edges at 0°, 45°, 90°, 135°)</p></li>
+<li><p>Phase (e.g.&nbsp;alignment/distance of features)</p></li>
+<li><p>Energy (e.g.&nbsp;overall intensity)</p></li>
+</ul>
+<p>Sources: <a href="https://link.springer.com/article/10.1007/s11042-020-09635-6">1</a>, <a href="https://link.springer.com/article/10.1007/BF00204594">2</a></p>
+</section>
+</section>
+<section id="gray-level-co-occurrence-matrix" class="level2">
+<h2 class="anchored" data-anchor-id="gray-level-co-occurrence-matrix">Gray Level Co-Occurrence Matrix</h2>
+<section id="what-is-it-1" class="level4">
+<h4 class="anchored" data-anchor-id="what-is-it-1">What is it</h4>
+<p>The Gray Level Co-Occurrence Matrix (GLCM) is another powerful tool for extracting <strong>texture</strong> features from an MRI image. GLCM works under the assumption that the textural information in an image is contained in the “average” spatial relationship that the gray tones in the image have to each other. For example, when a small patch of the picture has little variation of features, the dominant property is tone; When a small patch of a picture has high variation, the dominant property is texture (<a href="https://ieeexplore.ieee.org/document/4309314">3</a>).</p>
+</section>
+<section id="how-it-works-1" class="level4">
+<h4 class="anchored" data-anchor-id="how-it-works-1">How it Works</h4>
+<p>GLCM examines the spatial relationship between pairs of pixels in an image and calculates how often pairs of pixel values occur at a specified distance and orientation. It does this by computing a set of gray-tone spacial-dependence matrices for various angular relationships and distances between neighboring resolution cell pairs on the image (<a href="https://ieeexplore.ieee.org/document/4309314">3</a>).</p>
+</section>
+<section id="example-of-glcm" class="level4">
+<h4 class="anchored" data-anchor-id="example-of-glcm">Example of GLCM</h4>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/clipboard-759848695.png" class="img-fluid figure-img" style="width:80.0%"></p>
+<figcaption>Example of textural features extracted from two different land-use category images (<a href="https://ieeexplore.ieee.org/document/4309314">3</a>).</figcaption>
+</figure>
+</div>
+</section>
+<section id="image-features-provided-by-glcm" class="level4">
+<h4 class="anchored" data-anchor-id="image-features-provided-by-glcm">Image Features Provided by GLCM</h4>
+<p>In general, GLCM provides information on the following features:</p>
+<ul>
+<li><p>Homogeneity</p></li>
+<li><p>Linear Structure</p></li>
+<li><p>Contrast</p></li>
+<li><p>Number and Nature of Boundaries</p></li>
+<li><p>Complexity of the Image</p></li>
+</ul>
+</section>
+</section>
+<section id="local-binary-pattern" class="level2">
+<h2 class="anchored" data-anchor-id="local-binary-pattern">Local Binary Pattern</h2>
+<section id="what-is-it-2" class="level4">
+<h4 class="anchored" data-anchor-id="what-is-it-2">What is it</h4>
+<p>The Local Binary Pattern (LBP) is a third powerful method for extracting <u><strong>texture</strong></u> features from an image. An important and fundamental property of texture is how uniform the patterns are, and LBP captures this by detecting these uniform patterns in circular neighborhoods at any rotation and spatial resolution. LBP is rotation invariant, meaning it does not matter what rotation the image is at; it will always extract very similar features) (<a href="https://ieeexplore.ieee.org/document/1017623">4</a>).</p>
+</section>
+<section id="how-it-works-2" class="level4">
+<h4 class="anchored" data-anchor-id="how-it-works-2">How it Works</h4>
+<p>LBP works by comparing the intensity of a central pixel with its neighboring pixels and encoding this relationship into a binary pattern. For each neighbor, if it’s intensity is greater or equal to the central pixel, it gets assigned a 1 (otherwise a 0). The binary values of all neighbors are then concatenated to form a binary number, and this number is converted into a decimal that represent the LBP for the central pixel (<a href="https://ieeexplore.ieee.org/document/1017623">4</a>).</p>
+</section>
+<section id="example-of-lbp" class="level4">
+<h4 class="anchored" data-anchor-id="example-of-lbp">Example of LBP</h4>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/clipboard-3679699747.png" class="img-fluid figure-img"></p>
+<figcaption>Example of the 36 unique comparisons that can be made between neighboring pixels (<a href="https://ieeexplore.ieee.org/document/1017623">4</a>).</figcaption>
+</figure>
+</div>
+</section>
+<section id="code-information" class="level4">
+<h4 class="anchored" data-anchor-id="code-information">Code Information</h4>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../../..\Project_3_Predictive_Modelling/Project_3_R/Media/Code_Information.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:80.0%"></p>
+</figure>
+</div>
+</section>
+<section id="image-features-provided-by-the-lbp" class="level4">
+<h4 class="anchored" data-anchor-id="image-features-provided-by-the-lbp">Image Features Provided by the LBP</h4>
+<p>In general, the LBP provides image features on:</p>
+<ul>
+<li><p>Uniformity</p></li>
+<li><p>Local Contrast</p></li>
+<li><p>Texture Description</p></li>
+<li><p>Spatial Patterns</p></li>
+<li><p>Gray Level Distribution</p></li>
+</ul>
+</section>
+</section>
+</section>
+<section id="method" class="level1">
+<h1>Method</h1>
+<section id="study-design" class="level2">
+<h2 class="anchored" data-anchor-id="study-design">Study Design</h2>
+<p>The investigators recruited 71 young patients with ADPKD and collected MRI data at baseline and after 3 years. Additionally, the height corrected kidney volume for each patient was collected at baseline and 3 years by a physician, and the percentage change calculated. Patients were classified as having slow or fast progression of the disease based on this percentage change. Image features were extracted from the baseline MRI images including 2 image features on kidney geometric information, 5 features based on Gabor transform, 2 features based on gray level co-occurrence matrix, 5 features based on image textures, and 5 features based on local binary pattern.</p>
+<section id="statistical-hypotheses" class="level3">
+<h3 class="anchored" data-anchor-id="statistical-hypotheses">Statistical Hypotheses</h3>
+<ol type="1">
+<li><p>A <strong>linear regression model</strong> predicting <strong>percentage change of total kidney volume growth</strong> including MRI image features and baseline kidney volume will have better performance than a model with baseline kidney volume alone, as determined by specificity, sensitivity, PPV, &nbsp;NPV, &nbsp;accuracy, and AUC.</p></li>
+<li><p>A <strong>logistic regression model</strong> predicting <strong>classification of disease progression as slow or fast</strong> including MRI image features and baseline kidney volume will have better performance than a model with baseline kidney volume alone, as determined by specificity, sensitivity, PPV, &nbsp;NPV, &nbsp;accuracy, and AUC.</p></li>
+</ol>
+</section>
+</section>
+</section>
+<section id="data-preparation" class="level1">
+<h1>Data Preparation</h1>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    // For code content inside modals, clipBoardJS needs to be initialized with a container option
+    // TODO: Check when it could be a function (https://github.com/zenorocha/clipboard.js/issues/860)
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

@@ -24,7 +24,6 @@ For this project, we implement the Data Analysis Plan (DAP) we created for proje
 # Set Up
 
 ::: panel-tabset
-
 ## Connect to SAS
 
 #### Connect to SAS
@@ -56,6 +55,7 @@ sas = knitr::opts_chunk$get("sas")
 LIBNAME Source "&CourseRoot/BRFSS/Data/1_Source";
 LIBNAME Impt "&CourseRoot/BRFSS/Data/2_Import";
 ```
+
 ## System Options
 
 #### System Options
@@ -64,6 +64,7 @@ LIBNAME Impt "&CourseRoot/BRFSS/Data/2_Import";
 * Suppress error messages that occur when SAS cannot find a format or an informat
 OPTIONS NOFMTERR;
 ```
+
 ## Formats
 
 #### Formats
@@ -175,7 +176,6 @@ PROC FORMAT;
 ## Table 1A: Continuous Variables {#Table_1A}
 
 ::: panel-tabset
-
 ## Create Data Set
 
 #### Create Data Set of Means and Standard Deviations
@@ -260,6 +260,7 @@ DATA Table1_Clean;
 	FORMAT Variable $Varnames.;
 	RUN;
 ```
+
 #### Examine Final Table
 
 ```{sas}
@@ -270,13 +271,11 @@ TITLE;
 ```
 
 [Top of Tabset](#Table_1A)
-
 :::
 
 ## Table 1B: Categorical Variables {#Table_1B}
 
 ::: panel-tabset
-
 ## Create Data Set
 
 #### Create Data Set of Frequencies and Proportions
@@ -352,7 +351,6 @@ PROC PRINT DATA = Alcohol_Freq;
 	RUN;
 ```
 
-
 ## Final Table
 
 #### Concatenate and Examine Final Data Set
@@ -372,7 +370,6 @@ PROC PRINT DATA = Table1b_Combine LABEL NOOBS;
 	RUN;
 TITLE;
 ```
-
 :::
 
 # Analyses
@@ -380,7 +377,6 @@ TITLE;
 ## Table 2: T-Test {#T-Test}
 
 ::: panel-tabset
-
 ## Means and Standard Deviations
 
 #### Acquire Means and Standard Deviations for each State
@@ -470,7 +466,6 @@ ODS OUTPUT ttests=ttest_results;
 /*	ods trace off;*/
 ```
 
-
 #### Examine T-Test Results Table
 
 ```{sas}
@@ -478,7 +473,6 @@ ODS OUTPUT ttests=ttest_results;
 PROC PRINT DATA = ttest_results;
 	RUN;
 ```
-
 
 [Top of Tabset](#T-Test)
 
@@ -519,13 +513,11 @@ PROC PRINT DATA = Final_table2 NOOBS LABEL;
 	RUN;
 TITLE;
 ```
-
 :::
 
 ## Table 3: Multiple Logistic Regression {#MLR}
 
 ::: panel-tabset
-
 ## Perform Regression
 
 #### Perform Multiple Logistic Regression
@@ -551,6 +543,7 @@ PROC PRINT DATA = Parameter_estimates;
 ```
 
 #### Examine Odds Ratio Table
+
 ```{sas}
 * Examine table;
 PROC PRINT DATA = Odds_Ratio;
@@ -631,12 +624,140 @@ TITLE;
 ```
 
 [Top of Tabset](#MLR)
-
 :::
 
 # Figures
 
+## Figure 1: Boxplots
+
+#### Create Boxplot of BMI by State
+
+```{sas}
+TITLE "Boxplot of BMI by State";
+PROC SGPLOT DATA = IMPT.BRFSS_FINAL;
+	WHERE State = "6" OR State = "8";
+	VBOX BMI/CATEGORY=state NOOUTLIERS  fillattrs=(color=green) lineattrs=(color=black) whiskerattrs=(color=black) medianattrs=(color=black) meanattrs=(color=black);
+	YAXIS MIN = 0 MAX = 60;	
+	RUN;
+TITLE;
+```
+
+## Figure 2: Barplots
+
+#### Create Barplot of Cancer Occurence by Marijuana Usage
+
+```{sas}
+TITLE "Barplot of Cancer by Marijuana Usage";
+PROC SGPLOT DATA = IMPT.BRFSS_FINAL;
+	VBAR Cancer / GROUP = Marijuana
+				GROUPDISPLAY=STACK;
+	RUN;
+TITLE;
+
+```
+
 # Results
+
+## Research Question 1
+
+There is a statistically significant difference in BMI between Colorado and California (p = 0.012). On average, California (BMI = 28.56, SE = 6.56) has a BMI that is 0.24 units larger than Colorado (BMI = 28.32, SE = 6.13). While statistically significant, this difference is not clinically significant.
+
+## Research Question 2
+
+Marijuana usage is not a significant predictor of ever having cancer, while controlling for the number of cigarettes smoked per day, alcohol consumption, and age (p = 0.1013). On average, those who use marijuana had 0.87 times the odds of ever having cancer compared to those who did not use marijuana (95% CI: 0.73, 1.029).
 
 # Create ODS Report
 
+#### Set File Location and Start PDF
+
+```{sas, results = "hide"}
+ODS PDF FILE = "&CourseRoot/BRFSS/Data/5_Results/SeanVieau Project 5 Report &SYSDATE.PDF" style = journal;
+ODS LAYOUT START;
+```
+
+#### Create Header
+
+```{sas, results = "hide"}
+TITLE FONT = ARIAL JUSTIFY = LEFT "Project 5. BRFSS Study";
+TITLE2 FONT = ARIAL JUSTIFY = LEFT "Investigator: Sean Vieau";
+TITLE3 FONT = ARIAL JUSTIFY = LEFT "Analyst: Sean Vieau";
+TITLE4 FONT = ARIAL JUSTIFY = LEFT "&SysDate";
+```
+
+#### Print Table 1A
+
+```{sas, results = "hide"}
+* Print Final clean table 1a;
+TITLE5 FONT = ARIAL JUSTIFY = LEFT "Table 1A. Means and Standard Deviation";
+PROC PRINT DATA = Table1_Clean LABEL NOOBS;
+	RUN;
+TITLE5;
+```
+
+#### Print Table 1B
+
+```{sas, results = "hide"}
+* Print Final Clean Table 1b;
+TITLE FONT = ARIAL JUSTIFY = LEFT "Table 1B. Frequency and Proportion";
+PROC PRINT DATA = Table1b_Combine LABEL NOOBS;
+	RUN;
+TITLE;
+```
+
+#### Print Table 2
+
+```{sas, results = "hide"}
+* Print Final Clean table 2;
+TITLE FONT = ARIAL JUSTIFY = LEFT "Table 2. T-Test of BMI By State";
+PROC PRINT DATA = Final_table2 NOOBS LABEL;
+	RUN;
+TITLE;
+```
+
+#### Print Table 3
+
+```{sas, results = "hide"}
+* Print final table3;
+TITLE FONT = ARIAL JUSTIFY = LEFT "Table 3. Multiple Logistic Regression Predicting Ever Having Cancer";
+PROC PRINT DATA = Final_Table3 LABEL NOOBS;
+	RUN;
+TITLE;
+```
+
+#### Print Figure 1
+
+```{sas, results = "hide"}
+* Print Final Figure 1;
+TITLE1 FONT = ARIAL JUSTIFY = LEFT "Figure 1. Boxplot of BMI by State";
+PROC SGPLOT DATA = IMPT.BRFSS_FINAL;
+	WHERE State = "6" OR State = "8";
+	VBOX BMI/CATEGORY=state NOOUTLIERS  fillattrs=(color=green) lineattrs=(color=black) whiskerattrs=(color=black) medianattrs=(color=black) meanattrs=(color=black);
+	YAXIS MIN = 0 MAX = 60;	
+	RUN;
+TITLE;
+```
+
+#### Print Figure 2
+
+```{sas, results = "hide"}
+* Print Final Figure 2;
+TITLE1 FONT = ARIAL JUSTIFY = LEFT "Figure 2. Barplot of Cancer by Marijuana Usage";
+PROC SGPLOT DATA = IMPT.BRFSS_FINAL;
+	VBAR Cancer / GROUP = Marijuana
+				GROUPDISPLAY=STACK;
+	RUN;
+TITLE;
+```
+
+#### Close PDF
+
+```{sas, results = "hide"}
+ODS LAYOUT END;
+ODS PDF CLOSE;
+```
+
+# Final Report
+
+![](images/clipboard-2185940972.png){fig-align="center"}
+
+![![](images/clipboard-1728154802.png)](images/clipboard-3352771509.png){fig-align="center"}

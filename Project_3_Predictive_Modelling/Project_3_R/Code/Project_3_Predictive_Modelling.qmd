@@ -2863,7 +2863,7 @@ The difference in performance between models was not statistically significant (
 Table 2. Results of Pairwise T-Tests Comparing Model Performance Predicting Disease Progression using AUC
 
 |                                  |      |             |             |              |
-|----------------------------------|------|-------------|-------------|--------------|
+|-------------------|--------------|--------------|--------------|--------------|
 | Model                            | AUC  | Sensitivity | Specificity |   P-Adjusted |
 | Baseline Kidney Volume           | 0.47 | 0.30        | 0.71        | —            |
 | Txti2                            | 0.74 | 0.57        | 0.64        | 0.28         |

@@ -178,6 +178,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <a class="dropdown-item" href="../../../../Data_Management_(SAS)/Project_3/Project3.html">
  <span class="dropdown-text">Project 3 - Data Set Creation</span></a>
   </li>  
+        <li>
+    <a class="dropdown-item" href="../../../../Data_Management_(SAS)/Project_5/Project_5_Report_and_Analysis.html">
+ <span class="dropdown-text">Project 5 - Report and Analysis</span></a>
+  </li>  
     </ul>
   </li>
   <li class="nav-item dropdown ">
@@ -988,15 +992,15 @@ $ Age_Quartile                          &lt;chr&gt; "57-66", "43-56", "43-56", "
 <div class="cell-output cell-output-stdout">
 <pre><code>Best Normalizing transformation with 3264 Observations
  Estimated Normality Statistics (Pearson P / df, lower =&gt; more normal):
- - arcsinh(x): 24.3639
- - Box-Cox: 24.5538
- - Center+scale: 23.8741
- - Double Reversed Log_b(x+a): 25.8794
- - Exp(x): 343.555
- - Log_b(x+a): 24.3613
- - orderNorm (ORQ): 24.1248
- - sqrt(x + a): 24.2383
- - Yeo-Johnson: 24.8323
+ - arcsinh(x): 24.5109
+ - Box-Cox: 24.5912
+ - Center+scale: 23.9154
+ - Double Reversed Log_b(x+a): 25.8636
+ - Exp(x): 342.6772
+ - Log_b(x+a): 24.5106
+ - orderNorm (ORQ): 24.0415
+ - sqrt(x + a): 24.2046
+ - Yeo-Johnson: 24.8478
 Estimation method: Out-of-sample via CV with 10 folds and 5 repeats
  
 Based off these, bestNormalize chose:
@@ -1072,14 +1076,14 @@ center_scale(x) Transformation with 3264 nonmissing obs.
 <div class="cell-output cell-output-stdout">
 <pre><code>Best Normalizing transformation with 6430 Observations
  Estimated Normality Statistics (Pearson P / df, lower =&gt; more normal):
- - arcsinh(x): 9.0775
- - Box-Cox: 5.6419
- - Center+scale: 33.9203
- - Double Reversed Log_b(x+a): 57.9004
- - Log_b(x+a): 9.0775
- - orderNorm (ORQ): 1.2988
- - sqrt(x + a): 19.8824
- - Yeo-Johnson: 5.6729
+ - arcsinh(x): 9.0703
+ - Box-Cox: 5.6041
+ - Center+scale: 33.9282
+ - Double Reversed Log_b(x+a): 57.8321
+ - Log_b(x+a): 9.0679
+ - orderNorm (ORQ): 1.2822
+ - sqrt(x + a): 19.9283
+ - Yeo-Johnson: 5.6
 Estimation method: Out-of-sample via CV with 10 folds and 5 repeats
  
 Based off these, bestNormalize chose:
@@ -1233,13 +1237,13 @@ orderNorm Transformation with 6430 nonmissing obs and ties
 <div class="cell-output cell-output-stdout">
 <pre><code>Best Normalizing transformation with 6430 Observations
  Estimated Normality Statistics (Pearson P / df, lower =&gt; more normal):
- - arcsinh(x): 7.163
- - Center+scale: 52.5025
- - Double Reversed Log_b(x+a): 59.0025
- - Log_b(x+a): 8.7046
- - orderNorm (ORQ): 1.6432
- - sqrt(x + a): 10.7386
- - Yeo-Johnson: 5.6859
+ - arcsinh(x): 7.1154
+ - Center+scale: 52.6196
+ - Double Reversed Log_b(x+a): 59.6992
+ - Log_b(x+a): 8.773
+ - orderNorm (ORQ): 1.5972
+ - sqrt(x + a): 10.5623
+ - Yeo-Johnson: 5.5409
 Estimation method: Out-of-sample via CV with 10 folds and 5 repeats
  
 Based off these, bestNormalize chose:

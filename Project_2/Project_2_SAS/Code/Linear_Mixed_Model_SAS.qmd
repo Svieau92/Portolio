@@ -1,0 +1,1556 @@
+---
+title: "Linear Mixed Model (SAS)"
+author: "Sean Vieau"
+format: html
+editor: visual
+toc: true
+date: 12/17/2024
+---
+
+# Introduction
+
+The objective of this project is to **gain experience in the application of Linear Mixed Models** for statistical analysis. We are replicating this analysis in SAS.
+
+This is the exact same data set as Project 2. Please see Project 2 - MLR with Confounding and Interaction for a detailed description of the data cleaning process.
+
+## Project Description
+
+The aim of the current study is to assess how treatment response differs for HIV+ patients 2 years after initiating Highly Active Antiretroviral Therapy (HAART) based on hard drug usage (such as heroin or cocaine). This study is of particular scientific interest because it is unclear whether the use of hard drugs inhibits the immune system in humans; treatment strategies may differ based on these results. The researchers are interested in comparing subjects who never used hard drugs to current hard drug users (those that use hard drugs at year 2) or previous hard drug users (those who used drugs at year 0 or 1). Outcomes of interest are: viral load (HIV copies in a mL of blood), CD4+ T cell count (a measure of immunologic health), and aggregate physical and quality of life scores from the SF-36.
+
+The clinical hypothesis is that, if hard drugs inhibit the immune system in humans, subjects who currently or previously used hard drugs will have higher viral load and lower CD4+ T cell counts than those who never used hard drugs. Additionally, the researchers are interested in knowing if potential differences between the drug use groups can be explained by differences in adherence to the treatment regimen. The researchers are agnostic on how quality of life changes after treatment, since side effects of the treatment are significant.
+
+The project description provided by the PI is available below:
+
+::: {style="text-align: center;"}
+<img src="/Project_2/Project_2_R/Media/Project2_description1.png" width="85%"/>
+:::
+
+# Linear Mixed Models
+
+Note: This information is taken from the class notes for BIOS 6612: Applied Biostatistics II (Week 15, Lecture 24 and 25).
+
+Linear Mixed Models are a powerful statistical tool to handle correlated data. That is, when the assumption of independence is not met, as in longitudinal data (all of the values for the same subject will be highly correlated), we can no longer run a simple regression. This is where LMM's come in.
+
+LMM's are the most flexible method for analyzing repeated measures/correlated/longitudinal data. This is because:
+
+-   They allow for continuous predictors for repeated measures.
+
+    -   That is, time can now be treated as a continuous variable (whereas in RM ANOVA, predictors must be categorical).
+
+-   Missing data are allowed in LMMs, because subjects are weighted according to their number of measurements over time.
+
+-   They allow for heteroskedasticity (if you use an unstructured covariance matrix).
+
+-   Finally, LMM's allow for random intercepts and random slopes.
+
+### Random Intercepts
+
+Random intercepts allow for each subject to have their own intercept, which arguably makes the model easier to interpret.
+
+Random intercepts can be visualized below.
+
+![](/Project_2/Project_2_R/Code/images/clipboard-1117189542.png){fig-align="center" width="70%"}
+
+However, random slopes alone assumes that the rate of change of the outcome over time is the same for all individuals, which can be restrictive. This is where random slopes come in.
+
+### Random Slopes
+
+Random slopes allow you to account for the fact that the slope for the outcome variable will differ for each individual subject.
+
+Including random intercepts and slopes can be visualized below.
+
+![](/Project_2/Project_2_R/Code/images/clipboard-1061285406.png){fig-align="center" width="70%"}
+
+Thus, including random intercepts and slopes allows for us to interpret the relationship between a predictor and an outcome, "with the addition of subject-specific means". Basically, they allow you to capture variability between subjects.
+
+![](/Project_2/Project_2_R/Code/images/clipboard-511855197.png){fig-align="center" width="100%"}
+
+# Data Preparation
+
+## Connect to SAS
+
+```{r}
+# This code connects to SAS On Demand
+library(configSAS)
+configSAS::set_sas_engine()
+
+#  This code allows you to run ```{sas}``` chunks
+sas = knitr::opts_chunk$get("sas")
+```
+
+## Create Library
+
+```{sas, results = "hide"}
+* Create library;
+%LET CourseRoot = /home/u63376223/sasuser.v94/Advanced Data Analysis;
+LIBNAME Proj2LMM "&CourseRoot/Project 2 LMM";
+```
+
+## Read in Data
+
+```{sas, results = "hide"}
+* Import the dataset;
+PROC IMPORT
+    DATAFILE = "&CourseRoot/Project 2 LMM/Proj2_data_2_cleaned.csv"
+    OUT = Proj2LMM.data
+    REPLACE;
+    GETNAMES = YES;
+    RUN;
+    
+* Drop the extraneous VAR1 column;
+DATA Proj2LMM.data;
+	SET Proj2LMM.data;
+	DROP VAR1;
+	RUN;
+```
+
+## Handle NA Values
+
+```{sas, results = "hide"}
+* Fix missing values;
+DATA Proj2LMM.data;
+    SET Proj2LMM.data;
+    if hard_drugs = "NA" then hard_drugs = "";
+    	else hard_drugs = hard_drugs;
+    if ADH = "NA" then ADH = "";
+    	ELSE ADH = ADH;
+    IF FRP = "NA" THEN FRP = "";
+    	ELSE FRP = FRP;
+    RUN;
+```
+
+## Examine Data Set
+
+```{sas}
+* Examine header;
+PROC PRINT DATA = Proj2LMM.data (OBS = 6);
+    RUN;
+```
+
+# Variable Creation
+
+## Hard Drug Use Group
+
+ - Never User: Did not use hard drugs at any time point
+ - Previous User: Used hard drugs at time points 0 or 1, but not 2.
+ - Current User: Used hard drugs at time point 2.
+ 
+#### Create Hard Drug Use Group
+
+```{sas, results = "hide"}
+* Create hard drugs use group;
+PROC SQL;
+    CREATE TABLE data_2_grouped AS
+    SELECt newid,
+           hard_drugs,
+           years,
+           CASE
+               WHEN max(CASE WHEN hard_drugs = 'Yes' AND years = 2 THEN 1 ELSE 0 END) > 0 THEN 'Current User'
+               WHEN max(CASE WHEN hard_drugs = 'Yes' AND (years = 0 OR years = 1) THEN 1 ELSE 0 END) > 0 AND 
+                    max(case when hard_drugs = 'No' AND years = 2 THEN 1 ELSE 0 END) > 0 THEN 'Previous User'
+               ELSE 'Never User'
+           END AS hard_drugs_grp
+    FROM PROJ2LMM.data
+    GROUP BY newid
+    ORDER BY newid, years;
+QUIT;
+    
+```
+
+#### Append to Original Data Set
+
+```{sas, results = "hide"}
+
+* Append to original data set;
+DATA Proj2LMM.Data;
+	MERGE Proj2LMM.Data(IN = A) data_2_grouped(IN = B);
+	BY newid;
+	IF A;
+	RUN;
+```
+
+#### Double Check Classification
+
+```{sas}
+* Double check classification;
+* This matches the previous analysis in R;
+PROC TABULATE DATA = Proj2LMM.data;
+	CLASS hard_drugs_grp;
+	TABLE hard_drugs_grp;
+	RUN;
+```
+
+## Adherence High vs. Low
+
+ - High Adherence: >=95% Adherence to protocol
+ - Low Adherence: < 95 Adherence to protocol
+ 
+#### Create Adherence Group
+ 
+```{sas, results = "hide"}
+* Create adherence group;
+PROC SQL;
+    CREATE TABLE data_2_grouped AS
+    SELECT newid,
+           ADH,
+           years,
+           CASE
+               WHEN max(case when years = 2 AND (ADH = '100%' or ADH = '95-99%') THEN 1 ELSE 0 END) = 1 THEN 'High Adherence' 
+               ELSE 'Low Adherence'
+           END AS ADH_HIGHVSLOW
+    FROM PROJ2LMM.data
+    GROUP BY newid
+    ORDER BY newid, years;
+QUIT;
+```
+
+#### Append to Original Data Set
+
+```{sas, results = "hide"}
+* Append to original data set;
+DATA Proj2LMM.Data;
+	MERGE Proj2LMM.Data(IN = A) data_2_grouped(IN = B);
+	BY newid;
+	IF A;
+	RUN;
+```
+
+#### Double Check Classification
+
+```{sas}
+* Double check classification;
+* This matches the previous analysis in R;
+PROC TABULATE DATA = Proj2LMM.data;
+	CLASS ADH_HIGHVSLOW;
+	TABLE ADH_HIGHVSLOW;
+	RUN;
+```
+
+## Create College Education Variable
+
+#### Create College Level
+
+```{sas, results = "hide"}
+* Create college level variable;
+PROC SQL;
+    CREATE TABLE data_2_grouped AS
+    SELECT newid,
+           EDUCBAS,
+           years,
+           CASE
+               WHEN max(case when years = 2 AND (EDUCBAS IN ("At least one year college but no degree",
+                                                             "Four years college or got degree",
+                                                             "Some graduate work",
+                                                             "Post-graduate degree"))
+                                   THEN 1 ELSE 0 END) = 1 
+               THEN 'College' 
+               ELSE 'No College'
+           END AS EDUC_COLLEGE
+    FROM PROJ2LMM.data
+    GROUP BY newid
+    ORDER BY newid, years;
+QUIT;
+```
+
+#### Append to Original Data Set
+
+```{sas, results = "hide"}
+* Append to original data set;
+DATA Proj2LMM.Data;
+	MERGE Proj2LMM.Data(IN = A) data_2_grouped(IN = B);
+	BY newid;
+	IF A;
+	RUN;
+```
+
+#### Double Check Classification
+
+```{sas}
+* Double check classification;
+* This matches the previous analysis in R;
+PROC TABULATE DATA = Proj2LMM.data;
+	CLASS EDUC_COLLEGE;
+	TABLE EDUC_COLLEGE;
+	RUN;
+```
+
+# Data Visualization
+
+## Bivariate Relationships
+
+Here we will plot the average of each outcome group by our PEVs. 
+
+We will use SQL to calculate the averages across years (similiar to how we use the tidyverse in R).
+
+## Main Outcome Variables {#Main_Outcomes}
+
+::: panel-tabset
+
+## Viral Load 
+
+### By Hard Drug Use
+
+#### Calculate Average Viral Load for Each Year
+
+```{sas, results = "hide"}
+*** By hard drug use and year;
+PROC SQL;
+	CREATE TABLE summary_data as
+	SELECT hard_drugs_grp,
+		   years,
+		   mean(VLOAD_log) as avg_VLOAD_log
+	FROM Proj2LMM.data
+	GROUP BY hard_drugs_grp, years;
+	QUIT;
+```
+
+#### Create Plot
+
+```{sas}
+	
+* Plot;
+PROC SGPLOT DATA = summary_data;
+	SERIES x = years y = avg_VLOAD_log / GROUP = hard_drugs_grp;
+	XAXIS LABEL = "Years";
+	YAXIS LABEL = "Average Viral Load";
+	KEYLEGEND / POSITION = right ACROSS = 1 LOCATION = outside;
+	TITLE "Average Viral Load by Year and Hard Drug Use Group";
+	RUN;
+
+```
+
+### By Adherence
+
+#### Calculate Average Viral Load for Each Year
+
+```{sas, results = "hide"}
+* Calculate Averages by Adherence;
+PROC SQL;
+	CREATE TABLE summary_data as
+	SELECT ADH_HIGHVSLOW,
+		   years,
+		   mean(VLOAD_log) as avg_VLOAD_log
+	FROM Proj2LMM.data
+	GROUP BY ADH_HIGHVSLOW, years;
+	QUIT;
+```
+
+#### Create Plot
+
+```{sas}
+* Plot;
+PROC SGPLOT DATA = summary_data;
+	SERIES x = years y = avg_VLOAD_log / GROUP = ADH_HIGHVSLOW;
+	XAXIS LABEL = "Years";
+	YAXIS LABEL = "Average Viral Load";
+	KEYLEGEND / POSITION = right ACROSS = 1 LOCATION = outside;
+	TITLE "Average Viral Load by Year and Adherence";
+	RUN;
+```
+
+[Top of Tabset](#Main_Outcomes)
+
+## CD4+ T Cell Count 
+
+### By Hard Drug Use
+
+#### Calculate Average CD4+ T Cell Count for Each Year
+
+```{sas, results = "hide"}
+*** By hard drug use;
+PROC SQL;
+	CREATE TABLE summary_data as
+	SELECT hard_drugs_grp,
+		   years,
+		   mean(LEU3N) as avg_LEU3N
+	FROM Proj2LMM.data
+	GROUP BY hard_drugs_grp, years;
+	QUIT;
+```
+
+#### Create Plot
+
+```{sas}	
+* Plot;
+PROC SGPLOT DATA = summary_data;
+	SERIES x = years y = avg_LEU3N / GROUP = hard_drugs_grp;
+	XAXIS LABEL = "Years";
+	YAXIS LABEL = "Average CD4+ T Cell Count";
+	KEYLEGEND / POSITION = right ACROSS = 1 LOCATION = outside;
+	TITLE "Average CD4+ T Cell Count by Year and Hard Drug Use Group";
+	RUN;
+```
+
+### By Adherence
+
+#### Calculate Average CD4+ T Cell Count for Each Year
+
+```{sas, results = "hide"}
+* Calculate averages for each year;
+PROC SQL;
+	CREATE TABLE summary_data as
+	SELECT ADH_HIGHVSLOW,
+		   years,
+		   mean(LEU3N) as avg_LEU3N
+	FROM Proj2LMM.data
+	GROUP BY ADH_HIGHVSLOW, years;
+	QUIT;
+```
+
+#### Create Plot
+
+```{sas}
+* Plot;
+PROC SGPLOT DATA = summary_data;
+	SERIES x = years y = avg_LEU3N / GROUP = ADH_HIGHVSLOW;
+	XAXIS LABEL = "Years";
+	YAXIS LABEL = "Average CD4+ T Cell Count";
+	KEYLEGEND / POSITION = right ACROSS = 1 LOCATION = outside;
+	TITLE "Average CD4+ T Cell Count by Year and Adherence";
+	RUN;
+```
+
+[Top of Tabset](#Main_Outcomes)
+
+## Mental QOL 
+
+### By Hard Drug Use
+
+#### Calculate Average Mental QOL Each Year
+
+```{sas, results = "hide"}
+* Calculate the average AGG_MENT for each hard_drugs_grp and year;
+PROC SQL;
+	CREATE TABLE summary_data as
+	SELECT hard_drugs_grp,
+		   years,
+		   mean(AGG_MENT) as avg_AGG_MENT
+	FROM Proj2LMM.data
+	GROUP BY hard_drugs_grp, years;
+	QUIT;
+```
+
+#### Create Plot
+
+```{sas}
+* Plot;
+PROC SGPLOT DATA = summary_data;
+	SERIES x = years y = avg_AGG_MENT / GROUP = hard_drugs_grp;
+	XAXIS LABEL = "Years";
+	YAXIS LABEL = "Average Mental QOL";
+	KEYLEGEND / POSITION = right ACROSS = 1 LOCATION = outside;
+	TITLE "Average Mental Quality of Life by Year and Hard Drug Use Group";
+	RUN;
+```
+
+
+### By Adherence
+
+#### Calculate Average Mental QOL Each Year
+
+```{sas, results = "hide"}
+* Calculate the average for each year;
+PROC SQL;
+	CREATE TABLE summary_data AS
+	SELECT ADH_HIGHVSLOW,
+		   years,
+		   mean(AGG_MENT) AS avg_AGG_MENT
+	FROM Proj2LMM.data
+	GROUP BY ADH_HIGHVSLOW, years;
+	QUIT;
+```
+#### Create Plot
+
+```{sas}
+* Plot;
+PROC SGPLOT DATA = summary_data;
+	SERIES x = years y = avg_AGG_MENT / GROUP = ADH_HIGHVSLOW;
+	XAXIS LABEL = "Years";
+	YAXIS LABEL = "Average Mental QOL";
+	KEYLEGEND / POSITION = right ACROSS = 1 LOCATION = outside;
+	TITLE "Average Mental Quality of Life by Year and Adherence";
+	RUN;
+```
+
+[Top of Tabset](#Main_Outcomes)
+
+## Physical QOL
+
+### By Hard Drug Use
+
+#### Calculate Average Physical QOL Each Year
+
+```{sas, results = "hide"}
+* Calculate the average AGG_PHYS for each hard_drugs_grp and year;
+PROC SQL;
+	CREATE TABLE summary_data as
+	SELECT hard_drugs_grp,
+		   years,
+		   mean(AGG_PHYS) as avg_AGG_PHYS
+	FROM Proj2LMM.data
+	GROUP BY hard_drugs_grp, years;
+	QUIT;
+```
+
+#### Create Plot
+
+```{sas}
+* Plot;
+PROC SGPLOT DATA = summary_data;
+	SERIES x = years y = avg_AGG_PHYS / GROUP = hard_drugs_grp;
+	XAXIS LABEL = "Years";
+	YAXIS LABEL = "Average Physical QOL";
+	KEYLEGEND / POSITION = right ACROSS = 1 LOCATION = outside;
+	TITLE "Average Physical Quality of Life by Year and Hard Drug Use Group";
+	RUN;
+```
+
+### By Adherence
+
+#### Calculate Average Physical QOL Each Year
+
+```{sas, results = "hide"}
+* Calculate the average for each year;
+PROC SQL;
+	CREATE TABLE summary_data AS
+	SELECT ADH_HIGHVSLOW,
+		   years,
+		   mean(AGG_PHYS) AS avg_AGG_PHYS
+	FROM Proj2LMM.data
+	GROUP BY ADH_HIGHVSLOW, years;
+	QUIT;
+```
+
+#### Create Plot
+
+```{sas}
+* Plot;
+PROC SGPLOT DATA = summary_data;
+	SERIES x = years y = avg_AGG_PHYS / GROUP = ADH_HIGHVSLOW;
+	XAXIS LABEL = "Years";
+	YAXIS LABEL = "Average Physical QOL";
+	KEYLEGEND / POSITION = right ACROSS = 1 LOCATION = outside;
+	TITLE "Average Physical Quality of Life by Year and Adherence";
+	RUN;
+```
+
+[Top of Tabset](#Main_Outcomes)
+
+## Summary
+
+For hard drug use group, previous users have:
+
+- The lowest average log viral load
+- The lowest leukocyte count, and highest mental and physical QOL.
+
+For adherence, those with low adherence have:
+
+- The highest average log viral load
+- The lowest leukocyte count, and lowest mental and physical QOL.
+
+[Top of Tabset](#Main_Outcomes)
+
+:::
+
+## Covariates {#Covariates}
+
+::: panel-tabset
+
+## Depression 
+
+Depression was a confounder in the model for mental QOL and must be accounted for.
+
+### By Hard Drugs
+
+#### Calculate Average Depression Scores for Each Year
+
+```{sas, results = "hide"}
+* Calculate the average for each year;
+PROC SQL;
+	CREATE TABLE summary_data AS
+	SELECT hard_drugs_grp,
+		   years,
+		   mean(CESD) AS avg_CESD
+	FROM Proj2LMM.data
+	GROUP BY hard_drugs_grp, years;
+	QUIT;
+```
+
+#### Create Plot
+
+```{sas}
+* Plot;
+PROC SGPLOT DATA = summary_data;
+	SERIES x = years y = avg_CESD / GROUP = hard_drugs_grp;
+	XAXIS LABEL = "Years";
+	YAXIS LABEL = "Average Depresion Score";
+	KEYLEGEND / POSITION = right ACROSS = 1 LOCATION = outside;
+	TITLE "Average Depression Score by Year and Hard Drugs Use";
+	RUN;
+```
+
+### By Adherence
+
+#### Calculate Average Depression Score for Each Year
+
+```{sas, results= "hide"}
+* Calculate the average for each year;
+PROC SQL;
+	CREATE TABLE summary_data AS
+	SELECT ADH_HIGHVSLOW,
+		   years,
+		   mean(CESD) AS avg_CESD
+	FROM Proj2LMM.data
+	GROUP BY ADH_HIGHVSLOW, years;
+	QUIT;
+```
+
+#### Create Plot
+
+```{sas}
+PROC SGPLOT DATA = summary_data;
+	SERIES x = years y = avg_CESD / GROUP = ADH_HIGHVSLOW;
+	XAXIS LABEL = "Years";
+	YAXIS LABEL = "Average Depresion Score";
+	KEYLEGEND / POSITION = right ACROSS = 1 LOCATION = outside;
+	TITLE "Average Depression Score by Year and Adherence";
+	RUN;
+```
+
+
+[Top of Tabset](#Covariates)
+
+## Frailty Related Phenotype 
+
+Frailty Related Phenotype is a precision variable for physical QOL, and was previously significant for CD4+ T Cell Count.
+
+### CD4+ T Cell Count
+
+#### Calculate Averages for Each Year
+
+```{sas, results = "hide"}
+*** CD4+ T Cell Count;
+* Calculate the average for each year;
+PROC SQL;
+	CREATE TABLE summary_data AS
+	SELECT FRP,
+		   years,
+		   mean(LEU3N) AS avg_LEU3N
+	FROM Proj2LMM.data
+	WHERE FRP IS NOT MISSING
+	GROUP BY FRP, years;
+	QUIT;
+```
+
+#### Create Plot
+
+```{sas}
+* Plot;
+PROC SGPLOT DATA = summary_data;
+	SERIES x = years y = avg_LEU3N / GROUP = frp;
+	XAXIS LABEL = "Years";
+	YAXIS LABEL = "Average CD4+ T Cell Count";
+	KEYLEGEND / POSITION = right ACROSS = 1 LOCATION = outside;
+	TITLE "Average CD4+ T Cell Count by Year and Frailty Related Phenotype";
+	RUN;
+```
+
+### Physical QOL
+
+```{sas, results = "hide"}
+*** Physical QOL;
+PROC SQL;
+	CREATE TABLE summary_data AS
+	SELECT FRP,
+		   years,
+		   mean(AGG_PHYS) AS avg_AGG_PHYS
+	FROM Proj2LMM.data
+	WHERE FRP IS NOT MISSING
+	GROUP BY FRP, years;
+	QUIT;
+```
+
+#### Create Plot
+
+```{sas}
+* Plot;
+PROC SGPLOT DATA = summary_data;
+	SERIES x = years y = avg_AGG_PHYS / GROUP = frp;
+	XAXIS LABEL = "Years";
+	YAXIS LABEL = "Average Physical QOL";
+	KEYLEGEND / POSITION = right ACROSS = 1 LOCATION = outside;
+	TITLE "Average Physical QOL by Year and Frailty Related Phenotype";
+	RUN;
+```
+
+[Top of Tabset](#Covariates)
+
+## College Education
+
+This was significant for the model with VLOAD_log. Let’s assess.
+
+### Viral Load
+
+#### Calculate Average Viral Load
+
+```{sas, results = "hide"}
+*** Viral Load;
+PROC SQL;
+	CREATE TABLE summary_data AS
+	SELECT EDUC_COLLEGE,
+		   years,
+		   mean(VLOAD_log) AS avg_VLOAD_log
+	FROM Proj2LMM.data
+	GROUP BY EDUC_COLLEGE, years;
+	QUIT;
+```
+
+#### Create Plot
+
+```{sas}
+* Plot;
+PROC SGPLOT DATA = summary_data;
+	SERIES x = years y = avg_VLOAD_log / GROUP = EDUC_COLLEGE;
+	XAXIS LABEL = "Years";
+	YAXIS LABEL = "Average Viral Load";
+	KEYLEGEND / POSITION = right ACROSS = 1 LOCATION = outside;
+	TITLE "Average Viral Load by Year and College Education";
+	RUN;
+```
+
+#### Calculate Average CD4+ T Cell Count 
+
+```{sas, results = "hide"}
+*** CD4+ T Cell Count;
+PROC SQL;
+	CREATE TABLE summary_data AS
+	SELECT EDUC_COLLEGE,
+		   years,
+		   mean(LEU3N) AS avg_LEU3N
+	FROM Proj2LMM.data
+	GROUP BY EDUC_COLLEGE, years;
+	QUIT;
+```
+
+#### Create Plot
+
+```{sas}
+* Plot;
+PROC SGPLOT DATA = summary_data;
+	SERIES x = years y = avg_LEU3N / GROUP = EDUC_COLLEGE;
+	XAXIS LABEL = "Years";
+	YAXIS LABEL = "Average CD4+ T Cell Count";
+	KEYLEGEND / POSITION = right ACROSS = 1 LOCATION = outside;
+	TITLE "Average CD4+ T Cell Count by Year and College Education";
+	RUN;
+```
+
+### Mental Quality of Life
+
+#### Calculate Average Mental Quality of Life
+
+```{sas, results = "hide"}
+*** Mental QOL;
+PROC SQL;
+	CREATE TABLE summary_data AS
+	SELECT EDUC_COLLEGE,
+		   years,
+		   mean(AGG_MENT) AS avg_AGG_MENT
+	FROM Proj2LMM.data
+	GROUP BY EDUC_COLLEGE, years;
+	QUIT;
+```
+
+#### Create Plot
+
+```{sas}
+* Plot;
+PROC SGPLOT DATA = summary_data;
+	SERIES x = years y = avg_AGG_MENT / GROUP = EDUC_COLLEGE;
+	XAXIS LABEL = "Years";
+	YAXIS LABEL = "Average Mental QOL";
+	KEYLEGEND / POSITION = right ACROSS = 1 LOCATION = outside;
+	TITLE "Average Mental QOL by Year and College Education";
+	RUN;
+```
+
+### Physical Quality of Life
+
+#### Calculate Average Quality of Life
+
+```{sas, results = "hide"}
+*** Physical QOL;
+PROC SQL;
+	CREATE TABLE summary_data AS
+	SELECT EDUC_COLLEGE,
+		   years,
+		   mean(AGG_PHYS) AS avg_AGG_PHYS
+	FROM Proj2LMM.data
+	GROUP BY EDUC_COLLEGE, years;
+	QUIT;
+```
+
+#### Create Plot
+
+```{sas}
+* Plot;
+PROC SGPLOT DATA = summary_data;
+	SERIES x = years y = avg_AGG_PHYS / GROUP = EDUC_COLLEGE;
+	XAXIS LABEL = "Years";
+	YAXIS LABEL = "Average Physical QOL";
+	KEYLEGEND / POSITION = right ACROSS = 1 LOCATION = outside;
+	TITLE "Average Physical QOL by Year and College Education";
+	RUN;
+```
+
+[Top of Tabset](#Covariates)
+
+:::
+
+# Data Analysis
+
+We will be following the notes from BIOS 6680: Applied Biostatistics II as a guide to performin the linear mixed model analysis.
+
+#### Accounting for Repeated Measures
+
+We do not have independent measures in this data set, because it is longitudinal. Therefore, we are using a linear mixed model to account for the fact that observations from the same patient may be more similar to each other than to those from different patients.
+
+We account for this correlation by Including ID as a random effect, and fitting random intercepts and/or random slopes by `newid`.
+
+We fit random intercepts with `RANDOM INTERCEPT`
+
+We fit random slopes and intercepts by adding `newid` to the `RANDOM INTERCEPT` statement.
+
+Additionally, we know that the outcome variables are heteroskedastic, and thus we will use the unstructured covariance matrix to account for this (using `TYPE = UN`).
+
+## Log Viral Load {#VLOAD}
+
+Based on the previous interactive model selection in Project 2, the final covariates for this model were `hard_drugs_grp`, `ADH`, and `EDUC_COLLEGE`.
+
+::: panel-tabset
+
+## Model Selection
+
+To answer the researcher’s main question, we will run a model of `hard_drugs_grp`, `ADH_HIGHVSLOW`, years, and an interaction between `hard_drugs_grp`*`years` to see if the slopes differ based on hard drug usage.
+
+Note: An unstructured covariance matrix is not needed here since we are only using random intercepts.
+
+#### Perform Saturated Model
+
+```{sas}
+*** Log Viral Load;
+PROC MIXED DATA = PROJ2LMM.DATA METHOD = REML;
+	CLASS hard_drugs_grp (REF='Never User') ADH_HIGHVSLOW;
+	MODEL VLOAD_log = hard_drugs_grp ADH_HIGHVSLOW years hard_drugs_grp*years / SOLUTION CL;
+	RANDOM INTERCEPT / SUBJECT = newid VCORR;
+	ODS OUTPUT FitStatistics = Model_full;
+  ODS SELECT SolutionF Tests3; * Output only these specific tables;
+	RUN;
+```
+
+The interaction is not significant. Let's re-run without it.
+
+#### Re-Run Model Without Interaction Term
+
+```{sas}
+PROC MIXED DATA = PROJ2LMM.DATA METHOD = REML;
+	CLASS hard_drugs_grp (REF='Never User') ADH_HIGHVSLOW;
+	MODEL VLOAD_log = hard_drugs_grp ADH_HIGHVSLOW years / SOLUTION CL;
+	RANDOM INTERCEPT / SUBJECT = newid VCORR;
+	ODS OUTPUT FitStatistics = Model_Reduced1;
+  ODS SELECT SolutionF Tests3; * Output only these specific tables;
+	RUN;
+```
+
+That looks pretty good, however, we did see that high adherence vs low adherence had differing slopes when we plotted them. Let’s include an interaction term for adherence.
+
+#### Add Adherence Interaction Term
+
+```{sas}
+** Add Adherence interaction term;
+PROC MIXED DATA = PROJ2LMM.DATA METHOD = REML;
+	CLASS hard_drugs_grp (REF='Never User') ADH_HIGHVSLOW;
+	MODEL VLOAD_log = hard_drugs_grp ADH_HIGHVSLOW years ADH_HIGHVSLOW*years / SOLUTION CL;
+	RANDOM INTERCEPT / SUBJECT = newid VCORR;
+	ODS OUTPUT FitStatistics = Model_Reduced2;
+  ODS SELECT SolutionF Tests3; * Output only these specific tables;
+	RUN;
+```
+
+We have a significant interaciton. Let’s perform model selection based on AIC and BIC.
+
+#### Compare BIC of Each Model
+
+```{sas}
+** Perform Model Selection Comparing BIC;
+DATA COMPARE_BIC;
+	SET Model_Full(in=full) Model_Reduced1(in = reduced1) Model_Reduced2(in = reduced2);
+	IF full THEN Model = "Model 1";
+	ELSE IF reduced1 THEN MODEL = "Model 2";
+	ELSE Model = "Model 3";
+	
+	IF Descr = "BIC (Smaller is Better)";
+	RUN;
+	
+* Print BICs for each model;
+PROC PRINT DATA = COMPARE_BIC;
+	RUN;
+```
+
+BIC prefers model 3, with the `ADH_HIGHVSLOW`*`years` interaction. Thus that is our final model.
+
+[Top of Tabset](#VLOAD)
+
+## Analysis
+
+Based on model selection, the final model for log viral load includes `hard_drugs_grp`, `ADH_HIGHVSLOW`, `years`, and an interaction between `ADH_HIGHVSLOW`*`years`.
+
+#### Run Final Model
+
+```{sas}
+* Run Final Model;
+PROC MIXED DATA = PROJ2LMM.DATA METHOD = REML;
+	CLASS hard_drugs_grp (REF='Never User') ADH_HIGHVSLOW;
+	MODEL VLOAD_log = hard_drugs_grp ADH_HIGHVSLOW years ADH_HIGHVSLOW*years / SOLUTION CL;
+	RANDOM INTERCEPT / SUBJECT = newid VCORR;
+	ODS OUTPUT FitStatistics = Model_Reduced2;
+  STORE OUT=Model_VLOAD; *Store the model information for later use;
+	RUN;
+```
+
+After controlling for adherence and between subject means (intercepts), there was no difference in average log viral load for current (p = 0.93, 95% CI: -0.62, 0.56) and previous (p = 0.54, 95% CI: -0.88, 0.46) hard drug users compared to never users.
+
+After controlling for hard drug use and between subject means, those with low adherence did not differ significantly in average log viral load compared to those with high adherence (p = 0.16, 95% CI: -1.32, 0.22).
+
+There was a significant decrease in log viral load over time while controlling for subject-specific means, hard drug use, and adherence, with an average decrease of 3.15 log copies/mL per year (p < 0.0001, 95% CI: -3.30, -3.00).
+
+Subject ID contributes greatly to log viral load, as it accounts for 2.882 / (2.882 + 5.816) = 0.331 or 33.1% of the variance in log viral load.
+
+The slope for viral load over time differed significantly between those with low and high adherence. Those with low adherence had on average a 0.99 increase in log viral load each year compared to those with high adherence (p < 0.0001, 95% CI: 0.51, 1.47).
+
+#### Change Reference Group
+
+```{sas}
+* Change reference group;
+PROC MIXED DATA = PROJ2LMM.DATA METHOD = REML;
+	CLASS hard_drugs_grp (REF='Previous User') ADH_HIGHVSLOW;
+	MODEL VLOAD_log = hard_drugs_grp ADH_HIGHVSLOW years ADH_HIGHVSLOW*years / SOLUTION CL;
+	RANDOM INTERCEPT / SUBJECT = newid VCORR;
+	ODS OUTPUT FitStatistics = Model_Reduced2;
+  ODS SELECT SolutionF Tests3; * Output only these specific tables;
+	RUN;
+```
+
+Previous hard drug users did not differ significantly in average log viral load compared to current users (p = 0.67, 95% CI: -0.66, 1.03).
+
+[Top of Tabset](#VLOAD)
+
+## Interpretation
+
+#### Hard Drug Use Group
+
+After controlling for adherence and between subject means (intercepts), there was no difference in average log viral load for current (p = 0.93, 95% CI: -0.62, 0.56) and previous (p = 0.54, 95% CI: -0.88, 0.46) hard drug users compared to never users. Previous hard drug users did not differ significantly in average log viral load compared to current users (p = 0.67, 95% CI: -0.66, 1.03).
+
+#### Adherence
+
+After controlling for hard drug use and between subject means, those with low adherence did not differ significantly in average log viral load compared to those with high adherence (p = 0.16, 95% CI: -1.32, 0.22).
+
+#### Time
+
+There was a significant decrease in log viral load over time while controlling for subject-specific means, hard drug use, and adherence, with an average decrease of 3.15 log copies/mL per year (p < 0.0001, 95% CI: -3.30, -3.00).
+
+#### Viral Load over Time by Adherence
+
+The slope for viral load over time differed significantly between those with low and high adherence. Those with low adherence had on average a 0.99 increase in log viral load each year compared to those with high adherence (p < 0.0001, 95% CI: 0.51, 1.47). The other in group comparisons were not significant (p > 0.05).
+
+#### Within Subject Means
+
+Subject ID contributes greatly to log viral load, as it accounts for `2.882 / (2.882 + 5.816) = 0.331` or 33.1% of the variance in log viral load.
+
+[Top of Tabset](#VLOAD)
+
+## Visualization
+
+We can plot the predicted values of our model in order to visualize the interaction and understand it better.
+
+#### Generate Predicted Values with PROC PLM
+
+```{sas, results = "hide"}
+* Use PROC PLM to generate the predicted values under the final model;
+PROC PLM RESTORE = Model_VLOAD;
+	SCORE DATA = Proj2LMM.Data OUT = Proj2LMM.Data PREDICTED = Predicted_VLOAD_log;
+	RUN;
+```
+
+#### Visualize Predicted Values
+
+```{sas}
+* Visualize the predicted values under the final model;
+PROC SGPLOT DATA = Proj2LMM.Data;
+	REG X = Years Y = Predicted_VLOAD_log / GROUP = ADH_HIGHVSLOW LINEATTRS = (THICKNESS=2) NOMARKERS;
+	XAXIS LABEL = "Years";
+	YAXIS LABEL = "Average Log Viral Load";
+	TITLE "Predicted Log Viral Load by Adherence Level";
+	RUN;
+```
+
+[Top of Tabset](#VLOAD)
+
+:::
+
+## CD4+ T Cell Count {#CD4}
+
+::: panel-tabset
+
+## Model Selection
+
+Note: It appears that if we run the analysis with random slopes for `newid` in SAS, the program is unable to run due to insufficient memory. This may because I am using the unpaid version of SAS. We will therefore run these analyses without the random slopes. The results are similiar to how we originally ran this in R.
+
+#### Run Saturated Model with Unstructured Covariance Matrix
+
+First let us fit the full model of interest using a structured covariance matrix, and `hard_drugs_grp`, `ADH_HIGHVSLOW`, `years`, and the `hard_drugs_grp`*`years` interaction term.
+
+```{sas}
+* Run with unstructured covariance matrix;
+PROC MIXED DATA = PROJ2LMM.DATA METHOD = REML;
+	CLASS newid hard_drugs_grp ADH_HIGHVSLOW;
+	MODEL LEU3N = hard_drugs_grp ADH_HIGHVSLOW years hard_drugs_grp*years / CL;
+	RANDOM intercept / SUBJECT = newid TYPE = UN VCORR;
+	ODS OUTPUT FitStatistics = Full_Model_Un;
+  ODS SELECT SolutionF Tests3; * Output only these specific tables;
+	RUN;
+```
+
+The interaction is significant and thus this is our final model.
+
+[Top of Tabset](#CD4)
+
+## Analysis
+
+Here we perform the analysis with the final selected model, using an unstructured covariance matrix.
+
+```{sas}
+* Run with unstructured covariance matrix;
+PROC MIXED DATA = PROJ2LMM.DATA METHOD = REML;
+	CLASS newid hard_drugs_grp (REF = "Never User") ADH_HIGHVSLOW;
+	MODEL LEU3N = hard_drugs_grp ADH_HIGHVSLOW years hard_drugs_grp*years / CL;
+	RANDOM intercept / SUBJECT = newid TYPE = UN VCORR;
+	ODS OUTPUT FitStatistics = Full_Model_Un;
+  STORE OUT=Model_LEU3N; *Store the model information for later use;
+	RUN;
+```
+
+After controlling for adherence and between subject means (intercepts), there was no difference in average CD4+ T Cell count for previous users compared to never hard drug users (p = 0.13, 95% CI: -109.54, 14.08). However, current users had on average a 116.91 cell higher CD4+ T Cell count compared to never users (p < 0.0001, 95% CI: 61.97, 171.85).
+
+After controlling for hard drug use and between subject means, those with low adherence did not differ significantly in average CD4+ T Cell count compared to those with high adherence (p = 0.51, 95% CI: -75.92, 37.59).
+
+There was a significant increase in CD4+ T Cell count over time while controlling for subject-specific means, hard drug use, and adherence, with an average increase of 89.30 log copies/mL per year (p < 0.0001, 95% CI: -3.30, -3.00).
+
+The slope for CD4+ T Cell count over time differed significantly based on hard drug use. On average, previous hard drug users had a 32.15 decrease in CD4+ T Cell count per year compared to never drug users (p = 0.025, 95% CI: -60.24, -4.06), and current users had a 59.15 decrease in CD4+ T Cell count each year compared to never hard drug users (p < 0.0001, 95% CI: -84.11, -34.20).
+
+#### Change Reference Category
+
+```{sas}
+* Change reference Category;
+PROC MIXED DATA = PROJ2LMM.DATA METHOD = REML;
+	CLASS newid hard_drugs_grp (REF = "Previous User") ADH_HIGHVSLOW;
+	MODEL LEU3N = hard_drugs_grp ADH_HIGHVSLOW years hard_drugs_grp*years / CL;
+	RANDOM intercept / SUBJECT = newid TYPE = UN VCORR;
+	ODS OUTPUT FitStatistics = Full_Model_Un;
+  ODS SELECT SolutionF Tests3; * Output only these specific tables;
+	RUN;
+```
+
+[Top of Tabset](#CD4)
+
+## Interpretation
+
+Previous hard drug users had on average a 164.66 lower CD4+ T Cell count compared to current users (p < 0.0001, 95% CI: 86.44, 242.87).
+
+The slope for CD4+ T Cell count over time did not differ between previous and current hard drug users (p = 0.14, 95% CI: -62.49, 8.49).
+
+[Top of Tabset](#CD4)
+
+## Visualization
+
+#### Generate Predicted Values with PROC PLM
+
+```{sas, results = "hide"}
+* Use PROC PLM to generate the predicted values under the final model;
+PROC PLM RESTORE = Model_LEU3N;
+	SCORE DATA = Proj2LMM.Data OUT = Proj2LMM.Data PREDICTED = Predicted_LEU3N;
+	RUN;
+```
+
+#### Visualize Predicted Values
+
+```{sas}
+* Visualize the predicted values under the final model;
+PROC SGPLOT DATA = Proj2LMM.Data;
+	REG X = Years Y = Predicted_LEU3N / GROUP = hard_drugs_grp LINEATTRS = (THICKNESS=2) NOMARKERS;
+	XAXIS LABEL = "Years";
+	YAXIS LABEL = "Predicted CD4+ T Cell Count";
+	TITLE "Predicted CD4+ T Cell Count by Hard Drug Use";
+	RUN;
+```
+
+[Top of Tabset](#CD4)
+
+:::
+
+## Mental QOL {#Mental}
+
+We will be fitting the full model with `hard_drugs_grp`, `ADH_HIGHVSLOW`, `years`, `CESD`, and the `hard_drugs_grp`*`years` interaction.
+
+We will also use an unstructured covariance matrix to account for unequal variances.
+
+::: panel-tabset 
+
+## Model Selection
+
+#### Run the Full Model with Unstructured Covariance Matrix
+
+```{sas}
+* Run with unstructured covariance matrix;
+PROC MIXED DATA = PROJ2LMM.DATA METHOD = REML;
+	CLASS hard_drugs_grp (REF = "Never User") ADH_HIGHVSLOW;
+	MODEL AGG_MENT = hard_drugs_grp ADH_HIGHVSLOW years hard_drugs_grp*years cesd / CL;
+	RANDOM intercept newid/ SUBJECT = newid TYPE = UN VCORR;
+	ODS OUTPUT FitStatistics = Full_Model_Un;
+  ODS SELECT SolutionF Tests3; * Output only these specific tables;
+	RUN;
+```
+	
+The interaction is significant.
+
+#### Run Model without Interaction
+
+```{sas}
+* Run without the interaction term;
+PROC MIXED DATA = PROJ2LMM.DATA METHOD = REML;
+	CLASS hard_drugs_grp (REF = "Never User") ADH_HIGHVSLOW;
+	MODEL AGG_MENT = hard_drugs_grp ADH_HIGHVSLOW years cesd / CL;
+	RANDOM intercept newid/ SUBJECT = newid TYPE = UN VCORR;
+	ODS OUTPUT FitStatistics = Red_Model;
+  ODS SELECT SolutionF Tests3; * Output only these specific tables;
+	RUN;
+```
+
+#### Compare BICs
+
+```{sas}
+* Print BICs;
+PROC PRINT DATA = Compare_bic;
+	RUN;
+```
+
+The final model preferred by BIC is the model which includes the interaction term.
+
+[Top of Tabset](#Mental)
+
+## Analysis
+
+```{sas}
+* Run with unstructured covariance matrix;
+PROC MIXED DATA = PROJ2LMM.DATA METHOD = REML;
+	CLASS hard_drugs_grp (REF = "Never User") ADH_HIGHVSLOW;
+	MODEL AGG_MENT = hard_drugs_grp ADH_HIGHVSLOW years hard_drugs_grp*years CESD / CL;
+	RANDOM intercept newid/ SUBJECT = newid TYPE = UN VCORR;
+	ODS OUTPUT FitStatistics = Full_Model_Un;
+  STORE OUT=Model_AGG_MENT; *Store the model information for later use;
+	RUN;
+```
+
+#### Change the Reference Level
+
+```{sas}
+* Change the reference level;
+PROC MIXED DATA = PROJ2LMM.DATA METHOD = REML;
+	CLASS hard_drugs_grp (REF = "Previous User") ADH_HIGHVSLOW;
+	MODEL AGG_MENT = hard_drugs_grp ADH_HIGHVSLOW years CESD hard_drugs_grp*years / CL;
+	RANDOM intercept newid/ SUBJECT = newid TYPE = UN VCORR;
+	ODS OUTPUT FitStatistics = Full_Model_Un;
+  ODS SELECT SolutionF Tests3; * Output only these specific tables;
+	RUN;
+```
+
+[Top of Tabset](#Mental)
+
+## Interpretation
+
+After controlling for adherence and between subject means (intercepts), there was no difference in average mental QOL between previous and current hard drug users (p = 0.47, 95% CI: -1.36, 2.94). On average, current hard drug users had a mental QOL score that was 2.28 points lower than never drug users (p = 0.023, 95% CI: -4.24, -0.32).
+
+After controlling for hard drug use and between subject means, those with low adherence did not differ significantly in average mental QOL compared to those with high adherence (p = 0.26, 95% CI: -0.64, 2.35).
+
+There was a significant no change in mental QOL over time while controlling for subject-specific means, hard drug use, and adherence, with an average increase of 0.31 points per year (p 0.14, 95% CI: -0.099, 0.71).
+
+The slope for mental QOL over time differed significantly based on hard drug use. On average, current hard drug users had a 1.69 point increase in physical QOL per year compared to never drug users (p = 0.056, 95% CI: 0.50, 2.89). The slope for physical QOL over time did not differ between never and previous users (p = 0.58, 95% CI: -1.67, 0.94).
+
+Controlling for adherence, hard drug use, and time, depression was a significant predictor of mental QOL. On average, mental QOL score decreased by 0.91 points for every 1 point increase in depression score (p < 0.0001, 95% CI: -0.95, -0.88).
+
+[Top of Tabset](#Mental)
+
+## Visualization
+
+#### Generate Predicted Values with PROC PLM
+
+```{sas, results = "hide"}
+* Use PROC PLM to generate the predicted values under the final model;
+PROC PLM RESTORE = Model_AGG_MENT;
+	SCORE DATA = Proj2LMM.Data OUT = Proj2LMM.Data PREDICTED = Predicted_AGG_MENT;
+	RUN;
+```
+
+
+#### Visualize Predicted Values
+
+```{sas}
+* Visualize the predicted values under the final model;
+PROC SGPLOT DATA = Proj2LMM.Data;
+	REG X = Years Y = Predicted_AGG_MENT / GROUP = hard_drugs_grp LINEATTRS = (THICKNESS=2) NOMARKERS;
+	XAXIS LABEL = "Years";
+	YAXIS LABEL = "Predicted Mental QOL";
+	TITLE "Predicted Mental QOL by Hard Drug Use";
+	RUN;
+```
+
+[Top of Tabset](#Mental)
+
+:::
+
+## Physical QOL {#Phys}
+
+We will begin by fitting the full model predicting physical QOL, including as covariates: hard_drugs_grp, ADH_HIGHVSLOW, FRP, years, and the hard_drugs_grp*years interaction term.
+
+We know that we do not meet the assumption of equality of variances (as pictured below), so we will employ an unstructured covariance matrix to account for this.
+
+::: panel-tabset
+
+## Model Selection
+
+#### Run Model With Drug Usage Interaction
+
+```{sas}
+* Run with unstructured covariance matrix;
+PROC MIXED DATA = PROJ2LMM.DATA METHOD = REML;
+	CLASS hard_drugs_grp (REF = "Never User") ADH_HIGHVSLOW FRP;
+	MODEL AGG_PHYS = hard_drugs_grp ADH_HIGHVSLOW years hard_drugs_grp*years FRP/ CL;
+	RANDOM intercept newid/ SUBJECT = newid TYPE = UN VCORR;
+	ODS OUTPUT FitStatistics = Full_Model_Phys;
+  ODS SELECT SolutionF Tests3; * Output only these specific tables;
+	RUN;
+```
+
+#### Run Model with Both Interaction Terms
+
+```{sas}
+* Run with both interaction terms;
+PROC MIXED DATA = PROJ2LMM.DATA METHOD = REML;
+	CLASS hard_drugs_grp (REF = "Never User") ADH_HIGHVSLOW FRP;
+	MODEL AGG_PHYS = hard_drugs_grp ADH_HIGHVSLOW years hard_drugs_grp*years ADH_HIGHVSLOW*years FRP/ CL;
+	RANDOM intercept newid/ SUBJECT = newid TYPE = UN VCORR;
+	ODS OUTPUT FitStatistics = Full_Model_Phys2;
+  ODS SELECT SolutionF Tests3; * Output only these specific tables;
+	RUN;
+```
+
+#### Compare BICs
+
+```{sas}
+** Perform Model Selection Comparing BIC;
+DATA COMPARE_BIC;
+	SET Full_Model_Phys(in=full) Full_Model_Phys2(in = reduced1);
+	IF full THEN Model = "One Interaction";
+	ELSE IF reduced1 THEN MODEL = "Two Interactions";
+	
+	IF Descr = "BIC (Smaller is Better)";
+	RUN;
+	
+* Print BICs;
+PROC PRINT DATA = Compare_bic;
+	RUN;
+```
+
+BIC prefers the final model with both interaction terms.
+
+[Top of Tabset](#Phys)
+
+## Analysis
+
+#### Run Final Model
+
+```{sas}
+* Run with both interaction terms;
+PROC MIXED DATA = PROJ2LMM.DATA METHOD = REML;
+	CLASS hard_drugs_grp (REF = "Never User") ADH_HIGHVSLOW FRP;
+	MODEL AGG_PHYS = hard_drugs_grp ADH_HIGHVSLOW years hard_drugs_grp*years ADH_HIGHVSLOW*years FRP/ CL;
+	RANDOM intercept newid/ SUBJECT = newid TYPE = UN VCORR;
+	ODS OUTPUT FitStatistics = Full_Model_Phys2;
+  STORE OUT=Model_AGG_PHYS; *Store the model information for later use;
+	RUN;
+```
+
+After controlling for adherence and between subject means (intercepts), there was no difference in average physical QOL between never hard drug users and previous users (p = 0.95, 95% CI: -4.48, 0.36) and current users (p = 0.30, 95% CI: -1.02, 3.27).
+
+After controlling for hard drug use and between subject means, those with low adherence did not differ significantly in average physical QOL compared to those with high adherence (p = 0.93, 95% CI: -2.32, 2.12).
+
+There was a significant decrease in physical QOL over time while controlling for subject-specific means, hard drug use, and adherence, with an average decrease of 0.38 points per year (p < 0.05, 95% CI: -0.75, -0.002). However this value was borderline significant and may not be a true relationshi, especially following correction for multiple pairwise comparisons.
+
+The slope for physical QOL over time differed significantly based on hard drug use. On average, current hard drug users had a 1.89 point decrease in physical QOL per year compared to never drug users (p = 0.0004, 95% CI: -2.93, -0.85). The slope for physical QOL over time did not differ between never and previous users (p = 0.2116, 95% CI: -1.916, 0.42).
+
+The slope for physical QOL over time also differed significantly based on adherence. On average, those with low adherence had a 2.02 point decrease in physical QOL per year compared to those with high adherence (p = 0.0002, 95% CI: -3.10, -0.94).
+
+After controlling for hard drug user, adherence, and their interactions over time, and between subject means, those with a frailty related phenotype had on average a physical QOL score that was 14.01 points lower than those without a frailty related phenotype (p < 0.0001, 95% CI: -15.49, -12.53).
+
+#### Change Reference Level
+
+```{sas}
+* Change reference level;
+PROC MIXED DATA = PROJ2LMM.DATA METHOD = REML;
+	CLASS hard_drugs_grp (REF = "Previous User") ADH_HIGHVSLOW FRP;
+	MODEL AGG_PHYS = hard_drugs_grp ADH_HIGHVSLOW years hard_drugs_grp*years ADH_HIGHVSLOW*years FRP/ CL;
+	RANDOM intercept newid/ SUBJECT = newid TYPE = UN VCORR;
+	ODS OUTPUT FitStatistics = Full_Model_Phys2;
+  ODS SELECT SolutionF Tests3; * Output only these specific tables;
+	RUN;
+```
+
+Current hard drug users had on average a physical QOL score that was 3.19 points higher than previous users (p = 0.042, 95% CI: 0.12, 6.26).
+
+The slope for physical QOL over time did not differ between current and previous hard drug users (p = 0.13, 95% CI: -2.63, 0.34)
+
+[Top of Tabset](#Phys)
+
+## Interpretation
+
+#### Hard Drug Use
+
+After controlling for adherence and between subject means (intercepts), there was no difference in average physical QOL between never hard drug users and previous users (p = 0.95, 95% CI: -4.48, 0.36) and current users (p = 0.30, 95% CI: -1.02, 3.27). Current hard drug users had on average a physical QOL score that was 3.19 points higher than previous users (p = 0.042, 95% CI: 0.12, 6.26).
+
+#### Adherence
+
+After controlling for hard drug use and between subject means, those with low adherence did not differ significantly in average physical QOL compared to those with high adherence (p = 0.93, 95% CI: -2.32, 2.12).
+
+#### Physical QOL by Hard Drug Use over Time
+
+The slope for physical QOL over time differed significantly based on hard drug use. On average, current hard drug users had a 1.89 point decrease in physical QOL per year compared to never drug users (p = 0.0004, 95% CI: -2.93, -0.85). The slope for physical QOL over time did not differ between never and previous users (p = 0.2116, 95% CI: -1.916, 0.42). The slope for physical QOL over time did not differ between current and previous hard drug users (p = 0.13, 95% CI: -2.63, 0.34).
+
+#### Physical QOL by Adherence over Time
+
+The slope for physical QOL over time also differed significantly based on adherence. On average, those with low adherence had a 2.02 point decrease in physical QOL per year compared to those with high adherence (p = 0.0002, 95% CI: -3.10, -0.94).
+
+#### Time
+
+There was a significant decrease in physical QOL over time while controlling for subject-specific means, hard drug use, and adherence, with an average decrease of 0.38 points per year (p < 0.05, 95% CI: -0.75, -0.002). However this value was borderline significant and may not be a true relationshi, especially following correction for multiple pairwise comparisons.
+
+#### Frailty Related Phenotype
+
+After controlling for hard drug user, adherence, and their interactions over time, and between subject means, those with a frailty related phenotype had on average a physical QOL score that was 14.01 points lower than those without a frailty related phenotype (p < 0.0001, 95% CI: -15.49, -12.53).
+
+[Top of Tabset](#Phys)
+
+## Visualization
+
+#### Generate Predicted Values with PROC PLM
+
+```{sas, results = "hide"}
+** Visualize;
+* Use PROC PLM to generate the predicted values under the final model;
+PROC PLM RESTORE = Model_AGG_PHYS;
+	SCORE DATA = Proj2LMM.Data OUT = Proj2LMM.Data PREDICTED = Predicted_AGG_PHYS;
+	RUN;
+```
+
+#### Visualize predicted Values
+
+```{sas}
+* Visualize the predicted values under the final model;
+PROC SGPLOT DATA = Proj2LMM.Data;
+	REG X = Years Y = Predicted_AGG_PHYS / GROUP = hard_drugs_grp LINEATTRS = (THICKNESS=2) NOMARKERS;
+	XAXIS LABEL = "Years";
+	YAXIS LABEL = "Predicted Physical QOL";
+	TITLE "Predicted Physical QOL by Hard Drug Use";
+	RUN;
+```
+
+[Top of Tabset](#Phys)
+
+:::
+
+# Results
+
+In this analysis, the main findings for each outcome variable were:
+
+### Log Viral Load
+
+We found an interaction for log viral load, such that those with high adherence had a steeper decrease in log viral load over time compared to those with low adherence (p < 0.0001, 95% CI: 0.51, 1.47). The slopes for log viral load over time did not differ based on hard drug use (p > 0.05).
+
+```{sas}
+#| code-fold: true
+
+* Suppress the PROC PLM Table from the output;
+ODS EXCLUDE ALL;
+
+* Generate Predicted Values and SE's;
+PROC PLM RESTORE = Model_VLOAD;
+    SCORE DATA = Proj2LMM.Data OUT = Predicted_Data PREDICTED = Predicted_VLOAD_LOG STDERR = Predicted_SE;
+RUN;
+
+ODS SELECT ALL;
+
+* Calculate the average predicted values and SE's;
+PROC SQL;
+    CREATE TABLE Summarized_Data AS
+    SELECT Years,
+           ADH_HIGHVSLOW,
+           mean(Predicted_VLOAD_log) as Avg_Predicted_VLOAD_log,
+           mean(Predicted_SE) as Avg_Predicted_SE
+    FROM Predicted_Data
+    GROUP BY Years, ADH_HIGHVSLOW;
+	QUIT;
+
+* Calculate the lower and upper bounds for the standard errors;
+DATA Summarized_Data;
+    SET Summarized_Data;
+    LowerSE = Avg_Predicted_VLOAD_log - Avg_Predicted_SE;
+    UpperSE = Avg_Predicted_VLOAD_log + Avg_Predicted_SE;
+	RUN;
+
+* Create the final plot;
+PROC SGPLOT DATA = Summarized_Data;
+	SERIES X = Years Y = Avg_Predicted_VLOAD_log / GROUP = ADH_HIGHVSLOW LINEATTRS = (THICKNESS = 2);
+	BAND X = Years LOWER = LowerSE UPPER = UpperSE / GROUP = ADH_HIGHVSLOW TRANSPARENCY = 0.7;
+	XAXIS LABEL = "Year";
+	YAXIS LABEL = "Predicted Log Viral Load";
+	TITLE "Predicted Log Viral Load by Adherhence Level";
+	RUN;
+```
+
+
+### CD4+ T Cell Count
+
+We found an interaction for CD4+ T Cell count over time by hard drug use group, such that never users had a steeper recovery in CD4+ T cell count compared to previous users (p = 0.025, 95% CI: -60.24, -4.06) and current users.
+
+```{sas}
+#| code-fold: true
+
+**** CD4+ T Cell Count;
+* Suppress the PROC PLM Table from the output;
+ODS EXCLUDE ALL;
+
+* Generate Predicted Values and SE's;
+PROC PLM RESTORE = Model_LEU3N;
+    SCORE DATA = Proj2LMM.Data OUT = Predicted_Data PREDICTED = Predicted_LEU3N STDERR = Predicted_SE;
+RUN;
+
+ODS SELECT ALL;
+
+* Calculate the average predicted values and SE's;
+PROC SQL;
+    CREATE TABLE Summarized_Data AS
+    SELECT Years,
+           hard_drugs_grp,
+           mean(Predicted_LEU3N) as Avg_Predicted_LEU3N,
+           mean(Predicted_SE) as Avg_Predicted_SE
+    FROM Predicted_Data
+    GROUP BY Years, hard_drugs_grp;
+	QUIT;
+
+* Calculate the lower and upper bounds for the standard errors;
+DATA Summarized_Data;
+    SET Summarized_Data;
+    LowerSE = Avg_Predicted_LEU3N - Avg_Predicted_SE;
+    UpperSE = Avg_Predicted_LEU3N + Avg_Predicted_SE;
+	RUN;
+
+* Create the final plot;
+PROC SGPLOT DATA = Summarized_Data;
+	SERIES X = Years Y = Avg_Predicted_LEU3N / GROUP = hard_drugs_grp LINEATTRS = (THICKNESS = 2);
+	BAND X = Years LOWER = LowerSE UPPER = UpperSE / GROUP = hard_drugs_grp TRANSPARENCY = 0.7;
+	XAXIS LABEL = "Year";
+	YAXIS LABEL = "Predicted CD4+ T Cell Count";
+	TITLE "Predicted CD4+ T Cell Count by Hard Drug Use";
+	RUN;
+```
+
+### Mental QOL
+
+The interaction between hard drug use and mental QOL over time was weak. The main finding was that current hard drug users had worse mental QOL compared to previous users (p = 0.03, 95% CI: 5.82, -0.31).and never hard drug users (p = 0.023, 95% CI: -4.24, -0.32). Depression was the main driver in this relationship, and was a confounder for the relationship between hard drug use and mental QOL over time.
+
+```{sas}
+#| code-fold: true
+
+* Exclude PROC PLM Table;
+ODS EXCLUDE ALL;
+
+* Use PROC PLM to generate the predicted values under the final model;
+PROC PLM RESTORE = Model_AGG_MENT;
+	SCORE DATA = Proj2LMM.Data OUT = Proj2LMM.Data PREDICTED = Predicted_AGG_MENT;
+	RUN;
+
+ODS SELECT ALL;
+	
+* Visualize the predicted values under the final model;
+PROC SGPLOT DATA = Proj2LMM.Data;
+	REG X = Years Y = Predicted_AGG_MENT / GROUP = hard_drugs_grp LINEATTRS = (THICKNESS=2) NOMARKERS CLM CLMTRANSPARENCY=0.7;
+	XAXIS LABEL = "Years";
+	YAXIS LABEL = "Predicted Mental QOL";
+	TITLE "Predicted Mental QOL by Hard Drug Use";
+	RUN;
+```
+
+
+### Physical QOL
+
+We found a significant interaction for physical QOL over time by hard drug use, where current users had a steeper decrease in physical QOL over time compared to never users (p = 0.0004, 95% CI: -2.93). The other between group comparisons were not significant (p > 0.05).
+
+```{sas}
+#| code-fold: true
+
+** Visualize;
+
+* Exclude PROC PLM Table;
+ODS EXCLUDE ALL;
+
+* Use PROC PLM to generate the predicted values under the final model;
+PROC PLM RESTORE = Model_AGG_PHYS;
+	SCORE DATA = Proj2LMM.Data OUT = Proj2LMM.Data PREDICTED = Predicted_AGG_PHYS;
+	RUN;
+	
+ODS SELECT ALL;
+	
+* Visualize the predicted values under the final model;
+PROC SGPLOT DATA = Proj2LMM.Data;
+	REG X = Years Y = Predicted_AGG_PHYS / GROUP = hard_drugs_grp LINEATTRS = (THICKNESS=2) NOMARKERS CLM CLMTRANSPARENCY = 0.7;
+	XAXIS LABEL = "Years";
+	YAXIS LABEL = "Predicted Physical QOL";
+	TITLE "Predicted Physical QOL by Hard Drug Use";
+	RUN;
+```
+
+
+# Discussion
+
+The researchers’ main question was whether the outcome variables differed based on hard drug use, while controlling for adherence.
+
+We found that both adherence and hard drug are significant predictors for the outcome variables over time. Specifically:
+
+#### Log Viral Load
+
+Those with high adherence had improved recovery seen as decreased log viral load over time.
+
+#### CD4+ T Cell Count
+
+Never hard drug users had a faster recovery over time compared to previous and current hard drug users.
+
+#### Mental QOL
+
+Current hard drugs users had worse mental health compared previous and never hard drug users.
+
+#### Physical QOL
+
+Current hard drug users had a steeper decrease in physical QOL over time compared to never hard drug users.
+
+## Conclusion
+
+Thus, we have evidence that **high adherence improves outcomes from HIV, and those who never used hard drugs have improved recovery rate**. Additionally, **current drug users in particular have worse outcomes in physical and mental QOL**. This is important for the investigators to know and answers their main question of whether they need different different approaches based on hard drug use (they do).

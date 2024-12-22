@@ -207,6 +207,10 @@ window.Quarto = {
     <a class="dropdown-item" href="../../../Data_Management_(SAS)/Project_3/Project3.html">
  <span class="dropdown-text">Project 3 - Data Set Creation</span></a>
   </li>  
+        <li>
+    <a class="dropdown-item" href="../../../Data_Management_(SAS)/Project_5/Project_5_Report_and_Analysis.html">
+ <span class="dropdown-text">Project 5 - Report and Analysis</span></a>
+  </li>  
     </ul>
   </li>
   <li class="nav-item dropdown ">
@@ -3161,15 +3165,15 @@ During   Post    Pre
 <div class="cell-output cell-output-stdout">
 <pre><code>Best Normalizing transformation with 3263 Observations
  Estimated Normality Statistics (Pearson P / df, lower =&gt; more normal):
- - arcsinh(x): 24.5264
- - Box-Cox: 24.7305
- - Center+scale: 23.9146
- - Double Reversed Log_b(x+a): 25.6455
- - Exp(x): 342.2466
- - Log_b(x+a): 24.4975
- - orderNorm (ORQ): 24.1796
- - sqrt(x + a): 24.325
- - Yeo-Johnson: 24.8467
+ - arcsinh(x): 24.4867
+ - Box-Cox: 24.5665
+ - Center+scale: 23.8717
+ - Double Reversed Log_b(x+a): 26.6786
+ - Exp(x): 344.1979
+ - Log_b(x+a): 24.4223
+ - orderNorm (ORQ): 24.1476
+ - sqrt(x + a): 24.1835
+ - Yeo-Johnson: 24.7745
 Estimation method: Out-of-sample via CV with 10 folds and 5 repeats
  
 Based off these, bestNormalize chose:
@@ -3245,14 +3249,14 @@ center_scale(x) Transformation with 3263 nonmissing obs.
 <div class="cell-output cell-output-stdout">
 <pre><code>Best Normalizing transformation with 6429 Observations
  Estimated Normality Statistics (Pearson P / df, lower =&gt; more normal):
- - arcsinh(x): 9.1841
- - Box-Cox: 5.7492
- - Center+scale: 33.8262
- - Double Reversed Log_b(x+a): 57.5491
- - Log_b(x+a): 9.1841
- - orderNorm (ORQ): 1.4418
- - sqrt(x + a): 19.8236
- - Yeo-Johnson: 5.7588
+ - arcsinh(x): 9.1199
+ - Box-Cox: 5.6095
+ - Center+scale: 33.74
+ - Double Reversed Log_b(x+a): 58.0849
+ - Log_b(x+a): 9.119
+ - orderNorm (ORQ): 1.3568
+ - sqrt(x + a): 19.8425
+ - Yeo-Johnson: 5.5963
 Estimation method: Out-of-sample via CV with 10 folds and 5 repeats
  
 Based off these, bestNormalize chose:
@@ -3406,13 +3410,13 @@ orderNorm Transformation with 6429 nonmissing obs and ties
 <div class="cell-output cell-output-stdout">
 <pre><code>Best Normalizing transformation with 6429 Observations
  Estimated Normality Statistics (Pearson P / df, lower =&gt; more normal):
- - arcsinh(x): 7.2061
- - Center+scale: 50.6734
- - Double Reversed Log_b(x+a): 57.3317
- - Log_b(x+a): 8.6874
- - orderNorm (ORQ): 1.5227
- - sqrt(x + a): 10.8991
- - Yeo-Johnson: 5.2716
+ - arcsinh(x): 7.2209
+ - Center+scale: 50.261
+ - Double Reversed Log_b(x+a): 58.8499
+ - Log_b(x+a): 8.5935
+ - orderNorm (ORQ): 1.6034
+ - sqrt(x + a): 11.0184
+ - Yeo-Johnson: 5.4517
 Estimation method: Out-of-sample via CV with 10 folds and 5 repeats
  
 Based off these, bestNormalize chose:
@@ -10736,7 +10740,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
   }
     var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
     var mailtoRegex = new RegExp(/^mailto:/);
-      var filterRegex = new RegExp('/' + window.location.host + '/');
+      var filterRegex = new RegExp("https:\/\/svieau\.quarto\.pub\/portfolio");
     var isInternal = (href) => {
         return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
     }
