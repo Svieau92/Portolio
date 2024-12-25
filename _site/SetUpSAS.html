@@ -117,7 +117,7 @@ ul.task-list li input[type="checkbox"] {
  <span class="dropdown-text">Linear Mixed Model (R)</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="./Project_2/Project_2_SAS/Code/Linear_Mixed_Modxbcel_SAS.qmd">
+    <a class="dropdown-item" href="./Project_2/Project_2_SAS/Code/Linear_Mixed_Model_SAS.html">
  <span class="dropdown-text">Linear Mixed Model (SAS)</span></a>
   </li>  
         <li>
@@ -229,7 +229,7 @@ ul.task-list li input[type="checkbox"] {
 sas_session = saspy.SASsession(cfgfile="C:\\Users\\sviea\\anaconda3\\Lib\\site-packages\\saspy\\sascfg_personal.py")
 sas_session</code></pre>
 <pre class="{r}"><code>install.packages("configSAS")</code></pre>
-<div id="5cf5700b" class="cell" data-execution_count="1">
+<div id="f592e6d2" class="cell" data-execution_count="1">
 <details class="code-fold">
 <summary>Code</summary>
 <pre class="sas cell-code"><code>#| capture: log
@@ -239,7 +239,7 @@ proc candisc data=sashelp.iris out=outcan distance anova;
 run;</code></pre>
 </details>
 <div class="cell-output cell-output-stdout">
-<pre><code>5                                                          The SAS System                   Wednesday, December 25, 2024 02:58:00 AM
+<pre><code>5                                                          The SAS System                   Wednesday, December 25, 2024 09:33:00 AM
 
 24         ods listing close;ods html5 (id=saspy_internal) file=_tomods1 options(bitmap_mode='inline') device=svg style=HTMLBlue;
 24       ! ods graphics on / outputfmt=png;
@@ -265,7 +265,7 @@ ERROR 180-322: Statement is not valid or it is used out of proper order.
 32         
 33         ods html5 (id=saspy_internal) close;ods listing;
 34         
-6                                                          The SAS System                   Wednesday, December 25, 2024 02:58:00 AM
+6                                                          The SAS System                   Wednesday, December 25, 2024 09:33:00 AM
 
 35         </code></pre>
 </div>
@@ -340,7 +340,7 @@ result = sas.submit("proc print data=sashelp.class; run;")
 
 # Display the output in the Quarto document
 display(HTML(result['LST']))</code></pre>
-<div id="bae19b46" class="cell" data-execution_count="2">
+<div id="dbbb71d6" class="cell" data-execution_count="2">
 <details class="code-fold">
 <summary>Code</summary>
 <pre class="sas cell-code"><code>proc candisc data=sashelp.iris out=outcan distance anova;
