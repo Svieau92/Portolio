@@ -3,13 +3,15 @@ title: "Predictive Modelling (SAS)"
 format: html
 editor: visual
 author: Sean Vieau
-date: 12/17/2024
+date: 12/24/2024
 toc: true
 ---
 
 # Introduction
 
 The aim of the current study is to investigate whether MRI image features extracted from baseline kidney images can enhance the prediction of disease progression in young Autosomal Dominant Polycystic Kidney Disease (ADPKD) patients. This study is important because recent literature has demonstrated the inclusion of MRI image features improves the prognostic accuracy of models in adults, but this has not yet been demonstrated in children. Improving prediction models could greatly assist in diagnosing and predicting kidney disease outcomes in children, which is more challenging than in adults and could lead to improved treatment.
+
+Note: There is a lot of extraneous work I did when I originally performed this in R when exploring the data set, and we will not be retreading that in this SAS analysis.
 
 ::: {style="text-align: center;"}
 <img src="/Project_3_Predictive_Modelling/Project_3_R/Media/Project_Description.png" style="width:80%;"/>
@@ -138,3 +140,832 @@ The investigators recruited 71 young patients with ADPKD and collected MRI data 
 2.  A **logistic regression model** predicting **classification of disease progression as slow or fast** including MRI image features and baseline kidney volume will have better performance than a model with baseline kidney volume alone, as determined by specificity, sensitivity, PPV,  NPV,  accuracy, and AUC.
 
 # Data Preparation
+
+## Connect to SAS
+
+```{r}
+# This code connects to SAS On Demand
+library(configSAS)
+configSAS::set_sas_engine()
+
+#  This code allows you to run ```{sas}``` chunks
+sas = knitr::opts_chunk$get("sas")
+```
+
+## Create Library
+
+```{sas, results = "hide"}
+* Create library;
+%LET CourseRoot = /home/u63376223/sasuser.v94/Advanced Data Analysis;
+LIBNAME Proj3 "&CourseRoot/Project 3 Predictive Model";
+```
+
+## Read In Data
+
+```{sas, results = "hide"}
+* Import the dataset;
+PROC IMPORT
+    DATAFILE = "&CourseRoot/Project 3 Predictive Model/Project3_data.csv"
+    OUT = Proj3.data
+    REPLACE;
+    GETNAMES = YES;
+    RUN;
+```
+
+## Examine Data
+
+```{sas}
+* Examine data;
+PROC PRINT DATA = PROJ3.Data (OBS=6);
+	RUN;
+```
+
+## Examine Formats
+
+```{sas}
+* Examine formats;	
+PROC CONTENTS DATA = PROJ3.DATA;
+	RUN;
+```
+
+The data is completely clean and everything is numeric as it should be! We also have no missing variables in this data set.
+
+## Create Factors
+
+Let's just convert `progression` into a factor that contains the levels for "slow" or "fast' and we're good to go.
+
+```{sas, results = "hide"}
+* Create format;
+PROC FORMAT;
+	VALUE ProgressionCd
+		0 = "Slow"
+		1 = "Fast";
+	RUN;
+	
+* Apply Format;
+DATA Proj3.Data;
+	SET Proj3.Data;
+	FORMAT progression ProgressionCd.;
+	RUN;
+```
+
+#### Summary
+
+Our data set consists of:
+
+-   71 patients
+-   19 MRI image features
+-   4 kidney volume variables
+
+# Data Split
+
+#### Background
+
+We have an N of 71, which is notably small.
+
+In order to increase the power of the study, we will perform a 5-fold cross validation. Thus, all patients will be in both the training and validation sets, providing a comprehensive evaluation.
+
+![](images/clipboard-802573844.png)
+
+#### Perform the Split
+
+To begin with, we will divide our data set into 5 even folds.
+
+# Feature Engineering I
+
+## Correlation Matrix I
+
+To assess for the best engineering of features and select the most promising covariates for this predictive model, I will create the following correlation matrices.
+
+-   With unaltered features & engineered features
+-   With averages and interactions to aggregate features from the same class
+-   With squared features
+
+This process should uncover hidden relationships between features that are not immediately obvious (such as a squared feature being a significant predictor, but not in its original form).
+
+This first matrix will contain the unaltered features in their original form, as well as the engineered features as determined by examination of distributions.
+
+#### Create Correlation Matrix
+
+```{sas, results = "hide"}
+* Print correlation matrix;
+PROC CORR DATA = Proj3.Data OUTP = corr_matr;
+	VAR tkvht_base tkvht_change progression	 geom1 geom2 gabor1	gabor2	gabor3	gabor4	gabor5	glcm1	glcm2	txti1	txti2	txti3	txti4	txti5	lbp1	lbp2	lbp3	lbp4	lbp5; * List variables here;
+	RUN;
+
+* Create a dataset with only the correlation coefficients;
+DATA corr_only;
+    SET corr_matr;
+    IF _TYPE_ = 'CORR'; /* Select only the rows with correlation coefficients */
+RUN;
+
+* Reshape the correlation matrix for the heat map;
+DATA heatmap_data;
+    SET corr_only;
+    ARRAY vars[*] tkvht_base tkvht_change  progression	geom1 geom2	gabor1	gabor2	gabor3	gabor4	gabor5	glcm1	glcm2	txti1	txti2	txti3	txti4	txti5	lbp1	lbp2	lbp3	lbp4	lbp5; * List variables here;
+    DO i = 1 to DIM(vars);
+        ROW = _NAME_;
+        COL = VNAME(vars[i]);
+        corr_value = vars[i];
+        IF NOT missing(corr_value) THEN DO;
+            LABEL = PUT(corr_value, 8.2); * Format the text label;
+            OUTPUT;
+        END;
+    END;
+    KEEP row col corr_value label;
+RUN;
+```
+
+#### Plot the Correlation Matrix as a Heat Map
+
+```{sas}
+* Set the dimensions of the output graphic;
+ODS GRAPHICS / WIDTH=1000px HEIGHT=800px;
+
+* Create the Heat Map;
+PROC SGPLOT DATA=heatmap_data;
+    HEATMAPPARM X=col Y=row COLORRESPONSE = corr_value / COLORMODEL = (blue white red);
+    TEXT X=col Y=row TEXT=label / TEXTATTRS = (SIZE=8) POSITION = center;
+    XAXIS DISPLAY = (nolabel) DISCRETEORDER = data;
+    YAXIS DISPLAY=(nolabel) DISCRETEORDER = data;
+    TITLE "Correlation Matrix Heat Map";
+RUN;
+```
+
+## Summary
+
+The variables with the strongest correlations to `tkvht_change` are:
+
+-   `gabor1` (r = 0.20)
+-   `gabor4` (r = 0.22)
+-   `txti2` (r = 0.28)
+-   `txti3` (r= 0.19)
+-   `lbp1` (r = 0.21)
+-   `lbp3` (r = 0.25)
+-   `lbp4` (r = 0.24)
+
+# Feature Engineering II
+
+We had several variables of the same class (e.g. from the local binding pattern) that were correlated with the change in kidney volume size.
+
+In the interest of discovering underlying patterns, I will attempt to collapse these variables by
+
+-   Taking their average
+-   Taking their interaction term
+
+#### Create Averages and Interaction Terms
+
+```{sas, results = "hide"}
+** Create Average and Interaction Terms;
+DATA Proj3.Data;
+	SET Proj3.Data;
+	gabor_avg = mean(gabor1 + gabor4);
+	gabor_int = gabor1*gabor4;
+	txti_avg = mean(txti2 + txti3);
+	txti_int = txti2*txti3;
+	lbp_avg = mean(lbp1 + lbp3 + lbp4);
+	lbp_int = lbp1*lbp3*lbp4;
+	RUN;
+```
+
+## Correlation Matrix II
+
+#### Create Correlation Matrix
+
+```{sas, results = "hide"}
+* Print correlation matrix;
+PROC CORR DATA = Proj3.Data OUTP = corr_matr;
+	VAR tkvht_base tkvht_change progression gabor_avg gabor_int txti_avg txti_int lbp_avg lbp_int;
+	RUN;
+	
+* Create a dataset with only the correlation coefficients;
+DATA corr_only;
+    SET corr_matr;
+    IF _TYPE_ = 'CORR'; /* Select only the rows with correlation coefficients */
+RUN;
+
+* Reshape the correlation matrix for the heat map;
+DATA heatmap_data;
+    SET corr_only;
+    ARRAY vars[*] tkvht_base tkvht_change progression gabor_avg gabor_int txti_avg txti_int lbp_avg lbp_int;
+    DO i = 1 to DIM(vars);
+        ROW = _NAME_;
+        COL = VNAME(vars[i]);
+        corr_value = vars[i];
+        IF NOT missing(corr_value) THEN DO;
+            LABEL = PUT(corr_value, 8.2); * Format the text label;
+            OUTPUT;
+        END;
+    END;
+    KEEP row col corr_value label;
+RUN;
+```
+
+#### Plot the Correlation Matrix as a Heatmap
+
+```{sas}
+* Set the dimensions of the output graphic;
+ODS GRAPHICS / WIDTH=1000px HEIGHT=800px;
+
+* Create the Heat Map;
+PROC SGPLOT DATA=heatmap_data;
+    HEATMAPPARM X=col Y=row COLORRESPONSE = corr_value / COLORMODEL = (blue white red);
+    TEXT X=col Y=row TEXT=label / TEXTATTRS = (SIZE=8) POSITION = center;
+    XAXIS DISPLAY = (nolabel) DISCRETEORDER = data;
+    YAXIS DISPLAY=(nolabel) DISCRETEORDER = data;
+    TITLE "Correlation Matrix Heat Map";
+RUN;
+```
+
+## Summary
+
+The strongest correlations for this round are:
+
+-   `gabor_int` (r = 0.26)
+-   `lbp_int` (r = 0.24)
+
+These are slightly better than any one individual term, and will be chosen if one of the square terms does not have a stronger correlation.
+
+The `txti` average and interaction terms did not perform better than `txti2` alone.
+
+# Feature Engineering III
+
+#### Create Quadratic Terms
+
+```{sas, results = "hide"}
+* Create quadratic terms;
+DATA Proj3.Data;
+	SET Proj3.Data;
+	geom1_sq = geom1**2;
+	geom2_sq = geom2**2;
+	gabor1_sq = gabor1**2;
+	gabor2_sq = gabor2**2;
+	gabor3_sq = gabor3**2;
+	gabor4_sq = gabor4**2;
+	gabor5_sq = gabor5**2;
+	glcm1_sq = glcm1**2;
+	glcm2_sq = glcm2**2;
+	txti1_sq = txti1**2;
+	txti2_sq = txti2**2;
+	txti3_sq = txti3**2;
+	txti4_sq = txti4**2;
+	txti5_sq = txti5**2;
+	lbp1_sq = lbp1**2;
+	lbp2_sq = lbp2**2;
+	lbp3_sq = lbp3**2;
+	lbp4_sq = lbp4**2;
+	lbp5_sq = lbp5**2;
+	RUN;
+```
+
+## Correlation Matrix II
+
+#### Create the Correlation Matrix
+
+```{sas, results = "hide"}
+* Print correlation matrix;
+PROC CORR DATA = Proj3.Data OUTP = corr_matr;
+	VAR tkvht_base tkvht_change progression geom1_sq geom2_sq gabor1_sq gabor2_sq gabor3_sq gabor4_sq gabor5_sq glcm1_sq glcm2_sq txti1_sq txti2_sq txti3_sq txti4_sq txti5_sq lbp1_sq lbp2_sq lbp3_sq lbp4_sq lbp5_sq;
+	RUN;
+	
+* Create a dataset with only the correlation coefficients;
+DATA corr_only;
+    SET corr_matr;
+    IF _TYPE_ = 'CORR'; /* Select only the rows with correlation coefficients */
+RUN;
+
+* Reshape the correlation matrix for the heat map;
+DATA heatmap_data;
+    SET corr_only;
+    ARRAY vars[*] tkvht_base tkvht_change progression geom1_sq geom2_sq gabor1_sq gabor2_sq gabor3_sq gabor4_sq gabor5_sq glcm1_sq glcm2_sq txti1_sq txti2_sq txti3_sq txti4_sq txti5_sq lbp1_sq lbp2_sq lbp3_sq lbp4_sq lbp5_sq;
+    DO i = 1 to DIM(vars);
+        ROW = _NAME_;
+        COL = VNAME(vars[i]);
+        corr_value = vars[i];
+        IF NOT missing(corr_value) THEN DO;
+            LABEL = PUT(corr_value, 8.2); * Format the text label;
+            OUTPUT;
+        END;
+    END;
+    KEEP row col corr_value label;
+RUN;
+```
+
+#### Plot the Correlation Matrix as a Heatmap
+
+```{sas}
+* Set the dimensions of the output graphic;
+ODS GRAPHICS / WIDTH=1000px HEIGHT=800px;
+
+* Create the Heat Map;
+PROC SGPLOT DATA=heatmap_data;
+    HEATMAPPARM X=col Y=row COLORRESPONSE = corr_value / COLORMODEL = (blue white red);
+    TEXT X=col Y=row TEXT=label / TEXTATTRS = (SIZE=8) POSITION = center;
+    XAXIS DISPLAY = (nolabel) DISCRETEORDER = data;
+    YAXIS DISPLAY=(nolabel) DISCRETEORDER = data;
+    TITLE "Correlation Matrix Heat Map";
+RUN;
+```
+
+## Summary
+
+The only quadratic term that performs better than previous terms is `gabor3_sq` (r = 0.35), which will be chosen instead of `gabor_int`.
+
+## Feature Engineering Summary
+
+The final variables MRI image features chosen are:
+
+-   `lbp_int`
+-   `txti2`
+-   `gabor3_sq`
+
+# Feature Scaling
+
+Before we perform our regression, we must standardize our variables to place them all on the same scale so that they contribute equally to the model.
+
+This also makes it easier for the gradient descent process to converge faster and more efficiently.
+
+![](images/clipboard-243237117.png){fig-align="center" width="80%"}
+
+![](images/clipboard-2354431195.png){fig-align="center" width="80%"}
+
+## Perform Scaling
+
+#### Standardize All Features
+
+```{sas, results = "hide"}
+* Standardize the variables;
+PROC STANDARD DATA = Proj3.Data OUT = data_scale MEAN = 0 STD = 1;
+	VAR lbp_int txti2 gabor3_sq;
+	RUN;
+```
+
+# Task One: Linear Regression
+
+## Cost Function
+
+The cost function in a linear regression is Root Mean Square Error (RMSE):
+
+$$ \text{RMSE} = \sqrt{\frac{1}{n} \sum_{i=1}^{n} (y_i - \hat{y}_i)^2} $$
+
+Where y is the actual change in outcome variable and y-hat is the predicted change, and n is the number of observations.
+
+#### Mapping Function
+
+In the case of linear regression, the mapping function is essentially each beta in the model.
+
+#### Goal
+
+The goal is to select a mapping function that minimizes the cost function and thereby produces the best predictions for the outcome variable.
+
+We will be using `PROC GLMSELECT` to perform 5-fold cross validation and all of our analyses and Ordinary Least Squares (OLS). Another option is to perform gradient descent.
+
+## Model 1A: Baseline Kidney Volume {#1A}
+
+::: panel-tabset
+## Analysis
+
+To answer the researcher's first question for Task 1, we will perform a predictive model that uses the baseline height-corrected total kidney volume to predict percent change in kidney volume.
+
+$$ Kidney Volume Change = 𝛽_0 + 𝛽_1*Log Kidney Volume Baseline + e $$
+
+```{sas}
+*** Model 1A, Baseline Kidney Volume;
+* Perform 5-Fold Cross Validation and Linear Regression;
+PROC GLMSELECT DATA = Proj3.Data_scaled PLOTS = ALL SEED = 123;
+	PARTITION FRACTION(VALIDATE = 0.2); * Sets up the 5-Fold CV;
+	MODEL tkvht_change = tkvht_base / CVMETHOD =  SPLIT(5) SELECTION=none;
+	OUTPUT OUT = Model1A PRED = Predicted RESID = Residuals;
+	RUN;
+```
+
+[Top of Tabset](#1A)
+
+## Visualization
+
+```{sas}
+* Plot residuals vs. predicted values;
+PROC SGPLOT DATA = Model1A;
+    SCATTER X=Predicted Y=Residuals;
+    REFLINE 0 / AXIS=y LINEATTRS=(pattern=shortdash);
+    XAXIS LABEL='Predicted Values';
+    YAXIS LABEL='Residuals';
+    TITLE 'Residuals vs. Predicted Values';
+	RUN;
+```
+
+[Top of Tabset](#1A)
+
+## Summary
+
+the RMSE of the model including `kidvol_base` alone is 7.72.
+
+The model does not perform too well, when looking at the plots of the predicted vs actual values.
+
+The assumption of normality is almost, but not quite, met.
+
+[Top of Tabset](#1A)
+:::
+
+## Model 1B: MRI Features {#1B}
+
+To answer the researcher's second question for Task 1, we will run a predictive model that uses only MRI image features to predict percent change in kidney volume at year 3.
+
+$$ Kidney Volume Change = 𝛽_0 + 𝛽_1*Txti2 + 𝛽_{2}*LbpInt + e $$
+
+#### Model Selection
+
+The potential scaled covariates for our final model after feature engineering and interactive variable selection are:
+
+-   `lbp_int`
+-   `txti2`
+-   `gabor3_sq`
+
+We will perform model selection using backwards elimination and BIC.
+
+::: panel-tabset
+## Model Selection
+
+```{sas}
+** Model 1B: MRI Image Features;
+* Perform 5-Fold Cross Validation and Linear Regression;
+PROC GLMSELECT DATA = Proj3.Data_scaled PLOTS = ALL SEED = 123;
+	PARTITION FRACTION(VALIDATE = 0.2); * Sets up the 5-Fold CV;
+	MODEL tkvht_change = lbp_int txti2 gabor3_sq / CVMETHOD =  SPLIT(5) SELECTION = NONE;
+	RUN;
+```
+
+We can see that `gabor3_sq` decreases the performance on all metrics, and itself is not a significant predictor of `tkvht_change`. It will be removed from the final model.
+
+[Top of Tabset](#1B)
+
+## Analysis
+
+The final model selected via backwards elimination includes `lbp_int and`txti2\`.
+
+```{sas}
+** Model 1B: MRI Image Features;
+* Perform 5-Fold Cross Validation and Linear Regression;
+PROC GLMSELECT DATA = Proj3.Data_scaled PLOTS = ALL SEED = 123;
+	PARTITION FRACTION(VALIDATE = 0.2); * Sets up the 5-Fold CV;
+	MODEL tkvht_change = lbp_int txti2 / CVMETHOD =  SPLIT(5) SELECTION = NONE;
+	OUTPUT OUT = Model1B PRED = Predicted RESID = Residuals;
+	RUN;
+```
+
+[Top of Tabset](#1B)
+
+## Visualization
+
+#### Actual vs Predicted Values
+
+```{sas}
+* Plot residuals vs. predicted values;
+PROC SGPLOT DATA = Model1B;
+    SCATTER X=Predicted Y=Residuals;
+    REFLINE 0 / AXIS=y LINEATTRS=(pattern=shortdash);
+    XAXIS LABEL='Predicted Values';
+    YAXIS LABEL='Residuals';
+    TITLE 'Residuals vs. Predicted Values';
+	RUN;
+```
+
+[Top of Tabset](#1B)
+
+## Summary
+
+The RMSE for the model including only MRI Image features was 7.02, with both `lbp_int` and `txti2` being highly significant predictors of `tkvht_change`.
+
+This model with MRI images features alone performed better than that using only baseline kidney volume (RMSE = 7.70).
+
+[Top of Tabset](#1B)
+:::
+
+## Model 1C: Baseline Kidney Volume and MRI Image Features {#1C}
+
+::: panel-tabset
+## Analysis
+
+To answer the researcher’s third question, we will run a predictive model that uses the baseline height-corrected total kidney volume AND MRI image features to predict percent change in kidney volume.
+
+$$ Kidney Volume Change = 𝛽_0 + 𝛽_{1}*Baseline Kidney Volume + 𝛽_{2}*Txti2 + 𝛽_{3}*LbpInt + e $$
+
+```{sas}
+** Model 1C: Baseline + MRI Image Features;
+* Perform 5-Fold Cross Validation and Linear Regression;
+PROC GLMSELECT DATA = Proj3.Data_scaled PLOTS = ALL SEED = 123;
+	PARTITION FRACTION(VALIDATE = 0.2); * Sets up the 5-Fold CV;
+	MODEL tkvht_change = tkvht_base lbp_int txti2 / CVMETHOD =  SPLIT(5) SELECTION = NONE;
+	OUTPUT OUT = Model1C PRED = Predicted RESID = Residuals;
+	RUN;
+```
+
+[Top of Tabset](#1C)
+
+## Visualization
+
+```{sas}
+* Plot residuals vs. predicted values;
+PROC SGPLOT DATA = Model1C;
+    SCATTER X=Predicted Y=Residuals;
+    REFLINE 0 / AXIS=y LINEATTRS=(pattern=shortdash);
+    XAXIS LABEL='Predicted Values';
+    YAXIS LABEL='Residuals';
+    TITLE 'Residuals vs. Predicted Values';
+	RUN;
+```
+
+[Top of Tabset](#1C)
+
+## Summary
+
+Model 1C with baseline kidney volume and MRI image features (MRSE = 7.00) did not perform better than model 1B using MRI image features alone (MRSE = 7.02).
+
+[Top of Tabset](#1C)
+:::
+
+## Model Comparison
+
+Here we will compare how models 1A, 1B, and 1C performed.
+
+### Final Average RMSE
+
+| Model                             | RMSE |
+|-----------------------------------|------|
+| 1A: Baseline Kidney Volume        | 7.72 |
+| 1B: MRI Image Features            | 7.02 |
+| 1C Baseline Kidney Volume and MRI | 7.00 |
+
+## Conclusion
+
+The differences in model performance for task one were not statistically significant. Model A had an RMSE that was 0.70 points higher than model B, and 0.72 points higher than model C.
+
+Thus, **including MRI image features into the predictive model slightly increased predictive capability** above and beyond that of just using kidney volume measurements at baseline.
+
+# Task Two: Logistic Regression
+
+Here we will perform the logistic regression predicting disease progression as `fast` or `slow`.
+
+We will first create a macro to perform 5-fold cross validation in these analyses (code adapted from ChatGPT)
+
+#### Create 5 Folds
+
+```{sas, results = "hide"}
+* Create cross validation folds;
+DATA Proj3.Data_Scaled;
+	SET Proj3.Data_Scaled;
+	fold = mod(_N_, 5) + 1;
+	RUN;
+```
+
+#### Create Analysis Macro
+
+```{sas, results = "hide"}
+* Define a macro to perform the cross validation analyses;
+%MACRO cross_validate(data=, target=, predictors=);
+    %DO fold = 1 %TO 5;
+        /* Split data into training and validation sets */
+        DATA train valid;
+            SET &data;
+            IF fold ne &fold THEN OUTPUT train;
+            ELSE OUTPUT valid;
+        RUN;
+
+        /* Train the model on the training set */
+        PROC LOGISTIC DATA=train;
+            MODEL &target(EVENT='Fast') = &predictors;
+            OUTPUT=pred_train P=pred;
+        run;
+
+        /* Validate the model on the validation set */
+       PROC LOGISTIC DATA = valid;
+            MODEL &target(EVENT='Fast') = &predictors;
+            OUTPUT OUT=pred_valid P=pred;
+        run;
+
+        /* Store the validation results */
+        DATA results_&fold;
+            SET pred_valid;
+            IF fold = . THEN fold = &fold;
+        RUN;
+    %END;
+    
+    /* Combine the results from all folds */
+    DATA all_results;
+        SET results_:;
+    RUN;
+%MEND cross_validate;
+```
+
+## Model 2A {#2A}
+
+### Baseline Kidney Volume
+
+To answer the researcher’s first question for this task, we will run a predictive model that uses the baseline height-corrected total kidney volume to predict whether a patient had fast or slow disease progression.
+
+$$ logit(Progression) = 𝛽_0 + 𝛽_1*{Baseline Kidney Volume} + e $$
+
+::: panel-tabset
+## Analysis
+
+#### Train the Model
+
+```{sas, results = "hide"}
+* Run Model;
+%cross_validate(data=Proj3.Data_scaled, target=progression, predictors=tkvht_base);
+```
+
+#### Acquire AUC and ROC Curve
+
+```{sas}
+*ODS TRACE ON;
+ODS EXCLUDE ModelInfo NOBS ResponseProfile ConvergenceStatus ROCcurve;
+/* Calculate ROC curve and AUC the each model */
+PROC LOGISTIC DATA = all_results;
+    MODEL progression(EVENT = 'Fast') = tkvht_base;
+    OUTPUT OUT = Model2A PREDICTED = Model2Apred;
+    ROC;
+RUN;
+*ODS TRACE OFF;
+```
+
+[Top of Tabset](#2A)
+
+## Summary
+
+The AUC for the model with baseline kidney volume alone was 0.52, essentially just guessing.
+
+[Top of Tabset](#2A)
+:::
+
+## Model 2B: MRI Image Features {#2B}
+
+To answer the researcher’s second question for this task, we will run a predictive model that uses the MRI features to predict whether a patient had fast or slow disease progression.
+
+$$ logit(Progression) = 𝛽_0 + 𝛽_1*Txti2 + 𝛽_2*LbpInt + e $$
+
+As the correlation matrices revealed similar relationship between the MRI image features and `progression` as they did with `kidvol_change`, we will use the same final variables as in task model 1B.
+
+These are:
+
+-   `lbp_int`
+-   `txti2`
+
+::: panel-tabset
+## Analysis
+
+#### Train the Model
+
+```{sas, results = "hide"}
+* Train Model;
+%cross_validate(data=Proj3.Data_scaled, target=progression, predictors=lbp_int txti2);
+```
+
+#### Acquire AUC and ROC Curve
+
+```{sas}
+**** Model 2B;
+ODS EXCLUDE ModelInfo NOBS ResponseProfile ConvergenceStatus ROCcurve;
+/* Calculate ROC curve and AUC for the model */
+PROC LOGISTIC DATA = all_results;
+    MODEL progression(EVENT = 'Fast') = lbp_int txti2;
+    OUTPUT OUT = Model2B PREDICTED = Model2Bpred;
+    ROC;
+RUN;
+```
+
+[Top of Tabset](#2B)
+
+## Summary
+
+The AUC for the model with only MRI image features was 0.72, MUCH better performance than the model with just baseline kidney volume.
+
+[Top of Tabset](#2B)
+:::
+
+## Model 2C: Baseline Kidney Volume and MRI Image Features {#2C}
+
+To answer the researcher’s third question, we will run a predictive model that uses the baseline height-corrected total kidney volume AND MRI image features to predict slow vs fast disease progression.
+
+$$ logit(Progression) = 𝛽_0 + 𝛽_1*Baseline Kidney Volume + 𝛽_2*Txti2 + 𝛽_3*LbpInt ... + e $$
+
+::: panel-tabset
+## Analysis
+
+#### Train the Model
+
+```{sas, results = "hide"}
+* Train Model;
+%cross_validate(data=Proj3.Data_scaled, target=progression, predictors=tkvht_base lbp_int txti2);
+```
+
+#### Acquire AUC and ROC Curve
+
+```{sas}
+**** Model 2C;
+ODS EXCLUDE ModelInfo NOBS ResponseProfile ConvergenceStatus ROCcurve;
+/* Calculate ROC curve and AUC for the model */
+PROC LOGISTIC DATA = all_results;
+    MODEL progression(EVENT = 'Fast') = tkvht_base lbp_int txti2;
+    OUTPUT OUT = Model2C PREDICTED = Model2Cpred;
+    ROC;
+RUN;
+```
+
+[Top of Tabset](#2C)
+
+## Summary
+
+The AUC for the model including both baseline kidney volume and MRI image features is 0.72.
+
+Adding baseline kidney volume did not improve the predictive power above and beyond that of using MRI image features alone.
+
+[Top of Tabset](#2C)
+:::
+
+## Model Comparison
+
+Table 2. Results of Model Performance Predicting Disease Progression using AUC
+
+| Model                          | AUC  |
+|:-------------------------------|:-----|
+| Baseline Kidney Volume         | 0.52 |
+| MRI Image Features             | 0.72 |
+| Baseline Kidney Volume and MRI | 0.72 |
+
+## Conclusion
+
+The model including MRI images features increased the AUC by 0.20, when compared to the model using baseline kidney volume alone. Including baseline kidney volume did not increase predictive power above that of just using the MRI image features alone.
+
+# Results
+
+#### Predicting Height-Corrected Kidney Volume
+
+| Model                             | RMSE |
+|-----------------------------------|------|
+| 1A: Baseline Kidney Volume        | 7.72 |
+| 1B: MRI Image Features            | 7.02 |
+| 1C Baseline Kidney Volume and MRI | 7.00 |
+
+```{sas}
+#| echo: false
+* Plot residuals vs. predicted values;
+PROC SGPLOT DATA = Model1C;
+    SCATTER X=Predicted Y=Residuals;
+    REFLINE 0 / AXIS=y LINEATTRS=(pattern=shortdash);
+    XAXIS LABEL='Predicted Values';
+    YAXIS LABEL='Residuals';
+    TITLE "Residuals for Model 1C Predicting Change in Kidney Volume Size";
+	RUN;
+```
+
+To evaluate differences in model performance, RMSE for each model were compared. Model A (Baseline only) had a 0.70 higher RMSE compared to model B (MRI Image features), and a 0.72 higher RMSE compared to model C (Mixed).
+
+Overall, these models did not perform well.
+
+#### Predicting Disease Progression
+
+To evaluate differences in model performance, AUC for each model were compared and ROC curves for each model were plotted. The models using MRI image features alone (AUC = 0.72), or MRI image features and baseline kidney volume (AUC= 0.72), performed better at predicting disease progression speed than the model using baseline kidney volume alone (AUC 0.52).
+
+| Model                          | AUC  |
+|:-------------------------------|:-----|
+| Baseline Kidney Volume         | 0.52 |
+| MRI Image Features             | 0.72 |
+| Baseline Kidney Volume and MRI | 0.72 |
+
+## ROC Curves
+
+Code adapted from [here](https://blogs.sas.com/content/iml/2018/11/14/compare-roc-curves-sas.html)
+
+```{sas}
+#| code-fold: true
+*** Final ROC Curves PLOT;
+* Merge Data sets;
+DATA ROC;
+   MERGE Model2A Model2B Model2C;
+RUN;
+
+
+* overlay two or more ROC curves by using variables of predicted values;
+PROC LOGISTIC DATA = ROC;
+   MODEL progression(EVENT='Fast') = Model2APred Model2BPred Model2CPred / NOFIT;
+   ROC 'Model2A' PRED=Model2APred;
+   ROC 'Model2B'   PRED=Model2BPred;
+   ROC 'Model2C'	PRED=Model2CPred;
+   ODS SELECT ROCOverlay;
+   /* optional: for a statistical comparison, use ROCCONTRAST stmt and remove the ODS SELECT stmt */
+   *roccontrast reference('Expert Model') / estimate e;
+RUN;
+```
+
+# Discussion
+
+In this project we were tasked with identifying whether including MRI image features into a model predicting kidney disease improved model performance above and beyond that of just using baseline kidney volume.
+
+The results of the first series of analyses for task 1 demonstrated that the use of MRI image features *slightly* increased model performance, providing an RMSE that was 0.70 points lower than a model using solely baseline kidney volume.
+
+The results of the second series of analyses for task 2 demonstrated that the use of MRI image features *drastically* improved model performance. The model including MRI image features improved the AUC by 20%.
+
+Moreover, including the baseline kidney measurement volumes did not increase model performance beyond using only MRI image features.
+
+In conclusion , **we found that utlizing the MRI image features of texture and an aggregate local binary pattern interaction term provided the best predictive power for kidney disease progression**, yielding the lowest RMSE and highest AUC, and providing better predictive power than that achieved by baseline kidney volume alone.

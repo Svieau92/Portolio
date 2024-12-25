@@ -2581,7 +2581,7 @@ Specificity: 0.71
 
 To answer the researcher’s second question for this task, we will run a predictive model that uses the MRI features to predict whether a patient had fast or slow disease progression.
 
-$$ logit(Progression) = 𝛽_0 + 𝛽_{MRI Feature 1} + 𝛽_{MRI Feature 1} + ... + e $$
+$$ logit(Progression) = 𝛽_0 + 𝛽_{MRI Feature 1} + 𝛽_{MRI Feature 2} + ... + e $$
 
 As the correlation matrices revealed similar relationship between the MRI image features and `progression` as they did with `kidvol_change`, we will select the same candidate covariates for Task 2 as we did for Task 1.
 

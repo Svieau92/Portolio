@@ -20,9 +20,11 @@ website:
           - text: Linear Mixed Model (R)
             href: Project_2/Project_2_R/Code/Project2LMM.qmd
           - text: Linear Mixed Model (SAS)
-            href: Project_2/Project_2_SAS/Code/Linear_Mixed_Model_SAS.qmd
+            href: Project_2/Project_2_SAS/Code/Linear_Mixed_Modxbcel_SAS.qmd
           - text: Predictive Modelling (R)
             href: Project_3_Predictive_Modelling/Project_3_R/Code/Project_3_Predictive_Modelling.qmd
+          - text: Predictive Modelling (SAS)
+            href: Project_3_Predictive_Modelling/Project_3_SAS/Code/Project_3_Predictive_Modelling_SAS.qmd
       - text: Data Wrangling (Python)
         href: Data_Wrangling/Treadmill_Data_Cleaning/Code/Automated_Treadmill_Data_Cleaning.qmd
       - text: Data Management (SAS)
