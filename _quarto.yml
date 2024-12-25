@@ -20,7 +20,7 @@ website:
           - text: Linear Mixed Model (R)
             href: Project_2/Project_2_R/Code/Project2LMM.qmd
           - text: Linear Mixed Model (SAS)
-            href: Project_2/Project_2_SAS/Code/Linear_Mixed_Modxbcel_SAS.qmd
+            href: Project_2/Project_2_SAS/Code/Linear_Mixed_Model_SAS.qmd
           - text: Predictive Modelling (R)
             href: Project_3_Predictive_Modelling/Project_3_R/Code/Project_3_Predictive_Modelling.qmd
           - text: Predictive Modelling (SAS)

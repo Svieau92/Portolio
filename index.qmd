@@ -1,15 +1,9 @@
 ---
-title: "Sean Vieau"
-image: Project_1_Regression/Project_1_Regression_R/Media/Professional_Picture.jpg
-toc: false
-about:
-  template: jolla
-  image-shape: round
-  image-width: 24em
+title: Home Page
+format:
+  html:
+    template-partials: 
+      - title-block.html
+author: Sean Vieau
+date: 12/24/2024
 ---
-
-Graduate student in the Masters in Applied Biostatistics program at the Colorado School of Public Health. I have compiled this portfolio to showcase my most significant projects and skills.
-
-
-In my spare time I am an avid dancer, jiu jitsu practitioner, and drummer!
-

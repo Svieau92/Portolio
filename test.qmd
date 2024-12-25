@@ -1,0 +1,11 @@
+---
+title: Home Page
+format:
+  html:
+    template-partials: 
+      - title-block.html
+author: Sean Vieau
+date: 12/24/2024
+---
+
+

@@ -6,8 +6,10 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
+<meta name="author" content="Sean Vieau">
+<meta name="dcterms.date" content="2024-12-24">
 
-<title>Sean Vieau – Sean Vieau Portfolio</title>
+<title>Home Page – Sean Vieau Portfolio</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -33,6 +35,7 @@ ul.task-list li input[type="checkbox"] {
 <script src="site_libs/quarto-html/quarto.js"></script>
 <script src="site_libs/quarto-html/popper.min.js"></script>
 <script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
 <link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
 <link href="site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
@@ -120,6 +123,10 @@ ul.task-list li input[type="checkbox"] {
     <a class="dropdown-item" href="./Project_3_Predictive_Modelling/Project_3_R/Code/Project_3_Predictive_Modelling.html">
  <span class="dropdown-text">Predictive Modelling (R)</span></a>
   </li>  
+        <li>
+    <a class="dropdown-item" href="./Project_3_Predictive_Modelling/Project_3_SAS/Code/Project_3_Predictive_Modelling_SAS.html">
+ <span class="dropdown-text">Predictive Modelling (SAS)</span></a>
+  </li>  
     </ul>
   </li>
   <li class="nav-item">
@@ -188,23 +195,231 @@ ul.task-list li input[type="checkbox"] {
 <!-- margin-sidebar -->
     
 <!-- main -->
-<div class="quarto-about-jolla">
-  <img src="Project_1_Regression/Project_1_Regression_R/Media/Professional_Picture.jpg" class="about-image
-  round " style="height: 24em; width: 24em;">
- <header id="title-block-header" class="quarto-title-block default">
-<div class="quarto-title">
-<h1 class="title">Sean Vieau</h1>
-</div>
-<div class="quarto-title-meta">
-  </div>
-</header><main class="content" id="quarto-document-content">
-<p>Graduate student in the Masters in Applied Biostatistics program at the Colorado School of Public Health. I have compiled this portfolio to showcase my most significant projects and skills.</p>
-<p>In my spare time I am an avid dancer, jiu jitsu practitioner, and drummer!</p>
+<main class="content" id="quarto-document-content">
 
 
-</main>  
-</div>
- <!-- /main -->
+
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Quarto Website</title>
+  <!-- Embed Google Fonts for Antic Didone and Montserrat -->
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Antic+Didone&family=Montserrat:wght@400;700&display=swap');
+  </style>
+  <style>
+    /* Ensure the particles-js div covers the entire background */
+    #particles-js {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0; /* Lower z-index than content */
+      pointer-events: auto; /* Allow interactions */
+    }
+
+    /* Ensure the header covers the entire viewport */
+    #title-block-header {
+      position: relative;
+      width: 100%;
+      height: 100vh; /* Full viewport height */
+      overflow: hidden;
+    }
+    
+    /* Position content on top of the particles */
+    .title-block-content {
+      position: relative;
+      z-index: 1; /* Ensure it is above the particles */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start; /* Align content to the start */
+      height: 100vh;
+      text-align: center;
+      padding-top: 20px; /* Add some padding at the top */
+      pointer-events: none; /* Allow interactions to pass through */
+    }
+
+    .title-block-content * {
+      pointer-events: none; /* Allow interactions to pass through */
+    }
+
+    .title-block-content img {
+      margin-top: 0; /* Remove extra margin from the image */
+      pointer-events: none; /* Allow interactions to pass through the image */
+    }
+
+    /* Apply Antic Didone font to the name */
+    h1 {
+      font-family: 'Antic Didone', serif; /* Custom font for the name */
+      font-size: 4em; /* Change this value to adjust the font size */
+      margin: 10px 0 5px;
+    }
+
+    /* Style the blurb container */
+    .blurb-container {
+      background-color: rgba(255, 255, 255, 0.9); /* Adjust opacity to allow slight transparency if desired */
+      padding: 20px;
+      border-radius: 10px; /* Rounded corners */
+      max-width: 700px; /* Increased width */
+      margin: 20px;
+    }
+
+    /* Apply Montserrat font to the blurb text */
+    .blurb {
+      font-family: 'Montserrat', sans-serif; /* Custom font for the blurb */
+      font-size: 1em;
+      margin: 0;
+    }
+  </style>
+
+
+  <header id="title-block-header">
+    <!-- Div for particles -->
+    <div id="particles-js"></div>
+
+    <!-- Content on top of particles -->
+    <div class="title-block-content">
+      <!-- Profile picture -->
+      <img src="./Site_Media/Professional_Picture.jpg" alt="Profile Picture" style="border-radius: 50%; width: 500px; height: 500px; object-fit: cover;">
+
+      <!-- Name -->
+      <h1>Sean Vieau</h1>
+
+      <!-- Blurb container with background -->
+      <div class="blurb-container">
+        <p class="blurb">Graduate student in the Masters in Applied Biostatistics program at the Colorado School of Public Health. I have compiled this portfolio to showcase my most significant projects and skills.</p>
+        <p></p>
+        <p class="blurb">In my spare time I am an avid dancer, jiu jitsu practitioner, and drummer!</p>
+      </div>
+    </div>
+
+    <!-- Particle.js script loaded from a CDN -->
+    <script src="http://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+
+    <!-- Initialize particle.js with our own config (json file) -->
+    <script>
+      particlesJS("particles-js", {
+        "particles": {
+          "number": {
+            "value": 80,
+            "density": {
+              "enable": true,
+              "value_area": 800
+            }
+          },
+          "color": {
+            "value": "#9d9191"
+          },
+          "shape": {
+            "type": "circle",
+            "stroke": {
+              "width": 0,
+              "color": "#000000"
+            },
+            "polygon": {
+              "nb_sides": 5
+            },
+            "image": {
+              "src": "img/github.svg",
+              "width": 100,
+              "height": 100
+            }
+          },
+          "opacity": {
+            "value": 0.5,
+            "random": false,
+            "anim": {
+              "enable": false,
+              "speed": 1,
+              "opacity_min": 0.1,
+              "sync": false
+            }
+          },
+          "size": {
+            "value": 4.5,
+            "random": true,
+            "anim": {
+              "enable": false,
+              "speed": 40,
+              "size_min": 0.1,
+              "sync": false
+            }
+          },
+          "line_linked": {
+            "enable": true,
+            "distance": 150,
+            "color": "#2f2a2a",
+            "opacity": 0.4,
+            "width": 1
+          },
+          "move": {
+            "enable": true,
+            "speed": 2.5,
+            "direction": "none",
+            "random": false,
+            "straight": false,
+            "out_mode": "out",
+            "bounce": false,
+            "attract": {
+              "enable": false,
+              "rotateX": 600,
+              "rotateY": 1200
+            }
+          }
+        },
+        "interactivity": {
+          "detect_on": "canvas",
+          "events": {
+            "onhover": {
+              "enable": true,
+              "mode": "repulse"
+            },
+            "onclick": {
+              "enable": true,
+              "mode": "push"
+            },
+            "resize": true
+          },
+          "modes": {
+            "grab": {
+              "distance": 400,
+              "line_linked": {
+                "opacity": 1
+              }
+            },
+            "bubble": {
+              "distance": 400,
+              "size": 40,
+              "duration": 2,
+              "opacity": 8,
+              "speed": 3
+            },
+            "repulse": {
+              "distance": 200,
+              "duration": 0.4
+            },
+            "push": {
+              "particles_nb": 4
+            },
+            "remove": {
+              "particles_nb": 2
+            }
+          }
+        },
+        "retina_detect": true
+      });
+    </script>
+  </header>
+
+
+
+
+
+
+
+</main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
 window.document.addEventListener("DOMContentLoaded", function (event) {
   const toggleBodyColorMode = (bsSheetEl) => {
@@ -225,6 +440,13 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     }
   }
   toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
   const isCodeAnnotation = (el) => {
     for (const clz of el.classList) {
       if (clz.startsWith('code-annotation-')) {                     
@@ -290,7 +512,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
   }
     var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
     var mailtoRegex = new RegExp(/^mailto:/);
-      var filterRegex = new RegExp("https:\/\/svieau\.quarto\.pub\/portfolio");
+      var filterRegex = new RegExp('/' + window.location.host + '/');
     var isInternal = (href) => {
         return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
     }
