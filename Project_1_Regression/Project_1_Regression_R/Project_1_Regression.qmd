@@ -46,7 +46,7 @@ Then we will import the dataset
 
 ```{r, message = FALSE}
 # Import dataset
-data <- read.csv("C:\\Users\\sviea\\Documents\\Advanced Data Analysis\\Project 1 MLR with Covariates\\Project1_data.csv")
+data<- read.csv("RawData/Project1_data.csv")
 names(data)[1] <- "id" # Renaming the weird character out of this colname
 ```
 

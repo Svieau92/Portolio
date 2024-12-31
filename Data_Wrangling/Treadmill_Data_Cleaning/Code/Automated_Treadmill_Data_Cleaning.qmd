@@ -122,7 +122,7 @@ And then import an example treadmill.xlsx file
 col_names = ["Treadmill Position (V)", "Camera On/Off", "Time (sec)"]
 
 # Import treadmill data as a pd df, set column names to col_names
-treadmill = pd.read_excel(r"C:\Users\sviea\Documents\Portfolio\Data_Wrangling\Treadmill_Data_Cleaning\Treadmill Files Uncleaned\121523_RC1_Pace_1.xlsx", names = col_names)
+treadmill = pd.read_excel(r"../Treadmill Files Uncleaned/121523_RC1_Pace_1.xlsx", names = col_names)
 
 # Examine the df
 treadmill
@@ -199,7 +199,7 @@ For thorough record keeping, let's create a subfolder within the folder that the
 
 ```{python}
 # Name the new folder "Cleaned Treadmill Files", and place it within the folder that the uncleaned treadmill files will all be kept in
-new_folder = r"C:\Users\sviea\Documents\Portfolio\Data_Wrangling\Treadmill_Data_Cleaning\Treadmill Files Uncleaned\Cleaned Treadmill Files"
+new_folder = r"../Treadmill Files Uncleaned/Cleaned Treadmill Files"
 
 # Make the new folder
 os.makedirs(new_folder, exist_ok=True)
@@ -259,8 +259,8 @@ If we want to run the program to clean a single file, we can run the code below.
 ```{python}
 # Change file paths as needed below
 filename = "121523_RC1_Pace_1.xlsx" # Change this to what you want the last part of the file name to be!
-file_path = r"C:\Users\sviea\Documents\Portfolio\Data_Wrangling\Treadmill_Data_Cleaning\Treadmill Files Uncleaned\121523_RC1_Pace_1.xlsx" # Change this to the file path of the treadmill file you want to clean
-save_location = r"C:\Users\sviea\Documents\Portfolio\Data_Wrangling\Treadmill_Data_Cleaning\Treadmill Files Uncleaned\Cleaned Treadmill Files" #Change this to the name of the folder you want to save in
+file_path = r"../Treadmill Files Uncleaned/121523_RC1_Pace_1.xlsx" # Change this to the file path of the treadmill file you want to clean
+save_location = r"../Treadmill Files Uncleaned/Cleaned Treadmill Files" #Change this to the name of the folder you want to save in
 os.makedirs(save_location, exist_ok=True)  # Makes the save_location as a new folder, skips if it already exists
 
 # Run the program to clean a single treadmill file
@@ -275,7 +275,7 @@ If we want to clean a folder containing multiple treadmill files, we can run the
 # This program walks through every file in a designated folder and applies the above treadmill_cleaner() function to each file, saving the cleaned file in the same subfolder
 
 #__Enter the file path to the folder containing treadmill files here!!!!!__
-directory = r"C:\Users\sviea\Documents\Portfolio\Data_Wrangling\Treadmill_Data_Cleaning\Treadmill Files Uncleaned" 
+directory = r"../Treadmill Files Uncleaned" 
 
 ##### Create the save location as a new folder (if needed)
 # Names the save location as the folder containing treadmill files 
@@ -304,13 +304,13 @@ For good measure, let's check the output of the first and last file we cleaned.
 
 ```{python}
 # Check first file
-file_1 = pd.read_excel(r"C:\Users\sviea\Documents\Portfolio\Data_Wrangling\Treadmill_Data_Cleaning\Treadmill Files Uncleaned\Cleaned Treadmill Files\121523_RC1_Pace_1_cleaned.xlsx")
+file_1 = pd.read_excel(r"../Treadmill Files Uncleaned/Cleaned Treadmill Files/121523_RC1_Pace_1_cleaned.xlsx")
 file_1
 ```
 
 ```{python}
 # Check last file
-file_6 = pd.read_excel(r"C:\Users\sviea\Documents\Portfolio\Data_Wrangling\Treadmill_Data_Cleaning\Treadmill Files Uncleaned\Cleaned Treadmill Files\121523_RC1_Pace_6_cleaned.xlsx")
+file_6 = pd.read_excel(r"../Treadmill Files Uncleaned/Cleaned Treadmill Files/121523_RC1_Pace_6_cleaned.xlsx")
 file_6
 ```
 

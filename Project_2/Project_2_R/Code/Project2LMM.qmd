@@ -122,10 +122,11 @@ We will load in the cleaned, long form data set from Project 2
 #| message: false
 
 # Read in the raw 8 year data set
-data <- read_csv("C:\\Users\\sviea\\Documents\\Portfolio\\Project_2\\Project_2_R\\RawData\\hiv_dataset.csv")
+data <- read.csv("../RawData/hiv_dataset.csv")
+
 
 # Read in cleaned data set from Project 2
-data_2 <- read_csv("C:\\Users\\sviea\\Documents\\Portfolio\\Project_2\\Project_2_R\\Code\\Proj2_data_2_cleaned")
+data_2 <- read.csv("../RawData/Proj2_data_2_cleaned.csv")
 ```
 
 We have 3632 visits across the complete 8 year data set, and 1650 visits once we filter down to the first 2 years.

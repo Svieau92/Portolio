@@ -179,7 +179,6 @@ window.Quarto = {
     <a class="dropdown-item" href="../../../Project_2/Project_2_R/Code/Project2.html">
  <span class="dropdown-text">MLR With Confounding and Interaction (R)</span></a>
   </li>  
-        <li class="dropdown-header">MLR With Confounding and Interaction (SAS)</li>
         <li>
     <a class="dropdown-item" href="../../../Project_2/Project_2_R/Code/Project2LMM.html">
  <span class="dropdown-text">Linear Mixed Model (R)</span></a>
@@ -491,7 +490,7 @@ window.Quarto = {
 </div>
 <p>Import the data set.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>data <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"C:/Users/sviea/Documents/Statistical Consulting/Vieau_Project_01/Data Raw/MICUPT_Deidentify.csv"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>data <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"../Data Raw/MICUPT_Deidentify.csv"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>New names:
 Rows: 13109 Columns: 25
@@ -3173,15 +3172,15 @@ During   Post    Pre
 <div class="cell-output cell-output-stdout">
 <pre><code>Best Normalizing transformation with 3263 Observations
  Estimated Normality Statistics (Pearson P / df, lower =&gt; more normal):
- - arcsinh(x): 24.4792
- - Box-Cox: 24.5802
- - Center+scale: 23.8531
- - Double Reversed Log_b(x+a): 25.9117
- - Exp(x): 342.3306
- - Log_b(x+a): 24.4549
- - orderNorm (ORQ): 24.1554
- - sqrt(x + a): 24.2504
- - Yeo-Johnson: 24.6545
+ - arcsinh(x): 24.5519
+ - Box-Cox: 24.6177
+ - Center+scale: 23.9754
+ - Double Reversed Log_b(x+a): 26.2191
+ - Exp(x): 343.5041
+ - Log_b(x+a): 24.5127
+ - orderNorm (ORQ): 24.2628
+ - sqrt(x + a): 24.3697
+ - Yeo-Johnson: 24.7852
 Estimation method: Out-of-sample via CV with 10 folds and 5 repeats
  
 Based off these, bestNormalize chose:
@@ -3257,14 +3256,14 @@ center_scale(x) Transformation with 3263 nonmissing obs.
 <div class="cell-output cell-output-stdout">
 <pre><code>Best Normalizing transformation with 6429 Observations
  Estimated Normality Statistics (Pearson P / df, lower =&gt; more normal):
- - arcsinh(x): 9.0126
- - Box-Cox: 5.6943
- - Center+scale: 33.9621
- - Double Reversed Log_b(x+a): 58.3146
- - Log_b(x+a): 9.0128
- - orderNorm (ORQ): 1.3688
- - sqrt(x + a): 20.0376
- - Yeo-Johnson: 5.6749
+ - arcsinh(x): 9.3327
+ - Box-Cox: 5.6787
+ - Center+scale: 34.4724
+ - Double Reversed Log_b(x+a): 56.0199
+ - Log_b(x+a): 9.3285
+ - orderNorm (ORQ): 1.3347
+ - sqrt(x + a): 19.5863
+ - Yeo-Johnson: 5.6924
 Estimation method: Out-of-sample via CV with 10 folds and 5 repeats
  
 Based off these, bestNormalize chose:
@@ -3418,13 +3417,13 @@ orderNorm Transformation with 6429 nonmissing obs and ties
 <div class="cell-output cell-output-stdout">
 <pre><code>Best Normalizing transformation with 6429 Observations
  Estimated Normality Statistics (Pearson P / df, lower =&gt; more normal):
- - arcsinh(x): 7.103
- - Center+scale: 50.4334
- - Double Reversed Log_b(x+a): 56.0441
- - Log_b(x+a): 8.6317
- - orderNorm (ORQ): 1.5933
- - sqrt(x + a): 10.5439
- - Yeo-Johnson: 5.4208
+ - arcsinh(x): 7.0928
+ - Center+scale: 53.1844
+ - Double Reversed Log_b(x+a): 58.7531
+ - Log_b(x+a): 8.7735
+ - orderNorm (ORQ): 1.6299
+ - sqrt(x + a): 10.6332
+ - Yeo-Johnson: 5.4241
 Estimation method: Out-of-sample via CV with 10 folds and 5 repeats
  
 Based off these, bestNormalize chose:
@@ -10748,7 +10747,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
   }
     var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
     var mailtoRegex = new RegExp(/^mailto:/);
-      var filterRegex = new RegExp("https:\/\/svieau\.quarto\.pub\/portfolio");
+      var filterRegex = new RegExp('/' + window.location.host + '/');
     var isInternal = (href) => {
         return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
     }

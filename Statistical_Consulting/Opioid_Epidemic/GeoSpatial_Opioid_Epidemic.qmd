@@ -49,7 +49,7 @@ library(ggmap) # For plotting geospatial data with stadia
 
 ```{r}
 # Read in data set
-data <- read_csv(r"(C:\Users\sviea\Documents\R for Data Science\SAMHSA.csv)")
+data <- read_csv("RawData/SAMHSA.csv")
 
 # Examine data set
 pretty_print(head(data))

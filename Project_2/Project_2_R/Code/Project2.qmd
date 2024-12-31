@@ -86,7 +86,7 @@ Then we import the data set.
 
 ```{r, message = FALSE}
 # Read in data
-data <- read_csv("C:\\Users\\sviea\\Documents\\Portfolio\\Project_2\\Project_2_R\\RawData\\hiv_dataset.csv")
+data <- read_csv("../RawData/hiv_dataset.csv")
 ```
 
 And take a look.

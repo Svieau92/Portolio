@@ -197,7 +197,6 @@ window.Quarto = {
     <a class="dropdown-item" href="../../../Project_2/Project_2_R/Code/Project2.html">
  <span class="dropdown-text">MLR With Confounding and Interaction (R)</span></a>
   </li>  
-        <li class="dropdown-header">MLR With Confounding and Interaction (SAS)</li>
         <li>
     <a class="dropdown-item" href="../../../Project_2/Project_2_R/Code/Project2LMM.html">
  <span class="dropdown-text">Linear Mixed Model (R)</span></a>
@@ -584,7 +583,7 @@ window.Quarto = {
 <h4 class="anchored" data-anchor-id="read-.csv">Read .CSV</h4>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Read in data</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>data <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"C:/Users/sviea/Documents/Portfolio/Project_3_Predictive_Modelling/Project_3_R/Raw_Data/Project3_data.csv"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>data <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"../Raw_Data/Project3_data.csv"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>Rows: 71 Columns: 24
 ── Column specification ────────────────────────────────────────────────────────
@@ -5641,11 +5640,11 @@ Kidney Volume at Baseline and Txti2                                    </code></
 <p>Table 2. Results of Pairwise T-Tests Comparing Model Performance Predicting Disease Progression using AUC</p>
 <table class="caption-top table">
 <colgroup>
-<col style="width: 25%">
-<col style="width: 18%">
-<col style="width: 18%">
-<col style="width: 18%">
-<col style="width: 18%">
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
 </colgroup>
 <tbody>
 <tr class="odd">
@@ -5861,7 +5860,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
   }
     var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
     var mailtoRegex = new RegExp(/^mailto:/);
-      var filterRegex = new RegExp("https:\/\/svieau\.quarto\.pub\/portfolio");
+      var filterRegex = new RegExp('/' + window.location.host + '/');
     var isInternal = (href) => {
         return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
     }

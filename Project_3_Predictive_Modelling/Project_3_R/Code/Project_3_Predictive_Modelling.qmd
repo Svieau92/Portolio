@@ -219,7 +219,7 @@ library(reshape2) # Used for melting data for multi ROC plotting
 
 ```{r}
 # Read in data
-data <- read_csv("C:/Users/sviea/Documents/Portfolio/Project_3_Predictive_Modelling/Project_3_R/Raw_Data/Project3_data.csv")
+data <- read_csv("../Raw_Data/Project3_data.csv")
 ```
 
 #### Examine Data Set
@@ -2863,7 +2863,7 @@ The difference in performance between models was not statistically significant (
 Table 2. Results of Pairwise T-Tests Comparing Model Performance Predicting Disease Progression using AUC
 
 |                                  |      |             |             |              |
-|-------------------|--------------|--------------|--------------|--------------|
+|---------------|---------------|---------------|---------------|---------------|
 | Model                            | AUC  | Sensitivity | Specificity |   P-Adjusted |
 | Baseline Kidney Volume           | 0.47 | 0.30        | 0.71        | —            |
 | Txti2                            | 0.74 | 0.57        | 0.64        | 0.28         |

@@ -179,7 +179,6 @@ window.Quarto = {
     <a class="dropdown-item" href="../../Project_2/Project_2_R/Code/Project2.html">
  <span class="dropdown-text">MLR With Confounding and Interaction (R)</span></a>
   </li>  
-        <li class="dropdown-header">MLR With Confounding and Interaction (SAS)</li>
         <li>
     <a class="dropdown-item" href="../../Project_2/Project_2_R/Code/Project2LMM.html">
  <span class="dropdown-text">Linear Mixed Model (R)</span></a>
@@ -359,7 +358,7 @@ window.Quarto = {
 <p>Then we will import the dataset</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Import dataset</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>data <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">"C:</span><span class="sc">\\</span><span class="st">Users</span><span class="sc">\\</span><span class="st">sviea</span><span class="sc">\\</span><span class="st">Documents</span><span class="sc">\\</span><span class="st">Advanced Data Analysis</span><span class="sc">\\</span><span class="st">Project 1 MLR with Covariates</span><span class="sc">\\</span><span class="st">Project1_data.csv"</span>)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>data<span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">"RawData/Project1_data.csv"</span>)</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(data)[<span class="dv">1</span>] <span class="ot">&lt;-</span> <span class="st">"id"</span> <span class="co"># Renaming the weird character out of this colname</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>And visualize the dataset</p>
@@ -5482,7 +5481,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
   }
     var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
     var mailtoRegex = new RegExp(/^mailto:/);
-      var filterRegex = new RegExp("https:\/\/svieau\.quarto\.pub\/portfolio");
+      var filterRegex = new RegExp('/' + window.location.host + '/');
     var isInternal = (href) => {
         return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
     }

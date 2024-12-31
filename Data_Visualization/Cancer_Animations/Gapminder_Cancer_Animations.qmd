@@ -52,7 +52,7 @@ All data sets are from [Gapminder.org](https://www.gapminder.org/data/)
 
 ```{r}
 # Read in data set
-data_cancer <- read_csv(r"(C:\Users\sviea\Downloads\lung_cancer_new_cases_per_100000_men.csv)")
+data_cancer <- read_csv(r"(C:\Users\sviea\Documents\Portfolio\Data_Visualization\Cancer_Animations\RawData\lung_cancer_new_cases_per_100000_men.csv)")
 
 # Examine data
 pretty_print(head(data_cancer))
@@ -75,7 +75,7 @@ The `gapminder` data set that comes with the `tidyverse` package only goes up to
 
 ```{r}
 # Read in data set
-data_gdp <- read_csv(r"(C:\Users\sviea\Documents\R for Data Science\gdp_pcap.csv)")
+data_gdp <- read_csv(r"(C:\Users\sviea\Documents\Portfolio\Data_Visualization\Cancer_Animations\RawData\gdp_pcap.csv)")
 
 # Filter data set
 data_gdp <- data_gdp |> 
