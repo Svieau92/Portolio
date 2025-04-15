@@ -1,0 +1,2224 @@
+---
+title: "Data Checking - Statistical Consulting"
+author: Sean Vieau
+date: "October 13, 2024"
+format: html
+editor: visual
+toc: true
+theme: cerulean
+output: html-document
+---
+
+```{r, include = FALSE}
+# Sets the default for all chunks as echo = TRUE (ensures they show unless specified not to)
+knitr::opts_chunk$set(echo = TRUE)
+
+# Create a function to pretty print our dataframes
+pretty_print <- function(x) {
+  kable(x, format = "html") |>
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+}
+
+# Create a function to pretty print useful parameters of a regression model
+model_results <- function(x) {
+  # Create a table of the coefficients of the model
+  coefficients_ <- summary(x)$coefficients[]
+  
+  # Perform Bonferroni correction 
+  p_values <- summary(x)$coefficients[,4] # This line selects the fourth column of the resulting coefficients      table from summary(model), which is the p-values
+  p_adjusted <- p.adjust(p_values, method = "bonferroni")
+  
+  # Get the 95% CIs
+  conf_intervals <- confint(x)
+  
+  # Compare adjusted p-values to unadjusted p-values, with 95% CI's
+  model_output <- cbind(coefficients_, p_adjusted, conf_intervals)
+  
+  # Pretty print results
+  pretty_print(model_output)
+}
+
+# Set options to avoid scientific notation
+options(scipen = 999)
+
+# Make a function for quick plotting histograms and qq plot
+distr_plots <- function(data, variable, bins_choose = 30) {
+  
+hist_plot <- ggplot(data, aes_string(x = variable)) +
+  geom_histogram(bins = bins_choose) +
+  theme_minimal() +
+  labs(title = paste("Histogram of", variable),
+       x = variable,
+       y = "Count")
+
+# Create qqplot
+qq_plot <- ggplot(data, aes_string(sample = variable)) +
+  geom_qq() +
+  geom_qq_line() +
+  theme_minimal() +
+  labs(title = paste("QQ Plot of", variable))
+
+# Plot side by side
+grid.arrange(hist_plot, qq_plot, ncol = 2)
+}
+```
+
+
+
+# Introduction
+
+This is the Quarto markdown for the live consultation in BIOS 6621: Statistical Consulting.
+
+This is a research project encompassing the entire data analysis pipeline, from initial consultation to scope of work writing, execution of statistical analysis, and completion of project deliverables.
+
+# Scope of Work (SOW) Agreement
+
+## General Information
+
+|  |  |  |  |
+|------------------|------------------|------------------|------------------|
+| **Investigator** | Megan Watson | **Date** | September 30, 2024 |
+| **Project Title** | Quality Improvement into Standard Practice: Persistent Practice Changes and Decreased Length of Stay for 3 years following a Medical ICU Physical Therapy Quality Improvement Project |  |  |
+
+## Project Description
+
+### Background
+
+             The objective of this study is to assess the impact of a MICU physical therapy (PT) quality improvement (QI) project on physical therapist practice, and quantify the changes in length of stay (LOS) and mechanical ventilation (MV) time. The goals of the QI Initiative were to increase percentage of MICU admissions receiving PT, decrease time from MICU admission to first PT, and increase the frequency of PT visits. The main question the researcher came to us with was: how to correctly model the longitudinal data in the study?
+
+### Study Design
+
+              This was a retrospective cohort study, comparing 3 main time periods: Pre-QI Initiative (before April 2015), During QI Initiative (April 2015-Dec 2015), and After-QI Initiative (Jan 2016 and later). The QI initiative was deployed during the 9-month period between April 2015 and December 2015, during which time there were education and staffing changes. Patients were stratified as either having mechanical ventilation or not having mechanical ventilation. The primary outcomes of interest were MICU LOS and time on MV. Secondary outcomes of interest were the non-ICU LOS, total hospital LOS, and discharge location.
+
+### Description of the Data
+
+              Data was received as a de-identified .csv. Data points consist of: Admit and Discharge Time, PT Consult Time, Admit to Consult Time, First Therapy Time, Consult to Therapy Time, Admit to Therapy Time, Total Therapy Visits, Days with Therapy Visits, Average, min, and Max Therapy Length, Admit and Discharge Date/Time, Total MV Days, Hospital LOS, Patient Age, Sex, “Problem List”, and Codes (presumably ICD9/10).
+
+### Anticipated Sample Size / Study Population
+
+              The sample size is N = \~3000-4000, consisting of patients admitted to the MICU with a LOS between 2 and 30 days (I.e. exclude \< 2 days or \> 30 days). This was a single site study performed here at Colorado University.
+
+### Hypothesis
+
+              The hypothesis for the study was that LOS and time on MV would decrease when comparing the pre- and intra-initiative time periods, and when comparing the pre- and post-initiative time periods. Clinical significance for this outcome is considered as a 1-2 day change in LOS. The intended end product of this project is a publication in a PT journal.
+
+### Analysis Plan (Sketch)
+
+              Data should first be examined for missingness, as this has not been performed. Similarly, repeat MICU admissions should be explored and controlled for to ensure independence of observations. Death during MICU stay should also be examined and adjusted for if needed. The analysis plan discussed was to utilize splines to capture the trajectory of LOS or time on MV over time by fitting smooth curves to the data. Linear contrasts should be performed to assess if there is a significant difference in LOS or time on MV when comparing two timepoints (i.e. pre- and intra-, pre- and post- , and post- and intra-QI Initiative. Supplementary analyses should be performed to assess secondary outcomes of interest of non-ICU LOS and total hospital LOS.
+
+## Project Deliverables
+
+             At this stage, Megan has only asked for insight into what method to use to account for variance in time for her analysis. There are currently no other deliverables.
+
+**Timeline / Deadlines**
+
+At this time, Megan has not asked for data analysis efforts from us.
+
+Should this change, the anticipated project start date will be 1 week after our next meeting with her, where revisions to the Comprehensive Analysis Report are also expected to be completed.  The assigned analysts will reach out to the investigator to confirm the project timeframe and the project start date may be altered if necessary. 2 weeks will be allowed for initial data analysis by the assigned analyst.
+
+A follow-up meeting is to occur no later than **1 month after the next meeting with Megan.** During the follow-up meeting, the project team will discuss and preliminary results of the analysis, mockup the desired tables and figures (1-2 descriptive tables, 1-2 analysis results tables and up to 4 graphs), and discuss next steps. During the follow-up meeting, the team will establish a meeting schedule for the remainder of the project. 
+
+**Estimated Cost**
+
+This represents our best estimate of the effort needed to complete the project. Should the scope of work change substantially, the analyst(s) will discuss changes with the investigator and issue a new or amended project agreement.
+
+|            |             |                  |                      |
+|------------|-------------|------------------|----------------------|
+|            | **Effort**  |                  |                      |
+| **Months** | PhD Faculty | Master’s Faculty | Student              |
+|            |             |                  |                      |
+| **1**      | 20%         | 0%               | 80%                  |
+|            |             | **Total Costs**  | **'Bout Tree Fiddy** |
+
+# Data Preparation
+
+Let's begin by loading our libraries
+
+
+
+```{r, message = FALSE}
+library(dplyr)
+library(ggplot2)
+library(tidyverse)
+library(naniar) # Used to visualize missing data
+library(kableExtra) # Used for pretty printing (kable_styling)
+library(table1) # Used to make Table 1
+library(gridExtra) # Used to plot ggplots side by side
+library(bestNormalize) # Used to find best transformation for a variable
+library(corrplot) # Used for correlation matrix
+```
+
+
+
+Import the data set.
+
+
+
+```{r}
+data <- read_csv("C:/Users/sviea/Documents/Statistical Consulting/Vieau_Project_01/Data Raw/MICUPT_Deidentify.csv")
+names(data)[1] <- "id" # Rename the wonky id column
+```
+
+
+
+And take a look at our data.
+
+
+
+```{r}
+glimpse(data)
+```
+
+
+
+It looks like everything is formatted correctly for the most part.
+
+Percents are coded as doubles.
+
+`Admit_MonthYear` is a string (e.g. "2011-08") that we may have to process in order to create variables for the 3 main time periods: Pre-QI Initiative (before April 2015), During QI Initiative (April 2015-Dec 2015), and After-QI Initiative (Jan 2016 and later).
+
+Let's take a look at our data for good measure.
+
+
+
+```{r}
+# Pretty print header of wideform data
+kable(head(data), format = "html", full_width = TRUE) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+```
+
+
+
+Looks good.
+
+# Missingness
+
+
+
+```{r}
+gg_miss_var(data)
+```
+
+
+
+We are missing the most data in `MV_Total` , followed by `CONSULT TO TREAT`, `ADMIT TO TREAT`, and `PROBLEM LIST DX CODES`. Missingness does not seem to be an issue for the rest of the variables.
+
+
+
+```{r}
+vis_miss(data)
+```
+
+
+
+Immediately concerning is the 65% missing data on `MV_TOTAL`, the variable for total time on mechanical ventilation, which happens to me a main outcome of interest.
+
+`CONSULT TO TREAT` has 56% missing and `ADMIT TO TREAT` has 55% missing. This could be because, in emergency situations where immediate critical care is required, patients might be directly admitted to the MICU without a formal consult.
+
+`PROBLEM LIST DX CODES` and `PROBLEM LIST DX NAME` have 25% and 20% missing, respectively. Odd that their missingness doesn't align exactly. This isn't actually too bad, and our sample size is large enough that we may still be able to include these variables in our analysis if we wanted to. We'd just have to do some processing to place patients into large enough overarching diagnosis categories that we'd have enough patients in each group. Not the researcher's primary research question however so not looking any further into it. We'd also have to examine missingness and see if there are and patterns or it's MCAR.
+
+#### Summary
+
+Based on the initial missingness checks, we will exclude variables with excessive missingness.
+
+These variables will be retained for reporting in Table 1 for the researcher, but will be excluded from consideration in the analysis.
+
+-   `Consult to Treat` and `Admit to Treat` are missing \>= 55% of values, and will thus be excluded from analysis.
+
+-   `Problem List DX Codes` is missing 25% and `Problem List DX Names` is missing 20% of values. Additionally, it would be challenging to include these variables in the analysis in a meaningful way due to sample size limitations, so these will be excluded from consideration in the final analysis.
+
+-   `Admit to Consult` is missing 23% of values.
+
+All other variables were missing \< 1% and thus missingness does not need to be addressed for these variables.
+
+# Data Quality Check
+
+Let's perform some simple min/max checks to assess if data has been entered correctly.
+
+
+
+```{r}
+# This function summarizes the mins and maxes of numeric variables
+summarize_column <- function(column) {
+  if (is.numeric(column)) {
+    return(data.frame(
+      Type = "Numeric",
+      Min = min(column, na.rm = TRUE),
+      Max = max(column, na.rm = TRUE)
+    ))
+  }
+}
+
+# Apply the function to each column and bind the results into a single data frame
+summary_df <- map_dfr(data, summarize_column, .id = "Column") %>%
+  mutate(across(everything(), ~ format(., scientific = FALSE))) # Eliminates scientific notation
+
+# Pretty print the mins and maxes of longform data_2
+kable(summary_df, format = "html") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+```
+
+
+
+`HOSPITAL LOS` has a range of 4 to 9270. Presumably this is in hours, so a range of 0.01 to 386.25 days in the hospital. I believe the variable we are actually interested in for MICU LOS is `UNIT LOS` however, so a range of 1 to1811 hours, or 0.41 to 75.46 days. (Just realized none of us asked for a data dictionary even though it was a room of \~20 stats master's students 😅).
+
+The researcher outlined the exclusion criteria of \< 2 days or \> 30 days in the MICU for her investigation. It looks like we will have to [filter the data set](#Filtering) to match these criteria.
+
+`CONSULT TO TREAT` has a range of -405 to 3056. `ADMIT TO TREAT` has a range of -1 to 983. I think these variables are the time from consultation or admission until the time treatment for that patient began. Again, without a data dictionary I am unsure what to make of those negative values.
+
+Importantly, `AVG, MAX, and MIN THERAPY LENGTH` all have negative values for the minimums. This doesn't make any sense at face value, will have to investigate and circle back to the researchers for how this data was coded.
+
+Some variables like `MV_Total` are in hours, and some like `DAYS WITH THERAPY VISITS` are in days. I don't think we need to run any conversions, but this will be important to at least keep track of for interpretations.
+
+Aside from that everything else looks coded properly.
+
+# Filter Data Set {#Filtering}
+
+Let's go ahead and filter the data set according to the experimenter's exclusion criteria of \< 2 days or \> 30 days in the MICU so we are not unnecessarily investigating superfluous data in our continued examinations.
+
+
+
+```{r}
+# Filter data set based on researcher's exclusion criteria
+data_ex <- data[data$Unit_LOS >= 48 & data$Unit_LOS <= 720,]
+
+# Check dimensions
+dim(data_ex)
+```
+
+
+
+We now have a dataset of 6430 patients!
+
+# Univariate Distributions
+
+Here we will explore the univariate distributions of our variables to assess data quality using histograms and qqplots.
+
+## Outcome Variables {#Outcome_Variables}
+
+::: panel-tabset
+## Mechanical Ventilation
+
+First we will begin with mechanical ventilation time (MV)
+
+
+
+```{r}
+# Create histogram and qqplot
+distr_plots(data_ex, "MV_Total")
+```
+
+
+
+That's some severe right skewness! Is that logarithmic? Let's try and transform and see what happens.
+
+
+
+```{r}
+# Perform a log transform of mechanical ventilation time and plot
+data_ex$MV_Total_log <- log(data_ex$MV_Total)
+
+# Create histogram and qqplot
+distr_plots(data_ex, "MV_Total_log", 10)
+```
+
+
+
+That's better. Maybe try a square root transformation?
+
+
+
+```{r}
+# Perform a sqrt transformation and plot
+data_ex$MV_Total_sqrt <- sqrt(data_ex$MV_Total)
+
+# Create histogram and qqplot
+distr_plots(data_ex, "MV_Total_sqrt", 10)
+```
+
+
+
+That looks worse. Out of curiosity I'm going to try using the bestNormalize package I've been learning to see if it can recommend the best tranformation.
+
+
+
+```{r}
+BNobject <- bestNormalize(data_ex$MV_Total)
+BNobject
+```
+
+
+
+The short explanation of how these values work is that the value closest to 1 is the best transformation, but these are all VERY far from one. So that didn't help.
+
+#### Boxplot
+
+
+
+```{r}
+#Create boxplot to assess for outliers
+ggplot(data_ex, aes(y = MV_Total_log)) +
+  geom_boxplot() +
+  labs(title = "Boxplot of MV Total Log",
+       y = "MV Total Log")
+```
+
+
+
+There are also no outliers for `MV_Total_Log!`
+
+#### Summary
+
+It looks like the best option we have is a log transformation of `MV TOTAL`.
+
+Alternatively, we will likely end up running a Poisson or Negative Binomial regression to handle this data.
+
+[Top of Tabset](#Outcome_Variables)
+
+## MICU Length of Stay
+
+
+
+```{r}
+# Create histogram and qqplot
+distr_plots(data_ex, "Unit_LOS", 10)
+```
+
+
+
+That's super skewed as well! Let's try a log transform.
+
+
+
+```{r}
+# Perform log transform of MICU LOS
+data_ex$Unit_LOS_log <- log(data_ex$Unit_LOS)
+
+# Create histogram and qqplot
+distr_plots(data_ex, "Unit_LOS_log", 10)
+```
+
+
+
+We've got more of an S shape going there. I wonder if a BoxCox transformation is more appropriate?
+
+
+
+```{r}
+library(bestNormalize)
+# Use bestNormalize to try to find best transformation
+BNobject <- bestNormalize(data_ex$Unit_LOS)
+BNobject
+
+# Perform boxcox transformation
+data_ex$Unit_LOS_boxcox <- boxcox(data_ex$Unit_LOS)$x.t
+
+# Create histogram and qqplot
+distr_plots(data_ex, "Unit_LOS_boxcox", 25)
+```
+
+```{r}
+# Create boxplot to assess for outliers
+ggplot(data_ex, aes(y = Unit_LOS_boxcox)) +
+  geom_boxplot()
+```
+
+
+
+There are no outliers for boxcox Unit LOS.
+
+That histogram looks better at least, and we don't have any outliers. The bestNormalize package offers ways to back transform after you run your analysis, but I haven't gotten that far in learning it yet. It looks like a boxcox transformation is a candidate however.
+
+#### Summary
+
+Will come back to this. I think there is a specific link function we use in this situation when we have an s-shaped qq plot like that.
+
+[Top of Tabset](#Outcome_Variables)
+
+## Hospital Length of Stay
+
+
+
+```{r}
+# Create histogram and qqplot
+distr_plots(data_ex, "`HOSPITAL LOS`", 25)
+```
+
+
+
+`Hospital LOS` also looks logarithmic.
+
+Let's transform and assess.
+
+
+
+```{r}
+# Perform log transform 
+data_ex$HOSPITAL_LOS_log <- log(data_ex$`HOSPITAL LOS`)
+
+# Create histogram and qqplot
+distr_plots(data_ex, "HOSPITAL_LOS_log", 25)
+
+ggplot(data_ex, aes(y = HOSPITAL_LOS_log)) +
+  geom_boxplot()
+```
+
+
+
+Looks good! There are a handful of outliers in there, but the data looks normal and those values will likely be included.
+
+#### Summary
+
+`HOSPITAL LOS` is normal after a log transform. We will either perform that or a Poisson or Negative Binomial [Top of Tabset](#Outcome_Variables)
+
+## Non-ICU Length of Stay
+
+We must compute `NON_ICU_LOS` by subtracting `Unit_LOS` from `HOSPITAL LOS`.
+
+
+
+```{r}
+# Compute variable for non icu LOS.
+data_ex <- data_ex |> 
+  mutate(NON_ICU_LOS = `HOSPITAL LOS` - Unit_LOS)
+
+# Create histogram and qqplot
+distr_plots(data_ex, "NON_ICU_LOS", 25)
+```
+
+
+
+As expected, that looks exponential.
+
+
+
+```{r}
+# Perform log transform
+data_ex$NON_ICU_LOS_log <- log(data_ex$NON_ICU_LOS)
+
+# Create histogram and qqplot
+distr_plots(data_ex, "NON_ICU_LOS_log", 25)
+```
+
+
+
+That's bimodal. Odd.
+
+Let's try a square root transform
+
+
+
+```{r}
+# Perform log transform
+data_ex$NON_ICU_LOS_sqrt <- sqrt(data_ex$NON_ICU_LOS)
+
+# Create histogram and qqplot
+distr_plots(data_ex, "NON_ICU_LOS_sqrt", 25)
+```
+
+
+
+Looks crummy.
+
+Let's try bestNormalize
+
+
+
+```{r}
+BNobject <- bestNormalize(data_ex$NON_ICU_LOS)
+BNobject
+
+# Perform boxcox transformation
+data_ex$NON_ICU_LOS_yeo <- yeojohnson(data_ex$NON_ICU_LOS)$x.t
+
+# Create histogram and qqplot
+distr_plots(data_ex, "NON_ICU_LOS_yeo", 25)
+```
+
+
+
+Looks better! Still bimodal but much more normal.
+
+#### Summary
+
+Looks like Yeo-Johnson transformation may be the way to go.
+
+[Top of Tabset](#Outcome_Variables)
+
+## Discharge Location
+
+
+
+```{r}
+# Examine discharge locations
+pretty_print(table(data_ex$DISCH_DISP))
+```
+
+
+
+There are a few options we have for to analyze discharge location.
+
+-   We can spit on expired vs not expired
+-   We can split on hom vs other
+-   We can just look at all the groups with the largest N, and collapse the rest into a single variable of 'other'. This would be
+    -   Expired (1137), Home (3177), Hospice (424), long term care (451), rehab (249), skilled Nursing facility (596)
+    
+We will have to ask the researcher how she wants to group up these discharge locations! Keeping in mind that since we are looking at three different time periods, each group will essentially by a third of what is shown here.
+
+:::
+
+# Data Cleaning {#Clean}
+
+Here we will go one by one through our potential covariates and make sure they are all properly coded and there are no erroenous values.
+
+::: panel-tabset
+
+
+
+```{r}
+# Get counts
+table(data_ex$SEX)
+
+# Create barplot
+ggplot(data_ex, aes(x = SEX, fill = SEX)) +
+  geom_bar() +
+  theme_minimal() +
+  labs(title = "Counts by Sex",
+       x = "Sex",
+       y = "Counts") +
+  scale_fill_brewer(palette = "Pastel2")
+```
+
+
+
+`SEX` looks good and does not require any more cleaning.
+
+[Top of Tabset](#Clean)
+
+## ICD10 Code
+
+Note: `PROBLEM LIST DX CODES` and `PROBLEM LIST DX CODES` have 100's of levels comprising sundry diagnoses.
+
+Without a direction for the specific use of these variables we can't do much with them, so they will likely be excluded from the final analysis.
+
+[Top of Tabset](#Clean)
+
+## Department Before MICU
+
+
+
+```{r}
+# Get counts
+pretty_print(table(data_ex$`DEPT BEFORE Unit`))
+```
+
+
+
+I lack the clinical knowledge to make use of this variable. 
+
+It will likely not be used in the final analysis.
+
+[Top of Tabset](#Clean)
+
+## Department after MICU
+
+
+
+```{r}
+# Get counts
+pretty_print(table(data_ex$`DEPT AFTER Unit`))
+```
+
+
+
+Similarly, I lack the clinical knowledge to make use of this variable without a specific direction from the researcher. It will likely be excluded in this analysis.
+
+[Top of Tabset](#Clean)
+
+## Admit to Consult
+
+
+
+```{r}
+# Create histogram and qqplot
+distr_plots(data_ex, "`ADMIT TO CONSULT`", 25)
+```
+
+
+
+Try a log transform.
+
+
+
+```{r}
+# Perform log transform
+data_ex$ADMIT_TO_CONSULT_log <- log(data_ex$`ADMIT TO CONSULT`)
+
+# Create histogram and qqplot
+distr_plots(data_ex, "ADMIT_TO_CONSULT_log", 25)
+```
+
+
+
+This looks incredibly messy to use. And has 23% missing values. We will likely exclude.
+
+Could we convert it to a binary variable of whether the patient received a consult or not?
+
+[Top of Tabset](#Clean)
+
+## Consult to Treat
+
+`CONSULT TO TREAT` contained negative values. Let's explore
+
+
+
+```{r}
+# Create histogram for time from consult to treatment
+hist(data_ex$`CONSULT TO TREAT`)
+```
+
+
+
+Looks like we have a lot of values extending below 0, so it's not just some mis-entered data.
+
+
+
+```{r}
+# Sort by time from consult to treatment
+sorted_data <- data_ex %>%
+  arrange(`CONSULT TO TREAT`) %>%
+  select(id, `CONSULT TO TREAT`)
+
+# Pretty print table
+pretty_print(head(sorted_data))
+```
+
+
+
+`CONSULT TO TREAT` looks coded correctly. I believe it just has an event at timepoint zero, most likely admit.
+
+#### Summary
+
+`CONSULT TO TREAT` is coded correctly. However it has 56% missing values and will thus not be used.
+
+[Top of Tabset](#Clean)
+
+## Admit to Treat
+
+The -1 value we saw as the min for `ADMIT TO TREAT` makes me suspicious that's how missing data was coded for this variable.
+
+
+
+```{r}
+# Create histogram for time from admit to treatment
+hist(data_ex$`ADMIT TO TREAT`)
+```
+
+
+
+The histogram shows there were very few patients with a value of -1.
+
+
+
+```{r}
+# Sort by time from admit to treatment
+sorted_data <- data_ex %>%
+  arrange(`ADMIT TO TREAT`) %>%
+  select(id, `ADMIT TO TREAT`)
+
+# Pretty print table
+kable(head(sorted_data), format = "html") %>%
+  kable_styling(bootstrap_options = c("condensed", "hover", "striped"))
+```
+
+
+
+There were only 2 patients with an admit to treatment time of -1, and 1 patient with a value of 0. Will have to double check with the experimenters but this looks believable.
+
+#### Summary
+
+There are two patients with a -1 time to admit.
+
+However, `ADMIT TO TREAT` has 55% missing values and will thus not be included in the final analysis.
+
+[Top of Tabset](#Clean)
+
+## Total Therapy Visits
+
+`TOTAL THERAPY VISITS` is a promising covariate.
+
+Those who had more therapy days could have a quicker recovery if physical therapy improves patient condition.
+
+Or alternatively, more therapy days could be indicative of worse physical health, and could potentially increase the outcome variables of total MV time and MICU LOS.
+
+Either way it is prudent to account for it in the model.
+
+
+
+```{r}
+# Create histogram and qqplot
+distr_plots(data_ex, "`TOTAL THERAPY VISITS`", 25)
+```
+
+
+
+Let's try a log transform.
+
+
+
+```{r}
+# Perform log transform of average therapy length
+data_ex$TOTAL_THERAPY_VISITS_log <- log(data_ex$`TOTAL THERAPY VISITS`)
+
+# Create histogram and qqplot
+distr_plots(data_ex, "TOTAL_THERAPY_VISITS_log", 8)
+```
+
+
+
+[Top of Tabset](#Clean)
+
+#### Summary
+
+`TOTAL THERAPY VISITS` appears to have a logarithmic distribution. Poisson regression should take care of this
+
+## Days with Therapy Visits
+
+
+
+```{r}
+# Create histogram and qqplot
+distr_plots(data_ex, "`DAYS WITH THERAPY VISITS`", 8)
+```
+
+
+
+`DAYS WITH THERAPY VISITS` appears to be coded correctly. Poisson regression will handle the distribution.
+
+[Top of Tabset](#Clean)
+
+##
+
+
+
+```{r}
+# Create histogram and qqplot
+distr_plots(data_ex, "`PERCENT OF DAYS WITH THERAPY VISITS`", 8)
+```
+
+
+
+Interesting, there was a lot of patients with either 0 or 100% of their days including physical therapy.
+
+This could be a good covariate to include in the final model.
+
+[Top of Tabset](#Clean)
+
+## Therapy Length
+
+::: panel-tabset
+
+## Negative Therapy Length
+
+We saw earlier that average, min, and max therapy length had negative values for their minimum, which does not make sense. Let's investigate.
+
+
+
+```{r}
+# Create histogram and qqplot
+distr_plots(data_ex, "`AVG THERAPY LENGTH`", 8)
+```
+
+
+
+Ah, we can see that we have a one incredibly low and negative values, and some incredibly high values.
+
+
+
+```{r}
+# Create a table to checkout our frequencies for low and high values
+table(data_ex$`AVG THERAPY LENGTH`)
+```
+
+
+
+We have 1 patient with a -1424 average length in therapy that is most likely an erroneous entry, and some patients with very high times in therapy.
+
+I wonder who that patient is that is so advanced they've spent negative time in therapy.
+
+
+
+```{r}
+# Investigate patient with negative therapy lengths
+negative <- data_ex[data_ex$`AVG THERAPY LENGTH` == -1424,] %>% 
+  select(id, `AVG THERAPY LENGTH`, `MIN THERAPY LENGTH`, `MAX THERAPY LENGTH`)
+
+# Pretty Print
+kable(negative, format = "html") %>%
+  kable_styling(bootstrap_options = c("condensed", "hover", "striped"))
+```
+
+
+
+Aha! This patient has negative values for all therapy lengths.
+
+Let's see if they are the only one that has negative values.
+
+
+
+```{r}
+table(data_ex$`MIN THERAPY LENGTH`)
+table(data_ex$`MAX THERAPY LENGTH`)
+```
+
+
+
+They are! What probably happened here was their minimum is actually 85, and their max is actually 2726, and those got reversed into negatives somehow. Similarly, their average should be 1424.
+
+We'll double check with the investigator, but for now let's just delete this patient and re run the histogram and qqplot.
+
+
+
+```{r}
+# Remove negative patient
+data_ex <- data_ex %>% filter(data_ex$id != 10462)
+```
+
+
+
+[Top of Tabset](#Clean)
+
+## Average Therapy Length
+
+
+
+```{r}
+# Create histogram and qqplot
+distr_plots(data_ex, "`AVG THERAPY LENGTH`", 20)
+```
+
+
+
+We may have some outliers that spent very long in therapy
+
+
+
+```{r}
+# Examine potential outliers
+data_ex |> 
+  arrange(desc(`AVG THERAPY LENGTH`)) |> 
+  select(id, `MIN THERAPY LENGTH`, `MAX THERAPY LENGTH`, `AVG THERAPY LENGTH`) |>
+  head(n=10) |> 
+  pretty_print()
+```
+
+
+
+Success! That is not a logarithmic relationship, that's just 8 patients who had an extremely long stay in therapy.
+
+Let's remove them.
+
+
+
+```{r}
+# Filter out outlier patients
+data_ex <- data_ex |> 
+  filter(!id %in% c(178, 12985, 3230, 2942, 12803, 12640, 6661, 10917))
+```
+
+
+
+and re-plot
+
+
+
+```{r}
+# Create histogram and qqplot
+distr_plots(data_ex, "`AVG THERAPY LENGTH`", 20)
+```
+
+
+
+That's a normal distribution with a preponderance of patients who did not have physical therapy.
+
+#### Received PT Variable Creation
+
+Let's create a dummy variable for whether patients received PT or not.
+
+
+
+```{r}
+# Create variable for reception of PT
+data_ex <- data_ex |> 
+  mutate(PT_YESNO = ifelse(`AVG THERAPY LENGTH` == 0, 0,1))
+
+# Double check calculations
+data_ex |> 
+  select(`AVG THERAPY LENGTH`, `DAYS WITH THERAPY VISITS`, PT_YESNO) |> 
+  head() |> 
+  pretty_print()
+```
+
+
+
+Looks good, not we can answer one of their research questions of whether PT enrollment increased after the intervention.
+
+## Max Therapy Length
+
+
+
+```{r}
+# Create histogram and qqplot
+distr_plots(data_ex, "`MAX THERAPY LENGTH`", 20)
+```
+
+
+
+Max therapy appears mostly normally distributed, not including the patients that did not receive PT. 
+
+The highest patient has a max length of 140, and the next highest has a max stay of ~100. Not drastic enough to call that patient an outlier.
+
+#### Summary
+
+`MAX THERAPY LENGTH` appears normally distributed for those that received PT.
+
+[Top of Tabset](#Clean)
+
+## Min Therapy Length
+
+
+
+```{r}
+# Create histogram and qqplot
+distr_plots(data_ex, "`MIN THERAPY LENGTH`", 20)
+```
+
+
+
+#### Summary
+
+`MIN THERAPY LENGTH` appears mostly normal for thos who received it.
+
+[Top of Tabset](#Clean)
+
+:::
+
+## Days Post MICU
+
+This variable represents the number of days a patient has spent in a standard hospital unit after being discharged from the Medical Intensive Care Unit (MICU).
+
+
+
+```{r}
+# Create histogram and qqplot
+distr_plots(data_ex, "`ACTUAL DAYS POST MICU`", 20)
+```
+
+
+
+It appears logarithmic.
+
+
+
+```{r}
+# Log transform variable
+data_ex <- data_ex |> 
+  mutate(ACTUAL_DAYS_POST_MICU_log = log(`ACTUAL DAYS POST MICU`))
+
+# Create histogram and qqplot
+distr_plots(data_ex, "ACTUAL_DAYS_POST_MICU_log", 15)
+```
+
+
+
+That appears normally distributed now!
+
+#### Summary
+
+Days post MICU is normal after log transforming.
+
+[Top of Tabset](#Clean)
+
+## Post MICU PT or OT Visits
+
+This variable represents the number of days that patients have been visited by physical therapists (PT) or occupational therapists (OT) after being discharged from the Medical Intensive Care Unit (MICU). It captures the extent of post-ICU rehabilitation services provided to patients and can be important for understanding recovery trajectories.
+
+
+
+```{r}
+# Create histogram and qqplot
+distr_plots(data_ex, "`PT or OT VISIT DAYS POST MICU`", 15)
+```
+
+
+
+This variable is important for our analysis as it will not effect our outcome variables.
+
+[Top of Tabset](#Clean)
+
+## Post ICU Days with Therapy
+
+This variable is the percentage of days after a patient is discharged from the Intensive Care Unit (ICU) during which they received therapy, such as physical therapy (PT) or occupational therapy (OT). 
+
+This variable is likely not important as it will not effect our outcome variables.
+
+
+
+```{r}
+# Create histogram and qqplot
+distr_plots(data_ex, "`PERCENT POST ICU DAYS THERAPY`", 15)
+```
+
+
+
+[Top of Tabset](#Clean)
+
+## Age
+
+
+
+```{r}
+# Examine counts
+pretty_print(table(data_ex$Age_Range))
+```
+
+
+
+That's curious, what does "Negative Age" mean?
+
+
+
+```{r}
+# Examine negative age
+data_ex |> 
+  filter(Age_Range == "Negative Age") |> 
+  pretty_print()
+```
+
+
+
+I don't see any pattern. Let's exclude them.
+
+
+
+```{r}
+data_ex <- data_ex |> 
+  filter(!Age_Range == "Negative Age")
+```
+
+
+
+And plot the counts.
+
+
+
+```{r}
+# Plot counts
+ggplot(data_ex, aes(x = Age_Range, fill = Age_Range)) +
+  geom_bar() +
+  theme_minimal() +
+  labs(title = "Count by Age Range",
+       x = "Age Range",
+       y = "Count",
+       fill = "Age Range") +
+  scale_fill_brewer(palette = "Pastel2")
+```
+
+
+
+We have a sufficient size for each group and can use age range as a covariate.
+
+[Top of Tabset](#Clean)
+
+## Age Quartile
+
+This is just a different variable for age, where they divided the sample up by quartiles.
+
+
+
+```{r}
+# Check counts
+table(data_ex$Age_Quartile)
+```
+
+
+
+We can use either age variables, it really shouldn't matter unless there is some important clinical distinction that is driving up their divisions in `Age_Range`.
+
+[Top of Tabset](#Clean)
+
+## Admit Date
+
+`Admit_MonthYear` is a character. Let's go ahead and convert to datetime using `lubridate`.
+
+
+
+```{r}
+# Convert admit month year to datetime
+data_ex <- data_ex |> 
+  mutate(Admit_MonthYear = ym(Admit_MonthYear))
+```
+
+
+
+Now we can plot how many patients were admitted each month.
+
+We can also highlight the timeframe of the quality improvement iniative to visualize pre-, intra-, and post- periods.
+
+
+
+```{r}
+# Define the time periods to highlight
+highlight_periods <- data.frame(
+  start = as.Date(c("2015-04-01")),
+  end = as.Date(c("2016-01-01"))
+)
+
+# Summarize and plot the data
+data_ex |> 
+  group_by(Admit_MonthYear) |> 
+  summarise(count = n()) |> 
+  ggplot(aes(x = Admit_MonthYear, y = count)) +
+  geom_line() +
+  theme_minimal() +
+  geom_rect(data = highlight_periods, aes(xmin = start, xmax = end, ymin = -Inf, ymax = Inf), 
+            inherit.aes = FALSE, fill = "lightblue", alpha = 0.2) +
+  labs(title = "Admissions Over Time",
+       x = "Admit Date",
+       y = "Count")
+```
+
+
+
+It does not appear that the number of patients admitted throughout the year really changed that drastically. I don't think we will have to control for this.
+
+
+:::
+
+## Average MICU LOS
+
+
+
+```{r}
+# Summarize and plot the data
+data_ex |> 
+  group_by(Admit_MonthYear) |> 
+  summarise(avg_Unit_LOS = mean(Unit_LOS, na.rm = T)) |> 
+  ggplot(aes(x = Admit_MonthYear, y = avg_Unit_LOS)) +
+  geom_line() +
+  theme_minimal() +
+  geom_rect(data = highlight_periods, aes(xmin = start, xmax = end, ymin = -Inf, ymax = Inf), 
+            inherit.aes = FALSE, fill = "lightblue", alpha = 0.2) +
+  labs(title = "Average MICU LOS over Time",
+       x = "Admit Date",
+       y = "Avg MICU LOS")
+```
+
+
+
+It does not appear that `MICU_LOS` has decreased across any of the time periods.
+
+This is including patients that did not receive PT, so of course there's no difference.
+
+#### MICU LOS over Time by Mechanical Ventilation
+
+
+
+```{r}
+# Dummy code MV status 
+data_ex$MV_YN <- ifelse(is.na(data_ex$MV_Total), 0, 1)
+
+# Make it a factor for better plotting
+data_ex <- data_ex |> 
+  mutate(MV_YN = as.factor(MV_YN))
+
+# Summarize and plot the data
+data_ex |> 
+  group_by(Admit_MonthYear, MV_YN) |> 
+  summarise(avg_Unit_LOS = mean(Unit_LOS, na.rm = T)) |> 
+  ggplot(aes(x = Admit_MonthYear, y = avg_Unit_LOS, color = MV_YN, group = MV_YN)) +
+  geom_line() +
+  theme_minimal() +
+  geom_rect(data = highlight_periods, aes(xmin = start, xmax = end, ymin = -Inf, ymax = Inf), 
+            inherit.aes = FALSE, fill = "lightblue", alpha = 0.2) +
+  labs(title = "Average MICU LOS over Time by Mechanical Ventilation",
+       x = "Admit Date",
+       y = "Avg MICU LOS")
+```
+
+
+
+This shows that those who were mechanically ventilated had a higher MICU length of stay. This does not appear to have differed in relation to the QI iniative. 
+
+I am also including those that did not receive PT here, so that would explain the null finding.
+
+
+
+```{r}
+
+data_ex <- data_ex |> 
+  mutate(PT_YESNO = as.factor(PT_YESNO))
+
+# Summarize and plot the data
+data_ex |> 
+  group_by(Admit_MonthYear, MV_YN, PT_YESNO) |> 
+  summarise(avg_Unit_LOS = mean(Unit_LOS, na.rm = T)) |> 
+  ggplot(aes(x = Admit_MonthYear, y = avg_Unit_LOS, color = PT_YESNO)) +
+  geom_point() +
+  geom_smooth(method = "loess", se = F) +
+  theme_minimal() +
+  geom_rect(data = highlight_periods, aes(xmin = start, xmax = end, ymin = -Inf, ymax = Inf), 
+            inherit.aes = FALSE, fill = "lightblue", alpha = 0.2) +
+  labs(title = "Average MICU LOS over Time by Mechanical Ventilation",
+       x = "Admit Date",
+       y = "Avg MICU LOS") +
+  facet_wrap(~MV_YN)
+```
+
+
+
+I *think* this might show an interaction. For those on mechanical ventilation, they seemed to decrease in MICU LOS more if they received PT.
+
+For those not on MV, the PT did not seem to change their average LOS.
+
+#### Average MICU LOS over Time by Physical Therapy
+
+
+
+```{r}
+# Make it a factor for better plotting
+data_ex <- data_ex |> 
+  mutate(PT_YESNO = as.factor(PT_YESNO))
+
+# Summarize and plot the data
+data_ex |> 
+  group_by(Admit_MonthYear, PT_YESNO) |> 
+  summarise(avg_Unit_LOS = mean(Unit_LOS, na.rm = T)) |> 
+  filter(Admit_MonthYear > as.Date("2012-01-01")) |> 
+  ggplot(aes(x = Admit_MonthYear, y = avg_Unit_LOS, color = PT_YESNO, group = PT_YESNO)) +
+  geom_line() +
+  theme_minimal() +
+  geom_rect(data = highlight_periods, aes(xmin = start, xmax = end, ymin = -Inf, ymax = Inf), 
+            inherit.aes = FALSE, fill = "lightblue", alpha = 0.2) +
+  labs(title = "Average MICU LOS over Time by Physical Therapy",
+       x = "Admit Date",
+       y = "Avg MICU LOS")
+```
+
+```{r}
+# Summarize and plot the data
+data_ex |> 
+  group_by(Admit_MonthYear, PT_YESNO) |> 
+  summarise(avg_Unit_LOS = mean(Unit_LOS, na.rm = T)) |> 
+  filter(Admit_MonthYear > as.Date("2012-01-01")) |> 
+  ggplot(aes(x = Admit_MonthYear, y = avg_Unit_LOS, color = PT_YESNO, group = PT_YESNO)) +
+  geom_point() +
+  geom_smooth(method = "loess", se = F) +
+  theme_minimal() +
+  geom_rect(data = highlight_periods, aes(xmin = start, xmax = end, ymin = -Inf, ymax = Inf), 
+            inherit.aes = FALSE, fill = "lightblue", alpha = 0.2) +
+  labs(title = "Average MICU LOS over Time by Physical Therapy",
+       x = "Admit Date",
+       y = "Avg MICU LOS")
+```
+
+
+
+Interesting! It does look like average MICU length of stay decreased slighly immediately after the QI initiative. It also looks like it may be increasing slightly from then on. 
+
+That does appear that those received PT had a decrease before and after the iniative
+
+But overall it looks like the QI may have successfuly decreased MICU LOS.
+
+#### Fitting with Splines
+
+
+
+```{r}
+library(splines)
+# Summarize and plot the data
+data_ex |> 
+  group_by(Admit_MonthYear, PT_YESNO) |> 
+  summarise(avg_Unit_LOS = mean(Unit_LOS, na.rm = T)) |> 
+  filter(Admit_MonthYear > as.Date("2012-01-01")) |> 
+  ggplot(aes(x = Admit_MonthYear, y = avg_Unit_LOS, color = PT_YESNO, group = PT_YESNO)) +
+  geom_point() +
+  geom_smooth(method = "lm", formula = y ~ ns(x, df = 4), se = F) +
+  theme_minimal() +
+  geom_rect(data = highlight_periods, aes(xmin = start, xmax = end, ymin = -Inf, ymax = Inf), 
+            inherit.aes = FALSE, fill = "lightblue", alpha = 0.2) +
+  labs(title = "Average MICU LOS over Time by Physical Therapy",
+       x = "Admit Date",
+       y = "Avg MICU LOS")
+```
+
+
+
+Looking just at those who received PT
+
+
+
+```{r}
+# Make it a factor for better plotting
+data_ex <- data_ex |> 
+  mutate(PT_YESNO = as.factor(PT_YESNO))
+
+# Summarize and plot the data
+data_ex |> 
+  group_by(Admit_MonthYear, PT_YESNO) |> 
+  summarise(avg_Unit_LOS = mean(Unit_LOS, na.rm = T)) |> 
+  filter(Admit_MonthYear > as.Date("2012-01-01")) |> 
+  filter(PT_YESNO == 1) |> 
+  ggplot(aes(x = Admit_MonthYear, y = avg_Unit_LOS, group = PT_YESNO)) +
+  geom_point() +
+  geom_smooth(method = "loess", se = F) +
+  theme_minimal() +
+  geom_rect(data = highlight_periods, aes(xmin = start, xmax = end, ymin = -Inf, ymax = Inf), 
+            inherit.aes = FALSE, fill = "lightblue", alpha = 0.2) +
+  labs(title = "Average MICU LOS over Time by Physical Therapy",
+       x = "Admit Date",
+       y = "Avg MICU LOS")
+```
+
+
+
+Fitting a loess curve, it does appear that for those that receive PT, they had a decrease in average MICU LOS during the intervention compared to before. It also appears that they are increasing in average MICU following the interention, but this may still be lower compared to the pre-intervention period.
+
+:::
+
+# Main Goals
+
+## Increase Frequency of PT Visits
+
+
+
+```{r}
+# Summarize and plot the data
+data_ex |> 
+  group_by(Admit_MonthYear) |> 
+  summarise(avg_pct_therapy = mean(`PERCENT OF DAYS WITH THERAPY VISITS`, na.rm = T)) |> 
+  ggplot(aes(x = Admit_MonthYear, y = avg_pct_therapy)) +
+  geom_line() +
+  theme_minimal() +
+  geom_rect(data = highlight_periods, aes(xmin = start, xmax = end, ymin = -Inf, ymax = Inf), 
+            inherit.aes = FALSE, fill = "lightblue", alpha = 0.2) +
+  labs(title = "Average Percentage of Days with Physical Therapy Over Time",
+       x = "Admit Date",
+       y = "Average Days with Physical Therapy (%)")
+```
+
+
+
+Interesting! They successfully and drastically increased the percentage of days that patients had physical therapy (roughly from 10-20% pre-iniative to 50-60% post iniative). This percentage did seem to drop off over time during the post- initiative period however, though it is still higher than it was pre-initiative (now roughly 30-40%).
+
+#### Fit with Loess
+
+
+
+```{r}
+# Summarize and plot the data
+data_ex |> 
+  group_by(Admit_MonthYear) |> 
+  summarise(avg_pct_therapy = mean(`PERCENT OF DAYS WITH THERAPY VISITS`, na.rm = T)) |> 
+  ggplot(aes(x = Admit_MonthYear, y = avg_pct_therapy)) +
+  geom_point() +
+  geom_smooth(method = "loess", se = F) +
+  theme_minimal() +
+  geom_rect(data = highlight_periods, aes(xmin = start, xmax = end, ymin = -Inf, ymax = Inf), 
+            inherit.aes = FALSE, fill = "lightblue", alpha = 0.2) +
+  labs(title = "Average Percentage of Days with Physical Therapy Over Time",
+       x = "Admit Date",
+       y = "Average Days with Physical Therapy (%)")
+```
+
+
+
+#### Fit with Splines
+
+
+
+```{r}
+# Summarize and plot the data
+data_ex |> 
+  group_by(Admit_MonthYear) |> 
+  summarise(avg_pct_therapy = mean(`PERCENT OF DAYS WITH THERAPY VISITS`, na.rm = T)) |> 
+  ggplot(aes(x = Admit_MonthYear, y = avg_pct_therapy)) +
+  geom_point() +
+  geom_smooth(method = "lm", formula = y ~ ns(x, df = 5), se = F) +
+  theme_minimal() +
+  geom_rect(data = highlight_periods, aes(xmin = start, xmax = end, ymin = -Inf, ymax = Inf), 
+            inherit.aes = FALSE, fill = "lightblue", alpha = 0.2) +
+  labs(title = "Average Percentage of Days with Physical Therapy Over Time",
+       x = "Admit Date",
+       y = "Average Days with Physical Therapy (%)")
+```
+
+
+
+
+## Decrease Time from Admit to Therapy
+
+
+
+```{r}
+# Summarize and plot the data
+data_ex |> 
+  group_by(Admit_MonthYear) |> 
+  summarise(avg_ADMIT_TO_TREAT = mean(`ADMIT TO TREAT`, na.rm = T)) |> 
+  ggplot(aes(x = Admit_MonthYear, y = avg_ADMIT_TO_TREAT)) +
+  geom_line() +
+  theme_minimal() +
+  geom_rect(data = highlight_periods, aes(xmin = start, xmax = end, ymin = -Inf, ymax = Inf), 
+            inherit.aes = FALSE, fill = "lightblue", alpha = 0.2) +
+  annotate("text", x = as.Date("2015-09-01"), y = Inf, 
+           label = "QI-Initiative", color = "skyblue2", size = 4, vjust = 1.5,) +
+  labs(title = "Time from Admit to Therapy over Time",
+       x = "Admit Date",
+       y = "Time from Admit to Therapy")
+```
+
+
+
+They successfully decreased the time from a patient's first admit to their first physical therapy session.
+
+This means that patients were receiving PT sooner.
+
+#### Plot with Loess
+
+
+
+```{r}
+# Summarize and plot the data
+data_ex |> 
+  group_by(Admit_MonthYear) |> 
+  summarise(avg_ADMIT_TO_TREAT = mean(`ADMIT TO TREAT`, na.rm = T)) |> 
+  ggplot(aes(x = Admit_MonthYear, y = avg_ADMIT_TO_TREAT)) +
+  geom_point() +
+  geom_smooth(method = "loess", se = F) +
+  theme_minimal() +
+  geom_rect(data = highlight_periods, aes(xmin = start, xmax = end, ymin = -Inf, ymax = Inf), 
+            inherit.aes = FALSE, fill = "lightblue", alpha = 0.2) +
+  annotate("text", x = as.Date("2015-09-01"), y = Inf, 
+           label = "QI-Initiative", color = "skyblue2", size = 4, vjust = 1.5,) +
+  labs(title = "Time from Admit to Therapy over Time",
+       x = "Admit Date",
+       y = "Time from Admit to Therapy")
+```
+
+
+
+Yeah looks crummier with loess, will likely delete.
+
+## Increase Percentage of Admissions Receiving Physical Therapy
+
+
+
+```{r}
+# Summarize and calculate percentages
+summary_data <- data_ex |> 
+  group_by(Admit_MonthYear, PT_YESNO) |> 
+  summarise(count = n()) |> 
+  mutate(total_count = sum(count)) |> 
+  ungroup() |> 
+  mutate(percentage = (count / total_count) * 100) |> 
+  filter(PT_YESNO == 1)
+
+# Plot the data
+ggplot(summary_data, aes(x = Admit_MonthYear, y = percentage)) +
+  geom_line() +
+  theme_minimal() +
+  geom_rect(data = highlight_periods, aes(xmin = start, xmax = end, ymin = -Inf, ymax = Inf), 
+            inherit.aes = FALSE, fill = "lightblue", alpha = 0.2) +
+  annotate("text", x = as.Date("2015-09-01"), y = Inf, 
+           label = "QI-Initiative", color = "skyblue2", size = 4, vjust = 1.5) +
+  labs(title = "Percentage of Admissions Receiving Physical Therapy",
+       x = "Admit Date",
+       y = "Percentage")
+```
+
+
+
+They also successfully increased the percentage of patients receiving PT from ~40% pre-initiative to ~80% during the initiative. This percentage then decreases to ~70% post-initiative.
+
+::::
+
+
+# Variable Creation
+
+Here we will create any variables necessary for our analysis
+
+## Mechanical Ventilation
+
+The researcher expressed that patients would be stratified on Mechanical ventilation v. NO mechanical ventilation. However, I do not see this variable. Let's go ahead and create it, assuming that patients with NA for `MV_TOTAL` were simply never on mechanical ventilation.
+
+
+
+```{r}
+# Dummy code MV status 
+data_ex$MV_YN <- ifelse(is.na(data_ex$MV_Total), 0, 1)
+```
+
+
+
+Let's check that worked as intended.
+
+
+
+```{r}
+# Filter down to variables of interest to verify dummy coding worked
+check <- data_ex %>%
+  select(id, MV_Total, MV_YN)
+
+# Pretty print
+kable(head(check), format = "html") %>%
+  kable_styling(bootstrap_options = c("condensed", "stripe", "hover"))
+```
+
+
+
+Looks good.
+
+## QI-Initiative Time Period
+
+Let's group participants into the time period that they were present during the initiative for.
+
+
+
+```{r}
+# Create new variable based on QI initiative time period.
+data_ex <- data_ex |> 
+  mutate(initiative = ifelse(Admit_MonthYear < as.Date("2015-04-01"), "Pre",
+                             ifelse(Admit_MonthYear > as.Date("2015-12-01"), "Post", "During")))
+```
+
+
+
+Let's double check we did that right.
+
+
+
+```{r}
+# Check counts
+table(data_ex$initiative)
+
+# Double check assigning
+data_ex |> 
+  select(id, Admit_MonthYear, initiative) |> 
+  filter(Admit_MonthYear < as.Date("2015-04-01")) |> 
+  arrange(desc(Admit_MonthYear)) |> 
+  head() |> 
+  pretty_print()
+
+# Double check assigning
+data_ex |> 
+  select(id, Admit_MonthYear, initiative) |> 
+  filter(Admit_MonthYear > as.Date("2015-04-01")) |> 
+  arrange(Admit_MonthYear) |> 
+  head() |> 
+  pretty_print()
+
+# Double check assigning
+data_ex |> 
+  select(id, Admit_MonthYear, initiative) |> 
+  filter(Admit_MonthYear >= as.Date("2015-12-01")) |> 
+  arrange(Admit_MonthYear) |> 
+  head() |> 
+  pretty_print()
+
+# Double check assigning
+data_ex |> 
+  select(id, Admit_MonthYear, initiative) |> 
+  filter(Admit_MonthYear > as.Date("2015-12-01")) |> 
+  arrange(Admit_MonthYear) |> 
+  head() |> 
+  pretty_print()
+```
+
+
+
+Looks good.
+
+#### Some Graphing
+
+
+
+```{r}
+data_ex <- data_ex |> 
+  mutate(initiative = as.factor(initiative)) |> 
+  mutate(initiative = relevel(initiative, ref = "Pre"))
+
+ggplot(data_ex, aes(x = PT_YESNO, y = Unit_LOS_log, fill = initiative)) +
+  geom_boxplot() +
+  theme_minimal() +
+  scale_fill_brewer(palette = "Pastel2")
+```
+
+
+This shows that MICU LOS decreased in the during and post QI initiative periods compared to the pre-iniatitive period.
+
+
+
+```{r}
+data_ex |> 
+  filter(PT_YESNO == 1) |> 
+  ggplot(aes(x = initiative, y = Unit_LOS_log, fill = initiative)) +
+  geom_boxplot() +
+  theme_minimal() +
+  scale_fill_brewer(palette = "Pastel2")
+```
+
+```{r}
+data_ex |> 
+  filter(PT_YESNO == 1) |> 
+  ggplot(aes(x = initiative, y = Unit_LOS_log, fill = initiative)) +
+  geom_boxplot() +
+  theme_minimal() +
+  scale_fill_brewer(palette = "Pastel2")
+```
+
+
+
+There is an interaction here between PT and unit LOS and initiative.
+
+In other words, you HAVE to filter based on PT
+
+#### MV Total
+
+
+
+```{r}
+ggplot(data_ex, aes(x = PT_YESNO, y = MV_Total_log, fill = initiative)) +
+  geom_boxplot() +
+  theme_minimal() +
+  scale_fill_brewer(palette = "Pastel2")
+```
+
+
+# Correlation Matrix
+
+#### Remove Variables
+
+Here we will remove variables we will not be using in the analysis as previously discussed.
+
+
+
+```{r}
+# Clean up labels of variables.
+data_ex <- data_ex |> 
+  rename(PT_VISITS = `TOTAL THERAPY VISITS`,
+        PT_VISITS_PERC  = `PERCENT OF DAYS WITH THERAPY VISITS`,
+        DAYS_POST_MICU = `ACTUAL DAYS POST MICU`,
+        PT_POST_MICU = `PT or OT VISIT DAYS POST MICU`,
+        PERC_POST_ICU = `PERCENT POST ICU DAYS THERAPY`)
+
+# filter dataset for correlation matrix
+data_sub <- data_ex |> 
+  select(-`PROBLEM LIST DX CODES`, -`PROBLEM LIST DX NAMES`, -DISCH_DISP, -`DEPT BEFORE Unit`, -`DEPT AFTER Unit`, -`CONSULT TO TREAT`, -`ADMIT TO TREAT`)
+data_sub <- data_sub[,1:22]
+```
+
+```{r}
+# Let's clean our output by making a trimmed dataset excluding extaneous variables
+data_for_matrix <- data_sub |> 
+  select(-Age_Range, -Admit_MonthYear, -Age_Quartile, -MV_Total_log, -MV_Total_sqrt, - Unit_LOS_log, - Unit_LOS_boxcox) |> 
+  mutate(SEX = factor(SEX, levels = c("M","F"), labels = c("M", "F"))) |> 
+  select(Unit_LOS, MV_Total, everything())
+
+# We factored our variables at the start. To make a correlation matrix we must reconvert those back to numeric
+data_for_matrix <- data.frame(lapply(data_for_matrix, function(x) if (is.factor(x)) as.numeric(x) else x))
+
+# Make a correlation matrix with all variables of the trimmed data set
+correlation_matrix <- cor(data_for_matrix, use = "complete.obs")
+data_for_matrix
+# Plot the matrix
+corrplot(correlation_matrix, method = "color", addCoef.col = "Black", tl.cex = 0.8, number.cex = 0.5)
+```
+
+
+
+#### Main Obserations
+
+The variables that are most correlated with our outcome variables of `UNIT_LOS` and `MV_Total` are:
+
+ - `HOSPITAL_LOS`
+ - `ADMIT.TO.CONSULT`
+ - `PT_VISITS`
+ - `DAYS.WITH.THERAPY.VISITS`
+ - `AVERAGE THERAPY LENGTH`
+ -  `MAX THERAPY LENGTH`
+ 
+These will be important to examine and potentially control for in our modelS.
+
+# Bivariate Comparisons {#Bi}
+
+::: panel-tabset
+
+## Hospital Length of Stay
+
+
+
+```{r}
+# Create scatterplot
+ggplot(data_ex, aes(x = `HOSPITAL LOS`, y = Unit_LOS)) +
+  geom_point(alpha = 0.5) +
+  theme_minimal() +
+  labs(title = "MICU Length of Stay by Hospital Length of Stay",
+       x = "Hospital Length of Stay",
+       y = "MICU Length of stay")
+```
+
+
+
+This is an interesting shape! This sharp pattern is because some patients were admitted directly into the MICU. So there is a 1 to 1 connection between their hospital length of stay and MICU length of stay.
+
+Basically we probably can't use `UNIT_LOS` as a covariate in this model because it is so intrinsically intertwined with `MICU LOS`.
+
+[Top of Tabset](#Bi)
+
+## Admit to Consult Time
+
+### MICU Length of Stay
+
+
+
+```{r}
+# Create scatterplot
+ggplot(data_ex, aes(x = `ADMIT TO CONSULT`, y = Unit_LOS)) +
+  geom_point() +
+  theme_minimal() +
+  labs(title = "MICU Length of Stay by Admit to Consult Time",
+       x = "Admit to Consult Time",
+       y = "MICU Length of stay") +
+  geom_smooth(method = "lm")
+```
+
+
+
+We can see that a lot of patients that were in the hospital did not receive a consult (values= 0). We may have to filter these patients out or run a zero-inflated regression.
+
+The longer it took between a patient's admit to consult the longer they stayed in the MICU.
+
+#### Total Mechanical Ventilation
+
+
+
+```{r}
+# Create scatterplot
+ggplot(data_ex, aes(x = `ADMIT TO CONSULT`, y = MV_Total)) +
+  geom_point() +
+  theme_minimal() +
+  labs(title = "Total Mechanical Ventilation Time by Admit to Consult Time",
+       x = "Admit to Consult Time",
+       y = "Mechanical Ventilation Time") +
+  geom_smooth(method = "lm")
+```
+
+```{r}
+# Perform the regression
+model <- lm(MV_Total ~ `ADMIT TO CONSULT`, data = data_ex)
+summary(model)
+```
+
+
+
+Similarly, many patients that were not mechanically ventilated.
+
+Otherwise there is a strong linear relationship here.
+
+The longer it took between a patient's admit to consult the more time they spent mechanically ventilated.
+
+[Top of Tabset](#Bi)
+
+## Physical Therapy Visits
+
+#### MICU Length of Stay
+
+
+
+```{r}
+# Create scatterplot
+ggplot(data_ex, aes(x = PT_VISITS, y = Unit_LOS)) +
+  geom_point() +
+  theme_minimal() +
+  labs(title = "MICU Length of Stay by Hospital Length of Stay",
+       x = "Number of PT Visits",
+       y = "MICU Length of stay") +
+  geom_smooth(method = "lm")
+```
+
+```{r}
+# Perform the regression
+model <- lm(Unit_LOS ~ PT_VISITS, data = data_ex)
+summary(model)
+```
+
+
+
+
+This makes sense, patients that needed more intense and frequent PT visits did so because they had more extreme conditions and therefore stayed longer in the MICU.
+
+#### Total Mechanical Ventilation Time
+
+
+
+```{r}
+# Create scatterplot
+ggplot(data_ex, aes(x = PT_VISITS, y = MV_Total)) +
+  geom_point() +
+  theme_minimal() +
+  labs(title = "Mechanical Ventilation Time by Number of PT Visits",
+       x = "Number of PT Visits",
+       y = "Mechanical Ventilation Time") +
+  geom_smooth(method = "lm")
+```
+
+```{r}
+# Perform the regression
+model <- lm(MV_Total ~ PT_VISITS, data = data_ex)
+summary(model)
+```
+
+
+
+Patients that had more PT visits had more time on mechanical ventilation, but they probably had more PT visits BECAUSE they were mechanically ventilated.
+
+[Top of Tabset](#Bi)
+
+## Days with Therapy Visits
+
+#### MICU Length of Stay
+
+
+
+```{r}
+# Create scatterplot
+ggplot(data_ex, aes(x = `DAYS WITH THERAPY VISITS`, y = Unit_LOS)) +
+  geom_point() +
+  theme_minimal() +
+  labs(title = "MICU Length of Stay by Days with Therapy Visits",
+       x = "Days with Therapy Visits",
+       y = "MICU Length of stay") +
+  geom_smooth(method = "lm")
+```
+
+```{r}
+# Perform the regression
+model <- lm(Unit_LOS ~ `DAYS WITH THERAPY VISITS`, data = data_ex)
+summary(model)
+```
+
+
+
+This is basically the same variables as `PT_VISITS`.
+
+#### Mechanical Ventilation Time
+
+
+
+```{r}
+# Create scatterplot
+ggplot(data_ex, aes(x = PT_VISITS, y = MV_Total)) +
+  geom_point() +
+  theme_minimal() +
+  labs(title = "Mechanical Ventilation Time by Number of PT Visits",
+       x = "Number of PT Visits",
+       y = "Mechanical Ventilation Time") +
+  geom_smooth(method = "lm")
+```
+
+```{r}
+# Perform the regression
+model <- lm(MV_Total ~ `DAYS WITH THERAPY VISITS`, data = data_ex)
+summary(model)
+```
+
+
+
+[Top of Tabset](#Bi)
+
+## Average Therapy Length
+
+#### MICU Length of Stay
+
+
+
+```{r}
+# Create scatterplot
+ggplot(data_ex, aes(x = `AVG THERAPY LENGTH`, y = Unit_LOS)) +
+  geom_point() +
+  theme_minimal() +
+  labs(title = "MICU Length of Stay by Average Therapy Length",
+       x = "Average Therapy Length",
+       y = "MICU Length of stay") +
+  geom_smooth(method = "lm")
+```
+
+```{r}
+# Perform the regression
+model <- lm(Unit_LOS ~ `AVG THERAPY LENGTH`, data = data_ex)
+summary(model)
+```
+
+
+
+Weaker but significant relationship.
+
+#### Total Mechanical Ventilation Time
+
+
+
+```{r}
+# Create scatterplot
+ggplot(data_ex, aes(x = `AVG THERAPY LENGTH`, y = MV_Total)) +
+  geom_point() +
+  theme_minimal() +
+  labs(title = "MICU Length of Stay by Average Therapy Length",
+       x = "Average Therapy Length",
+       y = "Total Mechanical Ventilation Time") +
+  geom_smooth(method = "lm")
+```
+
+```{r}
+# Perform the regression
+model <- lm(MV_Total ~ `AVG THERAPY LENGTH`, data = data_ex)
+summary(model)
+```
+
+
+
+Significant but weak. We should control for `Average therapy length`.
+
+[Top of Tabset](#Bi)
+
+## Maximum Therapy Length
+
+#### MICU Length of Stay
+
+
+
+```{r}
+# Create scatterplot
+ggplot(data_ex, aes(x = `MAX THERAPY LENGTH`, y = Unit_LOS)) +
+  geom_point() +
+  theme_minimal() +
+  labs(title = "MICU Length of Stay by Max Therapy Length",
+       x = "Max Therapy Length",
+       y = "MICU Length of stay") +
+  geom_smooth(method = "lm")
+```
+
+```{r}
+# Perform the regression
+model <- lm(Unit_LOS ~ `MAX THERAPY LENGTH`, data = data_ex)
+summary(model)
+```
+
+
+
+#### Total Mechanical Ventilation Time
+
+
+
+```{r}
+# Create scatterplot
+ggplot(data_ex, aes(x = `MAX THERAPY LENGTH`, y = MV_Total)) +
+  geom_point() +
+  theme_minimal() +
+  labs(title = "MICU Length of Stay by Maximum Therapy Length",
+       x = "Maximum Therapy Length",
+       y = "Total Mechanical Ventilation Time") +
+  geom_smooth(method = "lm")
+```
+
+```{r}
+# Perform the regression
+model <- lm(MV_Total ~ `MAX THERAPY LENGTH`, data = data_ex)
+summary(model)
+```
+
+
+
+[Top of Tabset](#Bi)
+
+## Admit to Consult
+
+
+
+```{r}
+data_ex |> 
+  group_by(Admit_MonthYear) |> 
+  summarise(ADMIT_TO_CONSULT_avg = mean(`ADMIT TO CONSULT`, na.rm = T)) |> 
+  ggplot(aes(x = Admit_MonthYear, y = ADMIT_TO_CONSULT_avg)) +
+  geom_line() +
+  theme_minimal() +
+    geom_rect(data = highlight_periods, aes(xmin = start, xmax = end, ymin = -Inf, ymax = Inf), 
+            inherit.aes = FALSE, fill = "lightblue", alpha = 0.2) +
+  annotate("text", x = as.Date("2015-09-01"), y = Inf, 
+           label = "QI-Initiative", color = "skyblue2", size = 4, vjust = 1.5,) +
+  labs(title = "Time from Admit to Consult over Time",
+       x = "Admit Date",
+       y = "Time from Admit to Consult")
+```
+
+
+
+They also successfully decreased the time from admit to consult. Megan may be interested in this.
+
+:::
+
+# Table 1
+
+
+
+```{r}
+# Create labels for variables to make the names of each variable more professional in outputs
+label(data_ex$SEX) <- "Sex"
+label(data_ex$MV_Total) <- "Total Mechanical Ventilation Time"
+label(data_ex$`HOSPITAL LOS`) <- "Hospital Length of Stay"
+label(data_ex$`ADMIT TO CONSULT`) <- "Time From Admit to Consult"
+label(data_ex$`CONSULT TO TREAT`) <- "Time from Consult to Treatment"
+label(data_ex$`ADMIT TO TREAT`) <- "Time from Admit to Treatment"
+label(data_ex$PT_VISITS) <- "Total PT Visits"
+label(data_ex$Unit_LOS) <- "MICU Length of Stay"
+label(data_ex$`DAYS WITH THERAPY VISITS`) <- "Days with PT Visits"
+label(data_ex$PT_VISITS_PERC) <- "% of Days with PT Visits"
+label(data_ex$`AVG THERAPY LENGTH`) <- "Average Therapy Length"
+label(data_ex$`MAX THERAPY LENGTH`) <- "Maximum Therapy Length"
+label(data_ex$`MIN THERAPY LENGTH`) <- "Minimum Therapy Length"
+label(data_ex$DAYS_POST_MICU) <- "Days Post MICU"
+label(data_ex$PT_POST_MICU) <- "PT Post MICU"
+label(data_ex$PERC_POST_ICU) <- "% Post MICU"
+label(data_ex$Age_Range) <- "Age Range"
+label(data_ex$Age_Quartile) <- "Age Quartile"
+label(data_ex$NON_ICU_LOS) <- "NON-ICU Length of Stay"
+label(data_ex$PT_YESNO) <- "Received PT"
+label(data_ex$MV_YN) <- "Received Mechanical Ventilation"
+label(data_ex$initiative) <- "QI Initiative Time Period"
+
+# Changing labels for clearer output
+data_ex$SEX <- factor(data_ex$SEX, levels = c("F", "M"), labels = c("Female", "Male"))
+data_ex$PT_YESNO <- factor(data_ex$PT_YESNO, levels = c(0, 1), labels = c("No", "Yes"))
+```
+
+```{r}
+# Create Table 1 stratified by QI initiative
+table1 <- table1(~ SEX + MV_Total + `HOSPITAL LOS` + `ADMIT TO CONSULT` + `CONSULT TO TREAT` + `ADMIT TO TREAT` + PT_VISITS + Unit_LOS + `DAYS WITH THERAPY VISITS` +  PT_VISITS_PERC + `AVG THERAPY LENGTH` + `MAX THERAPY LENGTH` + `MIN THERAPY LENGTH` +  DAYS_POST_MICU + PT_POST_MICU + PERC_POST_ICU + Age_Range + Age_Quartile + NON_ICU_LOS +  PT_YESNO + MV_YN | initiative, data = data_ex, caption = "Descriptive Statistics by QI-Initiative Time Period", overall = c(left="Total"))
+table1
+```
+
+
+
+
+# Bonus
+
+## Check for Repeat Admissions 
+
+
+
+```{r}
+# Check for repeate admissions
+length(unique(data_ex$id))
+dim(data_ex)
+```
+
+
+
+The number of unique patient id's is the same number as the number of rows in our data set.
+
+So we do not have repeate admissions in this data set and do not need to account for repeated measures! (We meet the assumption of independent observations)
+
+:::
+
+# Bonus
+
+I just learned how to animate plots so I'll do that for practice and fun here
+
+
+
+```{r}
+library(splines)
+library(png)
+library(gganimate)
+library(gifski)
+# Summarize and plot the data
+data_ex |> 
+  group_by(Admit_MonthYear, PT_YESNO) |> 
+  summarise(avg_Unit_LOS = mean(Unit_LOS, na.rm = T)) |> 
+  filter(Admit_MonthYear > as.Date("2012-01-01")) |> 
+  ggplot(aes(x = Admit_MonthYear, y = avg_Unit_LOS, color = PT_YESNO, group = PT_YESNO)) +
+  geom_line() +
+  theme_minimal() +
+  geom_rect(data = highlight_periods, aes(xmin = start, xmax = end, ymin = -Inf, ymax = Inf), 
+            inherit.aes = FALSE, fill = "lightblue", alpha = 0.2) +
+  labs(title = "Average MICU LOS over Time by Physical Therapy",
+       x = "Admit Date",
+       y = "Avg MICU LOS") +
+  transition_reveal(Admit_MonthYear)
+```
+
+```{r}
+# Plot the data
+ggplot(summary_data, aes(x = Admit_MonthYear, y = percentage)) +
+  geom_line() +
+  theme_minimal() +
+  geom_rect(data = highlight_periods, aes(xmin = start, xmax = end, ymin = -Inf, ymax = Inf), 
+            inherit.aes = FALSE, fill = "lightblue", alpha = 0.2) +
+  annotate("text", x = as.Date("2015-09-01"), y = Inf, 
+           label = "QI-Initiative", color = "skyblue2", size = 4, vjust = 1.5) +
+  labs(title = "Percentage of Admissions Receiving Physical Therapy",
+       x = "Admit Date",
+       y = "Percentage") +
+  transition_reveal(Admit_MonthYear)
+```
+
+```{r}
+# Summarize and plot the data
+data_ex |> 
+  group_by(Admit_MonthYear) |> 
+  summarise(avg_ADMIT_TO_TREAT = mean(`ADMIT TO TREAT`, na.rm = T)) |> 
+  ggplot(aes(x = Admit_MonthYear, y = avg_ADMIT_TO_TREAT)) +
+  geom_line() +
+  theme_minimal() +
+  geom_rect(data = highlight_periods, aes(xmin = start, xmax = end, ymin = -Inf, ymax = Inf), 
+            inherit.aes = FALSE, fill = "lightblue", alpha = 0.2) +
+  annotate("text", x = as.Date("2015-09-01"), y = Inf, 
+           label = "QI-Initiative", color = "skyblue2", size = 4, vjust = 1.5,) +
+  labs(title = "Time from Admit to Therapy over Time",
+       x = "Admit Date",
+       y = "Time from Admit to Therapy") +
+  transition_reveal(Admit_MonthYear)
+```
+
+```{r}
+# Summarize and plot the data
+# data_ex |> 
+#   group_by(Admit_MonthYear) |> 
+#   summarise(avg_pct_therapy = mean(`PERCENT OF DAYS WITH THERAPY VISITS`, na.rm = T)) |> 
+#   ggplot(aes(x = Admit_MonthYear, y = avg_pct_therapy)) +
+#   geom_line() +
+#   theme_minimal() +
+#   geom_rect(data = highlight_periods, aes(xmin = start, xmax = end, ymin = -Inf, ymax = Inf), 
+#             inherit.aes = FALSE, fill = "lightblue", alpha = 0.2) +
+#   labs(title = "Average Percentage of Days with Physical Therapy Over Time",
+#        x = "Admit Date",
+#        y = "Average Days with Physical Therapy (%)") +
+#   transition_reveal(Admit_MonthYear)
+```
+
+
+
+
+# Table 1
+
+# Correlation Matrix
+
+# To Do
+
+Run Correlation matrix
+
+Make Table 1
+
+Plot disjointed lm's across each time period
+
+
+
