@@ -6,6 +6,11 @@ library(readxl)
 library(shinyWidgets)
 library(plotly)
 
+# Simple function to capitlize first letter of a word, for the user options
+capitalize_first <- function(x) {
+  paste0(toupper(substr(x, 1, 1)), substr(x, 2, nchar(x)))
+}
+
 page_navbar(
   title = "Clinical Trials Visualization App",
   theme = bs_theme(
@@ -107,7 +112,10 @@ page_navbar(
     )
   ),
   
-  ########## Adverse Events
+  ##############################################################################################
+  ########### ADVERSE EVENTS ############
+  
+  ##### Adverse Events Summary
   nav_panel(
     title = "Adverse Events",
     tabsetPanel(
@@ -118,18 +126,21 @@ page_navbar(
                    selectInput("summarize_by", "Summarize By:",
                                choices = c("Participants", "Events")),
                    selectInput("color_by", "Color By:",
-                               choices = c("None", "Sex", "Age", "Race", "Severity", "Outcome")),
+                               choices = c("None", "Sex", "Race", "Severity", "Outcome", "Seriousness", "Relatedness"),
+                               selected = "None"),
                    selectInput("severity", "Severity:", 
                                choices = c("All", "Mild", "Moderate", "Severe")),
                    selectInput("outcome", "Outcome:",
-                               choices = c("All", "Unresolved", "Resolved", "Resolved with Sequelae")),
+                               choices = c("All", capitalize_first(tolower(unique(ae$AEOUT))))),
                    selectInput("site_filter2", "Site:",  
                                choices = c("All", "Site 01", "Site 02", "Site 03", "Site 04", "Site 05")),
                    selectInput("serious", "Serious?:",
                                choices = c("All", "Yes", "No")),
-                   selectInput("related", "Related?",
-                               choices = "All", unique(ae$AEREL)))
-               )
+                   selectInput("related", "Related to Treatment?",
+                               choices = c("All", "Not Related", "Unlikely Related", "Possibly Related",
+                                           "Probably Related", "Definitely Related"))),
+                 plotOutput("plot2a")
+               ),
       ),
       tabPanel("Adverse Events by Site"),
       tabPanel("Adverse Events Timeline")
@@ -140,7 +151,6 @@ page_navbar(
   nav_panel(
     title = "Clinical Timelines"
   ),
-  
   ########## Safety
   nav_panel(
     title = "Safety",
@@ -151,3 +161,8 @@ page_navbar(
     )
   )
 )
+
+
+
+# Look into shinydashboard package. Has some cool themes.
+# Dashboard$page, dashboard$sidebar(), etc.

@@ -46,11 +46,19 @@ sv <- sv |>
   filter(VISITNUM %in% c(0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0)) |>
   filter(SVSTATUS != "Terminated")
 
+# Join SITE, SEX, and RACE to AE domain
+ae <- left_join(ae, select(dm, USUBJID, SITEID, SEX, RACE), by = "USUBJID")
+
 #########################################################################################################
 
 ############ Define server logic
 
 server <- function(input, output, session) {
+  
+  
+  #########################################################################################################
+  
+  ########## DASHBOARD ##########
 
   ########### Accrual
 
@@ -402,7 +410,138 @@ server <- function(input, output, session) {
   ggplotly(p1f, tooltip = "text") |> 
     config(displayModeBar = FALSE)
   })
+  
+  #########################################################################################################
+  
+  ########## ADVERSE EVENTS ###########
+  
+  ########## Adverse Events Summary
+  
+  # Reactive for dynamic column selection
+  color_by <- reactive({
+    if (input$color_by == "None"){
+      NULL
+    } else if (input$color_by == "Severity") {
+      "AESEV"  
+    } else if (input$color_by == "Outcome") {
+      "AEOUT"  
+    } else if (input$color_by == "Sex") {
+      "SEX"
+    } else if (input$color_by == "Race") {
+      "RACE"
+    } else if (input$color_by == "Seriousness") {
+      "AESER"
+    }
+    else if (input$color_by == "Relatedness") {
+      "AEREL"
+    }
+  })
+
+  # Filter data set based on user input
+  filtered_ae <- reactive({
+    
+    # Start with original data set
+    data <- ae
+      
+    # Filter by severity
+    if (input$severity != "All") {
+      data <- data |>  filter(AESEV == toupper(input$severity))
+    }
+    
+    # Filter by outcome
+    if (input$outcome != "All") {
+      data <- data |>  filter(AEOUT == toupper(input$outcome))
+    }
+    
+    # Filter by Site
+    if (input$site_filter2 != "All") {
+      data <- data |> filter(SITEID == gsub("[^0-9]", "", input$site_filter2)) # Removes text to match input with how the data is coded (i.e. "Site 01" -> "01")
+    }
+    
+    # Filter by seriousness
+    if (input$serious != "All") {
+      data <- data |>  filter(AESER == substring(input$serious, 1, 1))
+    }
+    
+    # Filter by relatedness
+    if (input$related != "All") {
+      data <- data |>  filter(AEREL == toupper(input$related))
+    }
+    
+    # Return filtered data set
+    data
+  })
+  
+  # Color the barplot based on user input
+  ae_sort <- reactive({
+    
+    # Compute total counts for sorting
+    total_counts <- filtered_ae() |>
+      group_by(AEBODSYS) |>
+      summarise(total_n = n(), .groups = "drop") |>
+      arrange(total_n)
+    
+    if (is.null(color_by())) {
+      # Group only by AEBODSYS when no grouping is selected
+      filtered_ae() |>
+        group_by(AEBODSYS) |>
+        summarise(n = n(), .groups = "drop") |>
+        mutate(AEBODSYS = factor(AEBODSYS, levels = total_counts$AEBODSYS))  # Relevel based on total counts
+    } else {
+      # Group by AEBODSYS and the selected variable
+      filtered_ae() |>
+        group_by(AEBODSYS, .data[[color_by()]]) |>
+        summarise(n = n(), .groups = "drop") |>
+        mutate(AEBODSYS = factor(AEBODSYS, levels = total_counts$AEBODSYS))  # Relevel based on total counts
+    }
+  })
+  
+  # Render the plot
+  output$plot2a <- renderPlot({
+    if (is.null(color_by())) {
+      # Plot without fill grouping
+      ggplot(ae_sort(), aes(x = n, y = AEBODSYS)) +
+        geom_bar(stat = "identity", position = "stack") +
+        theme_minimal() +
+        labs(
+          title = "Adverse Event Summary",
+          y = "Body System / Organ Class",
+          x = "Subject Count"
+        ) +
+        theme(
+          panel.grid = element_blank(),
+          axis.text.x = element_text(size = 12),
+          axis.text.y = element_text(size = 12),
+          axis.title.y = element_text(size = 14),
+          axis.title.x = element_text(size = 14),
+          legend.title = element_text(size = 14),
+          legend.text = element_text(size = 14)
+        )
+    } else {
+      # Plot with fill grouping
+      ggplot(ae_sort(), aes(x = n, y = AEBODSYS, fill = .data[[color_by()]])) +
+        geom_bar(stat = "identity", position = "stack") +
+        theme_minimal() +
+        labs(
+          title = "Adverse Event Summary",
+          y = "Body System / Organ Class",
+          x = "Subject Count",
+          fill = input$color_by  # Dynamic legend label
+        ) +
+        theme(
+          panel.grid = element_blank(),
+          axis.text.x = element_text(size = 12),
+          axis.text.y = element_text(size = 12),
+          axis.title.y = element_text(size = 14),
+          axis.title.x = element_text(size = 14),
+          legend.title = element_text(size = 14),
+          legend.text = element_text(size = 14)
+        )
+    }
+  })
+  
 }
+
 
 ########################## TO DO
 # Right now for my accrual bar, the tooltip is split between statuses. I want to make it a single tooltip.
@@ -410,52 +549,14 @@ server <- function(input, output, session) {
 # Also add drill down functionality to accrual plot 1a
 # 
 # Maybe make visit completion bar chart to be hovermode = "xxx" instead of "x"
+#
+# Here's what I think I want my interactivity for the dashboard to be:
+#       Whenever you click a bar on the accrual chart
+#       it sets accrual over time to whatever arm filter the accrual chart is on
+#       and then sets the site for accrual over time to the site that got clicked
+#       and changes the site in the visit progression plot to the site that got clicked.
+#
+# Add a reset filter to the AE summary plot
+#   Shift the filters to be in an order I prefer (Site at top or higher up)
+#       
 ################################
-
-# 
-# 
-# # 
-# 
-# library(shiny)
-# library(plotly)
-# library(ggplot2)
-# 
-# # Define UI
-# ui <- fluidPage(
-#   plotlyOutput("plot"),  # Main plot
-#   div(style = "position:absolute; bottom:10px; right:10px; padding:5px; font-size:16px; background:#f8f8f8; border:1px solid #ccc;",
-#       textOutput("hovered_date"))  # Separate hover box
-# )
-# 
-# # Define Server Logic
-# server <- function(input, output) {
-#   # Create ggplotly object
-#   output$plot1b <- renderPlotly({
-#     ggplotly(p1b, tooltip = "text") |>
-#       layout(
-#         hovermode = "x unified",
-#         legend = list(
-#           title = list(),
-#           x = 0.5,
-#           xanchor = "center",
-#           y = -0.05,
-#           orientation = "h")
-#       ) |>
-#       config(displayModeBar = FALSE)
-#   })
-# 
-#   output$hovered_date <- renderText({
-#     hover_data <- event_data("plotly_hover")
-# 
-#     if (!is.null(hover_data) && "x" %in% names(hover_data)) {
-#       hover_date <- as.Date(hover_data$x, origin = "1970-01-01")  # Ensure proper conversion
-# 
-#       return(paste("Date:", unique(hover_date)))  # Filter unique values
-#     }
-#   })
-# }
-# 
-# # Run App
-# shinyApp(ui, server)
-
-
