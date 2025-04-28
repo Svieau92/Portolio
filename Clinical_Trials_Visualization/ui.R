@@ -35,27 +35,51 @@ page_navbar(
     tabsetPanel(
       layout_columns(
         
-        ########## Accrual
+        ########## Actual Vs Target Screened ##########
+        card(card_header(h5("Actual vs. Target Subjects Screened")), plotlyOutput("plot1d")),
+        
+        ########## Actual Vs Target Randomized ##########
+        card(card_header(h5("Actual vs. Target Subjects Randomized")), plotlyOutput("plot1e")),
+        
+        ########## Completions and Discontinuations ##########
+        card(card_header(h5("Completions and Discontinuations")), plotlyOutput("plot1f"))
+      )
+      ,
+      layout_columns(
+        
+        ########## Accrual ##########
         card(
           card_header(
             div(style = "display: flex; justify-content: space-between; align-items: center;",
-                h4("Accrual"),
-                selectInput("arm_filter1a", "Arm:", 
-                            choices = c("All", unique(accrual$`filter:Arm`)), 
-                            selected = "All",
-                            width = "150px")
+                h5("Accrual"),
+                
+                 # Restrict radio button width to prevent excessive space
+                 div(style = "margin-left: 25px; display: flex; align-items: center; width: 150px;",
+                     radioButtons("click_mode", "Click Enables:", choices = c("Filter by Site", "Drill Down"),
+                                  inline = TRUE, width = "150px")  # Set explicit width
+                 ),
+                
+                # Outer wrapper ensures everything is aligned correctly
+                div(style = "margin-left: 0px; display: flex; justify-content: flex-end; align-items: center; width: 100%; gap: 20px;",  
+                    selectInput("arm_filter1a", "Arm:",  
+                                choices = c("All", unique(accrual$`filter:Arm`)),  
+                                selected = "All",  
+                                width = "150px")
+                )
             )
           ),
+          
           card_body(
-            plotlyOutput("plot1a")
+            div(style = "overflow-x: hidden; width: 100%;",  # Ensure no horizontal scrolling
+                plotlyOutput("plot1a")
+            )
           )
         ),
-        
-        ########## Accrual Over Time
+        ########## Accrual Over Time ##########
         card(
           card_header(
             div(style = "display: flex; justify-content: space-between; align-items: center;",
-                h4("Accrual Over Time"),
+                h5("Accrual Over Time"),
                 selectInput("arm_filter1b", "Arm:", 
                             choices = c("All", unique(accrual$`filter:Arm`)), 
                             selected = "All",
@@ -76,16 +100,20 @@ page_navbar(
           )
         ),
         
-        ########## Visit Completion
+        ########## Visit Completion ##########
         card(
           card_header(
             div(style = "display: flex; justify-content: space-between; align-items: center;",
-                h4("Visit Completion"),
+                h5("Visit Completion"),
                 div(style = "margin-left: auto",
+                selectInput("arm_filter1c", "Arm",
+                            choices = c("All", unique(sv$ARM)), 
+                            selected = "All",
+                            width = "140px")),
                 selectInput("site_filter1c", "Site:",  
                             choices = c("All", "Site 01", "Site 02", "Site 03", "Site 04", "Site 05"), 
                             selected = "All",
-                            width = "150px")),
+                            width = "150px"),
             div(style = "display: flex; justify-content: space-between; align-items: center;",
                 radioButtons("nperc_filter", label = NULL,
                              choices = c("%", "N"),
@@ -98,51 +126,73 @@ page_navbar(
           )
         )
       ),
-      layout_columns(
-        
-        ########## Actual Vs Target Screened
-        card(card_header("Actual vs. Target Subjects Screened"), plotlyOutput("plot1d")),
-        
-        ########## Actual Vs Target Randomized
-        card(card_header("Actual vs. Target Subjects Randomized"), plotlyOutput("plot1e")),
-        
-        ########## Completions and Discontinuations
-        card(card_header("Completions and Discontinuations"), plotlyOutput("plot1f"))
+      card_body(
+        actionBttn("reset_dashboard", "Reset", style = "stretch", size = "m", icon = icon("undo"), color = "primary"),
+      ),
+      card_body(
+        h4("Details-On-Demand", align = "center"),
+        DT:::dataTableOutput("drill_down_table_1")
       )
+      
     )
   ),
   
+  
+  
+  
+  
+  
   ##############################################################################################
+  
   ########### ADVERSE EVENTS ############
   
-  ##### Adverse Events Summary
+  ########## Adverse Events Summary ##########
   nav_panel(
     title = "Adverse Events",
     tabsetPanel(
-      tabPanel("Adverse Events Summary",
+      tabPanel("Adverse Events Explorer",
                layout_sidebar(
                  sidebar = sidebar(
                    bg = "lightgrey",
+                   actionBttn("reset_ae", "Reset", style = "stretch", size = "sm", icon = icon("undo")),
+                   HTML("<u>Choose Visual Parameters</u>"),
                    selectInput("summarize_by", "Summarize By:",
-                               choices = c("Participants", "Events")),
+                               choices = c("Events", "Patients")),
                    selectInput("color_by", "Color By:",
                                choices = c("None", "Sex", "Race", "Severity", "Outcome", "Seriousness", "Relatedness"),
                                selected = "None"),
+                   HTML("<u>Choose Filters</u>"),
                    selectInput("severity", "Severity:", 
                                choices = c("All", "Mild", "Moderate", "Severe")),
                    selectInput("outcome", "Outcome:",
                                choices = c("All", capitalize_first(tolower(unique(ae$AEOUT))))),
-                   selectInput("site_filter2", "Site:",  
-                               choices = c("All", "Site 01", "Site 02", "Site 03", "Site 04", "Site 05")),
                    selectInput("serious", "Serious?:",
                                choices = c("All", "Yes", "No")),
                    selectInput("related", "Related to Treatment?",
                                choices = c("All", "Not Related", "Unlikely Related", "Possibly Related",
-                                           "Probably Related", "Definitely Related"))),
-                 plotOutput("plot2a")
-               ),
+                                           "Probably Related", "Definitely Related")),
+                   numericInputIcon("prevalence", "Prevalence", 
+                                    value = 0,
+                                    icon = list(icon("greater-than-equal"), icon("percent")))),
+                 fluidRow(
+                   column(6, plotlyOutput("plot2a",height = "600px")),
+                   column(6, plotlyOutput("plot2b", height = "520px"))
+                 ),
+                 absolutePanel(
+                   top = 10, right = 10,  # Position the dropdown at the top-right corner
+                   width = 120,
+                   style = "z-index: 1000; background-color: white; padding: 10px;",
+                   selectInput(
+                     "site_filter2", "Site:",
+                     choices = c("All", "Site 01", "Site 02", "Site 03", "Site 04", "Site 05")
+                   )
+                 ),
+                 h4("Details-On-Demand", align = "center"),
+                 DT:::dataTableOutput("drill_down_table_2")
+                 
+               )
+              
       ),
-      tabPanel("Adverse Events by Site"),
       tabPanel("Adverse Events Timeline")
     )
   ),
@@ -161,7 +211,6 @@ page_navbar(
     )
   )
 )
-
 
 
 # Look into shinydashboard package. Has some cool themes.

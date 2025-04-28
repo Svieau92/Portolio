@@ -6,12 +6,14 @@ library(ggplot2)
 library(dplyr)
 library(tidyverse)
 library(forcats) # For reversing categories for plots
-library(plotly)
+library(plotly) # For interactive plots
 library(safetyGraphics) # Rho visualizations
+library(shinyWidgets) # For cooler icons
+library(DT) # For outputting data tables
 
 #########################################################################################################
 
-########## Load Data Sets
+########## Load Data Sets ##########
 
 # Load accrual data set
 accrual <- read_csv(r"(C:\Users\sviea\Documents\Portfolio\Data_Visualization\Clinical_Trials\Data\dashboard-accrual.csv)")
@@ -25,16 +27,13 @@ dm <- read_csv(r"(C:\Users\sviea\Documents\Portfolio\Data_Visualization\Clinical
 # Load Adverse Events Data set
 ae <- read_csv(r"(C:\Users\sviea\Documents\Portfolio\Data_Visualization\Clinical_Trials\Data\ae.csv)")
 
-########## Manipulate Data sets
+########## Manipulate Data sets ##########
 
 # Filter accrual dataset to latest day per patient
 accrual_summary <- accrual |>
   group_by(subjid) |> 
   filter(date == max(date)) |>
   ungroup()
-
-# Merge demographics with subject visits to get the SITEID variable
-sv <- left_join(sv, select(dm, "USUBJID", "SITEID"), by = "USUBJID")
 
 # Duplicate for discontinuations plot
 sv_sub <- sv |> 
@@ -46,8 +45,40 @@ sv <- sv |>
   filter(VISITNUM %in% c(0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0)) |>
   filter(SVSTATUS != "Terminated")
 
-# Join SITE, SEX, and RACE to AE domain
-ae <- left_join(ae, select(dm, USUBJID, SITEID, SEX, RACE), by = "USUBJID")
+# Peform a merge so we can get the trial arm variable onto the SV domain
+sv <- left_join(sv, select(dm, USUBJID, SITEID, ARM), by  = "USUBJID")
+
+# Join SITE, SEX, and RACE, and REFENDY (subject days in trial) to AE domain
+ae <- left_join(ae, select(dm, USUBJID, SITEID, SEX, RACE, RFENDY), by = "USUBJID")
+
+# Clean up AETERM labels
+table(ae$AEBODSYS)
+ae <- ae |> 
+  mutate(AEBODSYS = recode(AEBODSYS,
+                           "Cardiac disorders" = "Cardiac",
+                           "Ear and labyrinth disorders" = "Ear and Labryinth",
+                           "Endocrine disorders" = "Endocrine",
+                           "Eye disorders" = "Eye",
+                           "Gastrointestinal disorders" = "Gastrointestinal",
+                           "General disorders and administration sit conditions" = "General Disorders",
+                           "General disorders and administration site conditions" = "General Disorders",
+                           "Hepatobiliary disorders" = "Hepatobiliary",
+                           "Immune system disorders" = "Immune System",
+                           "Infections and infestations" = "Infections and Infestations",
+                           "Injury, poisoning and procedura complications" = "Injury & Poisoning",
+                           "Injury, poisoning and procedural complications" = "Injury & Poisoning",
+                           "Metabolism and nutrition disorders" = "Metabolic",
+                           "Musculoskeletal and connective tissu disorders" = "Musculoskeletal",
+                           "Neoplasms benign, malignant an unspecified (incl cysts and polyps)" = "Neoplasms",
+                           "Nervous system disorders" = "Nervous System",
+                           "Pregnancy, puerperium and perinata conditions" = "Pregnancy Complications",
+                           "Psychiatric disorders" = "Psychiatric",
+                           "Renal and urinary disorders" = "Renal and Urinary",
+                           "Reproductive system and breast disorders" = "Reproductive System",
+                           "Respiratory, thoracic and mediastina disorders" = "Respiratory",
+                           "Skin and subcutaneous tissue disorders" = "Skin & Tissue",
+                           "Vascular disorders" = "Vascular",
+                            "Blood and lymphatic system disorders" = "Blood and Lymphatic"))
 
 #########################################################################################################
 
@@ -60,7 +91,7 @@ server <- function(input, output, session) {
   
   ########## DASHBOARD ##########
 
-  ########### Accrual
+  ########### Accrual ##########
 
   # Create a reactive dataset based on user input
   accrual_filtered <- reactive({
@@ -132,7 +163,13 @@ server <- function(input, output, session) {
 
   })
   
-  ########## Accrual Over Time
+  
+  
+  
+  
+  
+  
+  ########## Accrual Over Time ##########
   
   output$plot1b <- renderPlotly({
     
@@ -161,7 +198,6 @@ server <- function(input, output, session) {
     group_by(population) |> 
     fill(cumulative_total, .direction = "down")  # Carry forward the last known value
 
-  
   # Create plot
   p1b <- ggplot(accrual_over_time, aes(x = date, 
                                        y = cumulative_total, 
@@ -180,7 +216,6 @@ server <- function(input, output, session) {
           legend.position = "bottom",
           legend.text = element_text(size = 14))
   
-  
   # Convert ggplot to plotly object
   ggplotly(p1b, tooltip = "text", source = "plot1b") |> 
     layout(
@@ -195,6 +230,7 @@ server <- function(input, output, session) {
     config(displayModeBar = FALSE)
   })
   
+  # Plot hovered date object
   output$hovered_date <- renderText({
         hover_data <- event_data("plotly_hover", source = "plot1b")
 
@@ -205,12 +241,18 @@ server <- function(input, output, session) {
         }
       })
   
-  ########## Visit Completion
+  
+  
+  
+  
+  
+  
+  ########## Visit Completion ##########
 
   #### Create a reactive dataset based on user input
   sv_filtered <- reactive({
     
-    # Reactivity base on site filter
+    # Reactivity based on site filter
     if (input$site_filter1c != "All") {
       if (input$site_filter1c == "Site 01") {
         sv <- sv |> filter(SITEID == "01")
@@ -225,6 +267,11 @@ server <- function(input, output, session) {
       }
     }
     
+    # Reactivity based on arm filter
+    if (input$arm_filter1c != "All") {
+      sv <- sv |> filter(ARM == input$arm_filter1c)
+    }
+
     # Reactivity base on %/N filter
     if (input$nperc_filter == "%") {
       sv_summary <- sv |>
@@ -267,7 +314,7 @@ server <- function(input, output, session) {
     } else {
       
       # Compute counts manually for hover tooltip
-      sv_summary <- sv_filtered() %>%
+      sv_summary <- sv_filtered() |> 
         count(VISITNUM, SVSTATUS)
       
       # Now plot using the pre-summarized data
@@ -303,7 +350,13 @@ server <- function(input, output, session) {
       config(displayModeBar = FALSE)  # Hide zoom/pan buttons
   })
   
-  ########### Screened vs Target
+  
+  
+  
+  
+  
+  
+  ########### Screened vs Target ##########
   
   # Get current total number of subjects screened
   screened <- nrow(accrual_summary)
@@ -318,8 +371,10 @@ server <- function(input, output, session) {
   output$plot1d <- renderPlotly({
     
     # Create Plot
-    p1d <- ggplot(total_screened, aes(x = value, y = category)) +
-      geom_col(aes(text = paste("Total Screened:", value)), fill = "#A6CEE3") +
+    p1d <- ggplot(total_screened, aes(x = value, 
+                                      y = category)) +
+      geom_col(aes(text = paste("Total Screened:", value)), 
+               fill = "#A6CEE3") +
       labs(y = "Subjects Screened", x = NULL) + 
       theme_minimal() +
       theme(axis.text.y = element_blank(), 
@@ -327,18 +382,27 @@ server <- function(input, output, session) {
             axis.text.x = element_text(size = 14),
             axis.title.y = element_text(size = 14)) +
       geom_vline(xintercept = 150, linetype = "dotted", size = 1) +
-      xlim(0,160) +
-      geom_text(aes(x = 160, label = "Target"), hjust = 0, size = 3) +
+      xlim(0,180) +
+      geom_text(aes(x = 170, label = "Screened \nTarget"), hjust = 0, size = 3) +
       
       # Invisible point for tooltip
-      geom_point(aes(x = 160, y = 1, text = "Target Goal: 150"), alpha = 0)
+      geom_point(aes(x = 170, y = 1, text = "Target Goal: 150"), alpha = 0)
     
     # Convert to plotly object
-    ggplotly(p1d, tooltip = "text") |> 
+     plotly_obj_1d <- ggplotly(p1d, tooltip = "text", source = "plot1d") |> 
       config(displayModeBar = FALSE)  # Hide zoom/pan buttons
+       
+    event_register(plotly_obj_1d, "plotly_click")  # Register click event
+    plotly_obj_1d
   })
   
-  ########## Randomized vs Target
+
+  
+  
+  
+  
+  
+  ########## Randomized vs Target ##########
   
   output$plot1e <- renderPlotly({
   
@@ -358,18 +422,27 @@ server <- function(input, output, session) {
           axis.text.x = element_text(size = 14),
           axis.title.y = element_text(size = 14)) +
     geom_vline(xintercept = 100, linetype = "dotted", size = 1) + 
-    xlim(0,110) +
-    geom_text(aes(x = 107, label = "Target"), hjust = 0, size = 3) +
+    xlim(0,130) +
+    geom_text(aes(x = 120, label = "Randomized \nTarget"), hjust = 0, size = 3) +
     
     # Invisible point for tooltip
-    geom_point(aes(x = 107, y = 1, text = "Target Goal: 100"), alpha = 0)
+    geom_point(aes(x = 120, y = 1, text = "Target Goal: 100"), alpha = 0)
   
   # Convert to plotly object
-  ggplotly(p1e, tooltip = "text") |> 
+  plotly_obj_1e <- ggplotly(p1e, tooltip = "text", source = "plot1e") |> 
     config(displayModeBar = FALSE)
+  
+  event_register(plotly_obj_1e, "plotly_click")  # Register click event
+  plotly_obj_1e
   })
   
-  ########## Discontinuations and Completions
+  
+  
+  
+  
+  
+  
+  ########## Discontinuations and Completions ##########
   
   output$plot1f <- renderPlotly({
     
@@ -407,140 +480,475 @@ server <- function(input, output, session) {
           legend.position = "none")
   
   # Convert to plotly object
-  ggplotly(p1f, tooltip = "text") |> 
+  plotly_obj_1f <- ggplotly(p1f, tooltip = "text", source = "plot1f") |> 
     config(displayModeBar = FALSE)
+  
+  
+  event_register(plotly_obj_1f, "plotly_click")  # Register click event
+  plotly_obj_1f
+  
   })
+  
+  
+  ########### Details-On-Demand Dataset - Dashboard ###########
+  
+  # Initialize Dashboard Data set
+  data_dashboard <- reactiveValues(data = NULL)
+  
+  # Observe the Reset Button
+  observeEvent(input$reset_dashboard, {
+    # Reset all inputs to their default values
+    updateSelectInput(session, "click_mode", selected = "Filter by Site")
+    updateSelectInput(session, "arm_filter1a", selected = "All")
+    updateSelectInput(session, "arm_filter1b", selected = "All")
+    updateSelectInput(session, "site_filter1b", selected = "All")
+    updateSelectInput(session, "arm_filter1c", selected = "All")
+    updateSelectInput(session, "site_filter1c", selected = "All")
+    updateSelectInput(session, "nperc_filter", selected = "N")
+  
+    
+    # Reset data set
+    data_dashboard$data <- NULL
+  })
+  
+  
+  # Observe click events 
+  
+  # Click event for plot 1d
+  observeEvent(event_data("plotly_click", source = "plot1d"), {
+    click_info_1d <- event_data("plotly_click", source = "plot1d")
+    if (!is.null(click_info_1d)) {
+      data_dashboard$data <- accrual |> 
+        filter(population == "Screened") |> 
+        select(-category_info)
+    }
+  })
+  
+  # Click event for plot 1e
+  observeEvent(event_data("plotly_click", source = "plot1e"), {
+    click_info_1e <- event_data("plotly_click", source = "plot1e")
+    if (!is.null(click_info_1e)) {
+      data_dashboard$data <- accrual |> 
+        filter(population != "Screened") |> 
+        select(-category_info)
+    }
+  })
+  
+  # Click event for plot 1f
+
+  
+  
+  # If reset is clicked, this ensures the datatable resets to show NULL
+  output$drill_down_table_1 <- DT::renderDataTable({
+    if (is.null(data_dashboard$data)) {
+      return(data.frame(Message = "No data to display—click a bar to explore details"))
+    }
+    
+    # Code generated by ChaptGPT to print all text in the data table in a single row
+    DT::datatable(
+      data_dashboard$data,
+      extensions = "Buttons", 
+      options = list(
+        columnDefs = list(list(
+          targets = "_all",
+          render = JS(
+            "function(data, type, row) {
+            return '<div style=\"white-space: nowrap; overflow: hidden; text-overflow: ellipsis;\">' + data + '</div>';
+          }"
+          )
+        )),
+        scrollX = TRUE,
+        dom = "frtipB",
+        buttons = list(
+          list(extend = "csv", text = "Download CSV")
+        )
+      ),
+      class = "compact"
+    )
+  })
+  
+
+  
+  
+  
+  
+  
+  
+  
   
   #########################################################################################################
   
   ########## ADVERSE EVENTS ###########
   
-  ########## Adverse Events Summary
+  ########## Adverse Events Summary ###########
+  
+  # Create a reactive value for the details on demand dataset
+  # Set it to default of null
+  clicked_aebodysys_val <- reactiveVal(NULL)
+
+  # Define the clicked_aebodsys reactive
+  clicked_aebodysys <- reactive({
+    clicked_aebodysys_val()
+  })
+  
+  # Observe the Reset Button
+  observeEvent(input$reset_ae, {
+    # Reset all inputs to their default values
+    updateSelectInput(session, "summarize_by", selected = "Events")
+    updateSelectInput(session, "color_by", selected = "None")
+    updateSelectInput(session, "severity", selected = "All")
+    updateSelectInput(session, "outcome", selected = "All")
+    updateSelectInput(session, "site_filter2", selected = "All")
+    updateSelectInput(session, "serious", selected = "All")
+    updateSelectInput(session, "related", selected = "All")
+    updateSelectInput(session, "prevalence", selected = 0)
+    
+    # Reset clicked AEBODSYS
+    clicked_aebodysys_val(NULL)
+  })
   
   # Reactive for dynamic column selection
   color_by <- reactive({
-    if (input$color_by == "None"){
-      NULL
-    } else if (input$color_by == "Severity") {
-      "AESEV"  
-    } else if (input$color_by == "Outcome") {
-      "AEOUT"  
-    } else if (input$color_by == "Sex") {
-      "SEX"
-    } else if (input$color_by == "Race") {
-      "RACE"
-    } else if (input$color_by == "Seriousness") {
-      "AESER"
-    }
-    else if (input$color_by == "Relatedness") {
-      "AEREL"
-    }
-  })
-
-  # Filter data set based on user input
-  filtered_ae <- reactive({
-    
-    # Start with original data set
-    data <- ae
-      
-    # Filter by severity
-    if (input$severity != "All") {
-      data <- data |>  filter(AESEV == toupper(input$severity))
-    }
-    
-    # Filter by outcome
-    if (input$outcome != "All") {
-      data <- data |>  filter(AEOUT == toupper(input$outcome))
-    }
-    
-    # Filter by Site
-    if (input$site_filter2 != "All") {
-      data <- data |> filter(SITEID == gsub("[^0-9]", "", input$site_filter2)) # Removes text to match input with how the data is coded (i.e. "Site 01" -> "01")
-    }
-    
-    # Filter by seriousness
-    if (input$serious != "All") {
-      data <- data |>  filter(AESER == substring(input$serious, 1, 1))
-    }
-    
-    # Filter by relatedness
-    if (input$related != "All") {
-      data <- data |>  filter(AEREL == toupper(input$related))
-    }
-    
-    # Return filtered data set
-    data
+    switch(input$color_by,
+           "None" = NULL,
+           "Severity" = "AESEV",
+           "Outcome" = "AEOUT",
+           "Sex" = "SEX",
+           "Race" = "RACE",
+           "Seriousness" = "AESER",
+           "Relatedness" = "AEREL",
+           NULL  # Default if input$color_by doesn't match any option
+    )
   })
   
-  # Color the barplot based on user input
-  ae_sort <- reactive({
+  # Filter and summarize dataset based on user input
+  filtered_ae <- reactive({
+    # Start with the original dataset
+    data <- ae
     
-    # Compute total counts for sorting
-    total_counts <- filtered_ae() |>
-      group_by(AEBODSYS) |>
-      summarise(total_n = n(), .groups = "drop") |>
-      arrange(total_n)
+    # Apply filters sequentially
     
-    if (is.null(color_by())) {
-      # Group only by AEBODSYS when no grouping is selected
-      filtered_ae() |>
-        group_by(AEBODSYS) |>
-        summarise(n = n(), .groups = "drop") |>
-        mutate(AEBODSYS = factor(AEBODSYS, levels = total_counts$AEBODSYS))  # Relevel based on total counts
-    } else {
-      # Group by AEBODSYS and the selected variable
-      filtered_ae() |>
-        group_by(AEBODSYS, .data[[color_by()]]) |>
-        summarise(n = n(), .groups = "drop") |>
-        mutate(AEBODSYS = factor(AEBODSYS, levels = total_counts$AEBODSYS))  # Relevel based on total counts
+    # Severity filter
+    if (input$severity != "All") {
+      data <- data |> filter(AESEV == toupper(input$severity))
     }
+    
+    # Outcome filter
+    if (input$outcome != "All") {
+      data <- data |> filter(AEOUT == toupper(input$outcome))
+    }
+    
+    # Site filter
+    if (input$site_filter2 != "All") {
+      data <- data |> filter(SITEID == gsub("[^0-9]", "", input$site_filter2))
+    }
+    
+    # Seriousness filter
+    if (input$serious != "All") {
+      data <- data |> filter(AESER == substring(input$serious, 1, 1))
+    }
+    
+    # Relatedness filter
+    if (input$related != "All") {
+      data <- data |> filter(AEREL == toupper(input$related))
+    }
+    
+    # Ensure column for color_by exists before grouping
+    if (!is.null(color_by()) && !(color_by() %in% colnames(data))) {
+      stop(paste("The column", color_by(), "does not exist in the dataset."))
+    }
+    
+    # Calculate global total counts for AEBODSYS
+    global_counts <- data |> 
+      group_by(AEBODSYS) |> 
+      summarise(
+        total_count = if (input$summarize_by == "Patients") n_distinct(USUBJID) else n(),
+        .groups = "drop"
+      )
+    
+    # Apply Prevalence Filter to Overall Totals
+    filtered_global <- global_counts |> 
+      filter((total_count / sum(global_counts$total_count)) * 100 >= input$prevalence)
+    
+    # Keep only rows in `data` that match the filtered AEBODSYS values
+    data <- data |> filter(AEBODSYS %in% filtered_global$AEBODSYS)
+    
+    # Group by color_by and AEBODSYS for finer counts
+    grouped_data <- if (is.null(color_by())) {
+      # No grouping by color_by column when "None" is selected
+      data |> 
+        group_by(AEBODSYS) |> 
+        summarise(
+          count = if (input$summarize_by == "Patients") n_distinct(USUBJID) else n(),
+          .groups = "drop"
+        )
+    } else {
+      # Include color_by column in grouping when selected
+      data |> 
+        group_by(AEBODSYS, .data[[color_by()]]) |> 
+        summarise(
+          count = if (input$summarize_by == "Patients") n_distinct(USUBJID) else n(),
+          .groups = "drop"
+        )
+    }
+    
+    # Merge global ordering into grouped dataset
+    grouped_data <- grouped_data |> 
+      left_join(global_counts, by = "AEBODSYS") |>  # Add global total counts
+      arrange(desc(total_count))  # Sort by global counts
+    
+    # Return grouped and ordered dataset for plotting
+    return(grouped_data)
   })
+  
+  
+  # Reactive for sorting and coloring barplot
+  ae_sort <- reactive({
+    # Prepare the dataset for plotting
+    filtered_ae() |> 
+      mutate(
+        AEBODSYS = factor(AEBODSYS, levels = rev(unique(filtered_ae()$AEBODSYS))),  # Use the global sorted order
+        fill_column = if (is.null(color_by())) "None" else .data[[color_by()]]  # Ensure consistent grouping
+      )
+  })
+  
   
   # Render the plot
-  output$plot2a <- renderPlot({
-    if (is.null(color_by())) {
-      # Plot without fill grouping
-      ggplot(ae_sort(), aes(x = n, y = AEBODSYS)) +
-        geom_bar(stat = "identity", position = "stack") +
-        theme_minimal() +
-        labs(
-          title = "Adverse Event Summary",
-          y = "Body System / Organ Class",
-          x = "Subject Count"
-        ) +
-        theme(
-          panel.grid = element_blank(),
-          axis.text.x = element_text(size = 12),
-          axis.text.y = element_text(size = 12),
-          axis.title.y = element_text(size = 14),
-          axis.title.x = element_text(size = 14),
-          legend.title = element_text(size = 14),
-          legend.text = element_text(size = 14)
+  output$plot2a <- renderPlotly({
+    p2a <- ggplot(ae_sort(), aes(x = count, 
+                                 y = AEBODSYS, 
+                                 fill = fill_column,
+                                 text = paste0(AEBODSYS, 
+                                              "\nCount: ", count, " (", round((count/sum(ae_sort()$count))*100, 2), "%)",
+                                              ifelse(fill_column == "None", "", paste("\n", fill_column))),
+                                 customdata = paste(AEBODSYS, fill_column, sep = "|"))) +
+      geom_bar(stat = "identity", position = "stack") +
+      theme_minimal() +
+      labs(
+        title = paste0("Adverse Events Summary"),
+        y = "Preferred Term",
+        x = paste0(input$summarize_by, " Count", " (N = ", sum(ae_sort()$count), ")"),
+        fill = input$color_by  # Dynamic legend label
+      ) +
+      theme(
+        panel.grid = element_blank(),
+        axis.text.x = element_text(size = 12),
+        axis.text.y = element_text(size = 12),
+        axis.title.y = element_text(size = 14),
+        axis.title.x = element_text(size = 14),
+        legend.title = element_text(size = 12),
+        legend.text = element_text(size = 10),
+        legend.spacing.x = unit(0.01, "cm"),     # Reduce spacing between items
+        plot.title = element_text(size = 17),
+        plot.title.position = "plot",
+        fill.position = "bottom"
+      ) +
+      scale_fill_brewer(palette = "Pastel2")
+    
+    # Create interactive plot
+    plotly_obj_2a <- ggplotly(p2a, tooltip = "text", source = "plot2a") |>  
+      config(displayModeBar = FALSE) |>  
+      layout(
+        legend = list(
+          orientation = "h",
+          y = -0.2,
+          x = 0.5,
+          xanchor = "center",
+          traceorder = "grouped",  # Group legend items by their categories
+          valign = "middle"        # Align items neatly in rows
         )
-    } else {
-      # Plot with fill grouping
-      ggplot(ae_sort(), aes(x = n, y = AEBODSYS, fill = .data[[color_by()]])) +
-        geom_bar(stat = "identity", position = "stack") +
-        theme_minimal() +
-        labs(
-          title = "Adverse Event Summary",
-          y = "Body System / Organ Class",
-          x = "Subject Count",
-          fill = input$color_by  # Dynamic legend label
-        ) +
-        theme(
-          panel.grid = element_blank(),
-          axis.text.x = element_text(size = 12),
-          axis.text.y = element_text(size = 12),
-          axis.title.y = element_text(size = 14),
-          axis.title.x = element_text(size = 14),
-          legend.title = element_text(size = 14),
-          legend.text = element_text(size = 14)
-        )
+      )
+    
+    # Register click event separately (after processing plotly_obj_2a)
+    event_register(plotly_obj_2a, "plotly_click")  # ✅ Ensures event registration
+    
+    # Return the final object
+    plotly_obj_2a
+    
+      })
+  
+  
+  
+  
+  
+  
+  
+  
+  ########## Details-On-Demand Data Set  - Adverse Events ##########
+  
+  # Initialize
+  clicked_filter_val <- reactiveVal(NULL)  # Initialize clicked filter reactive value
+  
+  # Observe event, update clicked_aebodysys_val to bar click
+  observeEvent(event_data("plotly_click", source = "plot2a"), {
+    click_info_2a <- event_data("plotly_click", source = "plot2a")
+    if (!is.null(click_info_2a)) {
+      clicked_vals <- unlist(strsplit(click_info_2a$customdata, "\\|")) # Split string into two values to separate the AEBODYSYS from the color filter
+      
+      # First value gets assigned to clicked_aebodysys_val
+      clicked_aebodysys_val(clicked_vals[1])  
+      
+      # Only assign `clicked_filter_val` if color_by is NOT "None" or NULL
+      if (!is.null(color_by()) && color_by() != "None") {
+        clicked_filter_val(clicked_vals[2])  # Second value: Fill category (e.g., Severity)
+      } else {
+        clicked_filter_val(NULL)  # Reset if no color_by filter is applied
+      }
+      
+      }
+  })
+  
+  # Create filtered data set based on clicking of AE Summary bars
+  drill_down_data_ae <- reactive({
+    if (is.null(clicked_aebodysys_val())) {
+      return(NULL)  # If nothing is clicked, return NULL
     }
+    
+    # If color_by filter is not selected, only filter by AEBODSYS
+    if (is.null(clicked_filter_val()) || color_by() == "None") {
+      return(ae |> filter(AEBODSYS == clicked_aebodysys_val()))
+    }
+    
+    # If both AEBODSYS and a fill_column are selected, filter by both
+    else {ae |> 
+      filter(AEBODSYS == clicked_aebodysys_val(), .data[[color_by()]] == clicked_filter_val()) # Filter by both AEBODSYS and fill_color
+    }
+  })
+  
+  # If reset is clicked, this ensures the datatable resets to show NULL
+  output$drill_down_table_2 <- DT::renderDataTable({
+    if (is.null(drill_down_data_ae())) {
+      return(data.frame(Message = "No data to display—click a bar to explore details"))
+    }
+
+    # Code generated by ChaptGPT to print all text in the data table in a single row
+    DT::datatable(
+      drill_down_data_ae(),
+      extensions = "Buttons", 
+      options = list(
+        columnDefs = list(list(
+          targets = "_all",
+          render = JS(
+            "function(data, type, row) {
+            return '<div style=\"white-space: nowrap; overflow: hidden; text-overflow: ellipsis;\">' + data + '</div>';
+          }"
+          )
+        )),
+        scrollX = TRUE,
+        dom = "frtipB",
+        buttons = list(
+          list(extend = "csv", text = "Download CSV")
+        )
+      ),
+      class = "compact"
+    )
+  })
+  
+  
+  
+  
+  
+  
+  
+
+  ########## Adverse Events by Site ###########
+
+  # Create data set with values for total subject weeks and AE rate per site
+  sites <- ae |> 
+    group_by(SITEID) |> 
+    summarize(total_subj_weeks = sum(RFENDY)/7,
+              ae_total = n(),
+              ae_rate = ae_total/total_subj_weeks) 
+  
+  # Calculate average AE rate across all sites
+  avg_ae_rate <- mean(sites$ae_rate)
+  
+  # Reactive function for clicked site from AE by Site plot
+  clicked_site <- reactive({
+    click_info_2b <- event_data("plotly_click", source = "plot2b")  # Capture click event
+    if (!is.null(click_info_2b)) {
+      return(click_info_2b$customdata)  # Extract SITEID from customdata
+    }
+    return(NULL)  # Return NULL if no point is clicked
+  })
+  
+  # Reactive function to determine the active site
+  active_site <- reactive({
+    site_from_dropdown <- input$site_filter2
+    site_from_click <- clicked_site()
+    
+    # Priority: use the dropdown selection if not "All", otherwise use the click
+    if (site_from_dropdown != "All") {
+      return(gsub("Site ", "", site_from_dropdown))  # Extract SITEID from input
+    } else if (!is.null(site_from_click)) {
+      return(site_from_click)
+    }
+    
+    return(NULL)  # No active site
+  })
+  
+  # Observe filter-on-click for SITEID to dynamically update the dropdown filter
+  # For AE By Site plot
+  observeEvent(clicked_site(), {
+    site <- clicked_site()  # Get the clicked site ID
+    if (!is.null(site)) {
+      updateSelectInput(session, inputId = "site_filter2", selected = paste("Site", site))  # Update dropdown with clicked site
+    }
+  })
+  
+  # Render AE by Site plot
+  output$plot2b <- renderPlotly({
+    # Calculate alpha values for each site
+    sites$alpha <- if (input$site_filter2 == "All" || is.null(active_site())) {
+      1  # Default: show all points fully opaque
+    } else {
+      ifelse(sites$SITEID == active_site(), 1, 0.3)  # Highlight active site
+    }
+    
+    # Create the ggplot object
+    p2b <- ggplot(sites, aes(x = total_subj_weeks, 
+                             y = ae_rate, 
+                             color = ae_rate,
+                             text = paste0("Clinical Site: ", SITEID,
+                                           "\nAE Rate: ", round(ae_rate, 3)),
+                             customdata = SITEID,
+                             alpha = alpha)) +
+      geom_point(shape = 18, size = 4) +
+      geom_hline(yintercept = avg_ae_rate, linetype = "dashed") +
+      theme_minimal() +
+      labs(title = "Adverse Events by Site",
+           x = "Total Subject Weeks",
+           y = "AE/Total Subject Weeks",
+           color = "AE Rate") + 
+      annotate("text", x = 3000, y = avg_ae_rate + 0.0002, label = paste("AVG AE Rate = ", round(avg_ae_rate, 3))) +
+      xlim(1800, 3250) +
+      scale_color_gradient2(low = "orange", mid = "grey", high = "orange", midpoint = avg_ae_rate) + 
+      scale_alpha_identity() +  # Ensure ggplot respects alpha values
+      theme(
+        panel.grid = element_blank(),
+        axis.text.x = element_text(size = 12),
+        axis.text.y = element_text(size = 12),
+        axis.title.y = element_text(size = 14),
+        axis.title.x = element_text(size = 14),
+        legend.title = element_text(size = 12),
+        legend.text = element_text(size = 10),
+        legend.key.size = unit(0.3, "cm"),
+        plot.title = element_text(size = 17)
+      )
+    
+    # Convert ggplot to Plotly object
+    plotly_obj_2b <- ggplotly(p2b, tooltip = "text", source = "plot2b") |> 
+      config(displayModeBar = FALSE)
+    event_register(plotly_obj_2b, "plotly_click")  # Register click event
+    plotly_obj_2b
   })
   
 }
+
+
+
+
+
 
 
 ########################## TO DO
@@ -556,7 +964,8 @@ server <- function(input, output, session) {
 #       and then sets the site for accrual over time to the site that got clicked
 #       and changes the site in the visit progression plot to the site that got clicked.
 #
-# Add a reset filter to the AE summary plot
+# AE summary plot
 #   Shift the filters to be in an order I prefer (Site at top or higher up)
-#       
+#       A small multiples option for the sites would be cool. Easier to see them side by side
+#       compared to having to click between them.
 ################################
