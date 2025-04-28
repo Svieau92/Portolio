@@ -111,7 +111,7 @@ server <- function(input, output, session) {
              Population_Percentage = round((Population_Count / Total) * 100, 1)) |>
       ungroup()
   })
-
+  
   # Compute totals for legend
   screened_total <- reactive({ nrow(accrual_summary_interactive()) })
   randomized_total <- reactive({ sum(accrual_summary_interactive()$population == "Randomized") })
@@ -120,13 +120,13 @@ server <- function(input, output, session) {
   output$plot1a <- renderPlotly({
 
     # Create ggplot
-    p1a <- ggplot(accrual_summary_interactive(), aes(
-      y = fct_rev(category_abbreviation),
-      fill = fct_rev(population),
-      text = paste0("Site: ", as.character(category_abbreviation),
-                    "<br>Population: ", population,
-                    "<br>Count: ", Population_Count,
-                    "<br>Percentage of Site Total: ", Population_Percentage, "%")
+    p1a <- ggplot(accrual_summary_interactive(), aes(y = fct_rev(category_abbreviation),
+                                                    fill = fct_rev(population),
+                                                    text = paste0("Site: ", as.character(category_abbreviation),
+                                                                  "<br>Population: ", population,
+                                                                  "<br>Count: ", Population_Count,
+                                                                  "<br>Percentage of Site Total: ", Population_Percentage, "%"),
+                                                    customdata = paste(category_abbreviation, population, sep = "|")
     )) +
       geom_bar() +
       labs(x = NULL, y = NULL, fill = NULL) +
@@ -138,7 +138,7 @@ server <- function(input, output, session) {
       scale_fill_brewer(palette = "Paired")
 
     # Convert to plotly and adjust legend positioning
-    plotly_obj1a <- ggplotly(p1a, tooltip = "text") |>
+    plotly_obj_1a <- ggplotly(p1a, tooltip = "text", source = "plot1a") |>
       layout(legend = list(
         title = list(),
         x = 0.5,
@@ -148,7 +148,7 @@ server <- function(input, output, session) {
       config(displayModeBar = FALSE)  # Hide zoom/pan buttons
 
     # Manually update legend labels (to ensure proper naming)
-    plotly_obj1a$x$data <- lapply(plotly_obj1a$x$data, function(trace) {
+    plotly_obj_1a$x$data <- lapply(plotly_obj_1a$x$data, function(trace) {
       if (!is.null(trace$name)) {
         if (trace$name == "Screened") {
           trace$name <- paste0("Screened: ", screened_total())
@@ -158,8 +158,9 @@ server <- function(input, output, session) {
       }
       return(trace)
     })
-
-    plotly_obj1a
+    
+    event_register(plotly_obj_1a, "plotly_click")  # Register click event
+    plotly_obj_1a
 
   })
   
@@ -244,8 +245,7 @@ server <- function(input, output, session) {
   
   
   
-  
-  
+
   
   ########## Visit Completion ##########
 
@@ -294,7 +294,8 @@ server <- function(input, output, session) {
                                        y = Percentage, 
                                        fill = fct_rev(SVSTATUS),
                                        text = paste0(as.character(SVSTATUS), ": ",
-                                                     round(Percentage,2), "%"))) +
+                                                     round(Percentage,2), "%"),
+                                       customdata = paste(VISITNUM, SVSTATUS, sep  = "|"))) +
         geom_bar(stat = "Identity") +
         theme_minimal() +
         labs(x = NULL, y = NULL, fill = NULL) +
@@ -319,7 +320,8 @@ server <- function(input, output, session) {
       
       # Now plot using the pre-summarized data
       p1c <- ggplot(sv_summary, aes(x = VISITNUM, y = n, fill = fct_rev(SVSTATUS),
-                                    text = paste(SVSTATUS, ":", n))) +
+                                    text = paste(SVSTATUS, ":", n),
+                                    customdata = paste(VISITNUM, SVSTATUS, sep  = "|"))) +
         geom_bar(stat = "identity") +
         theme_minimal() +
         labs(x = NULL, y = NULL, fill = NULL) +
@@ -338,8 +340,8 @@ server <- function(input, output, session) {
     }
     
     # Convert to plotly and adjust legend positioning
-    plotly_obj1c <- ggplotly(p1c, tooltip = "text") |>
-      layout(hovermode = "x",
+    plotly_obj_1c <- ggplotly(p1c, tooltip = "text", source = "plot1c") |>
+      layout(hovermode = "xxx",
         legend = list(
         title = list(),
         x = 0.5,
@@ -348,12 +350,79 @@ server <- function(input, output, session) {
         orientation = "h"
       )) |>
       config(displayModeBar = FALSE)  # Hide zoom/pan buttons
+    
+    event_register(plotly_obj_1c, "plotly_click")  # Register click event
+    plotly_obj_1c
+    
+    
+    
   })
   
   
+  ########### Cross Connectivity Between Plots ##########
   
-  
-  
+  observeEvent(event_data("plotly_click", source = "plot1a"), {
+    click_info_1a <- event_data("plotly_click", source = "plot1a")
+    clicked_vals_1a <- unlist(strsplit(click_info_1a$customdata, "\\|"))
+    
+    # Ensure click happened AND mode is "Filter by Site"
+    if (!is.null(click_info_1a$customdata) && input$click_mode == "Filter by Site") {
+      updateSelectInput(session, "site_filter1b", selected = clicked_vals_1a[1])
+      updateSelectInput(session, "site_filter1c", selected = clicked_vals_1a[1])
+
+      # Ensure arms of all plots match the arm filter of Plot 1A (accrual)      
+      if (input$arm_filter1a == "Placebo") {
+        updateSelectInput(session, "arm_filter1b", selected = "Placebo")
+        updateSelectInput(session, "arm_filter1c", selected = "Placebo")
+      }
+      
+      if (input$arm_filter1a == "Treatment A") {
+        updateSelectInput(session, "arm_filter1b", selected = "Treatment A")
+        updateSelectInput(session, "arm_filter1c", selected = "Treatment A")
+      }
+      
+      if (input$arm_filter1a == "Treatment B") {
+        updateSelectInput(session, "arm_filter1b", selected = "Treatment B")
+        updateSelectInput(session, "arm_filter1c", selected = "Treatment B")
+      }
+      
+      if (input$arm_filter1a == "Screen Failure") {
+        updateSelectInput(session, "arm_filter1b", selected = "Screen Failure")
+        updateSelectInput(session, "arm_filter1c", selected = "Screen Failure")
+      }
+      
+      # Handle filtering when Drill Down button is selected and barplot is clicked
+    } else if (input$click_mode == "Drill Down") {
+      print("drill down")
+      data_dashboard$data <- accrual_summary |> 
+        filter(category_abbreviation == clicked_vals_1a[1]) |> 
+        filter(population == clicked_vals_1a[2]) |> 
+        select(-category_info) |> 
+        group_by(subjid) |> 
+        filter(date == max(date))
+      
+      # Handle matching of arm filters
+      if (input$arm_filter1a == "Placebo") {
+        data_dashboard$data <- data_dashboard$data |> 
+          filter(`filter:Arm` == "Placebo")
+      }
+      
+      if (input$arm_filter1a == "Treatment A") {
+        data_dashboard$data <- data_dashboard$data |> 
+          filter(`filter:Arm` == "Treatment A")
+      }
+      
+      if (input$arm_filter1a == "Treatment B") {
+        data_dashboard$data <- data_dashboard$data |> 
+          filter(`filter:Arm` == "Treatment B")
+      }
+      
+      if (input$arm_filter1a == "Screen Failure") {
+        data_dashboard$data <- data_dashboard$data |> 
+          filter(`filter:Arm` == "Screen Failure")
+      }
+    }
+  })
   
   
   ########### Screened vs Target ##########
@@ -469,7 +538,8 @@ server <- function(input, output, session) {
   p1f <- ggplot(total_disc_comp, aes(x = value, 
                                      y = category,
                                      fill = category,
-                                     text = ifelse(category == "Subjects Discontinued", paste("Total Discontinued:", value), paste("Total Completed:", value)))) +
+                                     text = ifelse(category == "Subjects Discontinued", paste("Total Discontinued:", value), paste("Total Completed:", value)),
+                                     customdata = category)) +
     geom_col() +
     scale_fill_manual(values = c("Subjects Discontinued" = "darkgrey", "Subjects Completed" = "green4")) +
     theme_minimal() +
@@ -490,6 +560,8 @@ server <- function(input, output, session) {
   })
   
   
+  
+  
   ########### Details-On-Demand Dataset - Dashboard ###########
   
   # Initialize Dashboard Data set
@@ -506,13 +578,38 @@ server <- function(input, output, session) {
     updateSelectInput(session, "site_filter1c", selected = "All")
     updateSelectInput(session, "nperc_filter", selected = "N")
   
-    
     # Reset data set
     data_dashboard$data <- NULL
   })
   
+  # Observe click events
   
-  # Observe click events 
+  observeEvent(event_data("plotly_click", source = "plot1c"), {
+    
+    click_info_1c <- event_data("plotly_click", source = "plot1c")
+    clicked_vals_1c <- unlist(strsplit(click_info_1c$customdata, "\\|"))
+    print(clicked_vals_1c[1])
+    print(clicked_vals_1c[2])
+    
+    if (!is.null(click_info_1c)) {
+      data_dashboard$data <- sv |> 
+        filter(VISITNUM == clicked_vals_1c[1], SVSTATUS == clicked_vals_1c[2])
+      
+      # Apply ARM filter only if selection is not "All"
+      if (input$arm_filter1c != "All") {
+        data_dashboard$data <- data_dashboard$data |> filter(ARM == input$arm_filter1c)
+      }
+      
+      # Apply SITE filter only if selection is not "All"
+      if (input$site_filter1c != "All") {
+        data_dashboard$data <- data_dashboard$data |> filter(SITEID == gsub("Site ", "", input$site_filter1c))
+      }
+      
+      return(data_dashboard$data)
+    }
+  })
+      
+
   
   # Click event for plot 1d
   observeEvent(event_data("plotly_click", source = "plot1d"), {
@@ -521,6 +618,8 @@ server <- function(input, output, session) {
       data_dashboard$data <- accrual |> 
         filter(population == "Screened") |> 
         select(-category_info)
+      
+      
     }
   })
   
@@ -533,11 +632,26 @@ server <- function(input, output, session) {
         select(-category_info)
     }
   })
-  
-  # Click event for plot 1f
 
-  
-  
+  # Click event for plot 1f
+  observeEvent(event_data("plotly_click", source = "plot1f"), {
+    click_info_1f <- event_data("plotly_click", source = "plot1f")
+    
+    if (!is.null(click_info_1f)) {
+      customdata_value <- click_info_1f$customdata  # Access customdata
+      
+      if (customdata_value == "Subjects Discontinued") {
+        data_dashboard$data <- sv_sub |> 
+          arrange(USUBJID, SVDT) |> 
+          group_by(USUBJID) |> 
+          filter(SVSTATUS == "Terminated", lag(SVSTATUS) == "Completed")
+      } else if (customdata_value == "Subjects Completed") {
+        data_dashboard$data <- sv_sub |> 
+          filter(SVSTATUS == "Completed", VISIT == "End of Study")  
+      }
+    }
+  })
+
   # If reset is clicked, this ensures the datatable resets to show NULL
   output$drill_down_table_1 <- DT::renderDataTable({
     if (is.null(data_dashboard$data)) {
@@ -760,7 +874,7 @@ server <- function(input, output, session) {
       )
     
     # Register click event separately (after processing plotly_obj_2a)
-    event_register(plotly_obj_2a, "plotly_click")  # ✅ Ensures event registration
+    event_register(plotly_obj_2a, "plotly_click")  # Ensures event registration
     
     # Return the final object
     plotly_obj_2a
@@ -804,16 +918,38 @@ server <- function(input, output, session) {
       return(NULL)  # If nothing is clicked, return NULL
     }
     
-    # If color_by filter is not selected, only filter by AEBODSYS
-    if (is.null(clicked_filter_val()) || color_by() == "None") {
-      return(ae |> filter(AEBODSYS == clicked_aebodysys_val()))
+    # Start filtering base dataset
+    filtered_data_ae <- ae |> filter(AEBODSYS == clicked_aebodysys_val())
+    
+    # Apply color_by filter if selected
+    if (!is.null(clicked_filter_val()) && color_by() != "None") {
+      filtered_data_ae <- filtered_data_ae |> 
+        filter(.data[[color_by()]] == clicked_filter_val())
     }
     
-    # If both AEBODSYS and a fill_column are selected, filter by both
-    else {ae |> 
-      filter(AEBODSYS == clicked_aebodysys_val(), .data[[color_by()]] == clicked_filter_val()) # Filter by both AEBODSYS and fill_color
+    # Apply ARM filter only if selection is not "All"
+    if (input$severity != "All") {
+      filtered_data_ae <- filtered_data_ae |> filter(AESEV == toupper(input$severity))
     }
+    
+    # Apply OUTCOME filter only if selection is not "All"
+    if (input$outcome != "All") {
+      filtered_data_ae <- filtered_data_ae |> filter(AEOUT == toupper(input$outcome))
+    }
+    
+    # Apply SERIOUSNESS filter only if selection is not "All"
+    if (input$serious != "All") {
+      filtered_data_ae <- filtered_data_ae |> filter(AESER == substr(input$serious, 1, 1))
+    }
+    
+    # Apply RELATEDNESS filter only if selection is not "All"
+    if (input$related != "All") {
+      filtered_data_ae <- filtered_data_ae |> filter(AEREL == toupper(input$related))
+    }
+    
+    return(filtered_data_ae)  # Ensure filtered data is returned
   })
+  
   
   # If reset is clicked, this ensures the datatable resets to show NULL
   output$drill_down_table_2 <- DT::renderDataTable({
