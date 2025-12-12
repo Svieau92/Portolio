@@ -1,0 +1,12 @@
+name: dhm_volume_visualizer
+title:
+username: 6tendm-sean-vieau
+account: 6tendm-sean-vieau
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 15745519
+bundleId: 11039758
+url: https://6tendm-sean-vieau.shinyapps.io/dhm_volume_visualizer/
+version: 1
+asMultiple: FALSE
+asStatic: FALSE
