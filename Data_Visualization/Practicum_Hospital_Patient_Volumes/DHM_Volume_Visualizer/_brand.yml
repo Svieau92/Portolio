@@ -1,0 +1,31 @@
+meta:
+  name: brand.yml
+
+logo: logo.png
+
+color:
+  palette:
+    black: "#000000"
+    white: "#ffffff"
+    gold: "#CFB87C"
+    lightgrey: "#bcbcbc"
+    darkgrey: "#434343"
+  foreground: black
+  background: white
+  primary: gold
+  danger: darkgrey
+  info: lightgrey
+
+fonts:
+  - family: Roboto
+    source: google
+  - family: Source Sans Pro
+    source: google
+  - family: IBM Plex Mono
+    source: google
+
+base: Roboto
+headings:
+  family: Roboto
+  weight: 400
+monospace: IBM Plex Mono
