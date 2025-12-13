@@ -1,0 +1,12 @@
+name: Clinical_Trials_Visualization_App
+title: Clinical_Trials_Visualization_App
+username: 6tendm-sean-vieau
+account: 6tendm-sean-vieau
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 16305579
+bundleId: 11316900
+url: https://6tendm-sean-vieau.shinyapps.io/Clinical_Trials_Visualization_App/
+version: 1
+asMultiple: FALSE
+asStatic: FALSE
