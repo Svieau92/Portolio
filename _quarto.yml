@@ -40,7 +40,9 @@ website:
             href: Statistical_Consulting/Vieau_Project_01/Code/Megan_Watson_Project.qmd
       - text: Data Viz (R)
         menu:
-          - text: Clinical Trials Visualization App
+          - text: Hospital Volume Visualizer (RShiny)
+            href: https://6tendm-sean-vieau.shinyapps.io/dhm_volume_visualizer/
+          - text: Clinical Trials Visualization (RShiny)
             href: https://6tendm-sean-vieau.shinyapps.io/Clinical_Trials_Visualization_App/
           - text: Animated Plots (R)
             href: Data_Visualization/Cancer_Animations/Gapminder_Cancer_Animations.qmd
