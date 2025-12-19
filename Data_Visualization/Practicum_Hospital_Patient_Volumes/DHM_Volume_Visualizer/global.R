@@ -42,7 +42,7 @@ library(shinybusy) # For loading messages when processing data
 # ⚠️ HARD-CODED EXCEL SHEETS⚠️
 # Set sheets from the .xlsx file to be visualized
 # (We can move this into the function later to make it a user selected option and reactive)
-sheets <- c("AY21", "AY22", "AY23", "AY24", "AY25", "AY26")
+sheets <- c("AY21", "AY22", "AY23", "AY24", "AY25")
 
 # Create function to transform uploaded data
 process_uploaded_file <- function(vol_path, cap_path) {
@@ -118,21 +118,8 @@ data_daily_caps <- read_xlsx(cap_path)
 #==============================================================================================#
 
 # Combine "HMS 9 Team 1" and "HMS 9" columns into one (same for 10, 11, 12)
-combined_data <- combined_data |> 
-  mutate(`HMS 9` = coalesce(`HMS 9`, `HMS 9\r\nTeam 1`),
-         `HMS 10` = coalesce(`HMS 10`, `HMS 10\r\nTeam 1`),
-         `HMS 11` = coalesce(`HMS 11`, `HMS 11\r\nTeam 1`),
-         `HMS 12` = coalesce(`HMS 12`, `HMS 12\r\nTeam 2`),
-         HMS15Floor = coalesce(`HMS 15`, `HMS 15\r\nFloor`), # Combine HMS 15 groups with different names from different years
-         `Medicine \r\nConsults` = coalesce(CON, `Medicine \r\nConsults`) # Combine Med Consults groups with different names from different years
-  ) |> 
-  rename(
-    Htransplant = `H. Transplant\r\nTeam 2`, # Rename Transplant group to match name in daily caps sheet
-    HMS15Stepdown = `HMS 15\r\nStepdown` # Rename HMS15 stepdown group to match name in daily caps sheet
-  ) |> 
-  select(-`HMS 9\r\nTeam 1`, -`HMS 10\r\nTeam 1`, -`HMS 11\r\nTeam 1`, 
-         -`HMS 12\r\nTeam 2`, -`HMS 15`, -`HMS 15\r\nFloor`, -CON,
-         -`HOSP A`, -`Surge ICU 7`)
+combined_data <- combined_data |>
+  select(-`HOSP A`, -`Surge ICU 7`)
 
 # Remove all excess spaces so team names match the format of the daily caps data set
 combined_data <- combined_data |>
@@ -154,7 +141,7 @@ combined_data <- combined_data |>
 # Pivot census data
 census_long <- combined_data |>
   pivot_longer(
-    cols = c(HMS1:IMTOTAL),  # adjust as needed
+    cols = c('Team1':IMTOTAL),  # adjust as needed
     names_to = "Team",
     values_to = "Volume"
   )
@@ -207,17 +194,19 @@ census_with_capacity <- census_with_capacity |>
 census_with_capacity <- census_with_capacity |>
   mutate(
     ServiceLine = case_when(
-      str_detect(Team, "^ACE") ~ "ACE",
-      Team %in% c("AddictionMed", "Addiction\r\nMed") ~ "Addiction Medicine",
-      Team %in% c("HMS1", "HMS2", "HMS3", "HMS4", "HMS5", "HMS6", "HMS8", "HMS9", "HMS10", "HMS11", "HMS12", "HMS13", "HMS14", "HMS15Floor", "HMS16", "HMS17", "HMS18", "HMS19", "HMS20", "HTT", "MED1", "MED2", "MED3", "MED4") ~ "General Medicine",
-      Team == "HMS15Stepdown" ~ "Stepdown",
-      Team == "HMS7" ~ "HMS7",
-      str_detect(Team, "^ONC") ~ "Med Oncology",
-      Team %in% c("Medicine\r\nConsults", "NEWMED\r\nCONSULTS") ~ "Medicine Consults",
-      Team == "Htransplant" ~ "Transplant",
-      Team == "DAY" ~ "Day",
-      Team == "NIGHT" ~ "Night",
-      Team == "SWING" ~ "Swing",
+      str_detect(Team, "^ACUTECARE") ~ "Acute Care",
+      Team == "BehavioralHealth" ~ "Behavioral Health",
+      Team %in% c("Team1","Team2","Team3","Team4","Team5","Team6",
+                  "Team7","Team8","Team9","Team10",
+                  "Team11","Team12","Team13", "Team14",
+                  "Team15A", "HospitalTeam",
+                  "MedTeam1","MedTeam2","MedTeam3","MedTeam4") ~ "Medical Ward",
+      Team == "Team15B" ~ "Intermediate Care",
+      str_detect(Team, "^CancerCare") ~ "Cancer Care",
+      str_detect(Team, "^ConsultTeam") ~ "Consult Service",
+      Team == "DAY" ~ "Day Shift",
+      Team == "SWING" ~ "Evening Shift",
+      Team == "NIGHT" ~ "Night Shift",
       TRUE ~ Team
     )
   )
@@ -226,7 +215,7 @@ census_with_capacity <- census_with_capacity |>
 census_with_capacity <- census_with_capacity |>
   mutate(
     Team = case_when(
-      Team %in% c("HMS9", "HMS10", "HMS11") ~ "Team 1",
+      Team %in% c("Team9", "Team10", "Team11") ~ "TeamA",
       # Team %in% c("HMS12", "Htransplant") ~ "Team 2",
       TRUE ~ Team
     )
@@ -239,68 +228,70 @@ census_with_capacity <- census_with_capacity |>
     .groups = "drop"
   )
 
-# ⚠️ HARD-CODED CAPACITIES ⚠️
-# Manually set capacities based on Dimitriy's reccomendations
+# ⚠️ UPDATED CAPACITIES ⚠️
+# Manually set capacities based on recommendations
 census_with_capacity <- census_with_capacity |>
   mutate(Capacity = case_when(
-    ServiceLine == "Addiction Medicine" ~ 16,
-    ServiceLine == "Stepdown" ~ 14,
-    ServiceLine == "Medicine Consults" ~ 48,
-    ServiceLine == "Swing" ~ 19,
-    ServiceLine == "Day" ~ NA,
-    ServiceLine == "Night" ~ NA,
+    ServiceLine == "Behavioral Health" ~ 16,
+    ServiceLine == "Intermediate Care" ~ 14,
+    ServiceLine == "Consult Service" ~ 48,
+    ServiceLine == "Evening Shift" ~ 19,
+    ServiceLine == "Day Shift" ~ NA,
+    ServiceLine == "Night Shift" ~ NA,
     TRUE ~ Capacity
   ))
 
 # Order service line for plotting
 census_with_capacity <- census_with_capacity |>
-  mutate(ServiceLine = factor(ServiceLine, levels =
-                                c("ACE", "Addiction Medicine", "General Medicine", "Stepdown", "HMS7", "Med Oncology", "Medicine Consults", "Med Consults Combined", "Transplant", "Day", "Swing", "Night", "IMTOTAL", "AVAILCAP")))
+  mutate(ServiceLine = factor(ServiceLine, levels = c(
+    "Acute Care",
+    "Behavioral Health",
+    "Medical Ward",
+    "Intermediate Care",
+    "Cancer Care",
+    "Consult Service",
+    "Hospital Service",
+    "Day Shift",
+    "Evening Shift",
+    "Night Shift"
+  )))
 
-# Define custom team order (This makes our cards for the Teams show in the desired order)
-# Create a manual ordering variable
+# Define custom team order (for card display)
 census_with_capacity <- census_with_capacity |>
   mutate(TeamOrder = case_when(
-    Team == "HMS1" ~ 1,
-    Team == "HMS2" ~ 2,
-    Team == "HMS3" ~ 3,
-    Team == "HMS4" ~ 4,
-    Team == "HMS5" ~ 5,
-    Team == "HMS6" ~ 6,
-    Team == "HMS7" ~ 7,
-    Team == "HMS8" ~ 8,
-    Team == "Team 1" ~ 9,
-    Team == "Team 2" ~ 10,
-    Team == "HMS12" ~ 10.5,
-    Team == "HMS13" ~ 11,
-    Team == "HMS14" ~ 12,
-    Team == "HMS15" ~ 13,
-    Team == "HMS16" ~ 14,
-    Team == "HMS17" ~ 15,
-    Team == "HMS18" ~ 16,
-    Team == "HMS19" ~ 17,
-    Team == "HMS20" ~ 18,
-    Team == "HTT" ~ 19,
-    Team == "MED1" ~ 20,
-    Team == "MED2" ~ 21,
-    Team == "MED3" ~ 22,
-    Team == "MED4" ~ 23,
-    Team == "ACE1" ~ 24,
-    Team == "ACE2" ~ 25,
-    Team == "ACE3" ~ 26,
-    Team == "Medicine\r\nConsults" ~ 27,
-    Team == "NEWMED\r\nCONSULTS" ~ 28,
-    Team == "Med Consults Combined" ~ 29,
-    Team == "Addiction\r\nMed" ~ 30,
-    Team == "ONC1" ~ 31,
-    Team == "ONC2" ~ 32,
-    Team == "ONC3" ~ 33,
-    Team == "DAY" ~ 34,
-    Team == "SWING" ~ 35,
-    Team == "NIGHT" ~ 36,
-    Team == "AVAILCAP" ~ 37,
-    Team == "IMTOTAL" ~ 38,
-    Team == "CON" ~ 39,
+    Team == "Team1" ~ 1,
+    Team == "Team2" ~ 2,
+    Team == "Team3" ~ 3,
+    Team == "Team4" ~ 4,
+    Team == "Team5" ~ 5,
+    Team == "Team6" ~ 6,
+    Team == "Team7" ~ 7,
+    Team == "Team8" ~ 8,
+    Team == "Team9" ~ 9,
+    Team == "Team10" ~ 10,
+    Team == "Team11" ~ 11,
+    Team == "Team12" ~ 12,
+    Team == "Team13" ~ 13,
+    Team == "Team14" ~ 14,
+    Team == "Team15A" ~ 15,
+    Team == "Team15B" ~ 16,
+    Team == "HospitalTeam" ~ 17,
+    Team == "MedTeam1" ~ 18,
+    Team == "MedTeam2" ~ 19,
+    Team == "MedTeam3" ~ 20,
+    Team == "MedTeam4" ~ 21,
+    Team == "ACUTECARE1" ~ 22,
+    Team == "ACUTECARE2" ~ 23,
+    Team == "ACUTECARE3" ~ 24,
+    Team == "ConsultTeamA" ~ 25,
+    Team == "ConsultTeamB" ~ 26,
+    Team == "BehavioralHealth" ~ 27,
+    Team == "CancerCare1" ~ 28,
+    Team == "CancerCare2" ~ 29,
+    Team == "CancerCare3" ~ 30,
+    Team == "DAY" ~ 31,
+    Team == "SWING" ~ 32,
+    Team == "NIGHT" ~ 33,
     TRUE ~ NA_real_
   ))
 
@@ -325,3 +316,13 @@ return(list(
 #######################################################################################################################
 #                                                       End                                                           #
 #######################################################################################################################
+
+# Automatically load data sets for RShiny website hosting
+default_result <- process_uploaded_file("data/census_data.xlsx", "data/team_caps_data.xlsx")
+
+census_with_capacity <- reactiveVal(default_result$census_with_capacity)
+combined_data        <- reactiveVal(default_result$combined_data)
+data_daily_caps      <- reactiveVal(default_result$data_daily_caps)
+
+
+

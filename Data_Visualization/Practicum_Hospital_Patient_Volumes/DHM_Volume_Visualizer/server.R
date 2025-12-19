@@ -34,10 +34,10 @@ function(input, output, session) {
 #                                        Compile User Selected Data Sets                                              #
 #######################################################################################################################
 
-  # Initialize empty data sets
-  census_with_capacity <- reactiveVal(NULL)
-  combined_data <- reactiveVal(NULL)
-  data_daily_caps <- reactiveVal(NULL)
+  # # Initialize empty data sets
+  # census_with_capacity <- reactiveVal(NULL)
+  # combined_data <- reactiveVal(NULL)
+  # data_daily_caps <- reactiveVal(NULL)
   
   # Read census data based on user upload
   observeEvent(input$process, {
@@ -151,8 +151,7 @@ function(input, output, session) {
   #==== Examine Data Sets for Debugging ====#
   
   # Check the header (total_plot_data)
-  output$data_preview12 <- renderPrint({
-    req(total_plot_data())
+  output$data_preview12 <- renderDT({
     head(total_plot_data(), 10)
   })
   
@@ -544,13 +543,19 @@ function(input, output, session) {
   # Reactive state to track which service line card is currently expanded (NULL = none)
   expanded <- reactiveVal(NULL)
   
-  # ⚠️ HARD-CODED SERVICE LINES ⚠️
+  # ⚠️ HARD CODED SERVICE LINES ⚠️
   # This is the master list of service lines used throughout the app
   # If new service lines are added or existing ones renamed, UPDATE THIS VECTOR
   service_lines <- c(
-    "Addiction Medicine", "ACE", "General Medicine", "HMS7",
-    "Stepdown", "Med Oncology", "Medicine Consults", "Transplant",
-    "Day", "Night", "Swing"
+    "Acute Care",
+    "Behavioral Health",
+    "Medical Ward",
+    "Intermediate Care",
+    "Cancer Care",
+    "Consult Service",
+    "Day Shift",
+    "Evening Shift",
+    "Night Shift"
   )
   
   #===================== Expansion / Collapse Logic ===================#
@@ -993,11 +998,11 @@ function(input, output, session) {
   #   data_months(summarize_monthly_data(combined_data(), data_daily_caps()))
   # })
   # 
-  # # Check the header (data_months)
-  # output$data_preview4 <- renderPrint({
-  #   req(census_with_capacity())
-  #   head(census_with_capacity(), 10)
-  # })
+  # Check the header (data_months)
+  output$data_preview4 <- renderDT({
+    req(census_with_capacity())
+    head(census_with_capacity(), 10)
+  }, options = list(pageLength = 20))  # show 20 rows per page
 
   # 
   # #==============================================================================================#
@@ -1363,9 +1368,15 @@ function(input, output, session) {
   #                                  Create Service Line Data Set                                #
   #==============================================================================================#
 
-  # Initialize empty container
-  data_serviceline <- reactiveVal(NULL)
-  data_serviceline_month <- reactiveVal(NULL)
+  # # Initialize empty container
+  # data_serviceline <- reactiveVal(NULL)
+  # data_serviceline_month <- reactiveVal(NULL)
+  
+  # Summarize service line data using the default census_with_capacity
+  service_line_result <- summarize_by_service_line(default_result$census_with_capacity)
+  
+  data_serviceline      <- reactiveVal(service_line_result$data_serviceline)
+  data_serviceline_month <- reactiveVal(service_line_result$data_serviceline_month)
 
   # Acquire monthly averages of volumes and capacities
   observeEvent(input$process, {
@@ -1380,9 +1391,9 @@ function(input, output, session) {
   #==== Examine Data Sets for Debugging ====#
 
   # Check the header
-  output$data_preview5 <- renderPrint({
+  output$data_preview5 <- renderDT({
     req(data_serviceline())
-    head(data_serviceline(), 10)
+    data_serviceline()
   })
 
     # Check the header
@@ -1422,7 +1433,7 @@ function(input, output, session) {
   #==== Examine Data Sets for Debugging ====#
   
   # Preview: CYOP data
-  output$data_preview9 <- renderPrint({
+  output$data_preview9 <- renderDT({
     req(data_cyo_combined())
     head(data_cyo_combined(), 10)
   })

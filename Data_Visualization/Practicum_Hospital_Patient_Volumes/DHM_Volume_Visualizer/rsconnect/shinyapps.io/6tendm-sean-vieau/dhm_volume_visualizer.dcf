@@ -5,7 +5,7 @@ account: 6tendm-sean-vieau
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 15745519
-bundleId: 11039758
+bundleId: 11344158
 url: https://6tendm-sean-vieau.shinyapps.io/dhm_volume_visualizer/
 version: 1
 asMultiple: FALSE

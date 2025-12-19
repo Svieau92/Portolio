@@ -5,19 +5,21 @@
 
 # Create the function
 summarize_by_service_line <- function(census_with_capacity) {
-  # Define service line groups
+  # Define service line groups (updated to current names)
   team_groups <- list(
-    "ACE" = c("ACE1", "ACE2", "ACE3"),
-    "Medicine Consults" = c("Medicine\r\nConsults", "NEWMED\r\nCONSULTS"),
-    "Addiction Medicine" = c("AddictionMed", "Addiction\r\nMed", "Addiction Medicine"),
-    "General Medicine" = c("HMS1", "HMS2", "HMS3", "HMS4", "HMS5", "HMS6", "HMS8", "HMS9", "HMS10", "HMS11", "HMS12", "HMS13", "HMS14", "HMS15Floor", "HMS16", "HMS17", "HMS18", "HMS19", "HMS20", "HTT", "MED1", "MED2", "MED3", "MED4"),
-    "Stepdown" = c("HMS15Stepdown"),
-    "HMS7" = c("HMS7"),
-    "Med Oncology" = c("ONC1", "ONC2", "ONC3"),
-    "Transplant" = c("Htransplant"),
-    "Day" = c("DAY"),
-    "Swing" = c("SWING"),
-    "Night" = c("NIGHT")
+    "Acute Care"        = c("ACUTECARE1", "ACUTECARE2", "ACUTECARE3"),
+    "Behavioral Health" = c("BehavioralHealth"),
+    "Medical Ward"      = c("Team1","Team2","Team3","Team4","Team5","Team6",
+                            "Team7","Team8","Team9","Team10",
+                            "Team11","Team12","Team13","Team14",
+                            "Team15A","HospitalTeam",
+                            "MedTeam1","MedTeam2","MedTeam3","MedTeam4"),
+    "Intermediate Care" = c("Team15B"),
+    "Cancer Care"       = c("CancerCare1","CancerCare2","CancerCare3"),
+    "Consult Service"   = c("ConsultTeamA","ConsultTeamB"),
+    "Day Shift"         = c("DAY"),
+    "Evening Shift"     = c("SWING"),
+    "Night Shift"       = c("NIGHT")
   )
   
   # Aggregate by service line
@@ -54,9 +56,10 @@ summarize_by_service_line <- function(census_with_capacity) {
     )
   
   # Set plotting order
-  ordered_levels <- c("Addiction Medicine", "ACE", "General Medicine", "HMS7", "Stepdown",
-                      "Med Oncology", "Medicine Consults", "Transplant", "Day", "Swing", "Night",
-                      "IMTOTAL", "AVAILCAP")
+  ordered_levels <- c( "Acute Care", "Behavioral Health", "Medical Ward", 
+                       "Intermediate Care", "Cancer Care", "Consult Service", 
+                       "Hospital Service", "Day Shift", "Evening Shift", 
+                       "Night Shift" )
   
   data_serviceline_month <- data_serviceline_month |>
     dplyr::mutate(ServiceLine = factor(ServiceLine, levels = ordered_levels))

@@ -22,7 +22,7 @@ page_navbar(
   title = tags$div(
     style = "display: flex; align-items: center; height: 100%;",
     tags$img(src = "logo.png", style = "height: 40px; margin-right: 5px;"),
-    tags$span("DHM Volume Visualizer", style = "font-size: 1.25rem; line-height: 1; display: flex; align-items: center;")
+    tags$span("Hospital Volume Visualizer", style = "font-size: 1.25rem; line-height: 1; display: flex; align-items: center;")
   ),
   
   # Controls the colors of the panels. Sets selected panel text to be gold when selected
@@ -70,10 +70,10 @@ page_navbar(
     # withSpinner(verbatimTextOutput("data_preview3"), type = 6, color = "#CFB87C"),
     # "Final Combined Data:",
     # withSpinner(DTOutput("data_preview"), type = 6, color = "#CFB87C"),
-    # "Data_Months",
-    # withSpinner(verbatimTextOutput("data_preview4"), type = 6, color = "#CFB87C"),
+    # # "Data_Months",
+    # withSpinner(DTOutput("data_preview4"), type = 6, color = "#CFB87C"),
     # "Data_serviceline",
-    # withSpinner(verbatimTextOutput("data_preview5"), type = 6, color = "#CFB87C"),
+    # withSpinner(DTOutput("data_preview5"), type = 6, color = "#CFB87C"),
     # "data_serviceline_month",
     # withSpinner(verbatimTextOutput("data_preview6"), type = 6, color = "#CFB87C"),
     # "data_team",
@@ -81,13 +81,13 @@ page_navbar(
     # "data_team_month",
     # withSpinner(verbatimTextOutput("data_preview8"), type = 6, color = "#CFB87C"),
     # "cyop data",
-    # withSpinner(verbatimTextOutput("data_preview9"), type = 6, color = "#CFB87C"),
+    # withSpinner(DTOutput("data_preview9"), type = 6, color = "#CFB87C"),
     # "spc data",
     # withSpinner(verbatimTextOutput("data_preview10"), type = 6, color = "#CFB87C"),
     # "spc cyop data",
-    # withSpinner(verbatimTextOutput("data_preview11"), type = 6, color = "#CFB87C"),
+    # withSpinner(DTOutput("data_preview11"), type = 6, color = "#CFB87C"),
     # "Total_plot_data",
-    # withSpinner(verbatimTextOutput("data_preview12"), type = 6, color = "#CFB87C")
+    # withSpinner(DTOutput("data_preview12"), type = 6, color = "#CFB87C")
   ),
   
 #######################################################################################################################
@@ -99,9 +99,11 @@ page_navbar(
     title = "About",
     HTML("
       <h3 style='text-align: center;'>About This App</h3>
-      <p>The Division of Hospital Medicine (DHM) Volume Visualizer is an RShiny application designed to help users understand and monitor patient volumes across service lines and teams. Built on five years of daily census data, the tool supports proactive staffing decisions by tracking volumes, capacities, and utilization rates.</p>
-  
-      <p><strong>Purpose:</strong> The app enables DHM to provide care for over 50% of patients at CU Hospital by offering a data visualization dashboard that highlights operational health and emerging risks.</p>
+      <p>The Hospital Patient Volume Visualizer is an RShiny application designed to help users understand and monitor patient volumes across service lines and teams. Built on five years of daily census data, the tool supports proactive staffing decisions by tracking volumes, capacities, and utilization rates.</p>
+      
+      <p>This app was developed for my Master's Practicum project. All values have been randomized and noise has added to ensure privacy while preserving analytical utility. Likewise, team names have been made generic to the general hospital setting.</p>
+      
+      <p><strong>Purpose:</strong> The app enables the user to provide enhanced care to patients by offering a data visualization dashboard that highlights operational health and emerging risks.</p>
   
       <p><strong>Goals:</strong> By reviewing plots and metrics over user-selected time periods, leaders can:</p>
       <ul>
