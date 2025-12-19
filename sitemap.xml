@@ -1,51 +1,103 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
+    <loc>https://Svieau92.github.io/Advanced-Data-Analysis/Statistical_Consulting/Vieau_Project_01/Code/Megan_Watson_Project.html</loc>
+    <lastmod>2025-04-21T17:47:13.188Z</lastmod>
+  </url>
+  <url>
     <loc>https://Svieau92.github.io/Advanced-Data-Analysis/SetUpSAS.html</loc>
     <lastmod>2024-10-26T05:23:47.703Z</lastmod>
   </url>
   <url>
-    <loc>https://Svieau92.github.io/Advanced-Data-Analysis/Project_3_Predictive_Modelling/Project_3_R/Code/Project_3_Predictive_Modelling.html</loc>
-    <lastmod>2024-11-08T03:09:47.963Z</lastmod>
+    <loc>https://Svieau92.github.io/Advanced-Data-Analysis/Project_3_Predictive_Modelling/Project_3_SAS/Code/Project_3_Predictive_Modelling_SAS.html</loc>
+    <lastmod>2024-12-29T04:48:00.143Z</lastmod>
+  </url>
+  <url>
+    <loc>https://Svieau92.github.io/Advanced-Data-Analysis/Project_3_Predictive_Modelling/Project_3_SAS/Code/images/Megan_Watson_Project-02.html</loc>
+    <lastmod>2024-11-11T01:08:53.355Z</lastmod>
+  </url>
+  <url>
+    <loc>https://Svieau92.github.io/Advanced-Data-Analysis/Project_3_Predictive_Modelling/Project_3_R/Code/Project_Submission.html</loc>
+    <lastmod>2024-11-18T06:14:29.923Z</lastmod>
+  </url>
+  <url>
+    <loc>https://Svieau92.github.io/Advanced-Data-Analysis/Project_3_Predictive_Modelling/Project_3_R/Code/images/Megan_Watson_Project.html</loc>
+    <lastmod>2024-11-11T01:08:53.355Z</lastmod>
+  </url>
+  <url>
+    <loc>https://Svieau92.github.io/Advanced-Data-Analysis/Project_3_Predictive_Modelling/Project_3_R/Code/images/Megan_Watson_Project-01.html</loc>
+    <lastmod>2024-11-11T01:08:53.355Z</lastmod>
   </url>
   <url>
     <loc>https://Svieau92.github.io/Advanced-Data-Analysis/Project_2/Project_2_R/Code/Project2LMM.html</loc>
-    <lastmod>2024-11-05T03:13:33.053Z</lastmod>
+    <lastmod>2024-12-31T03:04:53.527Z</lastmod>
   </url>
   <url>
     <loc>https://Svieau92.github.io/Advanced-Data-Analysis/Project_1_Regression/Project_1_Regression_SAS/Project_1_Regression_SAS.html</loc>
     <lastmod>2024-10-27T07:52:44.717Z</lastmod>
   </url>
   <url>
-    <loc>https://Svieau92.github.io/Advanced-Data-Analysis/index.html</loc>
-    <lastmod>2024-10-14T01:11:13.165Z</lastmod>
-  </url>
-  <url>
-    <loc>https://Svieau92.github.io/Advanced-Data-Analysis/Data_Management_(SAS)/Project_3/Project3.html</loc>
-    <lastmod>2024-11-03T05:23:14.486Z</lastmod>
-  </url>
-  <url>
-    <loc>https://Svieau92.github.io/Advanced-Data-Analysis/Data_Management_(SAS)/Project_1/Project_1_Importing.html</loc>
-    <lastmod>2024-11-03T06:35:58.109Z</lastmod>
+    <loc>https://Svieau92.github.io/Advanced-Data-Analysis/Pharmacoepidemiology/Pharmacoepidemiology_Project.html</loc>
+    <lastmod>2025-05-09T02:07:59.559Z</lastmod>
   </url>
   <url>
     <loc>https://Svieau92.github.io/Advanced-Data-Analysis/Data_Wrangling/Treadmill_Data_Cleaning/Code/Automated_Treadmill_Data_Cleaning.html</loc>
-    <lastmod>2024-11-02T08:32:53.933Z</lastmod>
+    <lastmod>2024-12-31T03:21:11.038Z</lastmod>
+  </url>
+  <url>
+    <loc>https://Svieau92.github.io/Advanced-Data-Analysis/Data_Management_(SAS)/Project_5/Project_5_Report_and_Analysis.html</loc>
+    <lastmod>2024-12-22T02:47:59.274Z</lastmod>
+  </url>
+  <url>
+    <loc>https://Svieau92.github.io/Advanced-Data-Analysis/Data_Management_(SAS)/Project_1/Project_1_Importing.html</loc>
+    <lastmod>2025-12-13T06:01:47.295Z</lastmod>
+  </url>
+  <url>
+    <loc>https://Svieau92.github.io/Advanced-Data-Analysis/Data_Management_(SAS)/Project_3/Project3.html</loc>
+    <lastmod>2024-12-17T02:18:49.495Z</lastmod>
+  </url>
+  <url>
+    <loc>https://Svieau92.github.io/Advanced-Data-Analysis/Data_Visualization/Cancer_Animations/Gapminder_Cancer_Animations.html</loc>
+    <lastmod>2024-12-31T02:34:26.932Z</lastmod>
+  </url>
+  <url>
+    <loc>https://Svieau92.github.io/Advanced-Data-Analysis/index.html</loc>
+    <lastmod>2024-12-25T06:40:10.780Z</lastmod>
   </url>
   <url>
     <loc>https://Svieau92.github.io/Advanced-Data-Analysis/Project_1_Regression/Project_1_Regression_R/Project_1_Regression.html</loc>
-    <lastmod>2024-10-27T04:11:21.451Z</lastmod>
+    <lastmod>2024-12-31T02:47:50.376Z</lastmod>
   </url>
   <url>
     <loc>https://Svieau92.github.io/Advanced-Data-Analysis/Project_2/Project_2_R/Code/Project2.html</loc>
-    <lastmod>2024-10-29T00:00:30.481Z</lastmod>
+    <lastmod>2024-12-31T03:08:51.491Z</lastmod>
   </url>
   <url>
-    <loc>https://Svieau92.github.io/Advanced-Data-Analysis/Project_2/Project_2_SAS/Project_2_MLR_SAS.html</loc>
-    <lastmod>2024-10-27T11:07:24.681Z</lastmod>
+    <loc>https://Svieau92.github.io/Advanced-Data-Analysis/Project_2/Project_2_SAS/Code/Linear_Mixed_Model_SAS.html</loc>
+    <lastmod>2024-12-22T03:00:24.985Z</lastmod>
+  </url>
+  <url>
+    <loc>https://Svieau92.github.io/Advanced-Data-Analysis/Project_3_Predictive_Modelling/Project_3_R/Code/images/Megan_Watson_Project-02.html</loc>
+    <lastmod>2024-11-11T01:08:53.355Z</lastmod>
+  </url>
+  <url>
+    <loc>https://Svieau92.github.io/Advanced-Data-Analysis/Project_3_Predictive_Modelling/Project_3_R/Code/Project_3_Predictive_Modelling.html</loc>
+    <lastmod>2025-04-02T16:51:27.301Z</lastmod>
+  </url>
+  <url>
+    <loc>https://Svieau92.github.io/Advanced-Data-Analysis/Project_3_Predictive_Modelling/Project_3_SAS/Code/images/Megan_Watson_Project-01.html</loc>
+    <lastmod>2024-11-11T01:08:53.355Z</lastmod>
+  </url>
+  <url>
+    <loc>https://Svieau92.github.io/Advanced-Data-Analysis/Project_3_Predictive_Modelling/Project_3_SAS/Code/images/Megan_Watson_Project.html</loc>
+    <lastmod>2024-11-11T01:08:53.355Z</lastmod>
   </url>
   <url>
     <loc>https://Svieau92.github.io/Advanced-Data-Analysis/Resume/Publications_and_Presentations.html</loc>
     <lastmod>2024-11-03T06:34:01.352Z</lastmod>
+  </url>
+  <url>
+    <loc>https://Svieau92.github.io/Advanced-Data-Analysis/Statistical_Consulting/Opioid_Epidemic/GeoSpatial_Opioid_Epidemic.html</loc>
+    <lastmod>2024-12-31T04:46:06.186Z</lastmod>
   </url>
 </urlset>
