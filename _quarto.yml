@@ -24,6 +24,8 @@ website:
             href: Project_3_Predictive_Modelling/Project_3_R/Code/Project_3_Predictive_Modelling.qmd
           - text: Predictive Modelling (SAS)
             href: Project_3_Predictive_Modelling/Project_3_SAS/Code/Project_3_Predictive_Modelling_SAS.qmd
+          - text: Survival Analysis (R)
+            href: Survival_and_Longitudinal/Survival_Analysis_Islet_Autoimmunity_Diabetes.qmd
       - text: Data Wrangling (Python)
         href: Data_Wrangling/Treadmill_Data_Cleaning/Code/Automated_Treadmill_Data_Cleaning.qmd
       - text: Data Management (SAS)

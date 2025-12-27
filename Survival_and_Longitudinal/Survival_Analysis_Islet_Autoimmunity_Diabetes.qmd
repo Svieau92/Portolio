@@ -1,0 +1,1949 @@
+---
+title: "Survival Analysis - Omega-3 Intake Protects Against Development of Islet Autoimmunity in Children at Risk to Type 1 Diabetes"
+author: Sean Vieau
+date: 11/13/2025
+format: html
+editor: visual
+toc: true
+---
+
+# Abstract
+
+#### Background:
+
+Islet autoimmunity (IA) precedes the clinical onset of type 1 diabetes (T1D) and is marked by autoantibodies targeting pancreatic beta cells. Identifying modifiable risk factors for IA may offer insights into disease prevention. Omega-3 fatty acids have been hypothesized to modulate immune function and reduce IA risk.
+
+#### Methods:
+
+We conducted a survival analysis using data from the Diabetes Autoimmunity Study in the Young (DAISY), a prospective cohort of 1,856 children at increased genetic risk for T1D. After excluding participants with missing dietary data, 897 children were included (104 IA cases, 793 non-cases). Time-to-event was defined as age at first IA-positive visit, approximating the event time in originally interval-censored data. Cox proportional hazards models estimated the association between omega-3 intake and IA risk, adjusting for birth cohort risk group and dietary iron intake. Time-varying effects for HLA genotype and first-degree relative (FDR) status were modeled using Heaviside functions with a 10-year split.
+
+#### Results:
+
+Omega-3 intake was significantly protective (HR 0.44 per 1 g/day; 95% CI: \[0.28, 0.69\]; p \< 0.001), corresponding to a 56% reduction in IA hazard. High-risk HLA was associated with increased hazard before age 10 (HR 2.42; 95% CI: \[1.37, 4.27\]) and after age 10 (HR 3.63; 95% CI: \[1.30, 10.15\]). FDR status conferred elevated risk before age 10 (HR 2.01; 95% CI: \[1.16, 3.49\]), but not after (HR 1.07; 95% CI: \[0.27, 4.28\]).
+
+#### Conclusion:
+
+Higher omega-3 intake was associated with reduced IA risk, supporting its potential role in autoimmune prevention.
+
+## Background
+
+Prior to development of Type I Diabetes (T1D), there is a period of time where the patient is asymptomatic, but autoantibodies to beta cells and their antigens are detectable in the blood. Consistently testing positive for these autoantibodies places patients at a high risk to developing T1D, both in patients with relatives who have T1D, and in the general population. Thus risk factors predicting the development of the IA cells provides helpful information for the pathogenesis of events leading to autoimmunity and perhaps even for the development of T1D.
+
+The purpose of this analysis is to test whether Omega-3 Intake effects the hazard of developing Islet Autoimmunity in children at risk to Type 1 Diabetes, while controlling for relevant covariates in the model.
+
+## Design
+
+## Population
+
+The present study is an analysis of a subset of the Diabetes Autoimmunity Study in the Young (DAISY), which followed a cohort of children at risk for the appearance of Islet Autoantibodies. The data consists of 1856 children followed from birth in a 20 year longitudinal study following them from birth (January 1994 through December 2006).
+
+#### Describe how many in each group
+
+There were 1722 children who did not develop IA, and 134 children who developed IA in the entire data set. After removing children with missing dietary intake data (N = 965), there were 793 who did not develop IA and 104 who did.
+
+#### Summary of number of observations per subject (longitudinal) or group(correlated) or follow-up times (number censored)
+
+The data was interval censored, giving one observation per subject. 793 patients were right censored, and 104 were left censored.
+
+#### Inclusion/Exclusion Criteria
+
+Patients were excluded if they had 1 visit and an event time of 0 (N = 1). Otherwise the inclusion/exclusion criteria were the same as the parent study.
+
+#### Outcome
+
+Time-to-event was defined as the duration from birth to the first visit at which a participant tested positive for one or more islet autoantibodies (IA), consistent with the original case definition used in the parent study. In essence converting from interval censoring to assuming a fixed-time structure. This approach, while simplifying the censoring structure, preserves the temporal ordering of events and aligns with prior analytic strategies in similar cohort studies.
+
+A key limitation of this approach is that the true timing of seroconversion is not directly observed. Instead, the event is known to have occurred sometime between the last negative and the first positive autoantibody visit, and we are effectively treating this as right-censored data.
+
+#### Primary Explanatory Variable
+
+The primary explanatory variable of this study is Omega-3-Fatty Acid intake. In the original DAISY study (JAMA 2007), omega-3 intake was calculated using a validated food frequency questionnaire (FFQ), administered annually starting at age 2, and nutrient values were derived from the Harvard Food Composition Database.
+
+The statisticians in the examined Omega-3-Fatty Acid intake based on the standard difference deviation. This allowed them to answer questions such as, "What was the decrease in risk of IA associated with an increase in Omega-3 FA intake equal to 1 SD of the intake of Omega-3 FA".Adjustment Variables.
+
+However, I am more interested in answering the question, "How much omega-3 should I take to have a protective effect from IA and possibly Type 1 Diabetes?". Thus I used the raw values for Omega-3 Intake (grams/day).
+
+#### Adjustment Variables
+
+Adjustment variables considered were: sex, mother's age at birth, ethnicity, birth cohort risk group (Low-Risk, Child with HLA Genotype, Child with First Degree Relative with HLA Genotype), dietary iron intake, supplementary iron intake, number of visits.
+
+# Methods
+
+#### Statistical tests and models considered
+
+A Cox PH hazards model, which allows for right censoring, were conducted to assess whether Omega-3 intake effects the hazard of developing Islet Autoimmunity, while accounting for the other variables in the model.
+
+Exploratory analysis will be conducted to select potential covariates. Kaplan-Meier curves for categorical variables will be examined, and Likelihood Ratio Tests conducted to test if the survival curves of the groups differ. Individual Cox PH models will be conducted for each candidate covariate to test whether they are significant predictors of the hazard of developing IA.
+
+The assumption of Proportional Hazards will be examined for each potential covariate by examination of the Log of the Negative Log of the Survival Curve plots, Schoenfeld Test of Proportional Hazards and examination of the plot of the Schoenfeld residuals, and examination of time-varying correlations (Time, Time\^2, Log(Time), and Rank(Time). Martingale residuals will be assessed for continuous variables.
+
+#### Any a priori decisions
+
+The data will inform how variables that violate the assumption of proportional hazards are conducted. That is, if there is a discernible difference in the Survival Curves at specific time points, a heaviside function will be used to assess differences before and after said time points. Otherwise that variable will be treated as a time-varying covariate or will be stratified on.
+
+The final model will be selected by comparing the full model to reduced models, and conducting an LRT to assess whether removal of a covariate improves predictive power of the model. Covariates will be included in the final model if they are statistically significant or if their removal results in a greater than 10% change in the HR of Omega-3-Fatty-Acid.
+
+Tied event times were handled with R's defaults (ties = efron).
+
+#### Significance level (2-sided, alpha=0.05)
+
+Significance will be set at p\< 0. 05 (two-tailed), 95% CI will be reported.
+
+#### Software used for analysis
+
+Data management and statistical analyses were performed in R version 4.4.1. Time-to-event analyses were conducted using the `survival` package (v3.6.4), and Kaplan-Meier and log(-log) survival plots were generated using the `survminer` package (v0.5.0).
+
+# Data Preparation
+
+## Load Libraries
+
+```{r}
+#| warning: false
+
+# Load libraries
+library(tidyverse)
+library(ggplot2)
+library(naniar)
+library(Hmisc) # For labelling variables
+library(forcats) # Also for labelling variables
+library(knitr)
+library(kableExtra) # For pretty printing
+library(table1) # For table 1
+library(survival) # For survival analysis
+library(survminer) # For plotting KM curves
+
+# Set to decimal notation
+options(scipen = 999)
+```
+
+## Data Dictionary
+
+![![](images/clipboard-2709421245.png)](images/clipboard-2709421245.png)
+
+## Create Functions
+
+```{r}
+# Create pretty print function
+pretty_print <- function(df) {
+  kable(head(df), format = "html") |> 
+    kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+}
+```
+
+## Load Data
+
+```{r}
+# Load data
+data <- read_csv("daisy_intcens.csv")
+
+# Examine Data
+glimpse(data)
+```
+
+Some of these like `FirstDegreeRel` are doubles when they should be factors. Let's address.
+
+## Clean Variables
+
+```{r}
+# Clean and refactor necessary variables
+
+# Censor
+data$censor <- factor(data$censor, 
+                      levels = c("I", "R"), 
+                      labels = c("Interval Censored", "Right Censored"))
+
+# Sex
+data$SEX <- factor(data$SEX, 
+                   levels = c("Male", "Female"), 
+                   labels = c("Male", "Female"))
+
+# HLA
+data$hla <- factor(data$hla, 
+                   levels = c(0,1), 
+                   labels = c("No High-Risk HLA", "High-Risk HLA"))
+
+# SNP
+data$rs4646536 <- factor(data$rs4646536, 
+                         levels = c("A/A", "A/G", "G/G"), 
+                         labels = c("A/A", "A/G", "G/G"))
+
+# First degree relative
+data$FirstDegreeRel <- factor(data$FirstDegreeRel, 
+                              levels = c(0,1), 
+                              labels = c("No", "Yes"))
+
+# Ethnicity
+data$ethnicity[data$ethnicity == "."] <- NA
+data$ethnicity <- factor(data$ethnicity, 
+                         levels = c(0, 1), 
+                         labels = c("Other", "Non-Hispanic White"))
+
+# Supplemental iron intake
+data$SuppIron_intake[data$SuppIron_intake == "."] <- NA
+data$SuppIron_intake <- as.numeric(data$SuppIron_intake)
+
+# Dietary Iron Intake
+data$DietIron_intake[data$DietIron_intake == "."] <- NA
+data$DietIron_intake <- as.numeric(data$DietIron_intake)
+
+# Omega 3 Intake
+data$omega3_intake[data$omega3_intake == "."] <- NA
+data$omega3_intake <- as.numeric(data$omega3_intake)
+
+# Right Censoring
+data$right[data$right == "."] <- NA
+data$right <- as.numeric(data$right)
+
+# Mom age
+data$momage <- as.numeric(data$momage)
+
+# Birth Group
+data$group[data$group == "."] <- NA
+data$group <- factor(data$group,
+  levels = c("hla", "relative"),
+  labels = c("High Risk Based on HLA", "High Risk Based on Having Relative with Type 1 Diabetes")
+)
+data$group <- fct_na_value_to_level(data$group, "Not High Risk")
+
+# IA 
+data$IApos <- factor(data$IApos, levels = c(0,1), labels = c("No Islet Autoimmunity", "Islet Autoimmunity"))
+
+
+label(data$ID) <- "Participant ID"
+label(data$censor) <- "Censoring Type"
+label(data$SEX) <- "Sex"
+label(data$hla) <- "High-Risk HLA Genotype"
+label(data$momage) <- "Maternal Age at Birth"
+label(data$rs4646536) <- "Single Nucleotide Polymorphism (SNP) at CYP27B1"
+label(data$FirstDegreeRel) <- "First-Degree Relative with Type 1 Diabetes"
+label(data$ethnicity) <- "Ethnicity"
+label(data$SuppIron_intake) <- "Supplemental Iron Intake (ug/day)"
+label(data$DietIron_intake) <- "Dietary Iron Intake (IU/day)"
+label(data$omega3_intake) <- "Omega-3 Intake (g/day)"
+label(data$IApos) <- "Islet Autoimmunity Status"
+label(data$visits) <- "Number of Visits"
+label(data$left) <- "Left Endpoint of IA Detection Interval"
+label(data$right) <- "Right Endpoint of IA Detection Interval"
+label(data$group) <- "Birth Cohort"
+```
+
+## Examine Missingness
+
+```{r}
+# Examine missingness
+vis_miss(data)
+gg_miss_var(data)
+```
+
+Observations:
+
+-   Only 7% of our data is right censored
+
+-   About 52% of children are missing all dietary intake values
+
+-   Looks like everything else is useable as is
+
+## Double Check Data
+
+```{r}
+# Examine data
+pretty_print(data)
+
+# View Summary
+summary(data)
+
+# Double check all variables
+glimpse(data)
+```
+
+All our variables check out now, it does not appear that there are any erroneous data entry values or errors.
+
+## Create Variables
+
+We need to create the Time to Event variable as they did in the paper.
+
+"Time to event was calculated as time from birth to the first autoantibody positive visit (for cases)".
+
+```{r}
+# Create time to event variable
+data$IA_time <- ifelse(data$IApos == "Islet Autoimmunity", data$right, data$left) 
+data$IA_event <- data$IApos 
+data$IA_event <- ifelse(data$IA_event == "Islet Autoimmunity", 1, 0)
+```
+
+## Filter Data
+
+We have to address that 52% of our cases do not have data for our PEV. We could impute that, but I don't like to impute with that many missing cases (max should be 30%) since it makes the imputation less accurate.
+
+How big is our sample if we filter out those children without `Omega3_intake` values?
+
+```{r}
+# Fiter out children with missing omega 3 intake values
+data_diet <- data |> 
+  filter(!is.na(omega3_intake))
+
+# Examine sample size
+table(data_diet$IApos)
+```
+
+That looks sufficient!
+
+Should note here that it looks like we are using a different subset of the data from the original paper. They only had 58 children with IA positivity. This is because they were doing a nested case control study and thus had a smaller sample than we have here.
+
+#### Explore IApos Missingness
+
+```{r}
+# Visually examine missingness of IApos
+gg_miss_fct(data, fct = IApos)
+
+# Break down of what percentage in each group is missing IA pos
+data %>%
+  group_by(IApos) %>%
+  dplyr::summarize(
+    n = n(),
+    missing_omega3 = sum(is.na(omega3_intake)),
+    percent_missing = round(100 * mean(is.na(omega3_intake)), 1)
+  )
+```
+
+53.9% of children without IA are missing dietary information, while only 22.4% of IA positive children are missing data. That's 2x more missing dietary data for IA negative children
+
+This likely reflects a **recall bias,** where **mothers of children who develop a disease are more likely to recall specific information such as diet for their children**.
+
+This means are **data is not MCAR**.
+
+The solution is to run two models: one with imputation, one without, and compare significances (sensitivity analysis).
+
+This is a limitation of this analysis. If we do a complete-case analysis, we may be excluding children without IA who had a low intake of Omega-3. This means we may be overestimating any effects we find.
+
+## Clean Data
+
+We should also note that there are some children who had one visit at birth, and then were never followed up, giving them an event time of 0. This messes up our plots as you cannot take the log of 0, and these children are being excluded in the cox models anyway.
+
+#### Remove Children with 1 Visit
+
+There is only one child in our data set that has 1 visit and an event time of 0, let's remove them.
+
+```{r}
+# Examine count
+data_diet <- data_diet |> 
+  filter(!(IA_time == 0 & visits == 1))
+
+
+view(data_diet)
+```
+
+#### Summary of Events
+
+```{r}
+# Average and median follow-up times for censored vs IA cases
+mean_censor_time  <- mean(data_diet$IA_time[data_diet$IA_event == 0], na.rm = TRUE)
+median_censor_time <- median(data_diet$IA_time[data_diet$IA_event == 0], na.rm = TRUE)
+
+mean_event_time   <- mean(data_diet$IA_time[data_diet$IA_event == 1], na.rm = TRUE)
+median_event_time <- median(data_diet$IA_time[data_diet$IA_event == 1], na.rm = TRUE)
+
+# Quick summary table
+summary_table <- data.frame(
+  Group = c("Censored", "IA Cases"),
+  Mean_Time = c(mean_censor_time, mean_event_time),
+  Median_Time = c(median_censor_time, median_event_time)
+)
+
+print(summary_table)
+```
+
+# Table 1
+
+```{r}
+# Create Table 1, stratified by IA Positivity
+table1(
+  ~ SEX + momage + hla + FirstDegreeRel + ethnicity +
+    SuppIron_intake + DietIron_intake + omega3_intake +
+    visits + group | IApos,
+  data = data_diet,
+  caption = "Descriptive Statistics Stratified by Islet Autoimmunity Status",
+  overall = c(left = "Total")
+)
+```
+
+# Exploratory Analysis
+
+Here we will examine each variable by itself to see if it is significantly associated with `IApos`, and whether we will consider it as a candidate covariate in our final model.
+
+::::::::::::: panel-tabset
+## Sex
+
+::: panel-tabset
+## Distribution
+
+```{r}
+# Create a summary table
+table_sex <- table(data_diet$SEX, data_diet$IApos)
+df_sex <- as.data.frame(table_sex)
+colnames(df_sex) <- c("Sex", "IApos", "Count")
+
+# Plot as grouped barplot
+ggplot(df_sex, aes(x = Sex, y = Count, fill = factor(IApos))) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(
+    title = "IA Positivity by Sex",
+    x = "Sex",
+    y = "Count",
+    fill = "IA Positive"
+  ) +
+  theme_minimal()
+```
+
+## Chi-Square Test
+
+```{r}
+# Run chi-square test for Table 1
+table_sex <- table(data_diet$SEX, data_diet$IApos)
+chisq.test(table_sex)
+```
+
+p-value = 1, thus there is no significant association between sex and developing IA, so we will not include it for consideration in our model
+
+## KM Curves
+
+```{r}
+# Example: KM curves by HLA risk
+km_fit <- survfit(Surv(IA_time, IA_event) ~ SEX, data = data_diet)
+ggsurvplot(km_fit, data = data_diet, pval = TRUE, conf.int = TRUE)
+
+# Run log rank test
+survdiff(Surv(IA_time, IA_event) ~ SEX, data = data_diet)
+```
+
+The KM curves between males and females are not significantly different from each other (p = 0.9).
+
+## Cox PH Model
+
+```{r}
+# Run CoxPH model
+cox_sex <- coxph(Surv(IA_time, IA_event) ~ SEX, data = data_diet)
+
+# Examine model
+cox_sex
+exp(confint(cox_sex))
+```
+
+## Summary
+
+`Sex` is not a significant predictor of time to event of `IA`, and will thus not be included in our final model
+:::
+
+## Maternal Age at Birth
+
+::: panel-tabset
+## Distribution
+
+```{r}
+# Examine distribution
+hist(data_diet$momage, 
+     breaks = 20, 
+     col = "lightblue", 
+     main = "Distribution of Maternal Age", 
+     xlab = "Maternal Age")
+```
+
+## T-Test
+
+```{r}
+# Run T-Test
+wilcox.test(momage ~ IA_event, data = data_diet)
+```
+
+There was no significant difference in `momage` for children who developed IA and those who did not (Wilxocon p = 0.7117).
+
+## Cox PH Model
+
+```{r}
+# Run Cox PH model
+cox_momage <- coxph(Surv(IA_time, IA_event) ~ momage, data = data_diet)
+
+# Examine model
+cox_momage
+exp(confint(cox_momage))
+```
+
+Mother's age at birth is not a significant predictor of time to IA positive (p = 0.759), and will thus not be included for consideration in the final model.
+
+## Summary
+
+Mother's age at birth is not a significant predictor of time to IA positive and will thus not be included for consideration in the final model.
+:::
+
+## High-Risk HLA Genotype
+
+::: panel-tabset
+## Distribution
+
+```{r}
+# Create a summary table
+table_hla <- table(data_diet$hla, data_diet$IApos)
+df_hla <- as.data.frame(table_hla)
+colnames(df_hla) <- c("hla", "IApos", "Count")
+
+# Plot as grouped barplot
+ggplot(df_hla, aes(x = hla, y = Count, fill = factor(IApos))) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(
+    title = "IA Positivity by HLA",
+    x = "HLA",
+    y = "Count",
+    fill = "IA Positive"
+  ) +
+  theme_minimal()
+```
+
+## Chi-Square
+
+```{r}
+# Run Chi-square
+table_hla <- table(data_diet$hla, data_diet$IApos)
+chisq.test(table_hla)
+```
+
+The log-rank test revealed a significant difference in IA-free survival curves between HLA genotype groups (χ² = 12.3, df = 1, p = 0.0005), indicating that time to IA onset varied meaningfully by genetic risk status.
+
+## KM Curves and Log-Rank Test
+
+```{r}
+# Example: KM curves by HLA risk
+km_fit <- survfit(Surv(IA_time, IA_event) ~ hla, data = data_diet)
+ggsurvplot(km_fit, data = data_diet, pval = TRUE, conf.int = TRUE)
+
+# Run log rank test
+survdiff(Surv(IA_time, IA_event) ~ hla, data = data_diet)
+```
+
+The log-rank test revealed a significant difference in IA-free survival curves between HLA genotype groups (χ² = 12.3, df = 1, p = 0.0005), indicating that time to IA onset varied meaningfully by genetic risk status.
+
+## Cox PH Model
+
+```{r}
+# Run Cox PH model
+cox_hla <- coxph(Surv(IA_time, IA_event) ~ hla, data = data_diet)
+
+# Examine model
+cox_hla
+exp(confint(cox_hla))
+```
+
+On average, children with high-risk HLA genotypes had a 2.01-fold increased hazard of developing IA-positive status compared to those without high-risk genotypes (HR = 2.01, 95% CI: \[1.35–2.99\], p = 0.0006).
+
+## Assumptions
+
+#### Log of the Negative Log of Estimated Survivor Functions
+
+```{r}
+# Examine log log curves
+ggsurvplot(km_fit, data = data_diet, fun = "cloglog",
+           legend.title = "HLA Genotype",
+           legend.labs = c("Low-Risk", "High-Risk"),
+           title = "Log(-log) Survival Curves by HLA Genotype")
+
+```
+
+Our log(-log(S(t)) curves intersect at several points, providing evidence that the PH assumption is not met.
+
+#### Schoenfeld Residuals
+
+```{r}
+# Examine zph
+cox.zph(cox_hla)
+
+# Plot
+plot(cox.zph(cox_hla))
+```
+
+Schoenfeld residuals indicated significant time-dependence (χ² = 8.21, df = 1, p = 0.0042), with the smoothed residual plot showing a non-constant Beta(t) function over time. This provides further evidence that the PH assumption for `HLA` is not met.
+
+#### Using Time-Dependent Correlations
+
+```{r}
+# Extract Schoenfeld residuals and time
+zph <- cox.zph(cox_hla)
+resid_hla <- zph$y[, "hla"]
+time <- zph$x
+
+# Filter out invalid time values (≤ 0 or NA)
+valid_idx <- which(!is.na(time) & time > 0)
+resid_hla_valid <- resid_hla[valid_idx]
+time_valid <- time[valid_idx]
+
+# Create time functions
+rank_time <- rank(time_valid)
+log_time <- log(time_valid)
+time2 <- time_valid^2
+
+# Run correlations and collect results
+cor_table <- data.frame(
+  Variable = c("rank(time)", "time", "log(time)", "time^2"),
+  Correlation = c(
+    cor(resid_hla_valid, rank_time),
+    cor(resid_hla_valid, time_valid),
+    cor(resid_hla_valid, log_time),
+    cor(resid_hla_valid, time2)
+  ),
+  p_value = c(
+    cor.test(resid_hla_valid, rank_time)$p.value,
+    cor.test(resid_hla_valid, time_valid)$p.value,
+    cor.test(resid_hla_valid, log_time)$p.value,
+    cor.test(resid_hla_valid, time2)$p.value
+  )
+)
+
+# Format p-values
+cor_table$p_value <- formatC(cor_table$p_value, format = "e", digits = 2)
+
+# Print SAS-style table
+print(cor_table, row.names = FALSE)
+```
+
+To evaluate the proportional hazards (PH) assumption for the HLA genotype, we examined the correlation between scaled Schoenfeld residuals and various functions of time. As shown in Table X, the residuals were significantly correlated with rank-transformed time (ρ = 0.250, *p* = 0.0109), raw time (ρ = 0.259, *p* = 0.0084), log-transformed time (ρ = 0.207, *p* = 0.0357), and squared time (ρ = 0.252, *p* = 0.0103).
+
+These consistent, statistically significant correlations **suggest a violation of the PH assumption for HLA**.
+
+## Accounting for Non Proportional Hazards
+
+#### Heavyside Function
+
+```{r}
+# Recode HLA as binary
+data_diet$hla_binary <- ifelse(data_diet$hla == "High-Risk HLA", 1, 0)
+
+# Fit Cox model with time-varying HLA effect using Heaviside step at 10 years
+model_heaviside <- coxph(
+  Surv(IA_time, IA_event) ~ tt(hla_binary),
+  data = data_diet,
+  tt = function(x, t, ...) {
+    cbind(x * (t <= 10), x * (t > 10))
+  }
+)
+
+# View results
+summary(model_heaviside)
+```
+
+The results of the Cox proportional hazards model using a Heaviside function at age 10 confirm what we observed visually in the Kaplan-Meier curves. Prior to age 10, children with the HLA genotype had a 1.76-fold increased hazard of testing IA positive compared to those without the genotype (HR = 1.76, 95% CI: 1.13–2.75, p = 0.012). After age 10, this hazard further increased to 3.63 times the hazard (HR = 3.63, 95% CI: 1.45–9.09, p = 0.006).
+
+#### Time-Varying Covariate
+
+```{r}
+# As a time-varying covariate
+model_logtime <- coxph(
+  Surv(IA_time, IA_event) ~ tt(hla_binary),
+  data = data_diet,
+  tt = function(x, t, ...) x * log(t)
+)
+
+model_logtime
+
+# Get 95% CI's
+exp(confint(model_logtime))
+
+```
+
+The Cox model with a time-varying effect using hla_binary × log(time) indicates that the hazard associated with HLA genotype increases logarithmically over time. Specifically, for each unit increase in log(time), the hazard of IA seroconversion increases by 59.3% (HR = 1.59, 95% CI: \[1.27, 1.98\], p \< 0.0001). This suggests that the impact of HLA risk intensifies with age, but in a nonlinear fashion — with sharper increases in hazard at later timepoints.
+
+#### LRT
+
+```{r}
+# Run LRT
+anova(model_logtime, model_heaviside, test = "LRT")
+```
+
+The Likelihood ratio test comparing the heaviside function model to the model with log-time was not significant (p = 0.0768), meaning that the added complexity of the heaviside model does not add predictive power to our model.
+
+I may still go with the heaviside function for ease of interpretability and how it aligns with the story of the KM curves visually.
+
+## Summary
+
+HLA is a significant predictor of time to IA positivity, and will be included for consideration in the final model
+
+Assessment of the proportional hazards assumption revealed a violation for HLA genotype. Schoenfeld residuals indicated significant time-dependence (χ² = 8.21, df = 1, p = 0.0042), with the smoothed residual plot showing a non-constant Beta(t) function over time. Additionally, log(-log) survival curves for high-risk and low-risk HLA groups intersected, further suggesting that the hazard ratio is not constant. Additionally, correlations between Schoenfeld residuals and time, time², log(time), and rank-transformed time were all statistically significant (*p* \< 0.05), providing further evidence of PH violation
+
+Based on assessment of the KM curves, a heaviside function of time = 10 years will be used to account for the time-varying nature of HLA genotype.
+:::
+
+## First Degree Relative with HLA Genotype
+
+::: panel-tabset
+## Distribution
+
+```{r}
+# Create a summary table
+table_hla_rel <- table(data_diet$FirstDegreeRel, data_diet$IApos)
+df_hla_rel <- as.data.frame(table_hla_rel)
+colnames(df_hla_rel) <- c("FirstDegreeRel", "IApos", "Count")
+
+# Plot as grouped barplot
+ggplot(df_hla_rel, aes(x = FirstDegreeRel, y = Count, fill = factor(IApos))) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(
+    title = "IA Positivity by First Degree Relative",
+    x = "HLA Relative",
+    y = "Count",
+    fill = "IA Positive"
+  ) +
+  theme_minimal()
+
+```
+
+## Chi-Square
+
+```{r}
+# Run Chi-square
+table_hla_rel <- table(data_diet$FirstDegreeRel, data_diet$IApos)
+chisq.test(table_hla_rel)
+```
+
+The log-rank test revealed a significant difference in IA-free survival curves between HLA relative groups (χ² = 5.30, df = 1, p = 0.02127), indicating that time to IA onset varied meaningfully by having a first degree relative with the HLA genotype.
+
+## KM Curves and Log Rank Test
+
+```{r}
+# Run KM curves
+km_fit <- survfit(Surv(IA_time, IA_event) ~ FirstDegreeRel, data = data_diet)
+ggsurvplot(km_fit, data = data_diet, pval = TRUE, conf.int = TRUE)
+
+# Run log rank test
+survdiff(Surv(IA_time, IA_event) ~ FirstDegreeRel, data = data_diet)
+```
+
+The log-rank test revealed a significant difference in IA-free survival curves between HLA first degree relatives (χ² = 5.30, df = 1, p = 0.014), indicating that time to IA onset varied meaningfully by having a first degree relative with the HLA genotype.
+
+`HLA First Degree Relative` is a significant predictor of time to IA positivity, and will thus be included in our final model.
+
+## Cox PH Model
+
+```{r}
+# Run Cox PH model
+cox_hla_rel <- coxph(Surv(IA_time, IA_event) ~ FirstDegreeRel, data = data_diet)
+
+# Examine model
+cox_hla_rel
+exp(confint(cox_hla_rel))
+```
+
+On average, children with a relative with the high-risk HLA genotypes had a 1.62-fold increased hazard of developing IA-positive status compared to those without high-risk genotypes (95% CI: \[1.10, 2.39\], p = 0.016).
+
+## Assumptions
+
+#### Log of the Negative Log of Estimated Survivor Functions
+
+```{r}
+# Examine log log curves
+ggsurvplot(km_fit, data = data_diet, fun = "cloglog",
+           legend.title = "HLA First Degree Relative",
+           legend.labs = c("No First Degree Relative", "First Degree Relative with HLA Genotype"),
+           title = "Log(-log) Survival Curves by HLA Genotype Relative")
+
+```
+
+Our log(-log(S(t)) curves intersect at the end, providing evidence that the PH assumption is not met.
+
+#### Schoenfeld Residuals
+
+```{r}
+# Examine zph
+cox.zph(cox_hla_rel)
+
+# Plot
+plot(cox.zph(cox_hla_rel))
+```
+
+Schoenfeld residuals indicated significant time-dependence (χ² = 7.58, df = 1, p = 0.0059), with the smoothed residual plot showing a non-constant Beta(t) function over time. This provides further evidence that the PH assumption for `FirstDegreeRel` is not met.
+
+#### Using Time-Dependent Correlations
+
+```{r}
+# Extract Schoenfeld residuals and time
+zph <- cox.zph(cox_hla_rel)
+resid_hla <- zph$y[, "FirstDegreeRel"]
+time <- zph$x
+
+# Filter out invalid time values (≤ 0 or NA)
+valid_idx <- which(!is.na(time) & time > 0)
+resid_hla_valid <- resid_hla[valid_idx]
+time_valid <- time[valid_idx]
+
+# Create time functions
+rank_time <- rank(time_valid)
+log_time <- log(time_valid)
+time2 <- time_valid^2
+
+# Run correlations and collect results
+cor_table <- data.frame(
+  Variable = c("rank(time)", "time", "log(time)", "time^2"),
+  Correlation = c(
+    cor(resid_hla_valid, rank_time),
+    cor(resid_hla_valid, time_valid),
+    cor(resid_hla_valid, log_time),
+    cor(resid_hla_valid, time2)
+  ),
+  p_value = c(
+    cor.test(resid_hla_valid, rank_time)$p.value,
+    cor.test(resid_hla_valid, time_valid)$p.value,
+    cor.test(resid_hla_valid, log_time)$p.value,
+    cor.test(resid_hla_valid, time2)$p.value
+  )
+)
+
+# Format p-values
+cor_table$p_value <- formatC(cor_table$p_value, format = "e", digits = 2)
+
+# Print SAS-style table
+print(cor_table, row.names = FALSE)
+```
+
+To evaluate the proportional hazards (PH) assumption for having a relative with the HLA genotype, we examined the correlation between scaled Schoenfeld residuals and various functions of time. As shown in Table X, the residuals were significantly correlated with rank-transformed time (ρ = −0.257, p = 0.0089), raw time (ρ = −0.254, p = 0.0098), log-transformed time (ρ = −0.206, p = 0.0371), and squared time (ρ = −0.231, p = 0.0187). These consistent, statistically significant correlations suggest a violation of the PH assumption for HLA relative status, indicating that its effect on IA risk varies over time
+
+## Accounting for Non-Proportional Hazards
+
+#### Heaviside Function
+
+```{r}
+
+# Recode as binary
+data_diet$hla_rel <- ifelse(data_diet$FirstDegreeRel == "Yes", 1, 0)
+
+# Fit Cox model with time-varying HLA effect using Heaviside step at 10 years
+model_heaviside <- coxph(
+  Surv(IA_time, IA_event) ~ tt(hla_rel),
+  data = data_diet,
+  tt = function(x, t, ...) {
+    cbind(x * (t <= 10), x * (t > 10))
+  }
+)
+
+# View results
+summary(model_heaviside)
+```
+
+The results of the heaviside function analysis confirm what we saw with the KM curves.
+
+Prior to age 10, children with a relative with the HLA genotype have 1.85 times the hazard to have IA positivity (95% CI: \[1.21, 2.84\], p = 0.00471). However, after age 10, this difference is no longer significant (p = 0.6085, 95% CI: \[0.24, 1.34\]).
+
+#### As a Time-Varying Covariate
+
+```{r}
+# As a time-varying covariate
+model_logtime <- coxph(
+  Surv(IA_time, IA_event) ~ tt(hla_rel),
+  data = data_diet,
+  tt = function(x, t, ...) x * log(t)
+)
+
+model_logtime
+
+# Get 95% CI's
+exp(confint(model_logtime))
+```
+
+It's not significant if we run it as a time-varying covariate (p = 0.196), which makes sense since the KM curves only differed visually prior to age 10.
+
+Since this was not significant and does not make sense to run this way, we will use the heaviside function in our final model.
+
+## Summary
+
+Having a first degree relative with HLA genotype was a significant predictor of the hazard of IA. Furthermore, the hazards for this variable were non-proportional, and thus based on the KM curves a heaviside function at Time = 10 years will be used.
+:::
+
+## Ethnicity
+
+::: panel-tabset
+## Distribution
+
+```{r}
+# Create a summary table
+table_eth <- table(data_diet$ethnicity, data_diet$IApos)
+df_eth <- as.data.frame(table_eth)
+colnames(df_eth) <- c("ethnicity", "IApos", "Count")
+
+# Plot as grouped barplot
+ggplot(df_eth, aes(x = ethnicity, y = Count, fill = factor(IApos))) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(
+    title = "IA Positivity by Ethnicity",
+    x = "HLA Relative",
+    y = "Count",
+    fill = "IA Positive"
+  ) +
+  theme_minimal()
+
+```
+
+## Chi-Square Test
+
+```{r}
+# Run Chi-square
+chisq.test(table_eth)
+```
+
+The Chi-square test for ethnicity was not significant (X-squared = 0.25, df =1, p = 0.614).
+
+## Cox PH Model
+
+```{r}
+# Run Cox PH model
+cox_eth <- coxph(Surv(IA_time, IA_event) ~ ethnicity, data = data_diet)
+
+# Examine model
+cox_eth
+exp(confint(cox_eth))
+```
+
+The Cox PH model for ethnicity was not significant (p = 0.844).
+
+Thus, `Ethnicity` will **not** be included in the final model as a potential covariate.
+
+## KM Curves and Log Rank Test
+
+```{r}
+# Run KM curves
+km_fit <- survfit(Surv(IA_time, IA_event) ~ ethnicity, data = data_diet)
+ggsurvplot(km_fit, data = data_diet, pval = TRUE, conf.int = TRUE)
+
+# Run log rank test
+survdiff(Surv(IA_time, IA_event) ~ ethnicity, data = data_diet)
+```
+
+Confirmatory KM curves revealing no difference in time to IA positivity based on ethnicity.
+
+## Summary
+
+`Ethnicity` was not a significant predictor of the hazard of IA and will thus not be considered in the final model.
+:::
+
+## Supplemental Iron Intake
+
+::: panel-tabset
+In the paper they used the SD of the dietary intake variables for interpretation purposes. But I want to interpret the results in terms of hazard increase per unit increase in dietary intake. So I can just keep these variables raw.
+
+## Distribution
+
+```{r}
+# Examine distribution
+hist(data_diet$SuppIron_intake, 
+     breaks = 20, 
+     col = "lightblue", 
+     main = "Distribution of Supplemental Iron Intake", 
+     xlab = "Supplemental Iron Intake")
+```
+
+## T-Test
+
+We will run a Wilcoxon T test since supplemental iron intake is non-normally distributed
+
+```{r}
+# Run T-Test
+wilcox.test(SuppIron_intake ~ IA_event, data = data_diet)
+```
+
+There is no statistically significant difference in supplemental iron intake between children who became positive for IA and those who did not (Wilcoxon Rank Test, p = 0.5393).
+
+## Cox PH Model
+
+```{r}
+# Run Cox PH model
+cox_supp <- coxph(Surv(IA_time, IA_event) ~ SuppIron_intake, data = data_diet)
+
+# Examine model
+cox_supp
+exp(confint(cox_supp))
+```
+
+The cox model confirms the results of the Wilcoxon Test. Supplemental iron intake was not significantly associated with time to IA positivity (p = 0.333).
+
+## Summary
+
+While supplemental intake of iron was not a significant predictor of the hazard of IA, it will be included as a potential covariate in the final model because both iron and omega-3 are related to immune function and inflammation, and they may interact agonistically or antogonistically. Thus we will consider it in the final model to account for this relationship.
+:::
+
+## Dietary Iron Intake
+
+::: panel-tabset
+## Distribution
+
+```{r}
+# Examine distribution
+hist(data_diet$DietIron_intake, 
+     breaks = 20, 
+     col = "lightblue", 
+     main = "Distribution of Dietary Iron Intake", 
+     xlab = "Dietary Iron Intake")
+```
+
+## T-Test
+
+```{r}
+# Run T-Test
+wilcox.test(DietIron_intake ~ IA_event, data = data_diet)
+```
+
+There was not a significant difference in dietary iron intake between children who developed IA and those who did not (Wilxocon p = 0.122).
+
+## Cox PH Model
+
+```{r}
+# Run Cox PH model
+cox_diet <- coxph(Surv(IA_time, IA_event) ~ DietIron_intake, data = data_diet)
+
+# Examine model
+cox_diet
+exp(confint(cox_diet))
+```
+
+Dietary iron intake was not significantly associated with time to IA positivity (p = 0.781). And it will therefore not be considered in the final model.
+
+#### Assumptions
+
+#### Schoenfeld Residuals
+
+```{r}
+# Examine schoenfeld residuals
+cox.zph(cox_diet)
+plot(cox.zph(cox_diet))
+```
+
+The Schoenfeld Test for Proportional Hazards was not significant (p = 0.67), and the schoenfeld plot looks acceptable.
+
+#### Martingale Residuals
+
+```{r}
+# Plot martingale predicted values vs residuals
+plot(predict(cox_diet), residuals(cox_diet, type = "martingale"),
+     xlab = "Fitted Value", ylab = "Martingale Residuals",
+     main = "Residual Plot", las = 1)
+abline(h = 0)
+lines(smooth.spline(predict(cox_diet), residuals(cox_diet, type = "martingale")), col = "red")
+```
+
+#### Time-Varying Correlations
+
+```{r}
+# Extract Schoenfeld residuals and time
+zph <- cox.zph(cox_diet)
+resid_diet <- zph$y[, "DietIron_intake"]
+time <- zph$x
+
+# Filter out invalid time values (≤ 0 or NA)
+valid_idx <- which(!is.na(time) & time > 0)
+resid_diet_valid <- resid_diet[valid_idx]
+time_valid <- time[valid_idx]
+
+# Create time functions
+rank_time <- rank(time_valid)
+log_time <- log(time_valid)
+time2 <- time_valid^2
+
+# Run correlations and collect results
+cor_table <- data.frame(
+  Variable = c("rank(time)", "time", "log(time)", "time^2"),
+  Correlation = c(
+    cor(resid_diet_valid, rank_time),
+    cor(resid_diet_valid, time_valid),
+    cor(resid_diet_valid, log_time),
+    cor(resid_diet_valid, time2)
+  ),
+  p_value = c(
+    cor.test(resid_diet_valid, rank_time)$p.value,
+    cor.test(resid_diet_valid, time_valid)$p.value,
+    cor.test(resid_diet_valid, log_time)$p.value,
+    cor.test(resid_diet_valid, time2)$p.value
+  )
+)
+
+# Format p-values
+cor_table$p_value <- formatC(cor_table$p_value, format = "e", digits = 2)
+
+# Print SAS-style table
+print(cor_table, row.names = FALSE)
+```
+
+Time Varying correlations confirm that dietary iron does not violate the assumption of PH (all p's \> 0.05).
+
+## Summary
+
+While dietary intake of iron was not a significant predictor of the hazard of IA, it will be included as a potential covariate in the final model because both iron and omega-3 are related to immune function and inflammation, and they may interact agonistically or antogonistically. Thus we will consider it in the final model to account for this relationship.
+:::
+
+## Omega 3 Intake
+
+::: panel-tabset
+## Distribution
+
+```{r}
+# Examine distribution
+hist(data_diet$omega3_intake, 
+     breaks = 20, 
+     col = "lightblue", 
+     main = "Distribution of Omega Intake", 
+     xlab = "Omega 3 Intake")
+```
+
+## T-test
+
+```{r}
+# Run T-Test
+wilcox.test(omega3_intake ~ IA_event, data = data_diet)
+```
+
+There was a significant difference in omega 3 intake between children who developed IA and those who did not (Wilcoxon p = 0.004051).
+
+## Cox PH Model
+
+```{r}
+# Run Cox PH model
+cox_omega <- coxph(Surv(IA_time, IA_event) ~ omega3_intake, data = data_diet)
+
+# Examine model
+cox_omega
+exp(confint(cox_omega))
+```
+
+Omega-3 intake was significantly associated with reduced risk of islet autoimmunity. In a Cox proportional hazards model, each 1 g/day increase in omega-3 intake was associated with a 40% reduction in hazard (HR = 0.60, 95% CI: 0.42–0.87, p = 0.0065).
+
+## Assumptions
+
+#### Log(-log(S(t))
+
+```{r}
+# Break into quantiles
+data_diet$omega3_cat <- cut(data_diet$omega3_intake,
+                            breaks = quantile(data_diet$omega3_intake, probs = c(0, 0.33, 0.66, 1)),
+                            labels = c("Low", "Medium", "High"))
+fit <- survfit(Surv(IA_time, IA_event) ~ omega3_cat, data = data_diet)
+ggsurvplot(fit, fun = "cloglog")  # log(-log(S(t))) transformation
+```
+
+Looking at the log(-log(S(t)) plot, there appears to be some intersection, but it's also close to parallel. However this is a plot based on the tertiles, omega-3 intake is continuous so this is not the most appropriate method. We will instead look at the schoenfeld and martingale residuals.
+
+#### Schoenfeld Residuals
+
+```{r}
+# Examine schoenfeld residuals
+cox.zph(cox_omega)
+plot(cox.zph(cox_omega))
+```
+
+Examining the Schoenfeld residuals, we see a mostly flat trend. This confirms the results of the Schoenfeld Test of Proportional Hazards was not significant (p = 0.49), leading us to conclude that the assumption of PH is met for `Omega3 Intake`.
+
+This means we can treat it as is, and do not need to
+
+So we're modelling omega 3 intake as time-fixed, even though it technically varies over time, our data does not capture this variation. Furthermore, the assumption of PH holds for omega 3 intake, showing that the effect of omega-3 is constant over time.
+
+#### Martingale Residuals
+
+```{r}
+# Plot martingale predicted values vs residuals
+plot(predict(cox_omega), residuals(cox_omega, type = "martingale"),
+     xlab = "Fitted Value", ylab = "Martingale Residuals",
+     main = "Residual Plot", las = 1)
+abline(h = 0)
+lines(smooth.spline(predict(cox_omega), residuals(cox_omega, type = "martingale")), col = "red")
+```
+
+While we can't replicate the Martingale plot we get in SAS, we can still plot the fitted values against the predicted martingale residuals. We get a flat line, showing that the PH assumption is met.
+
+#### Visualize Predicted Values
+
+Let's visualize the difference in KM curve between 1, 2, and 3g of omega 3 intake per day.
+
+```{r}
+# Create new data for prediction
+newdata <- data.frame(omega3_intake = c(0, 1, 2))  # e.g., 0g, 1g, 2g/day
+fit <- coxph(Surv(IA_time, IA_event) ~ omega3_intake, data = data_diet)
+surv_fit <- survfit(fit, newdata = newdata)
+
+ggsurvplot(surv_fit, data = newdata, legend.title = "Omega-3 Intake (g/day)")
+```
+
+#### Time Varying Correlations
+
+```{r}
+# Extract Schoenfeld residuals and time
+zph <- cox.zph(cox_omega)
+resid_omega <- zph$y[, "omega3_intake"]
+time <- zph$x
+
+# Filter out invalid time values (≤ 0 or NA)
+valid_idx <- which(!is.na(time) & time > 0)
+resid_omega_valid <- resid_omega[valid_idx]
+time_valid <- time[valid_idx]
+
+# Create time functions
+rank_time <- rank(time_valid)
+log_time <- log(time_valid)
+time2 <- time_valid^2
+
+# Run correlations and collect results
+cor_table <- data.frame(
+  Variable = c("rank(time)", "time", "log(time)", "time^2"),
+  Correlation = c(
+    cor(resid_omega_valid, rank_time),
+    cor(resid_omega_valid, time_valid),
+    cor(resid_omega_valid, log_time),
+    cor(resid_omega_valid, time2)
+  ),
+  p_value = c(
+    cor.test(resid_omega_valid, rank_time)$p.value,
+    cor.test(resid_omega_valid, time_valid)$p.value,
+    cor.test(resid_omega_valid, log_time)$p.value,
+    cor.test(resid_omega_valid, time2)$p.value
+  )
+)
+
+# Format p-values
+cor_table$p_value <- formatC(cor_table$p_value, format = "e", digits = 2)
+
+# Print SAS-style table
+print(cor_table, row.names = FALSE)
+```
+
+All time varying correlations are p \> 0.05, confirming that Omega 3 Intake does not violate the assumption of Proportional Hazards.
+
+## Summary
+
+`Omega3 Intake` does not violate the PH assumption. Thus we can include it in our final model as is.
+:::
+
+## Number of Visits
+
+::: panel-tabset
+## Distribution
+
+```{r}
+# Examine distribution
+hist(data_diet$visits, 
+     breaks = 20, 
+     col = "lightblue", 
+     main = "Distribution of Number of Visits", 
+     xlab = "Number of Visits")
+
+```
+
+## T-Test
+
+```{r}
+# Run T-Test
+wilcox.test(visits ~ IA_event, data = data_diet)
+```
+
+There is a significant difference in the number of visits a child had between children who were IA positive and those who were not (p \< 0.0001).
+
+## Cox PH Model
+
+```{r}
+# Run Cox PH model
+cox_visits <- coxph(Surv(IA_time, IA_event) ~ visits, data = data_diet)
+
+# Examine model
+cox_visits
+exp(confint(cox_visits))
+```
+
+There was a significant association between number of visits and the hazard of developing IA. Every 1 visit increase was associated with a 38% decrease in the hazard of developing IA (p \< 0.0001, 95% CI: \[-.41, 0.54\]).
+
+This make sense on several fronts. Children of health conscious parents would likely end up going to the doctor more often which would lead to improved health. More frequent visits could also lead to earlier intervention on unhealthy dietary or health behaviors. More visits is also likely associated with socioeconomic factors, where parents with higher salaries are more able to afford to take their child to the doctor, and can also afford the time away from work. Finally, more frequent visits could also lead to higher adherence to health related behaviors such as omega 3 intake.
+
+Thus it `visits` will be considered in the final model.
+
+## Assumptions
+
+#### Log(-log(S(t)))
+
+```{r}
+# Break into quantiles
+data_diet$visits_quant <- cut(data_diet$visits,
+                            breaks = quantile(data_diet$visits, probs = c(0, 0.33, 0.66, 1)),
+                            labels = c("Low", "Medium", "High"))
+fit <- survfit(Surv(IA_time, IA_event) ~ visits_quant, data = data_diet)
+ggsurvplot(fit, fun = "cloglog")  # log(-log(S(t))) transformation
+```
+
+Okay this one may violate PH. Let's examine the Schoenfeld residuals.
+
+#### Schoenfeld Residuals
+
+```{r}
+# Examine schoenfeld residuals
+cox.zph(cox_visits)
+plot(cox.zph(cox_visits))
+```
+
+Based on the Schoenfeld Test for Proportional Hazards (p \< 0.0001) and the smoothed plot of the Schoenfeld residuals, we can conclude that the assumption of PH for number of visits is violated.
+
+#### Martingale Residuals
+
+```{r}
+# Plot martingale predicted values vs residuals
+plot(predict(cox_visits), residuals(cox_visits, type = "martingale"),
+     xlab = "Fitted Value", ylab = "Martingale Residuals",
+     main = "Residual Plot", las = 1)
+abline(h = 0)
+lines(smooth.spline(predict(cox_visits), residuals(cox_visits, type = "martingale")), col = "red")
+```
+
+We see some slight violated of PH with the martingale residuals plot, but not as drastic as in the Schoenfeld residuals plot.
+
+#### Time Varying Correlations
+
+```{r}
+# Extract Schoenfeld residuals and time
+zph <- cox.zph(cox_visits)
+resid_visits <- zph$y[, "visits"]
+time <- zph$x
+
+# Filter out invalid time values (≤ 0 or NA)
+valid_idx <- which(!is.na(time) & time > 0)
+resid_visits_valid <- resid_visits[valid_idx]
+time_valid <- time[valid_idx]
+
+# Create time functions
+rank_time <- rank(time_valid)
+log_time <- log(time_valid)
+time2 <- time_valid^2
+
+# Run correlations and collect results
+cor_table <- data.frame(
+  Variable = c("rank(time)", "time", "log(time)", "time^2"),
+  Correlation = c(
+    cor(resid_visits_valid, rank_time),
+    cor(resid_visits_valid, time_valid),
+    cor(resid_visits_valid, log_time),
+    cor(resid_visits_valid, time2)
+  ),
+  p_value = c(
+    cor.test(resid_visits_valid, rank_time)$p.value,
+    cor.test(resid_visits_valid, time_valid)$p.value,
+    cor.test(resid_visits_valid, log_time)$p.value,
+    cor.test(resid_visits_valid, time2)$p.value
+  )
+)
+
+# Format p-values
+cor_table$p_value <- formatC(cor_table$p_value, format = "e", digits = 2)
+
+# Print SAS-style table
+print(cor_table, row.names = FALSE)
+```
+
+The time varying correlations also provide further evidence for violation of PH (Rank Time, Time, Time\^2, and Log(Time) p-values all \< 0. 0001).
+
+## Addressing Non-Proportional Hazards
+
+#### Time-Varying Covariate
+
+I don't think it makes sense to use heaviside functions here. The KM plots showed an effect where higher visits was associated with a longer survival time, so let's do log(time).
+
+```{r}
+# Model with time varying covariate
+coxph(Surv(IA_time, IA_event) ~ tt(visits),
+      tt = function(x, t, ...) x * log(t),
+      data = data_diet)
+```
+
+We modeled visit frequency as a time-varying covariate using a log(time) interaction. The effect of visits on the hazard of testing positive for IA changes over time (p \< 0.0001). The effect of visits on IA risk increased over time, with the hazard ratio per additional visit decreasing from 0.41 at 100 days to 0.25 at 1000 days. This suggests that the protective effect of frequent visits strengthens as follow-up progresses.
+
+#### Visualize predicted effect over time
+
+```{r}
+# Create new data for prediction
+newdata <- data.frame(visits = c(1, 5, 10, 20)) 
+surv_fit <- survfit(cox_visits, newdata = newdata)
+
+ggsurvplot(surv_fit,
+           data = newdata,
+           legend.title = "Number of Visits",
+           legend.labs = c("1", "5", "10", "20"),
+           xlab = "Age (years)",
+           ylab = "Survival Probability",
+           ggtheme = theme_minimal())
+
+```
+
+## Summary
+
+Visits was a significant predictor of IA positivity and will be included for consideration in the final model.
+:::
+
+## Birth Cohorts
+
+::: panel-tabset
+## Distribution
+
+```{r}
+# Create a summary table
+table_group <- table(data_diet$group, data_diet$IApos)
+df_group <- as.data.frame(table_group)
+colnames(df_group) <- c("group", "IApos", "Count")
+
+# Plot as grouped barplot
+ggplot(df_group, aes(x = group, y = Count, fill = factor(IApos))) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(
+    title = "IA Positivity by Ethnicity",
+    x = "Birth Cohort",
+    y = "Count",
+    fill = "IA Positive"
+  ) +
+  theme_minimal()
+```
+
+## Chi-Square
+
+```{r}
+# Run Chi Square
+chisq.test(table_group)
+```
+
+The Chi-Square test is significant, showing an association between birth cohort and IA positivity.
+
+## Cox PH Model
+
+```{r}
+# Relevel
+data_diet$group <- relevel(data_diet$group, ref = "Not High Risk")
+
+# Run Cox PH model
+cox_group <- coxph(Surv(IA_time, IA_event) ~ group, data = data_diet)
+
+# Examine model
+cox_group
+exp(confint(cox_group))
+```
+
+Risk Group is a significant predictor of time to IA positivity (p = 0.0002). Children who had HLA had 2.7 times the hazard of testing IA positive (p \< 0.0001), while those who had a first degree relative with HLA had 1.86 times the hazard (p = 0.0152).
+
+## Assumptions
+
+#### Log(-log(S(t)))
+
+```{r}
+# Create survival curves from the Cox model
+
+# Relevel to set reference group
+data_diet$group <- relevel(data_diet$group, ref = "Not High Risk")
+
+# Fit survival curves by group (not just Cox model)
+surv_group <- survfit(Surv(IA_time, IA_event) ~ group, data = data_diet)
+
+# Plot log(-log) survival curves
+ggsurvplot(surv_group, data = data_diet, fun = "cloglog",
+           legend.title = "Birth Cohort",
+           legend.labs = c("Not High Risk", "HLA Genotype", "Relative with HLA Genotype"),
+           title = "Log(-log) Survival Curves by Birth Cohort")
+```
+
+PH appears to be violated based on the log(-log(S(t)).
+
+#### Schoenfeld Residuals
+
+```{r}
+# Examine schoenfeld residuals
+cox.zph(cox_group)
+plot(cox.zph(cox_group))
+```
+
+The Schoenfeld Test for Proportional Hazards confirms that PH is violated (p = 0.015). The plot doesn't look too bad but does curve.
+
+#### Time-Varying Correlations
+
+```{r}
+# Extract Schoenfeld residuals and time
+zph <- cox.zph(cox_group)
+resid_group <- zph$y[, "group"]
+time <- zph$x
+
+# Filter out invalid time values (≤ 0 or NA)
+valid_idx <- which(!is.na(time) & time > 0)
+resid_group_valid <- resid_group[valid_idx]
+time_valid <- time[valid_idx]
+
+# Create time functions
+rank_time <- rank(time_valid)
+log_time <- log(time_valid)
+time2 <- time_valid^2
+
+# Run correlations and collect results
+cor_table <- data.frame(
+  Variable = c("rank(time)", "time", "log(time)", "time^2"),
+  Correlation = c(
+    cor(resid_group_valid, rank_time),
+    cor(resid_group_valid, time_valid),
+    cor(resid_group_valid, log_time),
+    cor(resid_group_valid, time2)
+  ),
+  p_value = c(
+    cor.test(resid_group_valid, rank_time)$p.value,
+    cor.test(resid_group_valid, time_valid)$p.value,
+    cor.test(resid_group_valid, log_time)$p.value,
+    cor.test(resid_group_valid, time2)$p.value
+  )
+)
+
+# Format p-values
+cor_table$p_value <- formatC(cor_table$p_value, format = "e", digits = 2)
+
+# Print SAS-style table
+print(cor_table, row.names = FALSE)
+```
+
+The time correlations are not flagging a violation in PH, but we did see violation in the Schoenfeld test and plot, and the log(-log(S(t))) plot.
+
+Thus we conclude that the effect of birth cohort differs over time.
+
+## Addressing Non-Propotional Hazards
+
+#### Heaviside Function
+
+We saw before that using age = 10 as a heaviside function worked well. Looking at the KM plots, it appears that this will be useful here as well.
+
+```{r}
+# Create dummy variables
+data_diet$group_hla <- ifelse(data_diet$group == "High Risk Based on HLA", 1, 0)
+data_diet$group_fdr <- ifelse(data_diet$group == "High Risk Based on Having Relative with Type 1 Diabetes", 1, 0)
+
+# Run Model
+cox_group_heaviside <- coxph(
+  Surv(IA_time, IA_event) ~ tt(group_hla) + tt(group_fdr),
+  data = data_diet,
+  tt = function(x, t, ...) cbind(x * (t <= 10), x * (t > 10))
+)
+
+# Examine model
+cox_group_heaviside
+confint(cox_group_heaviside)
+
+```
+
+Let's also compare HLA genotype to having a relative with HLA genotype.
+
+```{r}
+# Contrasts
+library(car)
+
+# Compare HLA vs FDR before age 10
+linearHypothesis(cox_group_heaviside, "tt(group_hla)1 = tt(group_fdr)1")
+
+# Compare HLA vs FDR after age 10
+linearHypothesis(cox_group_heaviside, "tt(group_hla)2 = tt(group_fdr)2")
+```
+
+The results of the Heaviside Cox PH model confirm what we saw with the Kaplan-Meier curves. Birth cohort is a significant predictor of time to IA positivity (LRT = 19.12, df = 4, p = 0.0007).
+
+Compared to those in the low-risk group, children who had the HLA genotype had 2.58 times the hazard of testing positive for IA if they were under 10 years old (p = 0.0010, 95% CI: \[0.38, 1.51\]), which increased to 3.70 times the hazard after age 10 (p = 0.0123, 95% CI: \[0.28, 2.33\]).
+
+Children who had a relative with the HLA genotype had 1.98 times the hazard of testing positive for IA before age 10 (p = 0.0145, 95% CI: \[0.14, 1.24\]), a difference that was no longer significant after year 10 (HR = 1.07, p = 0.9277, 95% CI: \[–1.32, 1.45\]).
+
+There was no significant difference in the hazard of developing IA between children with the HLA genotype and those with a first-degree relative with the HLA genotype prior to age 10 (p = 0.2933, 95% CI: \[–0.75, 0.23\]). However, there was a marginally significant difference after year 10 (p = 0.0620, 95% CI: \[–0.06, 1.29\]), a difference that could become significant with greater time available in the dataset or if we used multiple Heaviside functions.
+
+## Summary
+
+Birth Cohort was a signficant predictor of IA positivity hazard, and will be included in the final model.
+
+Since this variable was created in the dataset from the `HLA` and `FDR` variables, presumably for clinically meaningful reasons, we will use this variable instead of the individual variables themselves.
+
+Furthermore, we will use the Time = 10 heaviside function we decided on earlier on, since this appears to account for a clinically meaningful cut off point for both high risk group variables.
+:::
+:::::::::::::
+
+# Analysis
+
+## Covariates
+
+#### Elliminated from Consideration
+
+Based on our examination of the individual covariates we found that the following are not significant predictors of time to IA positivity:
+
+-   Sex
+
+-   Maternal Age at Birth
+
+-   Ethnicity
+
+#### Covariates in Consideration
+
+We found these variables to be significant predictors of time to IA positivity and they will be included for consideration in our final model:
+
+-   Omega 3 Intake (The PEV)
+
+-   Dietary and Supplemental Iron (While these were not significantly associated with time to IA positivity, we want to control for them while modelling omega 3 intake, since they may be related and impact each other).
+
+-   Birth Cohort (Low Risk, High-Risk Based on HLA, High-Risk based on First Degree Relative with HLA)
+
+#### Accounting for Non-Proportional Hazards
+
+Additionally, the following were found to violate the assumption of Proportional Hazards and will be handled accordingly:
+
+-   Number of visits (Time-Varying Covariate)
+
+-   Birth Cohort (Heaviside Function at Year 10).
+
+## Perform Analysis
+
+::: panel-tabset
+## Full Model
+
+```{r}
+# Run model
+model_full <- coxph(
+  Surv(IA_time, IA_event) ~ SuppIron_intake + DietIron_intake + omega3_intake + tt(group_hla) + tt(group_fdr),
+  data = data_diet,
+  tt = function(x, t, ...) cbind(x * (t <= 10), x * (t > 10))
+)
+
+model_full
+```
+
+Supplemental Iron Intake was not a significant predictor of time to IA positivity. Let's remove it.
+
+All of the other variables are predictive of the hazard of IA in directions consistent to our single variable explorations.
+
+## Reduced Model 1
+
+We remove supplemental iron intake from the model as it was not a significant predictor of IA hazard.
+
+```{r}
+# Run model
+model_red <- coxph(
+  Surv(IA_time, IA_event) ~ DietIron_intake + omega3_intake + tt(group_hla) + tt(group_fdr),
+  data = data_diet,
+  tt = function(x, t, ...) cbind(x * (t <= 10), x * (t > 10))
+)
+
+# Examine model
+model_red
+confint(model_red)
+```
+
+## Reduced Model 2
+
+I want to examine if dietary intake of iron adds to our predictive power. It was significant in the previous model so this is more out of curiosity's sake.
+
+```{r}
+# Run model
+model_red2 <- coxph(
+  Surv(IA_time, IA_event) ~ omega3_intake + tt(group_hla) + tt(group_fdr),
+  data = data_diet,
+  tt = function(x, t, ...) cbind(x * (t <= 10), x * (t > 10))
+)
+
+# Examine model
+model_red2
+
+# Run LRT
+anova(model_red, model_red2, method = "LRT")
+```
+
+The LRT between model_red and model_red2 is significant (p = 0.01733), confirming that including dietary iron intake in the model adds predictive power to time to IA positivity.
+
+## Final Model
+
+Our final model includes: Dietary Iron Intake, Omega-3 Intake, and Birth Cohort.
+
+```{r}
+# Run model
+model_red <- coxph(
+  Surv(IA_time, IA_event) ~ DietIron_intake + omega3_intake + tt(group_hla) + tt(group_fdr),
+  data = data_diet,
+  tt = function(x, t, ...) cbind(x * (t <= 10), x * (t > 10))
+)
+
+# Examine model
+model_red
+confint(model_red)
+
+```
+
+#### Compare HLA to First Degree Relative Groups
+
+```{r}
+library(car)
+
+# Test if either time window is different from the other between HLA and FDR groups
+linearHypothesis(model_red, c(
+  "tt(group_fdr)1 - tt(group_hla)1 = 0",
+  "tt(group_fdr)2 - tt(group_hla)2 = 0"
+))
+```
+
+To assess whether the effect of FDR differed from HLA across time, we fit a Cox proportional hazards model with Heaviside functions (split at age 10) and included time-varying coefficients for each group. A joint Wald test comparing the FDR and HLA effects in both time intervals yielded: χ²(2) = 0.46, p = 0.50, indicating no significant difference in the hazard of IA between FDR and HLA groups across time
+:::
+
+# Results
+
+The final Cox proportional hazards model included dietary iron intake, omega-3 intake, and time-varying effects for HLA genotype and first-degree relative (FDR) status, modeled using a Heaviside function with a 10-year split based on Kaplan-Meier curves. Supplemental iron intake was removed from the model because it was not a significant predictor of the hazard of IA in the full model.
+
+![](images/clipboard-3375438849.png){width="100%"}
+
+![](images/clipboard-748960784.png)
+
+#### Iron Intake
+
+Dietary iron intake was significantly associated with increased IA risk (HR 1.05 per 1 IU/day, 95% CI: \[1.01, 1.09\], p = 0.012), controlling for other covariates. The hazard for IA increased by 5% for each 1 IU/day increase in iron intake.
+
+#### Omega-3 Intake
+
+Omega-3 intake was significantly protective (HR 0.44 per 1 g/day, 95% CI: \[0.28, 0.69\], p \< 0.001), and granted a 56% reduction in the hazard of IA positivity.
+
+##### HLA Genotype
+
+HLA genotype was associated with elevated risk: children with high-risk HLA had a 2.42-fold increased hazard before age 10 (95% CI: \[1.37, 4.27\], p = 0.002) and a 3.63-fold increase after age 10 (95% CI: \[1.30, 10.15\], p = 0.014).
+
+##### First Degree Relative with HLA Genotype
+
+FDR status was associated with a 2.01-fold increased hazard before age 10 (95% CI: \[1.16, 3.49\], p = 0.013), but this association was not significant after age 10 (HR 1.07, 95% CI: \[0.27, 4.28\], p = 0.918).
+
+There was no significant difference in the hazard of IA between children with the HLA genotype, and children with relative who have the HLA genotype (Joint Wald Test: χ²(2) = 0.46, p = 0.50).
+
+## Visualize Results
+
+#### Forest Plot of Main Effects
+
+```{r}
+# Extract coefficients and confidence intervals
+summary_model <- summary(model_red)
+
+# Create a tidy data frame
+effects_df <- data.frame(
+  term = rownames(summary_model$coefficients),
+  coef = summary_model$coefficients[, "coef"],
+  HR = summary_model$coefficients[, "exp(coef)"],
+  lower = summary_model$conf.int[, "lower .95"],
+  upper = summary_model$conf.int[, "upper .95"],
+  pval = summary_model$coefficients[, "Pr(>|z|)"]
+)
+
+# Clean up term names for plotting
+effects_df$term <- dplyr::recode(effects_df$term,
+  "DietIron_intake" = "Dietary Iron Intake",
+  "omega3_intake" = "Omega-3 Intake",
+  "tt(group_hla)1" = "HLA Genotype (≤10 yrs)",
+  "tt(group_hla)2" = "HLA Genotype (>10 yrs)",
+  "tt(group_fdr)1" = "FDR Status (≤10 yrs)",
+  "tt(group_fdr)2" = "FDR Status (>10 yrs)"
+)
+
+# Order terms for plotting
+effects_df$term <- factor(effects_df$term, levels = rev(effects_df$term))
+
+# Plot forest plot
+ggplot(effects_df, aes(x = HR, y = term)) +
+  geom_point(size = 3, color = "steelblue") +
+  geom_errorbarh(aes(xmin = lower, xmax = upper), height = 0.2, color = "steelblue") +
+  geom_vline(xintercept = 1, linetype = "dashed", color = "gray40") +
+  scale_x_log10() +
+  labs(
+    title = "Hazard Ratios for IA Positivity Risk Factors",
+    x = "Hazard Ratio (log scale)",
+    y = NULL
+  ) +
+  theme_minimal(base_size = 14)
+```
+
+#### Omega-3 Intake Main Effect
+
+```{r}
+# Step 1: Define omega-3 intake levels and baseline covariates
+omega_seq <- c(0, 1, 2)
+newdata <- data.frame(
+  DietIron_intake = mean(data_diet$DietIron_intake, na.rm = TRUE),
+  omega3_intake = omega_seq,
+  group_hla = 0,
+  group_fdr = 0
+)
+
+# Step 2: Extract coefficients and variance-covariance matrix
+coef_red <- coef(model_red)
+vcov_red <- vcov(model_red)
+
+# Step 3: Build covariate matrix and compute linear predictors
+X <- cbind(
+  DietIron_intake = newdata$DietIron_intake,
+  omega3_intake = newdata$omega3_intake
+)
+beta <- coef_red[c("DietIron_intake", "omega3_intake")]
+lp <- X %*% beta
+
+# Step 4: Compute standard errors of linear predictors
+se_lp <- sqrt(diag(X %*% vcov_red[c("DietIron_intake", "omega3_intake"), c("DietIron_intake", "omega3_intake")] %*% t(X)))
+
+# Step 5: Get baseline survival from null model
+model_base <- coxph(Surv(IA_time, IA_event) ~ 1, data = data_diet)
+base_surv <- survfit(model_base)
+
+# Step 6: Simulate survival curves and confidence intervals
+surv_df <- lapply(1:length(lp), function(i) {
+  S <- base_surv$surv^exp(lp[i])
+  S_upper <- base_surv$surv^exp(lp[i] + 1.96 * se_lp[i])
+  S_lower <- base_surv$surv^exp(lp[i] - 1.96 * se_lp[i])
+  data.frame(time = base_surv$time, surv = S, lower = S_lower, upper = S_upper, omega = paste0(omega_seq[i], "g/day"))
+})
+
+# Step 7: Combine and plot
+plot_df <- bind_rows(surv_df)
+ggplot(plot_df, aes(x = time, y = surv, color = omega)) +
+  geom_line(size = 1.2) +
+  geom_ribbon(aes(ymin = lower, ymax = upper, fill = omega), alpha = 0.2, color = NA) +
+  labs(x = "Time (years)", y = "Survival Probability",
+       title = "Model-Based Survival Curves with 95% CI",
+       color = "Omega-3 Intake", fill = "Omega-3 Intake") +
+  theme_minimal()
+```
+
+#### HLA Genotype
+
+We will model the predicted KM curves using the mean for dietary iron intake and omega 3 intake, and setting the birth cohort to HLA genotype.
+
+```{r}
+# Step 1: Extract means
+mean_iron <- mean(data_diet$DietIron_intake, na.rm = TRUE)
+mean_omega <- mean(data_diet$omega3_intake, na.rm = TRUE)
+
+# Step 2: Extract coefficients and variance-covariance matrix
+coef_red <- coef(model_red)
+vcov_red <- vcov(model_red)
+
+# Step 3: Get baseline survival from null model
+model_base <- coxph(Surv(IA_time, IA_event) ~ 1, data = data_diet)
+base_surv <- survfit(model_base)
+
+# Step 4: Simulate survival curves with CI
+simulate_survival <- function(hla_status) {
+  # Build time-varying covariate matrix
+  covariate_matrix <- sapply(base_surv$time, function(t) {
+    hla1 <- ifelse(t <= 10, hla_status, 0)
+    hla2 <- ifelse(t > 10, hla_status, 0)
+    c(
+      DietIron_intake = mean_iron,
+      omega3_intake = mean_omega,
+      `tt(group_hla)1` = hla1,
+      `tt(group_hla)2` = hla2
+    )
+  })
+  
+  # Compute linear predictors
+  lp <- apply(covariate_matrix, 2, function(x) sum(x * coef_red[names(x)]))
+  
+  # Compute standard errors
+  se_lp <- apply(covariate_matrix, 2, function(x) {
+    sqrt(t(x) %*% vcov_red[names(x), names(x)] %*% x)
+  })
+  
+  # Compute survival and CI
+  S <- base_surv$surv^exp(lp)
+  S_upper <- base_surv$surv^exp(lp + 1.96 * se_lp)
+  S_lower <- base_surv$surv^exp(lp - 1.96 * se_lp)
+  
+  data.frame(time = base_surv$time, surv = S, lower = S_lower, upper = S_upper,
+             hla = ifelse(hla_status == 1, "HLA+", "HLA−"))
+}
+
+# Step 5: Generate curves
+df_hla0 <- simulate_survival(hla_status = 0)
+df_hla1 <- simulate_survival(hla_status = 1)
+plot_df <- bind_rows(df_hla0, df_hla1)
+
+# Step 6: Plot
+ggplot(plot_df, aes(x = time, y = surv, color = hla)) +
+  geom_line(size = 1.2) +
+  geom_ribbon(aes(ymin = lower, ymax = upper, fill = hla), alpha = 0.2, color = NA) +
+  labs(x = "Time (years)", y = "Survival Probability",
+       title = "Model-Based Survival Curves with 95% CI: HLA Genotype vs No HLA",
+       color = "HLA Status", fill = "HLA Status") +
+  theme_minimal()
+```
+
+We see the simulation of the model, which is similiar to the effect we saw of the original raw KM curves for omega-3 intake, where the difference between the curves was larger after 10 yeras.
+
+#### First Degree Relative with HLA Genotype
+
+We will model the predicted KM curves using the mean values for dietary iron and omega-3 intake, and setting the birth cohort to First Degree Relative with HLA Genotype.
+
+```{r}
+# Step 1: Extract means
+mean_iron <- mean(data_diet$DietIron_intake, na.rm = TRUE)
+mean_omega <- mean(data_diet$omega3_intake, na.rm = TRUE)
+
+# Step 2: Extract coefficients and variance-covariance matrix
+coef_red <- coef(model_red)
+vcov_red <- vcov(model_red)
+
+# Step 3: Get baseline survival from null model
+model_base <- coxph(Surv(IA_time, IA_event) ~ 1, data = data_diet)
+base_surv <- survfit(model_base)
+
+# Step 4: Simulate survival curves with CI for FDR status
+simulate_survival_fdr <- function(fdr_status) {
+  covariate_matrix <- sapply(base_surv$time, function(t) {
+    fdr1 <- ifelse(t <= 10, fdr_status, 0)
+    fdr2 <- ifelse(t > 10, fdr_status, 0)
+    c(
+      DietIron_intake = mean_iron,
+      omega3_intake = mean_omega,
+      `tt(group_fdr)1` = fdr1,
+      `tt(group_fdr)2` = fdr2
+    )
+  })
+  
+  # Compute linear predictors
+  lp <- apply(covariate_matrix, 2, function(x) sum(x * coef_red[names(x)]))
+  
+  # Compute standard errors
+  se_lp <- apply(covariate_matrix, 2, function(x) {
+    sqrt(t(x) %*% vcov_red[names(x), names(x)] %*% x)
+  })
+  
+  # Compute survival and CI
+  S <- base_surv$surv^exp(lp)
+  S_upper <- base_surv$surv^exp(lp + 1.96 * se_lp)
+  S_lower <- base_surv$surv^exp(lp - 1.96 * se_lp)
+  
+  data.frame(time = base_surv$time, surv = S, lower = S_lower, upper = S_upper,
+             fdr = ifelse(fdr_status == 1, "FDR+", "FDR−"))
+}
+
+# Step 5: Generate curves
+df_fdr0 <- simulate_survival_fdr(fdr_status = 0)
+df_fdr1 <- simulate_survival_fdr(fdr_status = 1)
+plot_df <- bind_rows(df_fdr0, df_fdr1)
+
+# Step 6: Plot
+ggplot(plot_df, aes(x = time, y = surv, color = fdr)) +
+  geom_line(size = 1.2) +
+  geom_ribbon(aes(ymin = lower, ymax = upper, fill = fdr), alpha = 0.2, color = NA) +
+  labs(x = "Time (years)", y = "Survival Probability",
+       title = "Model-Based Survival Curves with 95% CI: FDR+ vs FDR−",
+       color = "FDR Status", fill = "FDR Status") +
+  theme_minimal()
+```
+
+While a bit odd looking, this plot reveals what the model is doing, essentially setting the survival rates to be different before 10 years, and equivalent after 10 years between children with and without a first degree relative with HLA.
+
+# Conclusions
+
+This study provides evidence that higher omega-3 fatty acid intake is associated with a significantly reduced risk of developing islet autoimmunity (IA) in children genetically predisposed to type 1 diabetes (T1D). Using a Cox proportional hazards framework with time-varying effects for genetic risk factors, we found that omega-3 intake conferred a 56% reduction in IA hazard, independent of dietary iron intake and birth cohort risk group. The protective association remained robust after adjusting for key covariates and evaluating proportional hazards assumptions.
+
+Time-varying effects revealed that both HLA genotype and first-degree relative (FDR) status were associated with elevated IA risk in early childhood, with HLA risk persisting beyond age 10. In contrast, the effect of FDR status attenuated over time, suggesting distinct temporal dynamics in genetic susceptibility.
+
+These findings support the hypothesis that omega-3 fatty acids may play a protective role in the early development of autoimmunity. Future research should explore mechanistic pathways, validate findings in independent cohorts, and assess whether dietary interventions can delay or prevent progression to T1D.
+
+#### Limitations
+
+By converting interval-censored data to fixed-time structure, we simplified the analysis. That is, if the last visits before first testing positive was at 12 years, and the visit where the child tested positive was at 15 years, then technically seroconversion could have first happened anywhere between 12 and 15 years. While a limitation, this was the method used in the original study, and thus we follow on previous established frameworks that nonetheless provide valuable information.
+
+Another limitation of this analysis is the differential missingness in dietary data between groups. Among children without IA, 53.9% were missing omega-3 intake data, compared to only 22.4% of children who developed IA. This discrepancy suggests the presence of recall bias, where parents of children who develop a disease may be more attentive or accurate in reporting dietary exposures. As a result, the missingness in omega-3 intake is not missing completely at random (MCAR). This has important implications for model interpretation. A complete-case analysis may disproportionately exclude IA-negative children with low omega-3 intake, potentially inflating the observed protective effect of omega-3. To address this, a sensitivity analysis comparing models with and without imputation is recommended to assess the robustness of the findings. Future work should consider multiple imputation strategies or inverse probability weighting to account for informative missingness and reduce bias in effect estimates
+
+#### Things You Learned
+
+The main thing I learned from this analysis was how to correctly account for violations of proportional hazards. While this was material we learned it class and I answered on the test, I feel that you only truly learn how to do an analysis by actually doing an analysis from start to finish. This hands on experience has really hammered home the methodology to correctly performing a survival analysis.
+
+#### Things you Wished You'd Done Differently
+
+I would be interested in further exploring the impact of including visits in the final model, and sussing out exactly why including it makes HLA genotype no longer significant after the 10 year time point.
